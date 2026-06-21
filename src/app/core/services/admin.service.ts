@@ -1,0 +1,66 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { CreateEquipeRequest, Equipe } from '../models/equipe.model';
+import { Page } from '../models/page.model';
+import { CreateUserRequest, UpdateUserRequest, User } from '../models/user.model';
+
+/** Réponse générique porteuse d'un message (MessageResponse backend). */
+export interface MessageResponse {
+  message: string;
+  timestamp: string;
+}
+
+/**
+ * Opérations réservées à l'administrateur : import du référentiel CSV,
+ * création d'équipes et assignation des chefs.
+ */
+@Injectable({ providedIn: 'root' })
+export class AdminService {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiUrl}/admin`;
+
+  /** Importe le référentiel à partir d'un fichier CSV (multipart, champ `file`). */
+  importCsv(file: File): Observable<MessageResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<MessageResponse>(`${this.baseUrl}/import-referentiel`, formData);
+  }
+
+  /** Crée une équipe de recherche en désignant son chef. */
+  createEquipe(request: CreateEquipeRequest): Observable<Equipe> {
+    return this.http.post<Equipe>(`${this.baseUrl}/equipes`, request);
+  }
+
+  /** (Ré)assigne le chef d'une équipe existante. */
+  assignChef(equipeId: number, chefId: number): Observable<Equipe> {
+    return this.http.put<Equipe>(`${this.baseUrl}/equipes/${equipeId}/chef`, { chefId });
+  }
+
+  // ----- Gestion des utilisateurs -----
+
+  /** Crée directement un utilisateur (action admin, sans référentiel). */
+  createUser(request: CreateUserRequest): Observable<User> {
+    return this.http.post<User>(`${this.baseUrl}/users`, request);
+  }
+
+  /** Liste paginée des utilisateurs, avec recherche libre optionnelle. */
+  getUsers(page: number, size: number, search?: string): Observable<Page<User>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (search?.trim()) {
+      params = params.set('search', search.trim());
+    }
+    return this.http.get<Page<User>>(`${this.baseUrl}/users`, { params });
+  }
+
+  /** Met à jour un utilisateur (identité, rôle, état d'activation). */
+  updateUser(id: number, request: UpdateUserRequest): Observable<User> {
+    return this.http.put<User>(`${this.baseUrl}/users/${id}`, request);
+  }
+
+  /** Supprime un utilisateur. */
+  deleteUser(id: number): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.baseUrl}/users/${id}`);
+  }
+}
