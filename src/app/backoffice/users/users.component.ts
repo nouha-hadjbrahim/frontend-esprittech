@@ -334,7 +334,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     private splitName(fullName: string): { prenom: string; nom: string } {
         const tokens = fullName.trim().split(/\s+/);
-        const prenom = tokens[0] ?? '';
+        const prenom = tokens[0];
         const nom = tokens.length > 1 ? tokens.slice(1).join(' ') : prenom;
         return { prenom, nom };
     }

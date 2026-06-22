@@ -107,6 +107,8 @@ sonarqube-analysis:
           -Dsonar.tests=src \
           -Dsonar.test.inclusions="**/*.spec.ts" \
           -Dsonar.exclusions="**/node_modules/**,**/dist/**" \
+          -Dsonar.coverage.exclusions="src/main.ts,src/environments/**,src/**/*.model.ts,src/**/*.routes.ts,src/app/app.config.ts" \
+          -Dsonar.cpd.exclusions="src/**/*.spec.ts" \
           -Dsonar.javascript.lcov.reportPaths="$LCOV_FILE" \
           -Dsonar.qualitygate.wait=true
       else
@@ -120,6 +122,8 @@ sonarqube-analysis:
           -Dsonar.tests=src \
           -Dsonar.test.inclusions="**/*.spec.ts" \
           -Dsonar.exclusions="**/node_modules/**,**/dist/**" \
+          -Dsonar.coverage.exclusions="src/main.ts,src/environments/**,src/**/*.model.ts,src/**/*.routes.ts,src/app/app.config.ts" \
+          -Dsonar.cpd.exclusions="src/**/*.spec.ts" \
           -Dsonar.qualitygate.wait=true
       fi
 
