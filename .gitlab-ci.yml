@@ -48,7 +48,15 @@ test-frontend:
     - npm --version
     - npm ci
   script:
-    - npm run test -- --watch=false --browsers=ChromeHeadlessNoSandbox --no-progress --code-coverage
+    - echo "Cleaning previous coverage output"
+    - rm -rf coverage
+    - echo "Running Angular tests with LCOV coverage enabled"
+    - npm run test:ci
+    - echo "Coverage output after tests:"
+    - ls -la coverage
+    - echo "Verifying normalized LCOV report at coverage/lcov.info"
+    - test -f coverage/lcov.info
+    - ls -la coverage/lcov.info
   artifacts:
     when: always
     expire_in: 1 week
@@ -94,34 +102,37 @@ sonarqube-analysis:
     - test-frontend
   script:
     - |
-      LCOV_FILE=$(find coverage -name lcov.info | head -n 1 || true)
+      echo "Checking coverage artifact downloaded from test-frontend"
+      ls -la
 
-      if [ -n "$LCOV_FILE" ]; then
-        echo "Using coverage report: $LCOV_FILE"
-        sonar-scanner \
-          -Dsonar.host.url="$SONAR_HOST_URL" \
-          -Dsonar.token="$SONAR_TOKEN" \
-          -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
-          -Dsonar.organization="$SONAR_ORGANIZATION" \
-          -Dsonar.sources=src \
-          -Dsonar.tests=src \
-          -Dsonar.test.inclusions="**/*.spec.ts" \
-          -Dsonar.exclusions="**/node_modules/**,**/dist/**" \
-          -Dsonar.javascript.lcov.reportPaths="$LCOV_FILE" \
-          -Dsonar.qualitygate.wait=true
-      else
-        echo "No lcov.info found. Running SonarCloud without coverage."
-        sonar-scanner \
-          -Dsonar.host.url="$SONAR_HOST_URL" \
-          -Dsonar.token="$SONAR_TOKEN" \
-          -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
-          -Dsonar.organization="$SONAR_ORGANIZATION" \
-          -Dsonar.sources=src \
-          -Dsonar.tests=src \
-          -Dsonar.test.inclusions="**/*.spec.ts" \
-          -Dsonar.exclusions="**/node_modules/**,**/dist/**" \
-          -Dsonar.qualitygate.wait=true
+      if [ ! -d coverage ]; then
+        echo "ERROR: coverage directory was not downloaded from test-frontend artifacts."
+        exit 1
       fi
+
+      echo "Coverage directory contents:"
+      ls -la coverage
+
+      if [ ! -f coverage/lcov.info ]; then
+        echo "ERROR: coverage/lcov.info is missing. Failing before SonarCloud so analysis does not run without coverage."
+        exit 1
+      fi
+
+      echo "Using coverage report: coverage/lcov.info"
+      ls -la coverage/lcov.info
+
+      sonar-scanner \
+        -Dsonar.host.url="$SONAR_HOST_URL" \
+        -Dsonar.token="$SONAR_TOKEN" \
+        -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+        -Dsonar.organization="$SONAR_ORGANIZATION" \
+        -Dsonar.sources=src \
+        -Dsonar.tests=src \
+        -Dsonar.test.inclusions="**/*.spec.ts" \
+        -Dsonar.exclusions="src/assets/**,**/node_modules/**,**/dist/**" \
+        -Dsonar.coverage.exclusions="src/main.ts,src/environments/**,src/**/*.model.ts,src/**/*.routes.ts,src/app/app.config.ts" \
+        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+        -Dsonar.qualitygate.wait=true
 
 build-frontend:
   stage: build
