@@ -19,12 +19,12 @@ module.exports = function (config) {
       suppressAll: true,
     },
     coverageReporter: {
-      dir: path.join(__dirname, './coverage/esprittech-frontend'),
+      dir: path.join(__dirname, './coverage'),
       subdir: '.',
       reporters: [
         { type: 'html' },
         { type: 'text-summary' },
-        { type: 'lcov' },
+        { type: 'lcovonly', file: 'lcov.info' },
       ],
     },
     reporters: ['progress', 'kjhtml'],
