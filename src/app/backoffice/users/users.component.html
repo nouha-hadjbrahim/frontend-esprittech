@@ -133,7 +133,7 @@
 
     <!-- View Details Modal -->
     <div class="modal-overlay" *ngIf="isDetailsModalOpen" role="button" tabindex="0" aria-label="Fermer la fenêtre"
-        (click)="$event.target === $event.currentTarget && closeDetailsModal()" (keyup.escape)="closeDetailsModal()">
+        (click)="onOverlayClick($event, 'details')" (keyup.escape)="closeDetailsModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title-group">
@@ -190,7 +190,7 @@
 
     <!-- Edit User Modal -->
     <div class="modal-overlay" *ngIf="isEditModalOpen" role="button" tabindex="0" aria-label="Fermer la fenêtre"
-        (click)="$event.target === $event.currentTarget && closeEditModal()" (keyup.escape)="closeEditModal()">
+        (click)="onOverlayClick($event, 'edit')" (keyup.escape)="closeEditModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title-group">
@@ -242,7 +242,7 @@
 
     <!-- Add User Modal -->
     <div class="modal-overlay" *ngIf="isCreateModalOpen" role="button" tabindex="0" aria-label="Fermer la fenêtre"
-        (click)="$event.target === $event.currentTarget && closeCreateModal()" (keyup.escape)="closeCreateModal()">
+        (click)="onOverlayClick($event, 'create')" (keyup.escape)="closeCreateModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title-group">

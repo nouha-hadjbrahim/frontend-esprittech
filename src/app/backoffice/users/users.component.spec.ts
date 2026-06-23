@@ -20,6 +20,11 @@ function makePage(content: User[], over: Partial<Page<User>> = {}): Page<User> {
   };
 }
 
+/** Construit un faux événement de clic avec une cible et une cible courante données. */
+function clickEvent(target: object, currentTarget: object): Event {
+  return { target, currentTarget } as unknown as Event;
+}
+
 describe('UsersComponent', () => {
   let component: UsersComponent;
   let adminService: jasmine.SpyObj<AdminService>;
@@ -303,6 +308,38 @@ describe('UsersComponent', () => {
       adminService.deleteUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
       component.deleteUser(row);
       expect(alertSpy).toHaveBeenCalledWith('Échec de la suppression.');
+    });
+  });
+
+  describe('onOverlayClick', () => {
+    it('should ignore clicks coming from an inner element (target !== overlay)', () => {
+      const overlay = {};
+      const inner = {};
+      component.isCreateModalOpen = true;
+      component.onOverlayClick(clickEvent(inner, overlay), 'create');
+      expect(component.isCreateModalOpen).toBeTrue();
+    });
+
+    it('should close the create modal when the overlay itself is clicked', () => {
+      const overlay = {};
+      component.isCreateModalOpen = true;
+      component.onOverlayClick(clickEvent(overlay, overlay), 'create');
+      expect(component.isCreateModalOpen).toBeFalse();
+    });
+
+    it('should close the edit modal when the overlay itself is clicked', () => {
+      const overlay = {};
+      component.isEditModalOpen = true;
+      component.onOverlayClick(clickEvent(overlay, overlay), 'edit');
+      expect(component.isEditModalOpen).toBeFalse();
+    });
+
+    it('should close the details modal when the overlay itself is clicked', () => {
+      const overlay = {};
+      component.isDetailsModalOpen = true;
+      component.selectedUser = null;
+      component.onOverlayClick(clickEvent(overlay, overlay), 'details');
+      expect(component.isDetailsModalOpen).toBeFalse();
     });
   });
 });
