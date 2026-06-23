@@ -227,6 +227,24 @@ export class UsersComponent implements OnInit, OnDestroy {
             });
     }
 
+    /**
+     * Ferme la modale uniquement si le clic provient de l'overlay lui-même
+     * (et non d'un élément interne). Retourne `void` volontairement : si un
+     * handler d'événement Angular retourne `false`, Angular appelle
+     * `preventDefault()` sur l'événement, ce qui bloquerait la soumission du
+     * formulaire quand le clic vient du bouton « submit ».
+     */
+    onOverlayClick(event: Event, modal: 'details' | 'edit' | 'create'): void {
+        if (event.target !== event.currentTarget) {
+            return;
+        }
+        switch (modal) {
+            case 'details': this.closeDetailsModal(); break;
+            case 'edit': this.closeEditModal(); break;
+            case 'create': this.closeCreateModal(); break;
+        }
+    }
+
     openDetailsModal(user: UserRow): void {
         this.selectedUser = user;
         this.isDetailsModalOpen = true;
