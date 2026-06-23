@@ -32,7 +32,9 @@ export class SignUpComponent {
 
   // Doit rester aligné avec les contraintes du backend (RegisterRequest)
   private static readonly PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
-  private static readonly ESPRIT_EMAIL_PATTERN = /.+@esprit\.tn$/;
+  // Partie locale en classe négative ([^@\s]+) plutôt que `.+` : supprime l'ambiguïté de
+  // backtracking signalée par Sonar (S5852, ReDoS) et rejette correctement les e-mails malformés.
+  private static readonly ESPRIT_EMAIL_PATTERN = /^[^@\s]+@esprit\.tn$/;
 
   readonly loading = signal(false);
   readonly serverError = signal<string | null>(null);

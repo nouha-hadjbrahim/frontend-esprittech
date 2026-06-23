@@ -98,6 +98,10 @@ sonarqube-analysis:
 
       if [ -n "$LCOV_FILE" ]; then
         echo "Using coverage report: $LCOV_FILE"
+        # Normalise d'éventuels backslashes Windows -> slashes pour que SonarCloud résolve les chemins source
+        sed -i 's#\\#/#g' "$LCOV_FILE"
+        echo "----- lcov SF sample (chemins vus par Sonar) -----"
+        grep '^SF:' "$LCOV_FILE" | head -n 3
         sonar-scanner \
           -Dsonar.host.url="$SONAR_HOST_URL" \
           -Dsonar.token="$SONAR_TOKEN" \

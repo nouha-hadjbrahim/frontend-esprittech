@@ -116,7 +116,8 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" placeholder="Rechercher...">
+                <label for="backoffice-search" class="sr-only">Rechercher</label>
+                <input id="backoffice-search" type="text" placeholder="Rechercher...">
             </div>
 
             <div class="header-actions">
@@ -130,7 +131,8 @@
                 </button>
 
                 <div class="user-profile-wrapper">
-                    <div class="user-profile-trigger" [class.active]="isProfileOpen" (click)="toggleProfileMenu()">
+                    <div class="user-profile-trigger" role="button" tabindex="0" [class.active]="isProfileOpen"
+                        (click)="toggleProfileMenu()" (keyup.enter)="toggleProfileMenu()">
                         <div class="avatar">{{ initials() }}</div>
                         <div class="user-info">
                             <span class="user-name">{{ user() ? user()!.prenom + ' ' + user()!.nom : 'Utilisateur'

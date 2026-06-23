@@ -52,6 +52,16 @@ describe('SignUpComponent', () => {
     expect(component.form.valid).toBeTrue();
   });
 
+  it('should accept a well-formed @esprit.tn address and reject a malformed one', () => {
+    // Garde-fou anti-régression du correctif ReDoS (S5852) : la partie locale ne doit
+    // accepter ni espace ni second « @ ».
+    component.f.email.setValue('jean.dupont@esprit.tn');
+    expect(component.f.email.errors?.['pattern']).toBeUndefined();
+
+    component.f.email.setValue('jean @esprit.tn');
+    expect(component.f.email.errors?.['pattern']).toBeTruthy();
+  });
+
   it('should not register when the form is invalid', () => {
     component.onSubmit();
     expect(authService.register).not.toHaveBeenCalled();
