@@ -2,29 +2,26 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { Role } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
-import { TokenService } from '../services/token.service';
 
 /**
  * Garde paramétrable par rôle(s). À utiliser via `roleGuard(['ROLE_ADMIN'])`
  * sur la propriété `canActivate` d'une route.
  *
- * Le rôle est lu depuis le JWT (claim `role`) pour rester fiable même après un
- * rechargement de page.
- * - Token absent/expiré  -> redirection vers /sign-in
+ * Le rôle est lu sur l'utilisateur courant en mémoire (peuplé via /auth/me, restauré
+ * au démarrage par l'APP_INITIALIZER), et non plus décodé d'un JWT côté client.
+ * - Non authentifié -> redirection vers /sign-in
  * - Connecté mais rôle non autorisé -> redirection vers sa propre page d'accueil
  */
 export function roleGuard(allowedRoles: Role[]): CanActivateFn {
   return () => {
-    const tokenService = inject(TokenService);
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (tokenService.isTokenExpired()) {
+    const role = authService.getRole();
+    if (!role) {
       return router.createUrlTree(['/sign-in']);
     }
-
-    const role = tokenService.decodeToken()?.role;
-    if (role && allowedRoles.includes(role)) {
+    if (allowedRoles.includes(role)) {
       return true;
     }
 

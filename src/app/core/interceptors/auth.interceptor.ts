@@ -6,53 +6,39 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import {
-  BehaviorSubject,
-  Observable,
-  catchError,
-  filter,
-  switchMap,
-  take,
-  throwError,
-} from 'rxjs';
+import { Router } from '@angular/router';
+import { Observable, Subject, catchError, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { TokenService } from '../services/token.service';
 
-/** Endpoints publics qui ne doivent jamais porter de Bearer token ni déclencher un refresh. */
-const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh'];
+/** Endpoints publics qui ne doivent jamais déclencher un refresh automatique. */
+const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
 
 /** Verrou partagé : évite plusieurs refresh concurrents sur des requêtes parallèles. */
 let isRefreshing = false;
-const refreshedToken$ = new BehaviorSubject<string | null>(null);
+/** Diffuse le résultat du refresh en cours aux requêtes en attente (true = réessayer). */
+const refreshResult$ = new Subject<boolean>();
 
 /**
- * Interceptor JWT :
- * 1. ajoute `Authorization: Bearer <accessToken>` à chaque requête authentifiée ;
- * 2. sur 401, rafraîchit automatiquement le token puis rejoue la requête ;
- * 3. si le refresh échoue, déconnecte l'utilisateur.
+ * Interceptor JWT basé sur les cookies HttpOnly :
+ * 1. ajoute `withCredentials: true` pour que le navigateur envoie les cookies d'auth ;
+ * 2. sur 401, tente un refresh (cookie refresh_token) puis rejoue la requête ;
+ * 3. si le refresh échoue, déconnecte l'utilisateur et redirige vers /sign-in.
+ *
+ * Aucun token n'est lu ni écrit côté JavaScript : tout passe par les cookies.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const tokenService = inject(TokenService);
   const authService = inject(AuthService);
+  const router = inject(Router);
 
+  const authReq = req.clone({ withCredentials: true });
   const isAuthEndpoint = AUTH_PATHS.some((path) => req.url.includes(path));
-  const token = tokenService.getToken();
-
-  const authReq =
-    token && !isAuthEndpoint
-      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-      : req;
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status !== 401 || isAuthEndpoint) {
         return throwError(() => error);
       }
-      if (!tokenService.getRefreshToken()) {
-        authService.logout();
-        return throwError(() => error);
-      }
-      return handle401(req, next, authService);
+      return handle401(authReq, next, authService, router, error);
     }),
   );
 };
@@ -62,32 +48,30 @@ function handle401(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
   authService: AuthService,
+  router: Router,
+  originalError: HttpErrorResponse,
 ): Observable<HttpEvent<unknown>> {
   if (isRefreshing) {
-    return refreshedToken$.pipe(
-      filter((newToken): newToken is string => newToken !== null),
+    return refreshResult$.pipe(
       take(1),
-      switchMap((newToken) => next(withBearer(req, newToken))),
+      switchMap((ok) => (ok ? next(req) : throwError(() => originalError))),
     );
   }
 
   isRefreshing = true;
-  refreshedToken$.next(null);
 
   return authService.refreshToken().pipe(
-    switchMap((res) => {
+    switchMap(() => {
       isRefreshing = false;
-      refreshedToken$.next(res.accessToken);
-      return next(withBearer(req, res.accessToken));
+      refreshResult$.next(true);
+      return next(req);
     }),
-    catchError((err) => {
+    catchError((refreshError) => {
       isRefreshing = false;
-      authService.logout();
-      return throwError(() => err);
+      refreshResult$.next(false);
+      authService.clearSession();
+      void router.navigate(['/sign-in']);
+      return throwError(() => originalError ?? refreshError);
     }),
   );
-}
-
-function withBearer(req: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
-  return req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
 }

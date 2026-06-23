@@ -1,12 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree, provideRouter } from '@angular/router';
-import { JwtPayload, Role } from '../models/user.model';
+import { Role } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
-import { TokenService } from '../services/token.service';
 import { roleGuard } from './role.guard';
 
 describe('roleGuard', () => {
-  let tokenService: jasmine.SpyObj<TokenService>;
   let authService: jasmine.SpyObj<AuthService>;
   let router: Router;
 
@@ -16,45 +14,33 @@ describe('roleGuard', () => {
   }
 
   beforeEach(() => {
-    tokenService = jasmine.createSpyObj<TokenService>('TokenService', ['isTokenExpired', 'decodeToken']);
-    authService = jasmine.createSpyObj<AuthService>('AuthService', ['landingRoute']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['getRole', 'landingRoute']);
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: TokenService, useValue: tokenService },
         { provide: AuthService, useValue: authService },
       ],
     });
     router = TestBed.inject(Router);
   });
 
-  it('should redirect to /sign-in when the token is expired', () => {
-    tokenService.isTokenExpired.and.returnValue(true);
+  it('should redirect to /sign-in when no user is authenticated', () => {
+    authService.getRole.and.returnValue(null);
     const result = run(['ROLE_ADMIN']);
     expect(result).toBeInstanceOf(UrlTree);
     expect(router.serializeUrl(result as UrlTree)).toContain('/sign-in');
   });
 
   it('should allow activation when the role is allowed', () => {
-    tokenService.isTokenExpired.and.returnValue(false);
-    tokenService.decodeToken.and.returnValue({ role: 'ROLE_ADMIN' } as JwtPayload);
+    authService.getRole.and.returnValue('ROLE_ADMIN');
     expect(run(['ROLE_ADMIN', 'ROLE_CI'])).toBeTrue();
   });
 
   it('should redirect to the landing route when the role is not allowed', () => {
-    tokenService.isTokenExpired.and.returnValue(false);
-    tokenService.decodeToken.and.returnValue({ role: 'ROLE_ETUDIANT' } as JwtPayload);
+    authService.getRole.and.returnValue('ROLE_ETUDIANT');
     authService.landingRoute.and.returnValue('/frontoffice/sujets-disponibles');
     const result = run(['ROLE_ADMIN']);
     expect(result).toBeInstanceOf(UrlTree);
     expect(router.serializeUrl(result as UrlTree)).toContain('/frontoffice/sujets-disponibles');
-  });
-
-  it('should redirect to the landing route when the token has no role claim', () => {
-    tokenService.isTokenExpired.and.returnValue(false);
-    tokenService.decodeToken.and.returnValue(null);
-    authService.landingRoute.and.returnValue('/frontoffice/sujets-disponibles');
-    const result = run(['ROLE_ADMIN']);
-    expect(result).toBeInstanceOf(UrlTree);
   });
 });

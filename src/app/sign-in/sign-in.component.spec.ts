@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { AuthResponse } from '../core/models/auth-response.model';
+import { User } from '../core/models/user.model';
 import { AuthService } from '../core/services/auth.service';
 import { SignInComponent } from './sign-in.component';
 
@@ -48,7 +48,7 @@ describe('SignInComponent', () => {
 
   it('should login and redirect by role when there is no redirect param', () => {
     component.form.setValue({ email: 'a@esprit.tn', password: 'pw' });
-    authService.login.and.returnValue(of({} as AuthResponse));
+    authService.login.and.returnValue(of({} as User));
     component.onSubmit();
     expect(authService.login).toHaveBeenCalled();
     expect(router.navigateByUrl).toHaveBeenCalledWith('/frontoffice/sujets-disponibles');
@@ -58,7 +58,7 @@ describe('SignInComponent', () => {
   it('should redirect to the deep-link when a redirect param is present', () => {
     redirectValue = '/backoffice/users';
     component.form.setValue({ email: 'a@esprit.tn', password: 'pw' });
-    authService.login.and.returnValue(of({} as AuthResponse));
+    authService.login.and.returnValue(of({} as User));
     component.onSubmit();
     expect(router.navigateByUrl).toHaveBeenCalledWith('/backoffice/users');
   });
