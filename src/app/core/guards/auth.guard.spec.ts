@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
-import { TokenService } from '../services/token.service';
+import { AuthService } from '../services/auth.service';
 import { authGuard } from './auth.guard';
 
 describe('authGuard', () => {
-  let tokenService: jasmine.SpyObj<TokenService>;
+  let authService: jasmine.SpyObj<AuthService>;
   let router: Router;
 
   function run(url = '/backoffice/users'): boolean | UrlTree {
@@ -14,23 +14,23 @@ describe('authGuard', () => {
   }
 
   beforeEach(() => {
-    tokenService = jasmine.createSpyObj<TokenService>('TokenService', ['isTokenExpired']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['isAuthenticated']);
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: TokenService, useValue: tokenService },
+        { provide: AuthService, useValue: authService },
       ],
     });
     router = TestBed.inject(Router);
   });
 
-  it('should allow activation when the token is valid', () => {
-    tokenService.isTokenExpired.and.returnValue(false);
+  it('should allow activation when a user is authenticated', () => {
+    authService.isAuthenticated.and.returnValue(true);
     expect(run()).toBeTrue();
   });
 
-  it('should redirect to /sign-in keeping the requested url when the token is expired', () => {
-    tokenService.isTokenExpired.and.returnValue(true);
+  it('should redirect to /sign-in keeping the requested url when not authenticated', () => {
+    authService.isAuthenticated.and.returnValue(false);
     const result = run('/backoffice/users');
     expect(result).toBeInstanceOf(UrlTree);
     const serialized = router.serializeUrl(result as UrlTree);

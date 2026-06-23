@@ -57,12 +57,3 @@ export interface LoginRequest {
   email: string;
   password: string;
 }
-
-/** Contenu décodé d'un JWT EspritTECH. */
-export interface JwtPayload {
-  sub: string; // email
-  role: Role;
-  type: 'access' | 'refresh';
-  iat: number;
-  exp: number;
-}

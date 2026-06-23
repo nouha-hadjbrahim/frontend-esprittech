@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { AuthResponse } from '../core/models/auth-response.model';
+import { User } from '../core/models/user.model';
 import { AuthService } from '../core/services/auth.service';
 import { SignUpComponent } from './sign-up.component';
 
@@ -70,7 +70,7 @@ describe('SignUpComponent', () => {
 
   it('should register and redirect on success', () => {
     component.form.setValue(validValues);
-    authService.register.and.returnValue(of({} as AuthResponse));
+    authService.register.and.returnValue(of({} as User));
     component.onSubmit();
     expect(authService.register).toHaveBeenCalledWith({
       nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn', identifiant: 'JD1', password: 'Passw0rd',
