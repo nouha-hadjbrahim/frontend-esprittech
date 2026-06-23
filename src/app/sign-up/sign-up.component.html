@@ -1,0 +1,111 @@
+<div class="auth-page">
+    <div class="auth-background">
+        <div class="dot-pattern"></div>
+        <div class="glow-container">
+            <div class="glow-layer glow-1"></div>
+            <div class="glow-layer glow-2"></div>
+            <div class="glow-layer glow-3"></div>
+        </div>
+    </div>
+
+    <div class="auth-card">
+        <div class="logo-container">
+            <img src="assets/logo.png" alt="EspriTECH Logo" class="app-logo"
+                style="height: 48px; object-fit: contain;" />
+            <p class="brand">EspriTECH</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+            <h1 class="auth-title">Créer un compte</h1>
+            <p class="auth-subtitle">Rejoignez la plateforme EspriTECH.</p>
+
+            <div *ngIf="serverError()" class="alert-error">{{ serverError() }}</div>
+
+            <div class="row">
+                <div class="form-group flex-1">
+                    <label for="firstName">Prénom</label>
+                    <input type="text" id="firstName" formControlName="prenom" placeholder=" ">
+                    <small *ngIf="f.prenom.touched && f.prenom.errors?.['required']" class="field-error">
+                        Le prénom est obligatoire.
+                    </small>
+                    <small
+                        *ngIf="f.prenom.touched && (f.prenom.errors?.['minlength'] || f.prenom.errors?.['maxlength'])"
+                        class="field-error">
+                        Entre 2 et 50 caractères.
+                    </small>
+                    <small *ngIf="f.prenom.errors?.['server']" class="field-error">{{ f.prenom.errors?.['server']
+                        }}</small>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="lastName">Nom</label>
+                    <input type="text" id="lastName" formControlName="nom" placeholder=" ">
+                    <small *ngIf="f.nom.touched && f.nom.errors?.['required']" class="field-error">
+                        Le nom est obligatoire.
+                    </small>
+                    <small *ngIf="f.nom.touched && (f.nom.errors?.['minlength'] || f.nom.errors?.['maxlength'])"
+                        class="field-error">
+                        Entre 2 et 50 caractères.
+                    </small>
+                    <small *ngIf="f.nom.errors?.['server']" class="field-error">{{ f.nom.errors?.['server'] }}</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Adresse e-mail</label>
+                <input type="email" id="email" formControlName="email" placeholder=" ">
+                <small *ngIf="f.email.touched && f.email.errors?.['required']" class="field-error">
+                    L'email est obligatoire.
+                </small>
+                <small *ngIf="f.email.touched && (f.email.errors?.['email'] || f.email.errors?.['pattern'])"
+                    class="field-error">
+                    L'email doit être valide et se terminer par &#64;esprit.tn.
+                </small>
+                <small *ngIf="f.email.errors?.['server']" class="field-error">{{ f.email.errors?.['server'] }}</small>
+            </div>
+
+            <div class="form-group">
+                <label for="identifiant">Identifiant ESPRIT</label>
+                <input type="text" id="identifiant" formControlName="identifiant" placeholder="Ex : ET10011">
+                <small *ngIf="f.identifiant.touched && f.identifiant.errors?.['required']" class="field-error">
+                    L'identifiant est obligatoire (vérifié avec le référentiel).
+                </small>
+                <small *ngIf="f.identifiant.errors?.['server']" class="field-error">{{ f.identifiant.errors?.['server']
+                    }}</small>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" formControlName="password" placeholder=" ">
+                <small *ngIf="f.password.touched && f.password.errors?.['required']" class="field-error">
+                    Le mot de passe est obligatoire.
+                </small>
+                <small
+                    *ngIf="f.password.touched && (f.password.errors?.['minlength'] || f.password.errors?.['pattern'])"
+                    class="field-error">
+                    Au moins 8 caractères, avec 1 majuscule, 1 minuscule et 1 chiffre.
+                </small>
+                <small *ngIf="f.password.errors?.['server']" class="field-error">{{ f.password.errors?.['server']
+                    }}</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirmer le mot de passe</label>
+                <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder=" ">
+                <small *ngIf="f.confirmPassword.touched && f.confirmPassword.errors?.['required']" class="field-error">
+                    Veuillez confirmer le mot de passe.
+                </small>
+                <small *ngIf="f.confirmPassword.touched && form.errors?.['passwordMismatch']" class="field-error">
+                    Les mots de passe ne correspondent pas.
+                </small>
+            </div>
+
+            <button type="submit" class="submit-btn" [disabled]="form.invalid || loading()">
+                {{ loading() ? 'Création…' : 'Créer mon compte' }}
+            </button>
+
+            <p class="auth-footer">
+                Déjà inscrit ? <a routerLink="/sign-in">Se connecter</a>
+            </p>
+        </form>
+    </div>
+</div>

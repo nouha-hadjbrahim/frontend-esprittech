@@ -1,0 +1,199 @@
+<div class="teams-page">
+    <div class="page-header">
+        <div class="header-text">
+            <h1>Équipes de recherche</h1>
+            <p>Gérez les équipes et désignez leurs chefs.</p>
+        </div>
+        <button class="add-btn" (click)="openModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Nouvelle équipe
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div *ngFor="let stat of stats()" class="stat-card">
+            <div class="stat-icon" [style.background-color]="stat.bgColor" [style.color]="stat.color">
+                <!-- Simple SVG icons for stats -->
+                <svg *ngIf="stat.icon === 'users'" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <svg *ngIf="stat.icon === 'user-plus'" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="16" y1="11" x2="22" y2="11"></line>
+                </svg>
+                <svg *ngIf="stat.icon === 'user-check'" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-count">{{ stat.count }}</span>
+                <span class="stat-label">{{ stat.label }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+        <div class="table-actions">
+            <div class="search-field">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <label for="team-search" class="sr-only">Rechercher une équipe</label>
+                <input id="team-search" type="text" placeholder="Rechercher une équipe...">
+            </div>
+            <div class="view-toggle">
+                <button class="toggle-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Cartes
+                </button>
+                <button class="toggle-btn active">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    Liste
+                </button>
+            </div>
+        </div>
+
+        <table class="teams-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Chef d'équipe</th>
+                    <th>Domaine</th>
+                    <th>Membres</th>
+                    <th>Créée le</th>
+                    <th>Statut</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="loading()">
+                    <td colspan="7" class="empty-row">Chargement des équipes…</td>
+                </tr>
+                <tr *ngIf="!loading() && loadError()">
+                    <td colspan="7" class="empty-row error">{{ loadError() }}</td>
+                </tr>
+                <tr *ngIf="!loading() && !loadError() && teams().length === 0">
+                    <td colspan="7" class="empty-row">Aucune équipe pour le moment.</td>
+                </tr>
+                <tr *ngFor="let team of teams()">
+                    <td><span class="team-name">{{ team.name }}</span></td>
+                    <td>
+                        <div class="lead-cell">
+                            <svg *ngIf="team.lead !== 'Aucun chef désigné'" width="14" height="14" viewBox="0 0 24 24"
+                                fill="#F59E0B" stroke="#F59E0B" style="margin-right: 4px;">
+                                <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z"></path>
+                            </svg>
+                            <span [class.no-lead]="team.lead === 'Aucun chef désigné'">{{ team.lead }}</span>
+                        </div>
+                    </td>
+                    <td><span class="domain-badge">{{ team.description }}</span></td>
+                    <td><span class="members-count">{{ team.members }}</span></td>
+                    <td><span class="date-text">{{ team.created }}</span></td>
+                    <td>
+                        <span class="status-badge"
+                            [ngClass]="{'active': team.status === 'Active', 'inactive': team.status === 'Inactive'}">
+                            {{ team.status }}
+                        </span>
+                    </td>
+                    <td class="text-right">
+                        <div class="actions-group">
+                            <button class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg> Voir</button>
+                            <button class="icon-btn-plain"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg></button>
+                            <button class="icon-btn-plain delete"><svg width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="#E23E3E" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg></button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- New Team Modal -->
+    <div class="modal-overlay" *ngIf="isModalOpen" role="button" tabindex="0" aria-label="Fermer la fenêtre"
+        (click)="$event.target === $event.currentTarget && closeModal()" (keyup.escape)="closeModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2>Nouvelle équipe de recherche</h2>
+                    <p>Vous pouvez créer une équipe sans chef et le désigner plus tard.</p>
+                </div>
+                <button class="close-btn" (click)="closeModal()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form class="modal-form" (ngSubmit)="createTeam()">
+                <div class="form-group">
+                    <label for="teamNom">Nom de l'équipe</label>
+                    <input type="text" id="teamNom" name="nom" [(ngModel)]="newTeam.nom"
+                        placeholder="Ex: AI Research Lab">
+                </div>
+                <div class="form-group">
+                    <label for="teamDescription">Description</label>
+                    <textarea id="teamDescription" name="description" [(ngModel)]="newTeam.description"
+                        rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="teamChefId">ID du chef (enseignant)</label>
+                    <input type="number" id="teamChefId" name="chefId" [(ngModel)]="newTeam.chefId"
+                        placeholder="Ex: 5">
+                    <span class="help-hint">Identifiant numérique d'un utilisateur ENSEIGNANT — il sera promu chef d'équipe.</span>
+                </div>
+
+                <p *ngIf="createError()" class="import-error">{{ createError() }}</p>
+
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" (click)="closeModal()">Annuler</button>
+                    <button type="submit" class="submit-btn"
+                        [disabled]="!newTeam.nom || newTeam.chefId == null || creating()">
+                        {{ creating() ? 'Création…' : 'Créer l\'équipe' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

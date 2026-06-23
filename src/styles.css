@@ -1,1 +1,180 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #E63946;
+  --primary-hover: #D62E3B;
+  --bg-color: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --text-main: #1E293B;
+  --text-muted: #64748B;
+  --border-color: #E2E8F0;
+  --input-focus: #E6394633;
+  --glow-color: rgba(230, 57, 70, 0.15);
+  --font-family: 'Inter', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+/* Libellé accessible mais masqué visuellement (lecteurs d'écran uniquement). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Global Auth Layout & Background */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-color);
+}
+
+.auth-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dot-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.25;
+  z-index: 1;
+}
+
+/* Layered Swirling Glow Animation */
+.glow-container {
+  position: absolute;
+  top: -15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 60vh;
+  z-index: 0;
+  filter: blur(80px);
+  opacity: 0.8;
+}
+
+.glow-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  mix-blend-mode: plus-lighter;
+}
+
+.glow-1 {
+  background: radial-gradient(circle at 50% 50%, rgba(230, 57, 70, 0.15), transparent 70%);
+  animation: swirl-1 25s infinite alternate ease-in-out;
+}
+
+.glow-2 {
+  background: radial-gradient(circle at 50% 50%, rgba(230, 57, 70, 0.1), transparent 60%);
+  animation: swirl-2 30s infinite alternate-reverse ease-in-out;
+}
+
+.glow-3 {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 107, 107, 0.08), transparent 50%);
+  animation: swirl-3 20s infinite alternate ease-in-out;
+}
+
+@keyframes swirl-1 {
+  0% {
+    transform: translate(-5%, -5%) scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translate(5%, 5%) scale(1.2) rotate(180deg);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translate(-2%, 8%) scale(1.1) rotate(360deg);
+    opacity: 0.7;
+  }
+}
+
+@keyframes swirl-2 {
+  0% {
+    transform: translate(10%, 2%) scale(1.1) rotate(0deg);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate(-8%, -10%) scale(0.9) rotate(-120deg);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(5%, -5%) scale(1.2) rotate(-240deg);
+    opacity: 0.6;
+  }
+}
+
+@keyframes swirl-3 {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+/* Card Styling Refinement */
+.auth-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -2px rgba(0, 0, 0, 0.05),
+    0 20px 25px -5px rgba(0, 0, 0, 0.05);
+}

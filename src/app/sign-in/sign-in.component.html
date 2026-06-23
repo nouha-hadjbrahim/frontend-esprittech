@@ -1,0 +1,55 @@
+<div class="auth-page">
+    <div class="auth-background">
+        <div class="dot-pattern"></div>
+        <div class="glow-container">
+            <div class="glow-layer glow-1"></div>
+            <div class="glow-layer glow-2"></div>
+            <div class="glow-layer glow-3"></div>
+        </div>
+    </div>
+
+    <div class="auth-card">
+        <div class="logo-container">
+            <img src="assets/logo.png" alt="EspriTECH Logo" class="app-logo"
+                style="height: 48px; object-fit: contain;" />
+            <p class="brand">EspriTECH</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+            <h1 class="auth-title">Connexion</h1>
+            <p class="auth-subtitle">Accédez à votre espace EspriTECH.</p>
+
+            <div *ngIf="serverError()" class="alert-error">{{ serverError() }}</div>
+
+            <div class="form-group">
+                <label for="email">Adresse e-mail</label>
+                <input type="email" id="email" formControlName="email" placeholder=" ">
+                <small *ngIf="f.email.touched && f.email.errors?.['required']" class="field-error">
+                    L'email est obligatoire.
+                </small>
+                <small *ngIf="f.email.touched && f.email.errors?.['email']" class="field-error">
+                    Format d'email invalide.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <div class="label-row">
+                    <label for="password">Mot de passe</label>
+                    <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+                </div>
+                <input type="password" id="password" formControlName="password" placeholder=" ">
+                <small *ngIf="f.password.touched && f.password.errors?.['required']" class="field-error">
+                    Le mot de passe est obligatoire.
+                </small>
+            </div>
+
+            <button type="submit" class="submit-btn" [disabled]="form.invalid || loading()">
+                {{ loading() ? 'Connexion…' : 'Se connecter' }}
+            </button>
+
+            <p class="auth-footer">
+                Pas encore de compte ? <a routerLink="/sign-up">Créer un compte</a>
+            </p>
+        </form>
+    </div>
+</div>

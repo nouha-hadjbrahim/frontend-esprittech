@@ -1,0 +1,147 @@
+.profile-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 32px;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.page-header p {
+    color: #6b7280;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.profile-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.profile-user-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.avatar-container {
+    position: relative;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    background-color: #E23E3E;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.camera-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #6b7280;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+}
+
+.camera-btn:hover {
+    color: #111827;
+    border-color: #d1d5db;
+}
+
+.user-main-info h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px 0;
+}
+
+.user-main-info .role {
+    color: #6b7280;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input {
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fdfdfd;
+    font-size: 0.95rem;
+    color: #111827;
+    transition: all 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #E23E3E;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(226, 62, 62, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #9ca3af;
+}
+
+.readonly-input {
+    background-color: #f9fafb !important;
+    color: #6b7280 !important;
+    cursor: not-allowed;
+}
+
+.password-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 24px 0;
+}
