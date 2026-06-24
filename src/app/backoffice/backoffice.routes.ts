@@ -26,6 +26,10 @@ export const backofficeRoutes: Routes = [
             { path: 'history', component: HistoryComponent },
             { path: 'settings', component: SettingsComponent },
             { path: 'profile', component: ProfileComponent },
+            { path: 'criteres',
+              loadComponent: () =>
+                import('./criteresEvaluationAdmin/admin-criteres-page.component')
+                  .then(m => m.AdminCriteresPageComponent) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     }
