@@ -41,7 +41,7 @@ export class BackofficeLayoutComponent {
         { label: 'Sujets', icon: 'book', route: '/backoffice/subjects' },
         { label: 'Catalogue applicatif', icon: 'layers', route: '/backoffice/catalog' },
         { label: 'Candidatures', icon: 'file-text', route: '/backoffice/applications' },
-        { label: 'Équipes de recherche', icon: 'users', route: '/backoffice/research-teams' },
+        { label: 'Équipes de recherche', icon: 'users', route: '/backoffice/equipes-recherche' },
         { label: 'Encadrants', icon: 'award', route: '/backoffice/supervisors' },
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },

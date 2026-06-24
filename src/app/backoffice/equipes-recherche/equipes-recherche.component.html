@@ -1,0 +1,129 @@
+<div class="space-y-6">
+
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="page-title">Équipes de recherche</h1>
+      <p class="page-subtitle">Gérez les équipes et désignez leurs chefs.</p>
+    </div>
+    <button app-button variant="default" (click)="ouvrirCreation()">
+      <mat-icon class="btn-icon-sm">add</mat-icon>
+      Nouvelle équipe
+    </button>
+  </div>
+
+  <div class="stats-grid">
+    <app-card class="stat-card" *ngFor="let s of stats()">
+      <div class="stat-inner">
+        <div class="stat-icon {{ s.color }}">
+          <mat-icon>{{ s.icon }}</mat-icon>
+        </div>
+        <div>
+          <div class="stat-val">{{ s.value }}</div>
+          <div class="stat-lbl">{{ s.label }}</div>
+        </div>
+      </div>
+    </app-card>
+  </div>
+
+  <app-card>
+    <app-card-content>
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <div class="search-wrap">
+          <mat-icon class="search-icon">search</mat-icon>
+          <app-input [(ngModel)]="query" (ngModelChange)="appliquerFiltre()" placeholder="Rechercher une équipe…" />
+        </div>
+        <div class="view-toggle">
+          <button app-button variant="ghost" size="sm" [class.active]="vue === 'grille'" (click)="vue = 'grille'">
+            <mat-icon class="icon-sm">grid_view</mat-icon> Cartes
+          </button>
+          <button app-button variant="ghost" size="sm" [class.active]="vue === 'liste'" (click)="vue = 'liste'">
+            <mat-icon class="icon-sm">list</mat-icon> Liste
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="chargement" class="center-msg">Chargement…</div>
+
+      <div *ngIf="!chargement && vue === 'grille'" class="grid-cards">
+        <app-card class="team-card" *ngFor="let e of filtered">
+          <div class="flex items-start justify-between gap-2">
+            <app-badge variant="outline" class="badge-xs">{{ e.domaine }}</app-badge>
+            <app-badge variant="outline" [class.badge-success]="e.statut === 'Actif'">
+              {{ e.statut }}
+            </app-badge>
+          </div>
+          <h3 class="team-name">{{ e.nom }}</h3>
+          <p class="team-desc">{{ e.description }}</p>
+          <div class="leader-row">
+            <mat-icon [class.chef]="!!e.chef" [class.muted]="!e.chef" class="leader-icon">star</mat-icon>
+            <span [class.no-chef]="!e.chef">{{ e.chef ? (e.chef.prenom + ' ' + e.chef.nom) : 'Aucun chef désigné' }}</span>
+          </div>
+          <div class="meta-row">
+            <span><mat-icon class="mi">group</mat-icon>{{ e.nbMembres }} membres</span>
+            <span><mat-icon class="mi">calendar_today</mat-icon>{{ e.createdAt }}</span>
+          </div>
+          <div class="card-actions">
+            <button app-button variant="outline" size="sm" class="flex-1" (click)="ouvrirDetails(e)">
+              <mat-icon class="icon-xs">visibility</mat-icon> Voir détails
+            </button>
+            <button app-button variant="ghost" size="icon" (click)="ouvrirModification(e)" matTooltip="Modifier">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button app-button variant="ghost" size="icon" class="danger-icon" (click)="supprimer(e)" matTooltip="Supprimer">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </app-card>
+      </div>
+
+      <div *ngIf="!chargement && vue === 'liste'" class="table-wrap">
+        <table class="eq-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Chef d'équipe</th>
+              <th>Domaine</th>
+              <th>Membres</th>
+              <th>Créée le</th>
+              <th>Statut</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of filtered">
+              <td class="cell-name">{{ e.nom }}</td>
+              <td>
+                <span *ngIf="e.chef" class="leader-cell">
+                  <mat-icon class="chef" style="font-size:16px;width:16px;height:16px">star</mat-icon>
+                  {{ e.chef.prenom }} {{ e.chef.nom }}
+                </span>
+                <span *ngIf="!e.chef" class="no-chef">Aucun chef désigné</span>
+              </td>
+              <td><app-badge variant="outline" class="badge-xs">{{ e.domaine }}</app-badge></td>
+              <td>{{ e.nbMembres }}</td>
+              <td class="muted-text">{{ e.createdAt }}</td>
+              <td>
+                <app-badge variant="outline" [class.badge-success]="e.statut === 'Actif'">
+                  {{ e.statut }}
+                </app-badge>
+              </td>
+              <td class="text-right action-btns">
+                <button app-button variant="ghost" size="sm" class="h-8" (click)="ouvrirDetails(e)">
+                  <mat-icon class="icon-xs">visibility</mat-icon> Voir
+                </button>
+                <button app-button variant="ghost" size="icon" class="h-8 w-8" (click)="ouvrirModification(e)" matTooltip="Modifier">
+                  <mat-icon class="icon-sm2">edit</mat-icon>
+                </button>
+                <button app-button variant="ghost" size="icon" class="h-8 w-8 danger-icon" (click)="supprimer(e)" matTooltip="Supprimer">
+                  <mat-icon class="icon-sm2">delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!chargement && filtered.length === 0" class="center-msg">Aucune équipe</div>
+    </app-card-content>
+  </app-card>
+</div>

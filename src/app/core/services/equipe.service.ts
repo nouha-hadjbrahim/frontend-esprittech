@@ -5,9 +5,6 @@ import { environment } from '../../../environments/environment';
 import { Equipe } from '../models/equipe.model';
 import { User } from '../models/user.model';
 
-/**
- * Consultation des équipes de recherche (accessible à tout utilisateur authentifié).
- */
 @Injectable({ providedIn: 'root' })
 export class EquipeService {
   private readonly http = inject(HttpClient);
@@ -23,5 +20,17 @@ export class EquipeService {
 
   getMembres(id: number): Observable<User[]> {
     return this.http.get<User[]>(`${this.baseUrl}/${id}/membres`);
+  }
+
+  creer(payload: Omit<Equipe, 'id'>): Observable<Equipe> {
+    return this.http.post<Equipe>(this.baseUrl, payload);
+  }
+
+  modifier(id: number, payload: Partial<Equipe>): Observable<Equipe> {
+    return this.http.put<Equipe>(`${this.baseUrl}/${id}`, payload);
+  }
+
+  supprimer(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }

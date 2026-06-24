@@ -47,6 +47,14 @@ export class AdminService {
 
   /** Liste paginée des utilisateurs, avec recherche libre optionnelle. */
   getUsers(page: number, size: number, search?: string): Observable<Page<User>> {
+    return this._getUsers(page, size, search);
+  }
+
+  chercherUtilisateurs(search: string, page = 0, size = 6): Observable<Page<User>> {
+    return this._getUsers(page, size, search);
+  }
+
+  private _getUsers(page: number, size: number, search?: string): Observable<Page<User>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (search?.trim()) {
       params = params.set('search', search.trim());

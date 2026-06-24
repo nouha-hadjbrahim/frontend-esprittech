@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { BackofficeLayoutComponent } from './backoffice-layout/backoffice-layout.component';
 import { UsersComponent } from './users/users.component';
-import { ResearchTeamsComponent } from './research-teams/research-teams.component';
+import { EquipesRechercheComponent } from './equipes-recherche/equipes-recherche.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SubjectsComponent } from './subjects/subjects.component';
 import { CatalogComponent } from './catalog/catalog.component';
@@ -20,7 +20,7 @@ export const backofficeRoutes: Routes = [
             { path: 'subjects', component: SubjectsComponent },
             { path: 'catalog', component: CatalogComponent },
             { path: 'applications', component: ApplicationsComponent },
-            { path: 'research-teams', component: ResearchTeamsComponent },
+            { path: 'equipes-recherche', component: EquipesRechercheComponent },
             { path: 'supervisors', component: SupervisorsComponent },
             { path: 'users', component: UsersComponent },
             { path: 'history', component: HistoryComponent },

@@ -6,8 +6,11 @@ export interface Equipe {
   nom: string;
   description: string | null;
   chef: User | null;
+  emailChef?: string;
   nbMembres: number;
   createdAt: string;
+  domaine: string;
+  statut: 'Actif' | 'Inactif';
 }
 
 /** Corps de création d'une équipe (admin). */
