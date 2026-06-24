@@ -29,6 +29,45 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   loadingNotes = signal(false);
   errorNotes = signal<string | null>(null);
 
+  // Pagination
+  readonly pageSize = 8;
+  eliminatoiresPage = signal(1);
+  notesPage = signal(1);
+
+  get eliminatoiresTotalPages(): number {
+    return Math.max(1, Math.ceil(this.criteresEliminatoires().length / this.pageSize));
+  }
+
+  get notesTotalPages(): number {
+    return Math.max(1, Math.ceil(this.criteresNotes().length / this.pageSize));
+  }
+
+  get eliminatoiresCount(): number {
+    return this.criteresEliminatoires().length;
+  }
+
+  get eliminatoiresActiveCount(): number {
+    return this.criteresEliminatoires().filter((crit) => crit.actif).length;
+  }
+
+  get notesCount(): number {
+    return this.criteresNotes().length;
+  }
+
+  get notesActiveCount(): number {
+    return this.criteresNotes().filter((crit) => crit.actif).length;
+  }
+
+  get visibleEliminatoires(): CritereEliminatoire[] {
+    const start = (this.eliminatoiresPage() - 1) * this.pageSize;
+    return this.criteresEliminatoires().slice(start, start + this.pageSize);
+  }
+
+  get visibleNotes(): CritereNote[] {
+    const start = (this.notesPage() - 1) * this.pageSize;
+    return this.criteresNotes().slice(start, start + this.pageSize);
+  }
+
   // Modales
   isModalOpen = signal(false);
   modalMode: 'create' | 'edit' = 'create';
@@ -92,6 +131,7 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.criteresEliminatoires.set(data.sort((a, b) => a.ordre - b.ordre));
+          this.eliminatoiresPage.set(1);
           this.loadingEliminatoires.set(false);
         },
         error: (error) => {
@@ -110,6 +150,7 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.criteresNotes.set(data.sort((a, b) => a.ordre - b.ordre));
+          this.notesPage.set(1);
           this.loadingNotes.set(false);
         },
         error: (error) => {
@@ -298,5 +339,13 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
           this.deleting.set(false);
         }
       });
+  }
+
+  goToEliminatoiresPage(page: number): void {
+    this.eliminatoiresPage.set(Math.min(Math.max(page, 1), this.eliminatoiresTotalPages));
+  }
+
+  goToNotesPage(page: number): void {
+    this.notesPage.set(Math.min(Math.max(page, 1), this.notesTotalPages));
   }
 }

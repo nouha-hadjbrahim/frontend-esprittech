@@ -51,6 +51,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
     padding: 20px;
     border-bottom: 1px solid #e5e7eb;
 
@@ -59,6 +60,13 @@
       font-weight: 600;
       color: #1f2937;
       margin: 0;
+    }
+
+    .section-meta {
+      margin: 6px 0 0;
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.4;
     }
   }
 }
@@ -232,6 +240,20 @@
         }
       }
     }
+  }
+
+  .pagination-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    color: #4b5563;
+    font-size: 13px;
+  }
+
+  .pagination-controls {
+    display: flex;
+    gap: 8px;
   }
 }
 

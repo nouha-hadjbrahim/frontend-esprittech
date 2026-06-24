@@ -16,7 +16,12 @@
   <!-- Critères Éliminatoires Section -->
   <section class="criteres-section">
     <div class="section-header">
-      <h2>Critères Éliminatoires</h2>
+      <div>
+        <h2>Critères Éliminatoires</h2>
+        <p class="section-meta">
+          {{ eliminatoiresCount }} critères • {{ eliminatoiresActiveCount }} actifs • {{ pageSize }} par page
+        </p>
+      </div>
       <button class="btn btn-primary" (click)="openCreateModal('eliminatoire')" [disabled]="saving() || deleting()">
         + Ajouter
       </button>
@@ -47,7 +52,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let crit of criteresEliminatoires()" [class.inactive]="!crit.actif">
+          <tr *ngFor="let crit of visibleEliminatoires" [class.inactive]="!crit.actif">
             <td class="text-center">{{ crit.ordre }}</td>
             <td>
               <strong>{{ crit.libelle }}</strong>
@@ -79,13 +84,26 @@
           </tr>
         </tbody>
       </table>
+
+      <div class="pagination-footer">
+        <span>Page {{ eliminatoiresPage() }} / {{ eliminatoiresTotalPages }}</span>
+        <div class="pagination-controls">
+          <button class="btn btn-sm btn-secondary" (click)="goToEliminatoiresPage(eliminatoiresPage() - 1)" [disabled]="eliminatoiresPage() === 1">Précédent</button>
+          <button class="btn btn-sm btn-secondary" (click)="goToEliminatoiresPage(eliminatoiresPage() + 1)" [disabled]="eliminatoiresPage() === eliminatoiresTotalPages">Suivant</button>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- Critères Notés Section -->
   <section class="criteres-section">
     <div class="section-header">
-      <h2>Critères Notés</h2>
+      <div>
+        <h2>Critères Notés</h2>
+        <p class="section-meta">
+          {{ notesCount }} critères • {{ notesActiveCount }} actifs • {{ pageSize }} par page
+        </p>
+      </div>
       <button class="btn btn-primary" (click)="openCreateModal('note')" [disabled]="saving() || deleting()">
         + Ajouter
       </button>
@@ -118,7 +136,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let crit of criteresNotes()" [class.inactive]="!crit.actif">
+          <tr *ngFor="let crit of visibleNotes" [class.inactive]="!crit.actif">
             <td class="text-center">{{ crit.ordre }}</td>
             <td>
               <strong>{{ crit.libelle }}</strong>
@@ -148,6 +166,14 @@
           </tr>
         </tbody>
       </table>
+
+      <div class="pagination-footer">
+        <span>Page {{ notesPage() }} / {{ notesTotalPages }}</span>
+        <div class="pagination-controls">
+          <button class="btn btn-sm btn-secondary" (click)="goToNotesPage(notesPage() - 1)" [disabled]="notesPage() === 1">Précédent</button>
+          <button class="btn btn-sm btn-secondary" (click)="goToNotesPage(notesPage() + 1)" [disabled]="notesPage() === notesTotalPages">Suivant</button>
+        </div>
+      </div>
     </div>
   </section>
 
