@@ -1,0 +1,132 @@
+<div class="evaluations-container">
+  <div class="page-header">
+    <h1>Évaluations</h1>
+    <p class="subtitle">Calculez le score final des projets terminés.</p>
+  </div>
+
+  <div class="projects-section card">
+    <div class="section-header">
+      <h2>Projets évaluables</h2>
+    </div>
+
+    <div *ngIf="loadingProjects()" class="loading">Chargement...</div>
+    <div *ngIf="projectsError()" class="alert alert-error">{{ projectsError() }}</div>
+
+    <table *ngIf="!loadingProjects() && projects().length > 0" class="projects-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Titre</th>
+          <th>Statut</th>
+          <th>Score</th>
+          <th>Éligible</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of projects()">
+          <td>{{ p.id }}</td>
+          <td>{{ p.titre }}</td>
+          <td>{{ p.statut }}</td>
+          <td>{{ p.scoreFinalEvaluation ?? '-' }}</td>
+          <td>
+            <span class="badge" [class.badge-success]="p.eligibleIndustrialisation" [class.badge-danger]="!p.eligibleIndustrialisation && p.eligibleIndustrialisation !== undefined">
+              {{ p.eligibleIndustrialisation === undefined ? '-' : (p.eligibleIndustrialisation ? 'Oui' : 'Non') }}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-primary" (click)="selectProject(p)">Évaluer</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="selectedProject" class="evaluation-panel card">
+    <h3>Évaluer : {{ selectedProject.titre }} (ID: {{ selectedProject.id }})</h3>
+
+    <div *ngIf="evalError()" class="alert alert-error">{{ evalError() }}</div>
+
+    <form [formGroup]="evaluationForm">
+      <section class="criteria-block">
+        <h4>Critères éliminatoires</h4>
+        <div *ngIf="eliminatoires.length === 0">Aucun critère éliminatoire actif.</div>
+        <div formArrayName="eliminatoires">
+          <div *ngFor="let ctrl of eliminatoiresArray.controls; let i = index" [formGroupName]="i" class="crit-item">
+            <div class="crit-header">
+              <strong>{{ eliminatoires[i].libelle }}</strong>
+              <span class="domain">{{ eliminatoires[i].domaine }}</span>
+            </div>
+            <p *ngIf="eliminatoires[i].description" class="description">{{ eliminatoires[i].description }}</p>
+
+            <div class="row">
+              <label>Réponse *</label>
+              <select formControlName="reponse" class="form-control">
+                <option [ngValue]="'OK'">OK</option>
+                <option [ngValue]="'NOT_OK'">NOT_OK</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <label>Commentaire</label>
+              <input type="text" formControlName="commentaire" class="form-control" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="criteria-block">
+        <h4>Critères notés</h4>
+        <div *ngIf="notes.length === 0">Aucun critère noté actif.</div>
+        <div formArrayName="notes">
+          <div *ngFor="let ctrl of notesArray.controls; let i = index" [formGroupName]="i" class="crit-item">
+            <div class="crit-header">
+              <strong>{{ notes[i].libelle }}</strong>
+              <span class="domain">{{ notes[i].domaine }}</span>
+            </div>
+            <p class="meta">Barème: {{ notes[i].bareme }} — Poids: {{ notes[i].poids }} — Seuil: {{ notes[i].seuil }}</p>
+
+            <div class="row">
+              <label>Note obtenue *</label>
+              <input type="number" formControlName="noteObtenue" class="form-control" [min]="0" [max]="notes[i].bareme" step="0.1" />
+            </div>
+
+            <div class="row">
+              <label>Commentaire</label>
+              <input type="text" formControlName="commentaire" class="form-control" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" (click)="selectedProject = null">Fermer</button>
+        <button class="btn btn-primary" type="button" [disabled]="!canCalculate() || saving()" (click)="calculateEvaluation()">
+          {{ saving() ? 'Calcul en cours...' : 'Calculer l\'évaluation' }}
+        </button>
+      </div>
+    </form>
+
+    <div *ngIf="evalResult()" class="result-card card">
+      <h4>Résultat</h4>
+      <p><strong>Score final:</strong> {{ evalResult()!.scoreFinal }} / 100</p>
+      <p><strong>Éligible:</strong> <span [class.badge-success]="evalResult()!.eligibleIndustrialisation" [class.badge-danger]="!evalResult()!.eligibleIndustrialisation">{{ evalResult()!.eligibleIndustrialisation ? 'Oui' : 'Non' }}</span></p>
+      <p><strong>Bloqué par éliminatoire:</strong> {{ evalResult()!.bloqueParEliminatoire ? 'Oui' : 'Non' }}</p>
+      <p><strong>Commentaire:</strong> {{ evalResult()!.commentaire }}</p>
+      <p><strong>Date:</strong> {{ evalResult()!.dateCalcul }}</p>
+
+      <div *ngIf="(evalResult()?.resultats?.length || 0) > 0" class="result-details">
+        <h5>Détails</h5>
+        <ul>
+          <li *ngFor="let r of evalResult()!.resultats">
+            Critère {{ r.critereId }} — Type: {{ r.typeCritere }} —
+            <span *ngIf="r.reponseEliminatoire">Réponse: {{ r.reponseEliminatoire }}</span>
+            <span *ngIf="r.noteObtenue">Note: {{ r.noteObtenue }}</span>
+            <span *ngIf="r.scorePondere"> — Score pondéré: {{ r.scorePondere }}</span>
+            <div *ngIf="r.commentaire">Commentaire: {{ r.commentaire }}</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

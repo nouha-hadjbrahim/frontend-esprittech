@@ -26,6 +26,10 @@ export const backofficeRoutes: Routes = [
             { path: 'history', component: HistoryComponent },
             { path: 'settings', component: SettingsComponent },
             { path: 'profile', component: ProfileComponent },
+            { path: 'admin/evaluations',
+              loadComponent: () =>
+                import('./evaluations/evaluation-page.component')
+                  .then(m => m.EvaluationPageComponent) },
             { path: 'criteres',
               loadComponent: () =>
                 import('./criteresEvaluationAdmin/admin-criteres-page.component')

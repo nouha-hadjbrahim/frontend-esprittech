@@ -1,5 +1,14 @@
 import { ReponseEliminatoire } from './critere.model';
 
+export interface ProjetEvaluable {
+  id: number;
+  titre: string;
+  statut: string;
+  scoreFinalEvaluation?: number;
+  eligibleIndustrialisation?: boolean;
+  bloqueParEliminatoire?: boolean;
+}
+
 /** Résultat pour un critère éliminatoire. */
 export interface ResultatEliminatoireRequest {
   critereId: number;
@@ -20,13 +29,15 @@ export interface EvaluationRequest {
   notes: ResultatNoteRequest[];
 }
 
-/** Résultat de critère dans une évaluation. */
+/** Résultat détaillé par critère renvoyé par le backend. */
 export interface ResultatCritereResponse {
   id: number;
   critereId: number;
-  valeur: string | number;
+  typeCritere: 'ELIMINATOIRE' | 'NOTE';
+  reponseEliminatoire?: ReponseEliminatoire;
+  noteObtenue?: number;
+  scorePondere?: number;
   commentaire?: string;
-  valide: boolean;
 }
 
 /** Réponse d'évaluation d'un projet. */
@@ -37,6 +48,6 @@ export interface EvaluationResponse {
   eligibleIndustrialisation: boolean;
   bloqueParEliminatoire: boolean;
   dateCalcul: string;
-  commentaire?: string;
-  resultats: ResultatCritereResponse[];
+  commentaire: string;
+  resultats?: ResultatCritereResponse[];
 }

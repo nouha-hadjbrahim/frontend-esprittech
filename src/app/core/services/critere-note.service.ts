@@ -13,7 +13,8 @@ import { CritereNote, CritereNoteRequest, OrdreCritereRequest } from '../models/
 @Injectable({ providedIn: 'root' })
 export class CritereNoteService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/admin/criteres/notes`;
+  // backend exposes criteres-notes endpoints (hyphenated) for active lists
+  private readonly baseUrl = `${environment.apiUrl}/admin/criteres-notes`;
 
   /**
    * Récupère tous les critères notés.
@@ -47,14 +48,14 @@ export class CritereNoteService {
    * Désactive un critère noté (PATCH).
    */
   deactivate(id: number): Observable<void> {
-    return this.http.patch<void>(`${this.baseUrl}/${id}/deactivate`, {});
+    return this.http.patch<void>(`${this.baseUrl}/${id}/desactiver`, {});
   }
 
   /**
    * Active un critère noté (PATCH).
    */
   activate(id: number): Observable<void> {
-    return this.http.patch<void>(`${this.baseUrl}/${id}/activate`, {});
+    return this.http.patch<void>(`${this.baseUrl}/${id}/activer`, {});
   }
 
   /**
