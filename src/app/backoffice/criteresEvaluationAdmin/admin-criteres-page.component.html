@@ -70,15 +70,28 @@
               </span>
             </td>
             <td class="actions">
-              <button class="btn btn-sm btn-edit" (click)="openEditModal('eliminatoire', crit)" [disabled]="saving() || deleting()">
-                Modifier
+              <button class="icon-btn-action edit" type="button" title="Modifier"
+                aria-label="Modifier le critère" (click)="openEditModal('eliminatoire', crit)"
+                [disabled]="saving() || deleting()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
               </button>
               <button
-                class="btn btn-sm"
-                [class]="crit.actif ? 'btn-danger' : 'btn-success'"
+                class="icon-btn-action"
+                [class.deactivate]="crit.actif"
+                [class.activate]="!crit.actif"
+                type="button"
+                [title]="crit.actif ? 'Désactiver' : 'Activer'"
+                [attr.aria-label]="crit.actif ? 'Désactiver le critère' : 'Activer le critère'"
                 (click)="toggleActivation('eliminatoire', crit)"
                 [disabled]="saving() || deleting()">
-                {{ crit.actif ? 'Désactiver' : 'Activer' }}
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                  <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
               </button>
             </td>
           </tr>
@@ -152,15 +165,28 @@
               </span>
             </td>
             <td class="actions">
-              <button class="btn btn-sm btn-edit" (click)="openEditModal('note', crit)" [disabled]="saving() || deleting()">
-                Modifier
+              <button class="icon-btn-action edit" type="button" title="Modifier"
+                aria-label="Modifier le critère" (click)="openEditModal('note', crit)"
+                [disabled]="saving() || deleting()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
               </button>
               <button
-                class="btn btn-sm"
-                [class]="crit.actif ? 'btn-danger' : 'btn-success'"
+                class="icon-btn-action"
+                [class.deactivate]="crit.actif"
+                [class.activate]="!crit.actif"
+                type="button"
+                [title]="crit.actif ? 'Désactiver' : 'Activer'"
+                [attr.aria-label]="crit.actif ? 'Désactiver le critère' : 'Activer le critère'"
                 (click)="toggleActivation('note', crit)"
                 [disabled]="saving() || deleting()">
-                {{ crit.actif ? 'Désactiver' : 'Activer' }}
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                  <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
               </button>
             </td>
           </tr>
