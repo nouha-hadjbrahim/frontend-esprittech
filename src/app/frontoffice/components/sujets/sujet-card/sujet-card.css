@@ -152,26 +152,16 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #ffffff;
-  color: #374151;
+  color: #111827;
   cursor: pointer;
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .sujet-card__icon-btn:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  color: #1a1a1a;
-}
-
-.sujet-card__icon-btn--danger {
   color: #E23E3E;
-}
-
-.sujet-card__icon-btn--danger:hover {
-  background: #fef2f2;
   border-color: #fecaca;
-  color: #c93434;
+  background: #fef2f2;
 }
 
 .sujet-card__btn {

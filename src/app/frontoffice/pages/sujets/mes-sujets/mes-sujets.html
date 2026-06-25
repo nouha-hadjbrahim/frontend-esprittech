@@ -98,3 +98,22 @@
   (closed)="closeModal()"
   (saved)="onSujetSaved()"
 />
+
+<app-confirm-dialog
+  [isOpen]="deleteConfirmOpen"
+  title="Supprimer le sujet"
+  [message]="deleteConfirmMessage"
+  confirmLabel="Supprimer"
+  cancelLabel="Annuler"
+  [loading]="deleting"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>
+
+<app-confirm-dialog
+  [isOpen]="deleteAlertOpen"
+  title="Erreur"
+  [message]="deleteAlertMessage"
+  [alertOnly]="true"
+  (cancelled)="closeDeleteAlert()"
+/>

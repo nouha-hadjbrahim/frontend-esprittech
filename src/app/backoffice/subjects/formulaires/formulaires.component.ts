@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { ReferenceItem, ReferenceType } from '../../../core/models/sujet-reference.model';
 import { SujetReferenceService } from '../../../core/services/sujet-reference.service';
+import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 interface TabConfig {
   type: ReferenceType;
@@ -17,7 +18,7 @@ interface TabConfig {
 @Component({
   selector: 'app-formulaires',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmDialog],
   templateUrl: './formulaires.component.html',
   styleUrl: './formulaires.component.css',
 })
@@ -73,6 +74,12 @@ export class FormulairesComponent implements OnInit, OnDestroy {
   modalNom = '';
   saving = false;
   modalError = '';
+
+  deleteConfirmOpen = false;
+  deleteAlertOpen = false;
+  deleteAlertMessage = '';
+  deleting = false;
+  itemToDelete: ReferenceItem | null = null;
 
   get activeTab(): TabConfig {
     return this.tabs.find((t) => t.type === this.activeType) ?? this.tabs[0];
@@ -166,12 +173,27 @@ export class FormulairesComponent implements OnInit, OnDestroy {
   }
 
   deleteItem(item: ReferenceItem): void {
-    if (!confirm(`Supprimer « ${item.nom} » ?`)) {
+    this.itemToDelete = item;
+    this.deleteConfirmOpen = true;
+  }
+
+  cancelDelete(): void {
+    this.deleteConfirmOpen = false;
+    this.itemToDelete = null;
+    this.deleting = false;
+  }
+
+  confirmDelete(): void {
+    if (!this.itemToDelete) {
       return;
     }
 
-    this.referenceService.delete(this.activeType, item.id).subscribe({
+    this.deleting = true;
+    this.referenceService.delete(this.activeType, this.itemToDelete.id).subscribe({
       next: () => {
+        this.deleting = false;
+        this.deleteConfirmOpen = false;
+        this.itemToDelete = null;
         this.loadCounts();
         if (this.items.length === 1 && this.page > 0) {
           this.page--;
@@ -179,9 +201,24 @@ export class FormulairesComponent implements OnInit, OnDestroy {
         this.loadItems();
       },
       error: () => {
-        this.loadError = 'Impossible de supprimer cet élément.';
+        this.deleting = false;
+        this.deleteConfirmOpen = false;
+        this.deleteAlertMessage = 'Impossible de supprimer cet élément.';
+        this.deleteAlertOpen = true;
+        this.itemToDelete = null;
       },
     });
+  }
+
+  closeDeleteAlert(): void {
+    this.deleteAlertOpen = false;
+    this.deleteAlertMessage = '';
+  }
+
+  get deleteConfirmMessage(): string {
+    return this.itemToDelete
+      ? `Voulez-vous vraiment supprimer « ${this.itemToDelete.nom} » ? Cette action est irréversible.`
+      : '';
   }
 
   goToPage(newPage: number): void {
