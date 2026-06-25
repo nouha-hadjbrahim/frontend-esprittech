@@ -206,18 +206,25 @@
 .icon-btn {
   width: 30px;
   height: 30px;
-  border: none;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  background: transparent;
-  color: #E23E3E;
+  background: #ffffff;
+  color: #111827;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.15s ease;
 }
 
 .icon-btn:hover {
+  color: #E23E3E;
+  border-color: #fecaca;
   background: #fef2f2;
+}
+
+.icon-btn--danger {
+  color: #111827;
 }
 
 .status-msg {

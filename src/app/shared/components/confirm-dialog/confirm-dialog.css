@@ -1,0 +1,114 @@
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(17, 24, 39, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.confirm-dialog {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+  text-align: center;
+}
+
+.confirm-dialog__icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fef2f2;
+  color: #E23E3E;
+}
+
+.confirm-dialog__icon--alert {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.confirm-dialog__title {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.confirm-dialog__message {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+.confirm-dialog__error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #E23E3E;
+  font-size: 0.9rem;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.confirm-dialog__btn {
+  min-width: 110px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.confirm-dialog__btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.confirm-dialog__btn--cancel {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+
+.confirm-dialog__btn--cancel:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.confirm-dialog__btn--confirm {
+  border: none;
+  background: #E23E3E;
+  color: #ffffff;
+}
+
+.confirm-dialog__btn--confirm:hover:not(:disabled) {
+  background: #c93434;
+}
+
+.confirm-dialog__btn--close {
+  border: none;
+  background: #111827;
+  color: #ffffff;
+}
+
+.confirm-dialog__btn--close:hover:not(:disabled) {
+  background: #E23E3E;
+}

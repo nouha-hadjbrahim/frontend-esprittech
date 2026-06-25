@@ -6,11 +6,12 @@ import { SujetProjetService } from '../../../../core/services/sujet-projet.servi
 import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-modal/deposer-sujet-modal';
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
 import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
+import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-mes-sujets',
-  imports: [FormsModule, DeposerSujetModal, SujetCard, FilterDropdown],
+  imports: [FormsModule, DeposerSujetModal, SujetCard, FilterDropdown, ConfirmDialog],
   templateUrl: './mes-sujets.html',
   styleUrl: './mes-sujets.css',
 })
@@ -27,6 +28,12 @@ export class MesSujets implements OnInit {
   selectedCategorie = '';
   selectedStatut = '';
   sortOrder = 'recent';
+
+  deleteConfirmOpen = false;
+  deleteAlertOpen = false;
+  deleteAlertMessage = '';
+  deleting = false;
+  sujetToDelete?: SujetProjet;
 
   readonly categorieOptions = [{ value: '', label: 'Tous les types' }, ...CATEGORIE_OPTIONS];
   readonly statutOptions = [
@@ -86,14 +93,48 @@ export class MesSujets implements OnInit {
   }
 
   deleteSujet(sujet: SujetProjet): void {
-    if (!confirm(`Supprimer le sujet « ${sujet.titre} » ?`)) {
+    this.sujetToDelete = sujet;
+    this.deleteConfirmOpen = true;
+  }
+
+  cancelDelete(): void {
+    this.deleteConfirmOpen = false;
+    this.sujetToDelete = undefined;
+    this.deleting = false;
+  }
+
+  confirmDelete(): void {
+    if (!this.sujetToDelete) {
       return;
     }
 
-    this.sujetProjetService.supprimerSujet(sujet.id).subscribe({
-      next: () => this.loadSujets(),
-      error: () => alert('Impossible de supprimer ce sujet.'),
+    this.deleting = true;
+    this.sujetProjetService.supprimerSujet(this.sujetToDelete.id).subscribe({
+      next: () => {
+        this.deleting = false;
+        this.deleteConfirmOpen = false;
+        this.sujetToDelete = undefined;
+        this.loadSujets();
+      },
+      error: () => {
+        this.deleting = false;
+        this.deleteConfirmOpen = false;
+        this.deleteAlertMessage = 'Impossible de supprimer ce sujet. Vérifiez que le backend est démarré.';
+        this.deleteAlertOpen = true;
+        this.sujetToDelete = undefined;
+      },
     });
+  }
+
+  closeDeleteAlert(): void {
+    this.deleteAlertOpen = false;
+    this.deleteAlertMessage = '';
+  }
+
+  get deleteConfirmMessage(): string {
+    return this.sujetToDelete
+      ? `Voulez-vous vraiment supprimer « ${this.sujetToDelete.titre} » ? Cette action est irréversible.`
+      : '';
   }
 
   onCategorieChange(value: string): void {
