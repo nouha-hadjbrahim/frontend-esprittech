@@ -4,10 +4,12 @@ import { RouterModule } from '@angular/router';
 import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 
+type NavIcon = 'layers' | 'document';
+
 interface NavLink {
   label: string;
   path: string;
-  icon?: string;
+  icon?: NavIcon;
   children?: NavLink[];
 }
 
@@ -53,7 +55,15 @@ export class FrontofficeLayout {
       ]
     },
     catalogueSimple: { label: 'Catalogue', path: '/frontoffice/catalogue' },
-    sujetsDisponibles: { label: 'Sujets disponibles', path: '/frontoffice/sujets-disponibles' },
+    sujets: {
+      label: 'Sujets',
+      path: '/frontoffice/sujets/mes-sujets',
+      children: [
+        { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' },
+        { label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' }
+      ]
+    },
+    sujetsDisponibles: { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles' },
     equipesRecherche: { label: 'Équipes de recherche', path: '/frontoffice/equipes-recherche' },
     mesCandidatures: { label: 'Mes candidatures', path: '/frontoffice/mes-candidatures' },
     validationSujets: { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
@@ -65,8 +75,8 @@ export class FrontofficeLayout {
     switch (this.user()?.role) {
       case 'ROLE_ENSEIGNANT':
         return [
-          this.allLinks.catalogue,        // Catalogue (dropdown : Catalogue, Mes projets)
-          this.allLinks.sujetsDisponibles,
+          this.allLinks.catalogue,
+          this.allLinks.sujets,
           this.allLinks.equipesRecherche
         ];
       case 'ROLE_ETUDIANT':

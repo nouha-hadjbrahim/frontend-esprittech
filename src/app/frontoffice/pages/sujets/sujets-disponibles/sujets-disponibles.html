@@ -1,0 +1,88 @@
+<div class="sujets-disponibles">
+  <header class="sujets-disponibles__header">
+    <div class="sujets-disponibles__header-text">
+      <h1 class="sujets-disponibles__title">Les sujets disponibles</h1>
+      <p class="sujets-disponibles__subtitle">
+        Parcourez le catalogue des sujets ouverts aux candidatures.
+      </p>
+    </div>
+    @if (isEnseignant()) {
+      <button type="button" class="sujets-disponibles__add-btn" (click)="openModal()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Déposer un sujet
+      </button>
+    }
+  </header>
+
+  <div class="sujets-disponibles__toolbar">
+    <div class="sujets-disponibles__search-box">
+      <svg class="sujets-disponibles__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="sujets-disponibles__search-input"
+        placeholder="Rechercher un sujet..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="sujets-disponibles__filters">
+      <app-filter-dropdown
+        class="sujets-disponibles__filter sujets-disponibles__filter--type"
+        label="Type"
+        [options]="categorieOptions"
+        [value]="selectedCategorie"
+        (valueChange)="onCategorieChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="sujets-disponibles__filter sujets-disponibles__filter--sort"
+        label="Plus récents"
+        [options]="sortOptions"
+        [value]="sortOrder"
+        defaultValue="recent"
+        [showSortIcon]="true"
+        (valueChange)="onSortChange($event)"
+      />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="sujets-disponibles__loading">Chargement des sujets...</div>
+  } @else if (filteredSujets.length === 0) {
+    <div class="sujets-disponibles__empty">
+      <div class="sujets-disponibles__empty-icon" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="34" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
+          <path d="M34 11V17M31 14H37" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="sujets-disponibles__empty-title">Aucun sujet disponible</h2>
+      <p class="sujets-disponibles__empty-text">
+        Aucun sujet ne correspond à votre recherche pour le moment.
+      </p>
+    </div>
+  } @else {
+    <div class="sujets-disponibles__grid">
+      @for (sujet of filteredSujets; track sujet.id) {
+        <app-sujet-card [sujet]="sujet" [detailsOnly]="true" />
+      }
+    </div>
+  }
+</div>
+
+@if (isEnseignant()) {
+  <app-deposer-sujet-modal
+    [isOpen]="isModalOpen"
+    (closed)="closeModal()"
+    (saved)="onSujetSaved()"
+  />
+}

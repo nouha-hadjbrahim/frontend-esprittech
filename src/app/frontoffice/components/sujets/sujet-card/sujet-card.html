@@ -1,0 +1,97 @@
+<article class="sujet-card">
+  <div class="sujet-card__badges">
+    <span class="badge" [class]="categorieBadge.cssClass">{{ categorieBadge.label }}</span>
+    <span class="badge" [class]="statutBadge.cssClass">{{ statutBadge.label }}</span>
+  </div>
+
+  <div class="sujet-card__divider"></div>
+
+  <h3 class="sujet-card__title">{{ sujet.titre }}</h3>
+
+  <p class="sujet-card__domaine">{{ domainesLabel }}</p>
+
+  <div class="sujet-card__tech-tags">
+    @for (tech of sujet.technologies; track tech) {
+      <span class="sujet-card__tech-tag">{{ tech }}</span>
+    }
+  </div>
+
+  <div class="sujet-card__info">
+    <div class="sujet-card__info-item">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M4.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span>{{ sujet.dateSoumission ? (sujet.dateSoumission | date:'yyyy-MM-dd') : '—' }}</span>
+    </div>
+    <div class="sujet-card__info-item">
+      <span class="sujet-card__info-label">Places :</span>
+      <span>0/{{ sujet.capaciteAccueil }}</span>
+    </div>
+    <div class="sujet-card__info-item">
+      <span class="sujet-card__info-label">Candidatures :</span>
+      <span>0</span>
+    </div>
+    @if (sujet.encadrantNom) {
+      <div class="sujet-card__info-item">
+        <span class="sujet-card__info-label">Encadrant :</span>
+        <span>{{ sujet.encadrantNom }}</span>
+      </div>
+    }
+  </div>
+
+  @if (showActions) {
+    <footer class="sujet-card__footer">
+      <div class="sujet-card__icon-actions">
+        <a
+          [routerLink]="['/frontoffice/sujets', sujet.id]"
+          class="sujet-card__icon-btn"
+          title="Détails"
+          aria-label="Voir les détails"
+        >
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </a>
+        @if (isOwner && !detailsOnly) {
+          <button
+            type="button"
+            class="sujet-card__icon-btn"
+            title="Modifier"
+            aria-label="Modifier le sujet"
+            (click)="onEditClick()"
+          >
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M10 1.5L12.5 4L4.5 12H2V9.5L10 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="sujet-card__icon-btn sujet-card__icon-btn--danger"
+            title="Supprimer"
+            aria-label="Supprimer le sujet"
+            (click)="onDeleteClick()"
+          >
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 4H12M5 4V2.5H9V4M5.5 6V10M8.5 6V10M3.5 4L4 11.5H10L10.5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        }
+      </div>
+      @if (!detailsOnly) {
+        <button type="button" class="sujet-card__btn sujet-card__btn--candidatures">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M1 12.5C1 10 2.8 8.5 5 8.5C7.2 8.5 9 10 9 12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="10.5" cy="4.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M13 12.5C13 10.8 11.8 9.5 10.5 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Candidatures
+        </button>
+      }
+    </footer>
+  }
+</article>

@@ -1,0 +1,147 @@
+<div class="sujet-detail">
+  <a [routerLink]="backLink" class="sujet-detail__back">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ backLabel }}
+  </a>
+
+  @if (isLoading) {
+    <div class="sujet-detail__loading">Chargement...</div>
+  } @else if (error || !sujet) {
+    <div class="sujet-detail__error">Sujet introuvable.</div>
+  } @else {
+    <section class="sujet-detail__hero">
+      <div class="sujet-detail__hero-badges">
+        <span class="hero-badge hero-badge--type">{{ categorieLabel }}</span>
+        <span class="hero-badge" [class]="statutClass">{{ statutLabel }}</span>
+      </div>
+      <h1 class="sujet-detail__hero-title">{{ sujet.titre }}</h1>
+      <p class="sujet-detail__hero-subtitle">
+        {{ sujet.encadrantNom }} · {{ sujet.domaines.join(', ') }} · {{ sujet.technologies.slice(0, 3).join(', ') }}
+      </p>
+    </section>
+
+    <div class="sujet-detail__summary">
+      <div class="summary-card">
+        <span class="summary-card__label">Catégorie</span>
+        <span class="summary-card__value">{{ categorieLabel }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-card__label">Domaines</span>
+        <span class="summary-card__value">{{ sujet.domaines.join(', ') }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-card__label">Encadrant</span>
+        <span class="summary-card__value">{{ sujet.encadrantNom }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-card__label">Date soumission</span>
+        <span class="summary-card__value">{{ sujet.dateSoumission ? (sujet.dateSoumission | date:'yyyy-MM-dd') : '—' }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-card__label">Capacité</span>
+        <span class="summary-card__value">0/{{ sujet.capaciteAccueil }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-card__label">Statut</span>
+        <span class="summary-card__value">{{ statutLabel }}</span>
+      </div>
+    </div>
+
+    <nav class="sujet-detail__tabs" aria-label="Sections du sujet">
+      @for (tab of tabs; track tab.label) {
+        <button
+          type="button"
+          class="sujet-detail__tab"
+          [class.sujet-detail__tab--active]="tab.active"
+          [disabled]="!tab.active"
+        >
+          @switch (tab.icon) {
+            @case ('info') {
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            }
+            @case ('candidatures') {
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M1.5 14C1.5 11 3.5 9.5 6 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                <circle cx="11.5" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M14.5 14C14.5 12 13 10.5 11.5 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            }
+            @default {
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+            }
+          }
+          {{ tab.label }}
+        </button>
+      }
+    </nav>
+
+    <div class="sujet-detail__content">
+      <div class="sujet-detail__main">
+        <article class="detail-panel">
+          <section class="detail-panel__section">
+            <h2 class="detail-panel__title">Description</h2>
+            <p class="detail-panel__text">{{ sujet.description }}</p>
+          </section>
+
+          <section class="detail-panel__section">
+            <h2 class="detail-panel__title">Objectifs</h2>
+            <ul class="detail-panel__list">
+              @for (line of objectifLines; track $index) {
+                <li>
+                  <span class="detail-panel__check" aria-hidden="true">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5L4 7L8 3" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                  {{ line }}
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="detail-panel__section detail-panel__section--last">
+            <h2 class="detail-panel__title">Prérequis</h2>
+            <p class="detail-panel__text">{{ sujet.prerequis.join(', ') }}</p>
+          </section>
+        </article>
+      </div>
+
+      <aside class="sujet-detail__sidebar">
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">Technologies</h3>
+          <div class="sidebar-card__tags">
+            @for (tech of sujet.technologies; track tech; let i = $index) {
+              <span class="tag" [class]="techColors[i]">{{ tech }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">Prérequis / Classes cibles</h3>
+          <div class="sidebar-card__tags">
+            @for (item of sujet.prerequis; track item) {
+              <span class="tag tag--grey">{{ item }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="sidebar-card">
+          <h3 class="sidebar-card__title">Mots-clés</h3>
+          <div class="sidebar-card__tags">
+            @for (keyword of keywordTags; track keyword) {
+              <span class="tag tag--keyword">{{ keyword }}</span>
+            }
+          </div>
+        </div>
+      </aside>
+    </div>
+  }
+</div>

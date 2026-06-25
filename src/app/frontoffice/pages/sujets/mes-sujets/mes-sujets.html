@@ -1,0 +1,100 @@
+<div class="mes-sujets">
+  <header class="mes-sujets__header">
+    <div class="mes-sujets__header-text">
+      <h1 class="mes-sujets__title">Mes sujets</h1>
+      <p class="mes-sujets__subtitle">
+        Sujets déposés, leur statut de validation et leurs candidatures.
+      </p>
+    </div>
+    <button type="button" class="mes-sujets__add-btn" (click)="openModal()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Déposer un sujet
+    </button>
+  </header>
+
+  <div class="mes-sujets__toolbar">
+    <div class="mes-sujets__search-box">
+      <svg class="mes-sujets__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="mes-sujets__search-input"
+        placeholder="Rechercher dans mes sujets..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="mes-sujets__filters">
+      <app-filter-dropdown
+        class="mes-sujets__filter mes-sujets__filter--type"
+        label="Type"
+        [options]="categorieOptions"
+        [value]="selectedCategorie"
+        (valueChange)="onCategorieChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="mes-sujets__filter mes-sujets__filter--statut"
+        label="Statut"
+        [options]="statutOptions"
+        [value]="selectedStatut"
+        (valueChange)="onStatutChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="mes-sujets__filter mes-sujets__filter--sort"
+        label="Plus récents"
+        [options]="sortOptions"
+        [value]="sortOrder"
+        defaultValue="recent"
+        [showSortIcon]="true"
+        (valueChange)="onSortChange($event)"
+      />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="mes-sujets__loading">Chargement des sujets...</div>
+  } @else if (filteredSujets.length === 0) {
+    <div class="mes-sujets__empty">
+      <div class="mes-sujets__empty-icon" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="8" y="12" width="32" height="28" rx="4" stroke="#e5e7eb" stroke-width="2"/>
+          <path d="M16 20H32M16 26H28M16 32H24" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="36" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
+          <path d="M33 14H39M36 11V17" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="mes-sujets__empty-title">Aucun sujet trouvé</h2>
+      <p class="mes-sujets__empty-text">
+        Vous n'avez pas encore déposé de sujet ou aucun résultat ne correspond à vos filtres.
+      </p>
+      <button type="button" class="mes-sujets__empty-btn" (click)="openModal()">
+        Déposer votre premier sujet
+      </button>
+    </div>
+  } @else {
+    <div class="mes-sujets__grid">
+      @for (sujet of filteredSujets; track sujet.id) {
+        <app-sujet-card
+          [sujet]="sujet"
+          [isOwner]="isOwner(sujet)"
+          (edit)="openEditModal(sujet)"
+          (delete)="deleteSujet(sujet)"
+        />
+      }
+    </div>
+  }
+</div>
+
+<app-deposer-sujet-modal
+  [isOpen]="isModalOpen"
+  [editSujet]="editSujet"
+  (closed)="closeModal()"
+  (saved)="onSujetSaved()"
+/>

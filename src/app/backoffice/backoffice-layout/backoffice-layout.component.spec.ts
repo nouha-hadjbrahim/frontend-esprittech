@@ -43,7 +43,7 @@ describe('BackofficeLayoutComponent', () => {
   it('should compute initials and role label from the user', () => {
     currentUser.set(userWith('ROLE_ADMIN'));
     expect(component.initials()).toBe('JD');
-    expect(component.roleLabel()).toBe('Administrateur');
+    expect(component.roleLabel()).toBe('Super-administrateur');
   });
 
   it('should toggle the profile menu', () => {
