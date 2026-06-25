@@ -1,0 +1,22 @@
+.evaluations-container {
+  padding: 24px;
+  background: #f5f7fa;
+
+  .page-header {
+    margin-bottom: 20px;
+    h1 { font-size: 24px; margin: 0; }
+    .subtitle { color: #6b7280; margin-top: 6px; }
+  }
+
+  .card { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
+
+  .projects-table { width: 100%; border-collapse: collapse; th, td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; } }
+
+  .criteria-block { margin-top: 12px; margin-bottom: 12px; .crit-item { padding: 12px; border: 1px solid #eef2f7; border-radius: 6px; margin-bottom: 10px; } }
+
+  .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+
+  .result-card { margin-top: 12px; padding: 12px; }
+
+  .badge { padding: 4px 8px; border-radius: 4px; &.badge-success { background: #d1fae5; color: #065f46; } &.badge-danger { background: #fee2e2; color: #991b1b; } }
+}
