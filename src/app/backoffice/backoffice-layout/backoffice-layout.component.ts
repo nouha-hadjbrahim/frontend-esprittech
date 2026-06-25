@@ -67,6 +67,8 @@ export class BackofficeLayoutComponent {
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
         { label: 'Paramètres', icon: 'settings', route: '/backoffice/settings' },
+        { label: 'Évaluations', icon: 'check-circle', route: '/backoffice/admin/evaluations' },
+        { label: 'Critères Evaluation Projets', icon: 'check-square', route: '/backoffice/criteres' }
     ];
 
     isProfileOpen = false;

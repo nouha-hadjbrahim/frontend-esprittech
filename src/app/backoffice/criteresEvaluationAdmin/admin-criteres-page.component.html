@@ -1,0 +1,408 @@
+<div class="criteres-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Critères d'Évaluation des Projets</h1>
+    <p class="subtitle">Gérez les critères éliminatoires et notés pour l'évaluation des projets</p>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage()" class="alert alert-success">
+    {{ successMessage() }}
+  </div>
+  <div *ngIf="errorMessage()" class="alert alert-error">
+    {{ errorMessage() }}
+  </div>
+
+  <!-- Critères Éliminatoires Section -->
+  <section class="criteres-section">
+    <div class="section-header">
+      <div>
+        <h2>Critères Éliminatoires</h2>
+        <p class="section-meta">
+          {{ eliminatoiresCount }} critères • {{ eliminatoiresActiveCount }} actifs • {{ pageSize }} par page
+        </p>
+      </div>
+      <button class="btn btn-primary" (click)="openCreateModal('eliminatoire')" [disabled]="saving() || deleting()">
+        + Ajouter
+      </button>
+    </div>
+
+    <div *ngIf="errorEliminatoires()" class="alert alert-error">
+      {{ errorEliminatoires() }}
+    </div>
+
+    <div *ngIf="loadingEliminatoires()" class="loading">
+      Chargement des critères éliminatoires...
+    </div>
+
+    <div *ngIf="!loadingEliminatoires() && criteresEliminatoires().length === 0" class="empty-state">
+      <p>Aucun critère éliminatoire n'a été créé</p>
+    </div>
+
+    <div *ngIf="!loadingEliminatoires() && criteresEliminatoires().length > 0" class="table-responsive">
+      <table class="criteria-table">
+        <thead>
+          <tr>
+            <th>Ordre</th>
+            <th>Libellé</th>
+            <th>Domaine</th>
+            <th>Réponse attendue</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let crit of visibleEliminatoires" [class.inactive]="!crit.actif">
+            <td class="text-center">{{ crit.ordre }}</td>
+            <td>
+              <strong>{{ crit.libelle }}</strong>
+              <p *ngIf="crit.description" class="description">{{ crit.description }}</p>
+            </td>
+            <td>{{ crit.domaine }}</td>
+            <td class="text-center">
+              <span [class]="'badge badge-' + (crit.reponseAttendue === 'OK' ? 'success' : 'danger')">
+                {{ crit.reponseAttendue }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span [class]="'badge badge-' + (crit.actif ? 'success' : 'secondary')">
+                {{ crit.actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn btn-sm btn-edit" (click)="openEditModal('eliminatoire', crit)" [disabled]="saving() || deleting()">
+                Modifier
+              </button>
+              <button
+                class="btn btn-sm"
+                [class]="crit.actif ? 'btn-danger' : 'btn-success'"
+                (click)="toggleActivation('eliminatoire', crit)"
+                [disabled]="saving() || deleting()">
+                {{ crit.actif ? 'Désactiver' : 'Activer' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination-footer">
+        <span>Page {{ eliminatoiresPage() }} / {{ eliminatoiresTotalPages }}</span>
+        <div class="pagination-controls">
+          <button class="btn btn-sm btn-secondary" (click)="goToEliminatoiresPage(eliminatoiresPage() - 1)" [disabled]="eliminatoiresPage() === 1">Précédent</button>
+          <button class="btn btn-sm btn-secondary" (click)="goToEliminatoiresPage(eliminatoiresPage() + 1)" [disabled]="eliminatoiresPage() === eliminatoiresTotalPages">Suivant</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Critères Notés Section -->
+  <section class="criteres-section">
+    <div class="section-header">
+      <div>
+        <h2>Critères Notés</h2>
+        <p class="section-meta">
+          {{ notesCount }} critères • {{ notesActiveCount }} actifs • {{ pageSize }} par page
+        </p>
+      </div>
+      <button class="btn btn-primary" (click)="openCreateModal('note')" [disabled]="saving() || deleting()">
+        + Ajouter
+      </button>
+    </div>
+
+    <div *ngIf="errorNotes()" class="alert alert-error">
+      {{ errorNotes() }}
+    </div>
+
+    <div *ngIf="loadingNotes()" class="loading">
+      Chargement des critères notés...
+    </div>
+
+    <div *ngIf="!loadingNotes() && criteresNotes().length === 0" class="empty-state">
+      <p>Aucun critère noté n'a été créé</p>
+    </div>
+
+    <div *ngIf="!loadingNotes() && criteresNotes().length > 0" class="table-responsive">
+      <table class="criteria-table">
+        <thead>
+          <tr>
+            <th>Ordre</th>
+            <th>Libellé</th>
+            <th>Domaine</th>
+            <th>Barème</th>
+            <th>Poids</th>
+            <th>Seuil</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let crit of visibleNotes" [class.inactive]="!crit.actif">
+            <td class="text-center">{{ crit.ordre }}</td>
+            <td>
+              <strong>{{ crit.libelle }}</strong>
+              <p *ngIf="crit.description" class="description">{{ crit.description }}</p>
+            </td>
+            <td>{{ crit.domaine }}</td>
+            <td class="text-center">{{ crit.bareme }}</td>
+            <td class="text-center">{{ crit.poids }}</td>
+            <td class="text-center">{{ crit.seuil }}</td>
+            <td class="text-center">
+              <span [class]="'badge badge-' + (crit.actif ? 'success' : 'secondary')">
+                {{ crit.actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn btn-sm btn-edit" (click)="openEditModal('note', crit)" [disabled]="saving() || deleting()">
+                Modifier
+              </button>
+              <button
+                class="btn btn-sm"
+                [class]="crit.actif ? 'btn-danger' : 'btn-success'"
+                (click)="toggleActivation('note', crit)"
+                [disabled]="saving() || deleting()">
+                {{ crit.actif ? 'Désactiver' : 'Activer' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination-footer">
+        <span>Page {{ notesPage() }} / {{ notesTotalPages }}</span>
+        <div class="pagination-controls">
+          <button class="btn btn-sm btn-secondary" (click)="goToNotesPage(notesPage() - 1)" [disabled]="notesPage() === 1">Précédent</button>
+          <button class="btn btn-sm btn-secondary" (click)="goToNotesPage(notesPage() + 1)" [disabled]="notesPage() === notesTotalPages">Suivant</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div *ngIf="isModalOpen()" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>
+          {{ modalMode === 'create' ? 'Ajouter' : 'Modifier' }}
+          {{ modalType === 'eliminatoire' ? 'un critère éliminatoire' : 'un critère noté' }}
+        </h3>
+        <button class="close-btn" (click)="closeModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Critère Éliminatoire Form -->
+        <form *ngIf="modalType === 'eliminatoire'" [formGroup]="eliminatoireForm">
+          <div class="form-group">
+            <label for="libelle-elim">Libellé *</label>
+            <input
+              id="libelle-elim"
+              type="text"
+              formControlName="libelle"
+              class="form-control"
+              placeholder="Entrez le libellé du critère"
+            />
+            <span *ngIf="eliminatoireForm.get('libelle')?.hasError('required')" class="error-text">
+              Le libellé est requis
+            </span>
+            <span *ngIf="eliminatoireForm.get('libelle')?.hasError('minlength')" class="error-text">
+              Le libellé doit contenir au moins 3 caractères
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="description-elim">Description</label>
+            <textarea
+              id="description-elim"
+              formControlName="description"
+              class="form-control"
+              rows="3"
+              placeholder="Entrez une description (optionnel)"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="domaine-elim">Domaine *</label>
+              <input
+                id="domaine-elim"
+                type="text"
+                formControlName="domaine"
+                class="form-control"
+                placeholder="Ex: Faisabilité"
+              />
+              <span *ngIf="eliminatoireForm.get('domaine')?.hasError('required')" class="error-text">
+                Le domaine est requis
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="ordre-elim">Ordre *</label>
+              <input
+                id="ordre-elim"
+                type="number"
+                formControlName="ordre"
+                class="form-control"
+                min="1"
+              />
+              <span *ngIf="eliminatoireForm.get('ordre')?.hasError('required')" class="error-text">
+                L'ordre est requis
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reponse-elim">Réponse attendue *</label>
+              <select formControlName="reponseAttendue" class="form-control" id="reponse-elim">
+                <option [value]="ReponseEliminatoire.OK">OK</option>
+                <option [value]="ReponseEliminatoire.NOT_OK">NOT_OK</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="actif-elim">
+                <input
+                  id="actif-elim"
+                  type="checkbox"
+                  formControlName="actif"
+                />
+                Actif
+              </label>
+            </div>
+          </div>
+        </form>
+
+        <!-- Critère Noté Form -->
+        <form *ngIf="modalType === 'note'" [formGroup]="noteForm">
+          <div class="form-group">
+            <label for="libelle-note">Libellé *</label>
+            <input
+              id="libelle-note"
+              type="text"
+              formControlName="libelle"
+              class="form-control"
+              placeholder="Entrez le libellé du critère"
+            />
+            <span *ngIf="noteForm.get('libelle')?.hasError('required')" class="error-text">
+              Le libellé est requis
+            </span>
+            <span *ngIf="noteForm.get('libelle')?.hasError('minlength')" class="error-text">
+              Le libellé doit contenir au moins 3 caractères
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="description-note">Description</label>
+            <textarea
+              id="description-note"
+              formControlName="description"
+              class="form-control"
+              rows="3"
+              placeholder="Entrez une description (optionnel)"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="domaine-note">Domaine *</label>
+              <input
+                id="domaine-note"
+                type="text"
+                formControlName="domaine"
+                class="form-control"
+                placeholder="Ex: Pertinence"
+              />
+              <span *ngIf="noteForm.get('domaine')?.hasError('required')" class="error-text">
+                Le domaine est requis
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="ordre-note">Ordre *</label>
+              <input
+                id="ordre-note"
+                type="number"
+                formControlName="ordre"
+                class="form-control"
+                min="1"
+              />
+              <span *ngIf="noteForm.get('ordre')?.hasError('required')" class="error-text">
+                L'ordre est requis
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bareme-note">Barème *</label>
+              <input
+                id="bareme-note"
+                type="number"
+                formControlName="bareme"
+                class="form-control"
+                min="0.1"
+                step="0.1"
+              />
+              <span *ngIf="noteForm.get('bareme')?.hasError('required')" class="error-text">
+                Le barème est requis
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="poids-note">Poids *</label>
+              <input
+                id="poids-note"
+                type="number"
+                formControlName="poids"
+                class="form-control"
+                min="0.1"
+                step="0.1"
+              />
+              <span *ngIf="noteForm.get('poids')?.hasError('required')" class="error-text">
+                Le poids est requis
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="seuil-note">Seuil *</label>
+              <input
+                id="seuil-note"
+                type="number"
+                formControlName="seuil"
+                class="form-control"
+                min="0"
+                step="0.1"
+              />
+              <span *ngIf="noteForm.get('seuil')?.hasError('required')" class="error-text">
+                Le seuil est requis
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="actif-note">
+              <input
+                id="actif-note"
+                type="checkbox"
+                formControlName="actif"
+              />
+              Actif
+            </label>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()" [disabled]="saving()">
+          Annuler
+        </button>
+        <button
+          class="btn btn-primary"
+          (click)="saveCritere()"
+          [disabled]="saving()"
+        >
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
