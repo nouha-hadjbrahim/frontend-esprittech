@@ -1,0 +1,117 @@
+<div class="admin-page">
+  <header class="page-header">
+    <div>
+      <h1>Questions industrialisation</h1>
+      <p>Referentiel du formulaire soumis par les encadrants.</p>
+    </div>
+  </header>
+
+  @if (message()) { <div class="alert alert--success">{{ message() }}</div> }
+  @if (error()) { <div class="alert alert--danger">{{ error() }}</div> }
+
+  <section class="panel form-panel">
+    <h2>{{ editingId() ? 'Modifier la question' : 'Nouvelle question' }}</h2>
+    <form [formGroup]="form" (ngSubmit)="save()" class="question-form">
+      <label>
+        Libelle
+        <input type="text" formControlName="libelle" />
+        @if (form.controls.libelle.touched && form.controls.libelle.invalid) {
+          <span class="field-error">Libelle obligatoire, 3 caracteres minimum.</span>
+        }
+      </label>
+      <label>
+        Description / aide
+        <textarea rows="3" formControlName="description"></textarea>
+      </label>
+      <label>
+        Type de reponse
+        <select formControlName="typeReponse">
+          @for (type of typeReponses; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Type de critere
+        <select formControlName="typeCritere">
+          @for (type of typeCriteres; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Poids
+        <input type="number" min="0" step="0.1" formControlName="poids" />
+      </label>
+      <label>
+        Ordre
+        <input type="number" min="1" formControlName="ordre" />
+      </label>
+      <label class="check-row">
+        <input type="checkbox" formControlName="obligatoire" />
+        Obligatoire
+      </label>
+      <label class="check-row">
+        <input type="checkbox" formControlName="conditionEliminatoire" />
+        Condition eliminatoire
+      </label>
+      <label class="check-row">
+        <input type="checkbox" formControlName="actif" />
+        Actif
+      </label>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="reset()">Annuler</button>
+        <button type="submit" class="btn btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement...' : 'Enregistrer' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title">
+      <h2>Questions</h2>
+      <span>{{ questions().length }} element(s)</span>
+    </div>
+    @if (loading()) {
+      <div class="empty">Chargement...</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ordre</th>
+              <th>Libelle</th>
+              <th>Reponse</th>
+              <th>Critere</th>
+              <th>Obligatoire</th>
+              <th>Statut</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (question of questions(); track question.id) {
+              <tr>
+                <td>{{ question.ordre }}</td>
+                <td>
+                  <strong>{{ question.libelle }}</strong>
+                  <span>{{ question.description || 'Aucune description' }}</span>
+                </td>
+                <td>{{ question.typeReponse }}</td>
+                <td>{{ question.typeCritere }}</td>
+                <td>{{ question.obligatoire ? 'Oui' : 'Non' }}</td>
+                <td><span class="badge" [class.badge--off]="!question.actif">{{ question.actif ? 'Actif' : 'Inactif' }}</span></td>
+                <td class="actions">
+                  <button type="button" class="btn btn--ghost" (click)="edit(question)">Modifier</button>
+                  <button type="button" class="btn btn--ghost" (click)="toggle(question)">
+                    {{ question.actif ? 'Desactiver' : 'Activer' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>

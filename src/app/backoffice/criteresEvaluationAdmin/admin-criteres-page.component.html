@@ -284,18 +284,56 @@
               </select>
             </div>
 
-            <div class="form-group">
-              <label for="actif-elim">
-                <input
-                  id="actif-elim"
-                  type="checkbox"
+              <div class="form-group">
+                <label for="actif-elim">
+                  <input
+                    id="actif-elim"
+                    type="checkbox"
                   formControlName="actif"
                 />
                 Actif
-              </label>
+                </label>
+              </div>
             </div>
-          </div>
-        </form>
+
+            <div class="rule-section">
+              <h4>Regle d'evaluation automatique</h4>
+              <p>Cette regle permet au systeme de calculer automatiquement le resultat du critere a partir des livrables deposes.</p>
+              <div class="form-group">
+                <label for="rule-enabled-elim">
+                  <input id="rule-enabled-elim" type="checkbox" formControlName="ruleEnabled" />
+                  Activer la regle automatique
+                </label>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="mode-elim">Mode d'evaluation</label>
+                  <select id="mode-elim" formControlName="modeEvaluation" class="form-control">
+                    <option [ngValue]="null">Selectionner</option>
+                    <option *ngFor="let mode of modeEvaluationOptions" [value]="mode.value">{{ mode.label }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="types-elim">Types de livrables attendus</label>
+                  <input id="types-elim" type="text" formControlName="expectedLivrableTypes" class="form-control" placeholder="DOCUMENTATION,RAPPORT" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="min-count-elim">Nombre minimum</label>
+                  <input id="min-count-elim" type="number" formControlName="minLivrableCount" class="form-control" min="1" />
+                </div>
+                <div class="form-group">
+                  <label for="keyword-elim">Mot-cle attendu</label>
+                  <input id="keyword-elim" type="text" formControlName="expectedKeyword" class="form-control" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="rule-description-elim">Description de la regle</label>
+                <textarea id="rule-description-elim" formControlName="ruleDescription" class="form-control" rows="2"></textarea>
+              </div>
+            </div>
+          </form>
 
         <!-- Critère Noté Form -->
         <form *ngIf="modalType === 'note'" [formGroup]="noteForm">
@@ -413,6 +451,50 @@
               />
               Actif
             </label>
+          </div>
+
+          <div class="rule-section">
+            <h4>Regle d'evaluation automatique</h4>
+            <p>Cette regle permet au systeme de calculer automatiquement le resultat du critere a partir des livrables deposes.</p>
+            <div class="form-group">
+              <label for="rule-enabled-note">
+                <input id="rule-enabled-note" type="checkbox" formControlName="ruleEnabled" />
+                Activer la regle automatique
+              </label>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="mode-note">Mode d'evaluation</label>
+                <select id="mode-note" formControlName="modeEvaluation" class="form-control">
+                  <option [ngValue]="null">Selectionner</option>
+                  <option *ngFor="let mode of modeEvaluationOptions" [value]="mode.value">{{ mode.label }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="types-note">Types de livrables attendus</label>
+                <input id="types-note" type="text" formControlName="expectedLivrableTypes" class="form-control" placeholder="LIEN_GIT,CODE_SOURCE" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="min-count-note">Nombre minimum</label>
+                <input id="min-count-note" type="number" formControlName="minLivrableCount" class="form-control" min="1" />
+              </div>
+              <div class="form-group">
+                <label for="keyword-note">Mot-cle attendu</label>
+                <input id="keyword-note" type="text" formControlName="expectedKeyword" class="form-control" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="note-max-auto">Note max automatique</label>
+                <input id="note-max-auto" type="number" formControlName="noteMaxAuto" class="form-control" min="0" step="0.1" />
+              </div>
+              <div class="form-group">
+                <label for="rule-description-note">Description de la regle</label>
+                <textarea id="rule-description-note" formControlName="ruleDescription" class="form-control" rows="2"></textarea>
+              </div>
+            </div>
           </div>
         </form>
       </div>

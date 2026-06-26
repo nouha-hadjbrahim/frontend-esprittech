@@ -1,22 +1,231 @@
 .evaluations-container {
-  padding: 24px;
-  background: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-  .page-header {
-    margin-bottom: 20px;
-    h1 { font-size: 24px; margin: 0; }
-    .subtitle { color: #6b7280; margin-top: 6px; }
+.page-header h1 {
+  margin: 0 0 8px;
+  color: #111827;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.subtitle,
+.section-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.kpi-card,
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.kpi-card {
+  padding: 18px;
+}
+
+.kpi-card span,
+.metric span {
+  display: block;
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.kpi-card strong {
+  color: #111827;
+  font-size: 1.7rem;
+}
+
+.section-header {
+  padding: 22px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.section-header h2 {
+  margin: 0 0 6px;
+  color: #111827;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.loading,
+.empty-state {
+  padding: 32px 24px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.alert {
+  margin: 16px 24px;
+  padding: 12px 14px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 0.86rem;
+}
+
+.alert-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.projects-table th,
+.projects-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.projects-table th {
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.projects-table td {
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.projects-table tr.selected,
+.projects-table tbody tr:hover {
+  background: #fff7f7;
+}
+
+.status-chip,
+.score-chip,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-chip,
+.score-chip,
+.badge-secondary {
+  color: #4b5563;
+  background: #f3f4f6;
+}
+
+.badge-success {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.badge-danger {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn {
+  padding: 9px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  color: #fff;
+  background: #e23e3e;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #c93535;
+}
+
+.btn-secondary {
+  color: #374151;
+  background: #fff;
+  border-color: #e5e7eb;
+}
+
+.result-card {
+  padding-bottom: 20px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 20px 24px;
+}
+
+.metric {
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+}
+
+.metric strong {
+  color: #111827;
+  font-size: 1rem;
+}
+
+app-evaluation-checklist {
+  display: block;
+  padding: 0 24px;
+}
+
+@media (max-width: 1024px) {
+  .kpi-grid,
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .kpi-grid,
+  .summary-grid {
+    grid-template-columns: 1fr;
   }
 
-  .card { background: #fff; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
-
-  .projects-table { width: 100%; border-collapse: collapse; th, td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; } }
-
-  .criteria-block { margin-top: 12px; margin-bottom: 12px; .crit-item { padding: 12px; border: 1px solid #eef2f7; border-radius: 6px; margin-bottom: 10px; } }
-
-  .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
-
-  .result-card { margin-top: 12px; padding: 12px; }
-
-  .badge { padding: 4px 8px; border-radius: 4px; &.badge-success { background: #d1fae5; color: #065f46; } &.badge-danger { background: #fee2e2; color: #991b1b; } }
+  .actions-cell {
+    flex-direction: column;
+  }
 }

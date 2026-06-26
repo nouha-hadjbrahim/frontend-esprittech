@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { EvaluationService } from './evaluation.service';
 import { environment } from '../../../environments/environment';
-import { EvaluationRequest, EvaluationResponse } from '../models/evaluation.model';
+import { EvaluationResponse } from '../models/evaluation.model';
 
 describe('EvaluationService', () => {
   let service: EvaluationService;
@@ -19,8 +19,7 @@ describe('EvaluationService', () => {
 
   afterEach(() => http.verify());
 
-  it('should post calculerEvaluation to correct URL', () => {
-    const mockReq: EvaluationRequest = { eliminatoires: [], notes: [] };
+  it('should post calculateScore to correct URL', () => {
     const mockRes: EvaluationResponse = {
       id: 1,
       sujetProjetId: 123,
@@ -29,17 +28,28 @@ describe('EvaluationService', () => {
       bloqueParEliminatoire: false,
       dateCalcul: new Date().toISOString(),
       commentaire: 'ok',
+      calculatedBy: 'ROLE_ADMIN Admin Root',
+      recalculationReason: 'Recalcul manuel',
       resultats: []
     };
 
-    service.calculerEvaluation(123, mockReq).subscribe(res => {
+    service.calculateScore(123).subscribe(res => {
       expect(res).toEqual(mockRes);
     });
 
-    const req = http.expectOne(`${environment.apiUrl}/projets/123/evaluations/calculer`);
+    const req = http.expectOne(`${environment.apiUrl}/projets/123/calculer-score`);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual(mockReq);
+    expect(req.request.body).toEqual({});
     req.flush(mockRes);
+  });
+
+  it('should reuse calculateScore for a recalculation request', () => {
+    service.calculateScore(5).subscribe();
+
+    const req = http.expectOne(`${environment.apiUrl}/projets/5/calculer-score`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({});
   });
 
   it('should getLatestEvaluation from correct URL', () => {
@@ -51,6 +61,8 @@ describe('EvaluationService', () => {
       bloqueParEliminatoire: false,
       dateCalcul: new Date().toISOString(),
       commentaire: '',
+      calculatedBy: 'SYSTEM',
+      recalculationReason: null,
       resultats: []
     };
 
