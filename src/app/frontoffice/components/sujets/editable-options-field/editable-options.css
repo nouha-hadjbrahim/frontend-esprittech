@@ -1,0 +1,144 @@
+.editable-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editable-options__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.editable-options__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.editable-options__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  background: #f9fafb;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.editable-options__chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.editable-options__chip-remove:hover {
+  background: #fee2e2;
+  color: #E23E3E;
+}
+
+.editable-options__add {
+  display: flex;
+  gap: 8px;
+}
+
+.editable-options__input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1a1a1a;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editable-options__input:focus {
+  outline: none;
+  border-color: #E23E3E;
+  box-shadow: 0 0 0 3px rgba(226, 62, 62, 0.1);
+}
+
+.editable-options__input::placeholder {
+  color: #9ca3af;
+}
+
+.editable-options__add-btn {
+  padding: 9px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.editable-options__add-btn:hover {
+  border-color: #E23E3E;
+  color: #E23E3E;
+  background: #fff5f5;
+}
+
+.editable-options__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.editable-options__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.editable-options__item:hover {
+  background: #f9fafb;
+}
+
+.editable-options__item input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #E23E3E;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.editable-options__empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+}

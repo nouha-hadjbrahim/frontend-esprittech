@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { Role, User } from '../../core/models/user.model';
 import { AdminService } from '../../core/services/admin.service';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 
 /** Ligne d'utilisateur telle qu'affichée dans le tableau. */
 interface UserRow {
@@ -21,7 +22,7 @@ interface UserRow {
 @Component({
     selector: 'app-users',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ConfirmDialog],
     templateUrl: './users.component.html',
     styleUrl: './users.component.css'
 })
@@ -78,6 +79,12 @@ export class UsersComponent implements OnInit, OnDestroy {
     isEditModalOpen = false;
     isCreateModalOpen = false;
     saving = signal(false);
+
+    deleteConfirmOpen = false;
+    deleteAlertOpen = false;
+    deleteAlertMessage = '';
+    deleting = false;
+    userToDelete: UserRow | null = null;
     creating = signal(false);
     editError = signal<string | null>(null);
     createError = signal<string | null>(null);
@@ -303,21 +310,51 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
 
     deleteUser(user: UserRow): void {
-        if (!confirm(`Voulez-vous vraiment supprimer l'utilisateur ${user.name} ?`)) {
+        this.userToDelete = user;
+        this.deleteConfirmOpen = true;
+    }
+
+    cancelDelete(): void {
+        this.deleteConfirmOpen = false;
+        this.userToDelete = null;
+        this.deleting = false;
+    }
+
+    confirmDelete(): void {
+        if (!this.userToDelete) {
             return;
         }
-        this.adminService.deleteUser(user.id).subscribe({
+
+        this.deleting = true;
+        this.adminService.deleteUser(this.userToDelete.id).subscribe({
             next: () => {
-                // Si on supprime le dernier élément d'une page, revenir en arrière
+                this.deleting = false;
+                this.deleteConfirmOpen = false;
                 if (this.users.length === 1 && this.page > 0) {
                     this.page--;
                 }
+                this.userToDelete = null;
                 this.loadUsers();
             },
             error: (err: HttpErrorResponse) => {
-                alert(err.error?.detail ?? 'Échec de la suppression.');
+                this.deleting = false;
+                this.deleteConfirmOpen = false;
+                this.deleteAlertMessage = err.error?.detail ?? 'Échec de la suppression.';
+                this.deleteAlertOpen = true;
+                this.userToDelete = null;
             },
         });
+    }
+
+    closeDeleteAlert(): void {
+        this.deleteAlertOpen = false;
+        this.deleteAlertMessage = '';
+    }
+
+    get deleteConfirmMessage(): string {
+        return this.userToDelete
+            ? `Voulez-vous vraiment supprimer l'utilisateur ${this.userToDelete.name} ? Cette action est irréversible.`
+            : '';
     }
 
     private toRow(u: User): UserRow {

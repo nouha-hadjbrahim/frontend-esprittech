@@ -1,0 +1,162 @@
+@if (isOpen) {
+  <div class="modal-overlay" (click)="onOverlayClick($event)">
+    <div class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <header class="modal__header">
+        <div>
+          <h2 id="modal-title" class="modal__title">{{ modalTitle }}</h2>
+          @if (encadrantName) {
+            <p class="modal__subtitle">Encadrant : {{ encadrantName }}</p>
+          }
+        </div>
+        <button type="button" class="modal__close" aria-label="Fermer" (click)="close()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <form class="modal__body" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="modal__categories">
+          @for (cat of categories; track cat.value) {
+            <button
+              type="button"
+              class="category-pill"
+              [class.category-pill--active]="isCategorieActive(cat.value)"
+              (click)="selectCategorie(cat.value)"
+            >
+              {{ cat.label }}
+            </button>
+          }
+        </div>
+
+        <div class="modal__columns">
+          <div class="modal__column">
+            <div class="form-field">
+              <label class="form-label" for="titre">Titre</label>
+              <input
+                id="titre"
+                type="text"
+                class="form-input"
+                [class.form-input--error]="isInvalid('titre')"
+                formControlName="titre"
+                placeholder="Titre du sujet"
+              />
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="description">Description</label>
+              <textarea
+                id="description"
+                class="form-textarea"
+                [class.form-input--error]="isInvalid('description')"
+                formControlName="description"
+                rows="5"
+                placeholder="Décrivez le sujet..."
+              ></textarea>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="objectifs">Objectifs</label>
+              <textarea
+                id="objectifs"
+                class="form-textarea"
+                [class.form-input--error]="isInvalid('objectifs')"
+                formControlName="objectifs"
+                rows="5"
+                placeholder="Objectifs du projet..."
+              ></textarea>
+            </div>
+
+            <div class="form-field" [class.form-field--error]="isPrerequisInvalid()">
+              <app-editable-options-field
+                label="Prérequis"
+                [options]="prerequisOptions"
+                [selected]="prerequisSelected"
+                [allowMultiSelect]="true"
+                [allowRemove]="false"
+                (optionAdded)="onPrerequisAdded($event)"
+                (selectedChange)="onPrerequisSelectedChange($event)"
+              />
+              @if (isPrerequisInvalid()) {
+                <span class="form-error">Sélectionnez au moins un prérequis.</span>
+              }
+            </div>
+          </div>
+
+          <div class="modal__column">
+            <div class="form-field" [class.form-field--error]="isDomaineInvalid()">
+              <app-editable-options-field
+                label="Domaines"
+                [options]="domaineOptions"
+                [selected]="domaineSelected"
+                [allowMultiSelect]="true"
+                [allowRemove]="false"
+                (optionAdded)="onDomaineAdded($event)"
+                (selectedChange)="onDomaineSelectedChange($event)"
+              />
+              @if (isDomaineInvalid()) {
+                <span class="form-error">Sélectionnez au moins un domaine.</span>
+              }
+            </div>
+
+            <div class="form-field" [class.form-field--error]="isTechnologiesInvalid()">
+              <label class="form-label">Technologies</label>
+              <div class="tech-add">
+                <input
+                  type="text"
+                  class="form-input"
+                  [(ngModel)]="newTechnology"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Ajouter une technologie..."
+                  (keydown)="onTechnologyKeydown($event)"
+                />
+                <button type="button" class="tech-add__btn" (click)="addTechnology()" [disabled]="addingReference">
+                  Ajouter
+                </button>
+              </div>
+              <div class="tech-grid">
+                @for (tech of technologies; track tech) {
+                  <label class="tech-checkbox">
+                    <input
+                      type="checkbox"
+                      [checked]="isTechnologySelected(tech)"
+                      (change)="toggleTechnology(tech)"
+                    />
+                    <span class="tech-checkbox__label">{{ tech }}</span>
+                  </label>
+                }
+              </div>
+              @if (isTechnologiesInvalid()) {
+                <span class="form-error">Sélectionnez au moins une technologie.</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Capacité d'accueil</label>
+              <div class="counter">
+                <button type="button" class="counter__btn" (click)="decrementCapacite()" aria-label="Diminuer">
+                  −
+                </button>
+                <span class="counter__value">{{ form.controls.capaciteAccueil.value }}</span>
+                <button type="button" class="counter__btn" (click)="incrementCapacite()" aria-label="Augmenter">
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (errorMessage) {
+          <p class="modal__error">{{ errorMessage }}</p>
+        }
+
+        <footer class="modal__footer">
+          <button type="button" class="btn btn--outline" (click)="close()">Annuler</button>
+          <button type="submit" class="btn btn--primary" [disabled]="isSubmitting">
+            {{ submitLabel }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+}

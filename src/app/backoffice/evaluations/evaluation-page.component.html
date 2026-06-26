@@ -1,0 +1,129 @@
+<div class="evaluations-container">
+  <header class="page-header">
+    <div>
+      <h1>Evaluations</h1>
+      <p class="subtitle">Calcul automatique et recalcul des scores pour les projets termines.</p>
+    </div>
+  </header>
+
+  <section class="kpi-grid">
+    <article class="kpi-card">
+      <span>Projets termines</span>
+      <strong>{{ projects().length }}</strong>
+    </article>
+    <article class="kpi-card">
+      <span>Evalues</span>
+      <strong>{{ evaluatedCount }}</strong>
+    </article>
+    <article class="kpi-card">
+      <span>Eligibles</span>
+      <strong>{{ eligibleCount }}</strong>
+    </article>
+    <article class="kpi-card">
+      <span>Non eligibles</span>
+      <strong>{{ nonEligibleCount }}</strong>
+    </article>
+  </section>
+
+  <section class="card projects-section">
+    <div class="section-header">
+      <div>
+        <h2>Projets termines</h2>
+        <p>Selectionnez un projet pour consulter son evaluation detaillee.</p>
+      </div>
+    </div>
+
+    <div *ngIf="loadingProjects()" class="loading">Chargement des evaluations...</div>
+    <div *ngIf="projectsError() && !loadingProjects()" class="alert alert-error">{{ projectsError() }}</div>
+    <div *ngIf="!loadingProjects() && !projectsError() && projects().length === 0" class="empty-state">
+      Aucun projet termine a evaluer.
+    </div>
+
+    <div *ngIf="!loadingProjects() && projects().length > 0" class="table-responsive">
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Projet</th>
+            <th>Statut</th>
+            <th>Score</th>
+            <th>Eligibilite</th>
+            <th>Dernier calcul</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of projects()" [class.selected]="selectedProject?.id === p.id">
+            <td>#{{ p.id }}</td>
+            <td><strong>{{ p.titre }}</strong></td>
+            <td><span class="status-chip">{{ statusLabel(p.statut) }}</span></td>
+            <td>
+              <span class="score-chip">{{ p.scoreFinal == null ? 'Non calcule' : (p.scoreFinal + ' / 100') }}</span>
+            </td>
+            <td>
+              <span class="badge"
+                [class.badge-success]="p.eligibleIndustrialisation"
+                [class.badge-danger]="p.eligibleIndustrialisation === false"
+                [class.badge-secondary]="p.eligibleIndustrialisation == null">
+                {{ p.eligibleIndustrialisation == null ? 'En attente' : (p.eligibleIndustrialisation ? 'Eligible' : 'Non eligible') }}
+              </span>
+            </td>
+            <td>-</td>
+            <td class="actions-cell">
+              <button class="btn btn-secondary" type="button" (click)="selectProject(p)">Voir detail</button>
+              <button class="btn btn-primary" type="button" [disabled]="savingProjectId() === p.id" (click)="calculate(p)">
+                {{ savingProjectId() === p.id ? 'Calcul...' : (p.scoreFinal == null ? 'Calculer score' : 'Recalculer') }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section *ngIf="selectedProject" class="card result-card">
+    <div class="section-header">
+      <div>
+        <h2>Evaluation du projet</h2>
+        <p>{{ selectedProject.titre }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="evalError()" class="alert alert-error">{{ evalError() }}</div>
+
+    <ng-container *ngIf="evalResult(); else noEvaluation">
+      <div class="summary-grid">
+        <article class="metric">
+          <span>Score final</span>
+          <strong>{{ evalResult()!.scoreFinal }} / 100</strong>
+        </article>
+        <article class="metric">
+          <span>Eligibilite</span>
+          <strong>{{ evalResult()!.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Blocage eliminatoire</span>
+          <strong>{{ evalResult()!.bloqueParEliminatoire ? 'Oui' : 'Non' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Calcule le</span>
+          <strong>{{ evalResult()!.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Calcule par</span>
+          <strong>{{ evalResult()!.calculatedBy || 'SYSTEM' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Motif</span>
+          <strong>{{ evalResult()!.recalculationReason || 'Calcul initial' }}</strong>
+        </article>
+      </div>
+
+      <app-evaluation-checklist [evaluation]="evalResult()!" [projectTitle]="selectedProject.titre"></app-evaluation-checklist>
+    </ng-container>
+
+    <ng-template #noEvaluation>
+      <p class="empty-state">Aucune evaluation enregistree pour ce projet.</p>
+    </ng-template>
+  </section>
+</div>

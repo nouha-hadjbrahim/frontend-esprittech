@@ -1,0 +1,200 @@
+.sujet-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: box-shadow 0.15s ease;
+}
+
+.sujet-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.sujet-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sujet-card__divider {
+  height: 1px;
+  background: #f0f0f0;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.badge--pfe {
+  background: #fff5f5;
+  color: #E23E3E;
+}
+
+.badge--stage {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.badge--rdi {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.badge--success {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.badge--warning {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.badge--progress {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge--info {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.badge--danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.badge--neutral {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.sujet-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.sujet-card__domaine {
+  margin: 0;
+  font-size: 12px;
+  color: #757575;
+  line-height: 1.4;
+}
+
+.sujet-card__tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sujet-card__tech-tag {
+  padding: 3px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.sujet-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sujet-card__info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.sujet-card__info-label {
+  color: #9ca3af;
+}
+
+.sujet-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.sujet-card__icon-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sujet-card__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.sujet-card__icon-btn:hover {
+  color: #E23E3E;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.sujet-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.sujet-card__btn--details {
+  display: none;
+}
+
+.sujet-card__btn--edit {
+  display: none;
+}
+
+.sujet-card__btn--candidatures {
+  margin-left: 0;
+  border: none;
+  background: #E23E3E;
+  color: #ffffff;
+  padding: 8px 14px;
+}
+
+.sujet-card__btn--candidatures:hover {
+  background: #c93434;
+}

@@ -10,7 +10,7 @@ describe('frontoffice routes', () => {
   });
 
   it('should redirect the empty child path to available subjects', () => {
-    expect(children.find((c) => c.path === '')?.redirectTo).toBe('sujets-disponibles');
+    expect(children.find((c) => c.path === '')?.redirectTo).toBe('sujets/disponibles');
   });
 
   it('should lazily resolve every page component', async () => {

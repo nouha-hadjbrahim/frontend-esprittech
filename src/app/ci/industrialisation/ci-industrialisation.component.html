@@ -1,0 +1,249 @@
+<div class="ci-page">
+  <header class="ci-header">
+    <div>
+      <span class="eyebrow">Espace CI</span>
+      <h1>Demandes d'industrialisation</h1>
+      <p>Analyse des demandes soumises, livrables, reponses et decisions CI.</p>
+    </div>
+  </header>
+
+  @if (message()) { <div class="alert alert--success">{{ message() }}</div> }
+  @if (error()) { <div class="alert alert--danger">{{ error() }}</div> }
+
+  <section class="filters">
+    <select [(ngModel)]="statutFilter" (ngModelChange)="load()">
+      <option value="">Tous les statuts</option>
+      @for (statut of statuts; track statut) {
+        <option [value]="statut">{{ statutLabels[statut] }}</option>
+      }
+    </select>
+    <select [(ngModel)]="typeFilter" (ngModelChange)="load()">
+      <option value="">Interne et externe</option>
+      @for (type of types; track type) {
+        <option [value]="type">{{ typeLabels[type] }}</option>
+      }
+    </select>
+  </section>
+
+  <main class="ci-grid">
+    <section class="panel list-panel">
+      <div class="panel-title">
+        <h2>Demandes</h2>
+        <span>{{ demandes().length }}</span>
+      </div>
+      @if (loading()) {
+        <div class="empty">Chargement...</div>
+      } @else if (demandes().length === 0) {
+        <div class="empty">Aucune demande.</div>
+      } @else {
+        <div class="request-list">
+          @for (demande of demandes(); track demande.id) {
+            <button type="button" class="request-row" [class.active]="selected()?.id === demande.id" (click)="openDetail(demande.id)">
+              <strong>{{ demande.projetTitre }}</strong>
+              <span>{{ typeLabels[demande.typeIndustrialisation] }} - {{ demande.demandeurNom }}</span>
+              <em>{{ statutLabels[demande.statut] }}</em>
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="panel detail-panel">
+      @if (detailLoading()) {
+        <div class="empty">Chargement du detail...</div>
+      } @else if (!selected()) {
+        <div class="empty">Selectionnez une demande.</div>
+      } @else {
+        <div class="detail-header">
+          <div>
+            <h2>{{ selected()!.projetTitre }}</h2>
+            <p>{{ selected()!.demandeurNom }} - {{ typeLabels[selected()!.typeIndustrialisation] }}</p>
+          </div>
+          <span class="status" [class.status--go]="selected()!.statut === 'GO'" [class.status--nogo]="selected()!.statut === 'NO_GO'">
+            {{ statutLabels[selected()!.statut] }}
+          </span>
+        </div>
+
+        <div class="summary-grid">
+          <div>
+            <span>Score</span>
+            <strong>{{ selected()!.scoreEvaluationProjet ?? '-' }}/100</strong>
+          </div>
+          <div>
+            <span>Eligibilite</span>
+            <strong>{{ selected()!.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</strong>
+          </div>
+          <div>
+            <span>Blocage eliminatoire</span>
+            <strong>{{ selected()!.bloqueParEliminatoire ? 'Oui' : 'Non' }}</strong>
+          </div>
+          <div>
+            <span>Decision</span>
+            <strong>{{ selected()!.orientation || selected()!.motifDecision || '-' }}</strong>
+          </div>
+        </div>
+
+        <div class="section-block project-info">
+          <h3>Informations projet</h3>
+          <div class="project-info-grid">
+            <div>
+              <span>Categorie</span>
+              <strong>{{ selected()!.projetCategorie || '-' }}</strong>
+            </div>
+            <div>
+              <span>Domaine</span>
+              <strong>{{ selected()!.projetDomaine || '-' }}</strong>
+            </div>
+            <div>
+              <span>Statut projet</span>
+              <strong>{{ selected()!.projetStatut }}</strong>
+            </div>
+            <div>
+              <span>Date terminaison</span>
+              <strong>{{ selected()!.projetDateTerminaison ? (selected()!.projetDateTerminaison | date:'yyyy-MM-dd') : '-' }}</strong>
+            </div>
+          </div>
+          @if (selected()!.projetDescription) { <p>{{ selected()!.projetDescription }}</p> }
+          @if (selected()!.projetObjectifs) { <p><strong>Objectifs :</strong> {{ selected()!.projetObjectifs }}</p> }
+          @if (selected()!.projetTechnologies) { <p><strong>Technologies :</strong> {{ selected()!.projetTechnologies }}</p> }
+          @if (selected()!.projetPrerequis) { <p><strong>Prerequis :</strong> {{ selected()!.projetPrerequis }}</p> }
+        </div>
+
+        <div class="section-block decision-helper">
+          <h3>Aide a la decision</h3>
+          <div class="helper-grid">
+            <div>
+              <span>Recommandation</span>
+              <strong>{{ recommendation(selected()!) }}</strong>
+            </div>
+            <div>
+              <span>Criteres bloquants</span>
+              <strong>{{ blockingCriteriaCount(selected()!) }}</strong>
+            </div>
+            <div>
+              <span>Evaluation</span>
+              <strong>{{ selected()!.latestEvaluation?.evaluationComplete === false ? 'Incomplete' : 'Complete' }}</strong>
+            </div>
+            <div>
+              <span>Regles non configurees</span>
+              <strong>{{ nonConfiguredCount(selected()!) }}</strong>
+            </div>
+            <div>
+              <span>Livrables</span>
+              <strong>{{ selected()!.livrables.length }}</strong>
+            </div>
+            <div>
+              <span>Score utilise</span>
+              <strong>{{ selected()!.latestEvaluation?.scoreFinal ?? selected()!.scoreEvaluationProjet ?? '-' }}/100</strong>
+            </div>
+          </div>
+          <p class="helper-explanation">{{ recommendationExplanation(selected()!) }}</p>
+        </div>
+
+        @if (selected()!.latestEvaluation) {
+          <div class="section-block">
+            <app-evaluation-checklist [evaluation]="selected()!.latestEvaluation!" [projectTitle]="selected()!.projetTitre"></app-evaluation-checklist>
+          </div>
+        }
+
+        <div class="section-block">
+          <h3>Livrables</h3>
+          @if (selected()!.livrables.length === 0) {
+            <p class="muted">Aucun livrable.</p>
+          } @else {
+            <div class="mini-table">
+              @for (livrable of selected()!.livrables; track livrable.id) {
+                <div>
+                  <strong>{{ livrable.nom }}</strong>
+                  <span>{{ livrableLabels[livrable.typeLivrable] }}</span>
+                  @if (livrable.objectName) {
+                    <a [href]="downloadLivrable(livrable.id)" target="_blank" rel="noreferrer">Telecharger</a>
+                  } @else if (livrable.lienExterne) {
+                    <a [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="section-block">
+          <h3>Reponses</h3>
+          @if (selected()!.reponses.length === 0) {
+            <p class="muted">Aucune reponse.</p>
+          } @else {
+            <div class="answers">
+              @for (answer of selected()!.reponses; track answer.id) {
+                <div class="answer-row">
+                  <span>{{ answer.questionLibelle || ('Question #' + answer.questionId) }}</span>
+                  <strong>{{ answerValue(answer) }}</strong>
+                  @if (answer.reponseEliminatoire) { <em>{{ answer.reponseEliminatoire }}</em> }
+                  @if (answer.noteObtenue != null) { <em>Note {{ answer.noteObtenue }}</em> }
+                  @if (answer.justificatif) { <p>{{ answer.justificatif }}</p> }
+                  @if (answer.preuveOriginalFileName) { <p>Preuve: {{ answer.preuveOriginalFileName }}</p> }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="section-block">
+          <h3>Historique & cycle de vie</h3>
+          @for (history of selected()!.historique; track history.id) {
+            <div class="history-row">
+              <strong>{{ statutLabels[history.statutCible] }}</strong>
+              <span>{{ history.acteurNom }} - {{ history.dateTransition | date:'yyyy-MM-dd HH:mm' }}</span>
+              @if (history.motif || history.commentaire) { <p>{{ history.motif || history.commentaire }}</p> }
+            </div>
+          } @empty {
+            <p class="muted">Aucun historique disponible pour ce projet.</p>
+          }
+        </div>
+
+        @if (canDecide(selected())) {
+          <div class="decision-actions">
+            <button type="button" class="btn btn--primary" (click)="openDecision('GO')">Go</button>
+            <button type="button" class="btn btn--danger" (click)="openDecision('NO_GO')">No Go</button>
+          </div>
+        }
+      }
+    </section>
+  </main>
+</div>
+
+@if (decisionMode) {
+  <div class="modal-backdrop" (click)="closeDecision()">
+    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      @if (decisionMode === 'GO') {
+        <h2>Decision Go</h2>
+        <label>
+          Orientation
+          <select [(ngModel)]="orientation">
+            <option value="">Selectionner</option>
+            @for (item of orientations; track item.value) {
+              <option [value]="item.value">{{ item.label }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Commentaire
+          <textarea rows="4" [(ngModel)]="commentaire"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn--ghost" (click)="closeDecision()">Annuler</button>
+          <button type="button" class="btn btn--primary" (click)="decideGo()">Valider Go</button>
+        </div>
+      } @else {
+        <h2>Decision No Go</h2>
+        <label>
+          Motif
+          <textarea rows="5" [(ngModel)]="motif"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn--ghost" (click)="closeDecision()">Annuler</button>
+          <button type="button" class="btn btn--danger" (click)="decideNoGo()">Valider No Go</button>
+        </div>
+      }
+    </div>
+  </div>
+}

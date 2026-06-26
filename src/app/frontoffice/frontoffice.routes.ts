@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { roleGuard } from '../core/guards/role.guard';
 import { FrontofficeLayout } from './frontoffice-layout/frontoffice-layout';
 
+const AUTHENTICATED_ROLES = ['ROLE_ENSEIGNANT', 'ROLE_ETUDIANT', 'ROLE_CHEF_EQUIPE', 'ROLE_CI'] as const;
+
 export const frontofficeRoutes: Routes = [
     {
         path: '',
@@ -18,9 +20,29 @@ export const frontofficeRoutes: Routes = [
                 loadComponent: () => import('./pages/mes-projets/mes-projets').then(m => m.MesProjets)
             },
             {
+                path: 'sujets',
+                children: [
+                    {
+                        path: 'mes-sujets',
+                        canActivate: [roleGuard(['ROLE_ENSEIGNANT'])],
+                        loadComponent: () => import('./pages/sujets/mes-sujets/mes-sujets').then(m => m.MesSujets)
+                    },
+                    {
+                        path: 'disponibles',
+                        canActivate: [roleGuard([...AUTHENTICATED_ROLES])],
+                        loadComponent: () => import('./pages/sujets/sujets-disponibles/sujets-disponibles').then(m => m.SujetsDisponibles)
+                    },
+                    {
+                        path: ':id',
+                        canActivate: [roleGuard([...AUTHENTICATED_ROLES])],
+                        loadComponent: () => import('./pages/sujets/sujet-detail/sujet-detail').then(m => m.SujetDetail)
+                    }
+                ]
+            },
+            {
                 path: 'sujets-disponibles',
-                canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_ETUDIANT', 'ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
-                loadComponent: () => import('./pages/sujets-disponibles/sujets-disponibles').then(m => m.SujetsDisponibles)
+                redirectTo: 'sujets/disponibles',
+                pathMatch: 'full'
             },
             {
                 path: 'equipes-recherche',
@@ -44,10 +66,10 @@ export const frontofficeRoutes: Routes = [
             },
             {
                 path: 'demandes-industrialisation',
-                canActivate: [roleGuard(['ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
+                canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
                 loadComponent: () => import('./pages/demandes-industrialisation/demandes-industrialisation').then(m => m.DemandesIndustrialisation)
             },
-            { path: '', redirectTo: 'sujets-disponibles', pathMatch: 'full' }
+            { path: '', redirectTo: 'sujets/disponibles', pathMatch: 'full' }
         ]
     }
 ];

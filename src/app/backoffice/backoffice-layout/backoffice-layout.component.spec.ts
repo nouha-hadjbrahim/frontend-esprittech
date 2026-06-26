@@ -32,7 +32,7 @@ describe('BackofficeLayoutComponent', () => {
 
   it('should create with the full navigation', () => {
     expect(component).toBeTruthy();
-    expect(component.navItems.length).toBe(9);
+    expect(component.navItems.length).toBe(13);
   });
 
   it('should fall back to "AD" initials and empty role label without a user', () => {
@@ -43,7 +43,7 @@ describe('BackofficeLayoutComponent', () => {
   it('should compute initials and role label from the user', () => {
     currentUser.set(userWith('ROLE_ADMIN'));
     expect(component.initials()).toBe('JD');
-    expect(component.roleLabel()).toBe('Administrateur');
+    expect(component.roleLabel()).toBe('Super-administrateur');
   });
 
   it('should toggle the profile menu', () => {
