@@ -8,7 +8,6 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { finalize } from 'rxjs';
 import { EquipeService } from '../../../core/services/equipe.service';
-import { AdminService } from '../../../core/services/admin.service';
 import { Equipe } from '../../../core/models/equipe.model';
 import { User } from '../../../core/models/user.model';
 import { ButtonComponent } from '../../../ui/button/button.component';
@@ -324,7 +323,6 @@ import { ButtonComponent } from '../../../ui/button/button.component';
 })
 export class DialogueAssignerChefComponent implements OnInit, OnDestroy {
   private readonly svc = inject(EquipeService);
-  private readonly adminSvc = inject(AdminService);
   private readonly snack = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
 
@@ -342,7 +340,7 @@ export class DialogueAssignerChefComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.chargement = true;
-    this.adminSvc.chercherUtilisateursEligibles('', this.eq.id, 'CHEF', 0, 100).subscribe({
+    this.svc.chercherUtilisateursEligibles('', this.eq.id, 'CHEF', 0, 100).subscribe({
       next: (res) => { this.candidats = res.content; this.chargement = false; },
       error: () => { this.chargement = false; this.snack.open('Erreur lors du chargement', '✕', { duration: 3500, panelClass: ['snack-error'] }); },
     });
@@ -352,7 +350,7 @@ export class DialogueAssignerChefComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       switchMap((q) => {
         this.chargement = true;
-        return this.adminSvc.chercherUtilisateursEligibles(q, this.eq.id, 'CHEF', 0, 100);
+        return this.svc.chercherUtilisateursEligibles(q, this.eq.id, 'CHEF', 0, 100);
       }),
       takeUntil(this.destroy$),
     ).subscribe((res) => {

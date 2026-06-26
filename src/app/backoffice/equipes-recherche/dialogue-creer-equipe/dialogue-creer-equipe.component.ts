@@ -7,7 +7,7 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs
 import { takeUntil } from 'rxjs/operators';
 import { CreateEquipePayload } from '../../../core/models/equipe.model';
 import { User } from '../../../core/models/user.model';
-import { AdminService } from '../../../core/services/admin.service';
+import { EquipeService } from '../../../core/services/equipe.service';
 import { ButtonComponent } from '../../../ui/button/button.component';
 import { LabelComponent } from '../../../ui/label/label.component';
 
@@ -483,7 +483,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
   `],
 })
 export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
-  private readonly adminSvc = inject(AdminService);
+  private readonly equipeSvc = inject(EquipeService);
   private readonly destroy$ = new Subject<void>();
 
   @ViewChild('chefPickerWrap') chefPickerRef!: ElementRef;
@@ -521,7 +521,7 @@ export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
       switchMap((q) => {
         if (q.trim().length < 2) { this.candidatsChef = []; this.chargementChef = false; return of(null); }
         this.chargementChef = true;
-        return this.adminSvc.chercherUtilisateursEligibles(q, null, 'CHEF');
+        return this.equipeSvc.chercherUtilisateursEligibles(q, null, 'CHEF');
       }),
       takeUntil(this.destroy$),
     ).subscribe({
@@ -540,7 +540,7 @@ export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
       switchMap((q) => {
         if (q.trim().length < 2) { this.candidatsMembres = []; this.chargementMembres = false; return of(null); }
         this.chargementMembres = true;
-        return this.adminSvc.chercherUtilisateursEligibles(q, null, 'MEMBER');
+        return this.equipeSvc.chercherUtilisateursEligibles(q, null, 'MEMBER');
       }),
       takeUntil(this.destroy$),
     ).subscribe({

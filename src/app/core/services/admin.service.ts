@@ -2,7 +2,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateEquipeRequest, Equipe } from '../models/equipe.model';
 import { Page } from '../models/page.model';
 import { CreateUserRequest, UpdateUserRequest, User } from '../models/user.model';
 
@@ -28,16 +27,6 @@ export class AdminService {
     return this.http.post<MessageResponse>(`${this.baseUrl}/import-referentiel`, formData);
   }
 
-  /** Crée une équipe de recherche en désignant son chef. */
-  createEquipe(request: CreateEquipeRequest): Observable<Equipe> {
-    return this.http.post<Equipe>(`${this.baseUrl}/equipes`, request);
-  }
-
-  /** (Ré)assigne le chef d'une équipe existante. */
-  assignChef(equipeId: number, chefId: number): Observable<Equipe> {
-    return this.http.put<Equipe>(`${this.baseUrl}/equipes/${equipeId}/chef`, { chefId });
-  }
-
   // ----- Gestion des utilisateurs -----
 
   /** Crée directement un utilisateur (action admin, sans référentiel). */
@@ -52,18 +41,6 @@ export class AdminService {
 
   chercherUtilisateurs(search: string, page = 0, size = 6): Observable<Page<User>> {
     return this._getUsers(page, size, search);
-  }
-
-  chercherUtilisateursEligibles(search: string, equipeId: number | null, type: string, page = 0, size = 6): Observable<Page<User>> {
-    let params = new HttpParams()
-      .set('type', type)
-      .set('search', search)
-      .set('page', page)
-      .set('size', size);
-    if (equipeId != null) {
-      params = params.set('equipeId', equipeId);
-    }
-    return this.http.get<Page<User>>(`${this.baseUrl}/users/eligible`, { params });
   }
 
   private _getUsers(page: number, size: number, search?: string): Observable<Page<User>> {

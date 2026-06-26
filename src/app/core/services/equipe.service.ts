@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AssignChefRequest, CreateEquipePayload, Equipe } from '../models/equipe.model';
+import { AssignChefRequest, CreateEquipePayload, CreateEquipeRequest, Equipe } from '../models/equipe.model';
+import { Page } from '../models/page.model';
 import { User } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
@@ -49,5 +50,25 @@ export class EquipeService {
 
   retirerChef(equipeId: number): Observable<Equipe> {
     return this.http.delete<Equipe>(`${this.baseUrl}/${equipeId}/chef`);
+  }
+
+  createEquipe(request: CreateEquipeRequest): Observable<Equipe> {
+    return this.http.post<Equipe>(this.baseUrl, request);
+  }
+
+  assignChef(equipeId: number, chefId: number): Observable<Equipe> {
+    return this.http.put<Equipe>(`${this.baseUrl}/${equipeId}/chef`, { chefId });
+  }
+
+  chercherUtilisateursEligibles(search: string, equipeId: number | null, type: string, page = 0, size = 6): Observable<Page<User>> {
+    let params = new HttpParams()
+      .set('type', type)
+      .set('search', search)
+      .set('page', page)
+      .set('size', size);
+    if (equipeId != null) {
+      params = params.set('equipeId', equipeId);
+    }
+    return this.http.get<Page<User>>(`${this.baseUrl}/users/eligible`, { params });
   }
 }

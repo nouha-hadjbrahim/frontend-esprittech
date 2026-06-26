@@ -9,7 +9,7 @@ import { takeUntil } from 'rxjs/operators';
 import { inject } from '@angular/core';
 import { Equipe } from '../../../core/models/equipe.model';
 import { User } from '../../../core/models/user.model';
-import { AdminService } from '../../../core/services/admin.service';
+import { EquipeService } from '../../../core/services/equipe.service';
 import { ButtonComponent } from '../../../ui/button/button.component';
 import { LabelComponent } from '../../../ui/label/label.component';
 
@@ -533,7 +533,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
   `],
 })
 export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
-  private readonly adminSvc = inject(AdminService);
+  private readonly equipeSvc = inject(EquipeService);
   private readonly snack = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
 
@@ -592,7 +592,7 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
       switchMap((q) => {
         if (q.trim().length < 2) { this.candidatsChef = []; this.chargementChef = false; return of(null); }
         this.chargementChef = true;
-        return this.adminSvc.chercherUtilisateursEligibles(q, this.equipe.id, 'CHEF');
+        return this.equipeSvc.chercherUtilisateursEligibles(q, this.equipe.id, 'CHEF');
       }),
       takeUntil(this.destroy$),
     ).subscribe({
@@ -612,7 +612,7 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
       switchMap((q) => {
         if (q.trim().length < 2) { this.candidatsMembres = []; this.chargementMembres = false; return of(null); }
         this.chargementMembres = true;
-        return this.adminSvc.chercherUtilisateursEligibles(q, this.equipe.id, 'MEMBER');
+        return this.equipeSvc.chercherUtilisateursEligibles(q, this.equipe.id, 'MEMBER');
       }),
       takeUntil(this.destroy$),
     ).subscribe({
