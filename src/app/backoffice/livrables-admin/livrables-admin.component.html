@@ -1,0 +1,107 @@
+<div class="admin-page">
+  <header class="page-header">
+    <div>
+      <h1>Livrables</h1>
+      <p>Gestion globale des fichiers et liens de projet.</p>
+    </div>
+  </header>
+
+  @if (message()) { <div class="alert alert--success">{{ message() }}</div> }
+  @if (error()) { <div class="alert alert--danger">{{ error() }}</div> }
+
+  <section class="panel toolbar">
+    <input type="search" placeholder="Projet, livrable, deposant..." [ngModel]="query()" (ngModelChange)="query.set($event)" />
+    <select [ngModel]="selectedType()" (ngModelChange)="selectedType.set($event)">
+      <option value="">Tous les types</option>
+      @for (type of typeOptions; track type.value) {
+        <option [value]="type.value">{{ type.label }}</option>
+      }
+    </select>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title">
+      <h2>Liste</h2>
+      <span>{{ filteredLivrables().length }} element(s)</span>
+    </div>
+    @if (loading()) {
+      <div class="empty">Chargement...</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Projet</th>
+              <th>Type</th>
+              <th>Deposant</th>
+              <th>Taille</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (livrable of filteredLivrables(); track livrable.id) {
+              <tr>
+                <td>
+                  <strong>{{ livrable.nom }}</strong>
+                  <span>{{ livrable.originalFileName || livrable.lienExterne || 'Metadata' }}</span>
+                </td>
+                <td>{{ livrable.projetTitre }}</td>
+                <td>{{ labels[livrable.typeLivrable] }}</td>
+                <td>{{ livrable.deposantNom }}</td>
+                <td>{{ formatSize(livrable.size) }}</td>
+                <td>{{ livrable.dateDepot | date:'yyyy-MM-dd' }}</td>
+                <td class="actions">
+                  @if (livrable.objectName) {
+                    <a class="btn btn--ghost" [href]="download(livrable)" target="_blank" rel="noreferrer">Telecharger</a>
+                  } @else if (livrable.lienExterne) {
+                    <a class="btn btn--ghost" [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
+                  }
+                  <button type="button" class="btn btn--ghost" (click)="openEdit(livrable)">Modifier</button>
+                  <button type="button" class="btn btn--danger" (click)="delete(livrable)">Desactiver</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</div>
+
+@if (selectedLivrable()) {
+  <div class="modal-backdrop" (click)="closeEdit()">
+    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h2>Modifier le livrable</h2>
+      <label>
+        Type
+        <select [(ngModel)]="editForm.typeLivrable">
+          @for (type of typeOptions; track type.value) {
+            <option [value]="type.value">{{ type.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Nom
+        <input type="text" [(ngModel)]="editForm.nom" />
+      </label>
+      <label>
+        Description
+        <textarea rows="4" [(ngModel)]="editForm.description"></textarea>
+      </label>
+      <label>
+        Lien externe
+        <input type="url" [(ngModel)]="editForm.lienExterne" />
+      </label>
+      <label class="check-row">
+        <input type="checkbox" [(ngModel)]="editForm.actif" />
+        Actif
+      </label>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="closeEdit()">Annuler</button>
+        <button type="button" class="btn btn--primary" (click)="saveEdit()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+}

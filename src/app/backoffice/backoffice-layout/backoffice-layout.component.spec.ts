@@ -32,7 +32,7 @@ describe('BackofficeLayoutComponent', () => {
 
   it('should create with the full navigation', () => {
     expect(component).toBeTruthy();
-    expect(component.navItems.length).toBe(11);
+    expect(component.navItems.length).toBe(13);
   });
 
   it('should fall back to "AD" initials and empty role label without a user', () => {

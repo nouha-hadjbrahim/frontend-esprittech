@@ -66,7 +66,7 @@ export const frontofficeRoutes: Routes = [
             },
             {
                 path: 'demandes-industrialisation',
-                canActivate: [roleGuard(['ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
+                canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
                 loadComponent: () => import('./pages/demandes-industrialisation/demandes-industrialisation').then(m => m.DemandesIndustrialisation)
             },
             { path: '', redirectTo: 'sujets/disponibles', pathMatch: 'full' }

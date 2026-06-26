@@ -50,7 +50,8 @@ describe('FrontofficeLayout', () => {
     currentUser.set(userWith('ROLE_ENSEIGNANT'));
     const labels = component.navLinks().map((l) => l.label);
     expect(labels).toContain('Catalogue');
-    expect(labels).toContain('Sujets disponibles');
+    expect(labels).toContain('Sujets');
+    expect(labels).toContain('Demandes d\'industrialisation');
     expect(labels).toContain('Équipes de recherche');
   });
 

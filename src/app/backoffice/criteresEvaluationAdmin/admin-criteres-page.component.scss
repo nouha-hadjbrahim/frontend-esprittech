@@ -391,6 +391,28 @@ textarea.form-control {
   gap: 16px;
 }
 
+.rule-section {
+  padding: 18px;
+  margin-top: 8px;
+  background: #fff7f7;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+}
+
+.rule-section h4 {
+  margin: 0 0 6px;
+  color: #991b1b;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.rule-section p {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
 .error-text {
   display: block;
   margin-top: 6px;

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { CritereEliminatoire, CritereNote, CritereEliminatoireRequest, CritereNoteRequest, ReponseEliminatoire } from '../../core/models/critere.model';
+import { CritereEliminatoire, CritereNote, CritereEliminatoireRequest, CritereNoteRequest, MODE_EVALUATION_OPTIONS, ReponseEliminatoire } from '../../core/models/critere.model';
 import { CritereEliminatoireService } from '../../core/services/critere-eliminatoire.service';
 import { CritereNoteService } from '../../core/services/critere-note.service';
 
@@ -85,6 +85,7 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   deleting = signal(false);
 
   readonly ReponseEliminatoire = ReponseEliminatoire;
+  readonly modeEvaluationOptions = MODE_EVALUATION_OPTIONS;
 
   ngOnInit(): void {
     this.initializeForms();
@@ -103,7 +104,14 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       domaine: ['', Validators.required],
       ordre: [1, [Validators.required, Validators.min(1)]],
       reponseAttendue: [ReponseEliminatoire.OK, Validators.required],
-      actif: [true]
+      actif: [true],
+      ruleEnabled: [false],
+      modeEvaluation: [null],
+      expectedLivrableTypes: [''],
+      minLivrableCount: [1],
+      expectedKeyword: [''],
+      noteMaxAuto: [null],
+      ruleDescription: ['']
     });
 
     this.noteForm = this.fb.group({
@@ -114,7 +122,14 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       bareme: [20, [Validators.required, Validators.min(1)]],
       poids: [1, [Validators.required, Validators.min(0.1)]],
       seuil: [10, [Validators.required, Validators.min(0)]],
-      actif: [true]
+      actif: [true],
+      ruleEnabled: [false],
+      modeEvaluation: [null],
+      expectedLivrableTypes: [''],
+      minLivrableCount: [1],
+      expectedKeyword: [''],
+      noteMaxAuto: [20],
+      ruleDescription: ['']
     });
   }
 
@@ -166,9 +181,9 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     this.modalMode = 'create';
     this.selectedCritereId = null;
     if (type === 'eliminatoire') {
-      this.eliminatoireForm.reset({ reponseAttendue: ReponseEliminatoire.OK, actif: true, ordre: 1 });
+      this.eliminatoireForm.reset({ reponseAttendue: ReponseEliminatoire.OK, actif: true, ordre: 1, ruleEnabled: false, minLivrableCount: 1 });
     } else {
-      this.noteForm.reset({ actif: true, ordre: 1, bareme: 20, poids: 1, seuil: 10 });
+      this.noteForm.reset({ actif: true, ordre: 1, bareme: 20, poids: 1, seuil: 10, ruleEnabled: false, minLivrableCount: 1, noteMaxAuto: 20 });
     }
     this.isModalOpen.set(true);
   }
@@ -186,7 +201,14 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
         domaine: crit.domaine,
         ordre: crit.ordre,
         reponseAttendue: crit.reponseAttendue,
-        actif: crit.actif
+        actif: crit.actif,
+        ruleEnabled: crit.ruleEnabled ?? false,
+        modeEvaluation: crit.modeEvaluation ?? null,
+        expectedLivrableTypes: crit.expectedLivrableTypes ?? '',
+        minLivrableCount: crit.minLivrableCount ?? 1,
+        expectedKeyword: crit.expectedKeyword ?? '',
+        noteMaxAuto: crit.noteMaxAuto ?? null,
+        ruleDescription: crit.ruleDescription ?? ''
       });
     } else {
       const crit = critere as CritereNote;
@@ -198,7 +220,14 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
         bareme: crit.bareme,
         poids: crit.poids,
         seuil: crit.seuil,
-        actif: crit.actif
+        actif: crit.actif,
+        ruleEnabled: crit.ruleEnabled ?? false,
+        modeEvaluation: crit.modeEvaluation ?? null,
+        expectedLivrableTypes: crit.expectedLivrableTypes ?? '',
+        minLivrableCount: crit.minLivrableCount ?? 1,
+        expectedKeyword: crit.expectedKeyword ?? '',
+        noteMaxAuto: crit.noteMaxAuto ?? crit.bareme,
+        ruleDescription: crit.ruleDescription ?? ''
       });
     }
     this.isModalOpen.set(true);

@@ -39,6 +39,14 @@ export const backofficeRoutes: Routes = [
               loadComponent: () =>
                 import('./criteresEvaluationAdmin/admin-criteres-page.component')
                   .then(m => m.AdminCriteresPageComponent) },
+            { path: 'admin/industrialisation/questions',
+              loadComponent: () =>
+                import('./industrialisation-questions/industrialisation-questions.component')
+                  .then(m => m.IndustrialisationQuestionsComponent) },
+            { path: 'admin/livrables',
+              loadComponent: () =>
+                import('./livrables-admin/livrables-admin.component')
+                  .then(m => m.LivrablesAdminComponent) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     }

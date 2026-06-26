@@ -4,6 +4,7 @@ import { SignUpComponent } from './sign-up/sign-up.component';
 
 import { backofficeRoutes } from './backoffice/backoffice.routes';
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 import { frontofficeRoutes } from './frontoffice/frontoffice.routes';
 
@@ -13,5 +14,10 @@ export const routes: Routes = [
     { path: 'sign-up', component: SignUpComponent },
     { path: 'frontoffice', canActivate: [authGuard], children: frontofficeRoutes },
     { path: 'backoffice', canActivate: [authGuard], children: backofficeRoutes },
+    {
+        path: 'ci/industrialisation',
+        canActivate: [authGuard, roleGuard(['ROLE_CI'])],
+        loadComponent: () => import('./ci/industrialisation/ci-industrialisation.component').then(m => m.CiIndustrialisationComponent)
+    },
     { path: '**', redirectTo: 'sign-in' }
 ];

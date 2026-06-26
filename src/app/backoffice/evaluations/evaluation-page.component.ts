@@ -1,42 +1,43 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { ProjetEvaluable, EvaluationRequest, EvaluationResponse } from '../../core/models/evaluation.model';
-import { ProjetEvaluableService } from '../../core/services/projet-evaluable.service';
-import { CritereEliminatoire } from '../../core/models/critere.model';
-import { CritereEliminatoireService } from '../../core/services/critere-eliminatoire.service';
-import { CritereNote } from '../../core/models/critere.model';
-import { CritereNoteService } from '../../core/services/critere-note.service';
+import { EvaluationResponse, ProjetEvaluable } from '../../core/models/evaluation.model';
 import { EvaluationService } from '../../core/services/evaluation.service';
+import { ProjetEvaluableService } from '../../core/services/projet-evaluable.service';
+import { EvaluationChecklistComponent } from '../../shared/components/evaluation-checklist/evaluation-checklist.component';
 
 @Component({
   selector: 'app-evaluation-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, EvaluationChecklistComponent],
   templateUrl: './evaluation-page.component.html',
   styleUrl: './evaluation-page.component.scss'
 })
 export class EvaluationPageComponent implements OnInit, OnDestroy {
   private readonly projetService = inject(ProjetEvaluableService);
-  private readonly critElimService = inject(CritereEliminatoireService);
-  private readonly critNoteService = inject(CritereNoteService);
-  private readonly evalService = inject(EvaluationService);
-  private readonly fb = inject(FormBuilder);
+  private readonly evaluationService = inject(EvaluationService);
   private readonly destroy$ = new Subject<void>();
 
   readonly projects = signal<ProjetEvaluable[]>([]);
   readonly loadingProjects = signal(false);
   readonly projectsError = signal<string | null>(null);
+  readonly savingProjectId = signal<number | null>(null);
+  readonly evalResult = signal<EvaluationResponse | null>(null);
+  readonly evalError = signal<string | null>(null);
 
   selectedProject: ProjetEvaluable | null = null;
-  eliminatoires: CritereEliminatoire[] = [];
-  notes: CritereNote[] = [];
 
-  evaluationForm!: FormGroup;
-  saving = signal(false);
-  evalResult = signal<EvaluationResponse | null>(null);
-  evalError = signal<string | null>(null);
+  get evaluatedCount(): number {
+    return this.projects().filter((project) => project.scoreFinal != null).length;
+  }
+
+  get eligibleCount(): number {
+    return this.projects().filter((project) => project.eligibleIndustrialisation === true).length;
+  }
+
+  get nonEligibleCount(): number {
+    return this.projects().filter((project) => project.eligibleIndustrialisation === false).length;
+  }
 
   ngOnInit(): void {
     this.loadProjects();
@@ -47,23 +48,21 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadProjects(): void {
+  loadProjects(): void {
     this.loadingProjects.set(true);
     this.projectsError.set(null);
     this.projetService.getEvaluables()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          // filter projects by expected status
-          const filtered = data.filter(p => p.statut === 'REALISATION_TERMINEE');
+          const filtered = data.filter((p) => p.statut === 'REALISATION_TERMINEE');
           this.projects.set(filtered);
-          if (filtered.length === 0) {
-            this.projectsError.set('Aucun projet évaluable trouvé.');
-          }
           this.loadingProjects.set(false);
+          if (filtered.length === 0) {
+            this.projectsError.set('Aucun projet terminé à évaluer.');
+          }
         },
-        error: (err) => {
-          console.error(err);
+        error: () => {
           this.projectsError.set('Impossible de charger les projets évaluables.');
           this.loadingProjects.set(false);
         }
@@ -72,89 +71,46 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
 
   selectProject(project: ProjetEvaluable): void {
     this.selectedProject = project;
-    this.evalResult.set(null);
     this.evalError.set(null);
-    // load active criteria
-    this.critElimService.findActive().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (elims) => {
-        this.eliminatoires = elims;
-        this.buildForm();
-      },
-      error: () => {
-        this.evalError.set("Erreur lors du chargement des critères éliminatoires.");
-      }
-    });
-
-    this.critNoteService.findActive().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (notes) => {
-        this.notes = notes;
-        this.buildForm();
-      },
-      error: () => {
-        this.evalError.set("Erreur lors du chargement des critères notés.");
-      }
-    });
-  }
-
-  private buildForm(): void {
-    // build when both lists are present
-    const elimsReady = Array.isArray(this.eliminatoires);
-    const notesReady = Array.isArray(this.notes);
-    if (!elimsReady || !notesReady) return;
-
-    const elimControls = this.eliminatoires.map(e => this.fb.group({
-      critereId: [e.id],
-      reponse: [null, Validators.required],
-      commentaire: ['']
-    }));
-
-    const noteControls = this.notes.map(n => this.fb.group({
-      critereId: [n.id],
-      noteObtenue: [null, [Validators.required, Validators.min(0), Validators.max(n.bareme)]],
-      commentaire: ['']
-    }));
-
-    this.evaluationForm = this.fb.group({
-      eliminatoires: this.fb.array(elimControls),
-      notes: this.fb.array(noteControls)
-    });
-  }
-
-  get eliminatoiresArray(): FormArray {
-    return this.evaluationForm.get('eliminatoires') as FormArray;
-  }
-
-  get notesArray(): FormArray {
-    return this.evaluationForm.get('notes') as FormArray;
-  }
-
-  canCalculate(): boolean {
-    return this.evaluationForm && this.evaluationForm.valid && !!this.selectedProject;
-  }
-
-  calculateEvaluation(): void {
-    if (!this.canCalculate() || !this.selectedProject) return;
-
-    this.saving.set(true);
-    this.evalError.set(null);
-
-    const payload: EvaluationRequest = {
-      eliminatoires: this.eliminatoiresArray.value,
-      notes: this.notesArray.value
-    };
-
-    this.evalService.calculerEvaluation(this.selectedProject.id, payload)
+    this.evaluationService.getLatestEvaluation(project.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (res) => {
-          this.evalResult.set(res);
-          this.saving.set(false);
+        next: (evaluation) => this.evalResult.set(evaluation),
+        error: () => this.evalResult.set(null),
+      });
+  }
+
+  calculate(project: ProjetEvaluable): void {
+    this.savingProjectId.set(project.id);
+    this.evalError.set(null);
+    this.evaluationService.calculateScore(project.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (evaluation) => {
+          this.evalResult.set(evaluation);
+          this.selectedProject = project;
+          this.projects.update((projects) =>
+            projects.map((item) =>
+              item.id === project.id
+                ? {
+                    ...item,
+                    scoreFinal: evaluation.scoreFinal,
+                    eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
+                    bloqueParEliminatoire: evaluation.bloqueParEliminatoire,
+                  }
+                : item
+            )
+          );
+          this.savingProjectId.set(null);
         },
         error: (err) => {
-          console.error(err);
-          this.evalError.set('Erreur lors du calcul de l\'évaluation.');
-          this.saving.set(false);
+          this.evalError.set(err?.error?.detail ?? 'Erreur lors du calcul du score.');
+          this.savingProjectId.set(null);
         }
       });
+  }
+
+  statusLabel(status: string): string {
+    return status === 'REALISATION_TERMINEE' ? 'Realisation terminee' : status;
   }
 }

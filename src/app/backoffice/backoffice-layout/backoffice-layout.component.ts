@@ -68,7 +68,9 @@ export class BackofficeLayoutComponent {
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
         { label: 'Paramètres', icon: 'settings', route: '/backoffice/settings' },
         { label: 'Évaluations', icon: 'check-circle', route: '/backoffice/admin/evaluations' },
-        { label: 'Critères Evaluation Projets', icon: 'check-square', route: '/backoffice/criteres' }
+        { label: 'Critères Evaluation Projets', icon: 'check-square', route: '/backoffice/criteres' },
+        { label: 'Questions industrialisation', icon: 'check-square', route: '/backoffice/admin/industrialisation/questions' },
+        { label: 'Livrables', icon: 'file-text', route: '/backoffice/admin/livrables' }
     ];
 
     isProfileOpen = false;
