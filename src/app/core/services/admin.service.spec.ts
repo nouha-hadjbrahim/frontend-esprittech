@@ -53,10 +53,10 @@ describe('AdminService', () => {
 
   it('should create an equipe', () => {
     const equipe = { id: 1, nom: 'E1' } as Equipe;
-    service.createEquipe({ nom: 'E1', chefId: 2 }).subscribe((res) => expect(res).toEqual(equipe));
+    service.createEquipe({ nom: 'E1', domaine: 'Info', chefId: 2 }).subscribe((res) => expect(res).toEqual(equipe));
     const req = http.expectOne(`${API}/equipes`);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ nom: 'E1', chefId: 2 });
+    expect(req.request.body).toEqual({ nom: 'E1', domaine: 'Info', chefId: 2 });
     req.flush(equipe);
   });
 

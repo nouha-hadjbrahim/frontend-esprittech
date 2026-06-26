@@ -57,10 +57,13 @@
           <div class="leader-row">
             <mat-icon [class.chef]="!!e.chef" [class.muted]="!e.chef" class="leader-icon">star</mat-icon>
             <span [class.no-chef]="!e.chef">{{ e.chef ? (e.chef.prenom + ' ' + e.chef.nom) : 'Aucun chef désigné' }}</span>
+            <button *ngIf="!e.chef" app-button variant="ghost" size="sm" class="btn-assign-chef" (click)="ouvrirAssignerChef(e); $event.stopPropagation()" matTooltip="Assigner un chef">
+              <mat-icon class="icon-xs">person_add</mat-icon> Assigner
+            </button>
           </div>
           <div class="meta-row">
             <span><mat-icon class="mi">group</mat-icon>{{ e.nbMembres }} membres</span>
-            <span><mat-icon class="mi">calendar_today</mat-icon>{{ e.createdAt }}</span>
+            <span><mat-icon class="mi">calendar_today</mat-icon>{{ e.createdAt | date:'dd/MM/yyyy' }}</span>
           </div>
           <div class="card-actions">
             <button app-button variant="outline" size="sm" class="flex-1" (click)="ouvrirDetails(e)">
@@ -86,7 +89,7 @@
               <th>Membres</th>
               <th>Créée le</th>
               <th>Statut</th>
-              <th class="text-right">Actions</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -97,26 +100,33 @@
                   <mat-icon class="chef" style="font-size:16px;width:16px;height:16px">star</mat-icon>
                   {{ e.chef.prenom }} {{ e.chef.nom }}
                 </span>
-                <span *ngIf="!e.chef" class="no-chef">Aucun chef désigné</span>
+                <span *ngIf="!e.chef" class="no-chef">
+                  Aucun chef désigné
+                </span>
+                <button *ngIf="!e.chef" app-button variant="ghost" size="sm" class="btn-assign-chef-list" (click)="ouvrirAssignerChef(e)">
+                  Assigner
+                </button>
               </td>
               <td><app-badge variant="outline" class="badge-xs">{{ e.domaine }}</app-badge></td>
               <td>{{ e.nbMembres }}</td>
-              <td class="muted-text">{{ e.createdAt }}</td>
+              <td class="muted-text">{{ e.createdAt | date:'dd/MM/yyyy' }}</td>
               <td>
                 <app-badge variant="outline" [class.badge-success]="e.statut === 'Actif'">
                   {{ e.statut }}
                 </app-badge>
               </td>
-              <td class="text-right action-btns">
-                <button app-button variant="ghost" size="sm" class="h-8" (click)="ouvrirDetails(e)">
-                  <mat-icon class="icon-xs">visibility</mat-icon> Voir
+              <td class="action-btns">
+                <button class="action-btn view" matTooltip="Voir détails" (click)="ouvrirDetails(e)">
+                  <mat-icon>visibility</mat-icon>
                 </button>
-                <button app-button variant="ghost" size="icon" class="h-8 w-8" (click)="ouvrirModification(e)" matTooltip="Modifier">
-                  <mat-icon class="icon-sm2">edit</mat-icon>
+                <button class="action-btn edit" matTooltip="Modifier" (click)="ouvrirModification(e)">
+                  <mat-icon>edit</mat-icon>
                 </button>
-                <button app-button variant="ghost" size="icon" class="h-8 w-8 danger-icon" (click)="supprimer(e)" matTooltip="Supprimer">
-                  <mat-icon class="icon-sm2">delete</mat-icon>
-                </button>
+                <span [matTooltip]="e.nbMembres > 0 ? 'Videz d\'abord l\'équipe' : 'Supprimer'">
+                  <button class="action-btn delete" (click)="supprimer(e)" [disabled]="e.nbMembres > 0">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </span>
               </td>
             </tr>
           </tbody>

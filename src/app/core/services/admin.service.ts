@@ -54,6 +54,18 @@ export class AdminService {
     return this._getUsers(page, size, search);
   }
 
+  chercherUtilisateursEligibles(search: string, equipeId: number | null, type: string, page = 0, size = 6): Observable<Page<User>> {
+    let params = new HttpParams()
+      .set('type', type)
+      .set('search', search)
+      .set('page', page)
+      .set('size', size);
+    if (equipeId != null) {
+      params = params.set('equipeId', equipeId);
+    }
+    return this.http.get<Page<User>>(`${this.baseUrl}/users/eligible`, { params });
+  }
+
   private _getUsers(page: number, size: number, search?: string): Observable<Page<User>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (search?.trim()) {

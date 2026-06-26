@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Equipe } from '../models/equipe.model';
+import { AssignChefRequest, CreateEquipePayload, Equipe } from '../models/equipe.model';
 import { User } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
@@ -22,7 +22,7 @@ export class EquipeService {
     return this.http.get<User[]>(`${this.baseUrl}/${id}/membres`);
   }
 
-  creer(payload: Omit<Equipe, 'id'>): Observable<Equipe> {
+  creer(payload: CreateEquipePayload): Observable<Equipe> {
     return this.http.post<Equipe>(this.baseUrl, payload);
   }
 
@@ -32,5 +32,22 @@ export class EquipeService {
 
   supprimer(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  assignerChef(equipeId: number, chefId: number): Observable<Equipe> {
+    const body: AssignChefRequest = { chefId };
+    return this.http.put<Equipe>(`${this.baseUrl}/${equipeId}/chef`, body);
+  }
+
+  ajouterMembres(equipeId: number, memberIds: number[]): Observable<Equipe> {
+    return this.http.post<Equipe>(`${this.baseUrl}/${equipeId}/membres`, { memberIds });
+  }
+
+  retirerMembre(equipeId: number, userId: number): Observable<Equipe> {
+    return this.http.delete<Equipe>(`${this.baseUrl}/${equipeId}/membres/${userId}`);
+  }
+
+  retirerChef(equipeId: number): Observable<Equipe> {
+    return this.http.delete<Equipe>(`${this.baseUrl}/${equipeId}/chef`);
   }
 }

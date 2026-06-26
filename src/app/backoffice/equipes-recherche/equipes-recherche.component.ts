@@ -8,16 +8,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize } from 'rxjs';
 
 import { EquipeService } from '../../core/services/equipe.service';
-import { Equipe } from '../../core/models/equipe.model';
+import { CreateEquipePayload, Equipe } from '../../core/models/equipe.model';
 
 import { ButtonComponent } from '../../ui/button/button.component';
 import { BadgeComponent } from '../../ui/badge/badge.component';
 import { CardComponent, CardContentComponent } from '../../ui/card/card.component';
 import { InputComponent } from '../../ui/input/input.component';
-
 import { DialogueCreerEquipeComponent } from './dialogue-creer-equipe/dialogue-creer-equipe.component';
 import { DialogueModifierEquipeComponent } from './dialogue-modifier-equipe/dialogue-modifier-equipe.component';
 import { DialogueDetailsEquipeComponent } from './dialogue-details-equipe/dialogue-details-equipe.component';
+import { DialogueAssignerChefComponent } from './dialogue-assigner-chef/dialogue-assigner-chef.component';
+import { DialogueConfirmationComponent } from '../../ui/dialogue-confirmation/dialogue-confirmation.component';
 
 @Component({
   selector: 'app-equipes-recherche',
@@ -78,13 +79,13 @@ export class EquipesRechercheComponent implements OnInit {
   ouvrirCreation() {
     this.dialog.open(DialogueCreerEquipeComponent, { width: '520px' })
       .afterClosed()
-      .subscribe((payload: Omit<Equipe, 'id'> | undefined) => {
+      .subscribe((payload: CreateEquipePayload | undefined) => {
         if (!payload) return;
         this.svc.creer(payload).subscribe({
           next: (created) => {
             this.equipes.update((arr) => [created, ...arr]);
             this.appliquerFiltre();
-            this.toast(payload.chef ? 'Équipe créée' : 'Équipe créée — chef à désigner plus tard', 'succes');
+            this.toast(payload.chefId ? 'Équipe créée avec chef' : 'Équipe créée — chef à désigner plus tard', 'succes');
           },
           error: () => this.toast('Erreur lors de la création'),
         });
@@ -92,9 +93,11 @@ export class EquipesRechercheComponent implements OnInit {
   }
 
   ouvrirDetails(equipe: Equipe) {
-    this.dialog.open(DialogueDetailsEquipeComponent, { width: '520px', data: equipe })
-      .afterClosed()
-      .subscribe((r) => { if (r === 'edit') this.ouvrirModification(equipe); });
+    const ref = this.dialog.open(DialogueDetailsEquipeComponent, { width: '520px', data: equipe });
+    ref.afterClosed().subscribe((r) => {
+      if (r === 'edit') this.ouvrirModification(equipe);
+      if (r === 'updated') this.charger();
+    });
   }
 
   ouvrirModification(equipe: Equipe) {
@@ -114,14 +117,32 @@ export class EquipesRechercheComponent implements OnInit {
   }
 
   supprimer(equipe: Equipe) {
-    if (!confirm(`Supprimer l'équipe « ${equipe.nom} » ?`)) return;
-    this.svc.supprimer(equipe.id).subscribe({
-      next: () => {
-        this.equipes.update((arr) => arr.filter((e) => e.id !== equipe.id));
-        this.appliquerFiltre();
-        this.toast('Équipe supprimée', 'succes');
-      },
-      error: () => this.toast('Erreur lors de la suppression'),
+    this.dialog.open(DialogueConfirmationComponent, {
+      width: '320px',
+      data: `Supprimer l'équipe « ${equipe.nom} » ?`,
+    }).afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.svc.supprimer(equipe.id).subscribe({
+        next: () => {
+          this.equipes.update((arr) => arr.filter((e) => e.id !== equipe.id));
+          this.appliquerFiltre();
+          this.toast('Équipe supprimée', 'succes');
+        },
+        error: (err) => {
+          const msg = err?.error?.detail || 'Erreur lors de la suppression';
+          this.toast(msg);
+        },
+      });
+    });
+  }
+
+  ouvrirAssignerChef(equipe: Equipe) {
+    const ref = this.dialog.open(DialogueAssignerChefComponent, { width: '480px', data: equipe });
+    ref.afterClosed().subscribe((updated) => {
+      if (!updated) return;
+      this.equipes.update((arr) => arr.map((e) => (e.id === updated.id ? updated : e)));
+      this.appliquerFiltre();
+      this.toast('Chef assigné avec succès', 'succes');
     });
   }
 
