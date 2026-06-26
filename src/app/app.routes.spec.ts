@@ -16,6 +16,12 @@ describe('app routes', () => {
     expect(routes.find((r) => r.path === 'backoffice')?.canActivate?.length).toBe(1);
   });
 
+  it('should render the ci workspace inside the connected layout', () => {
+    const ciRoute = routes.find((r) => r.path === 'ci');
+    expect(ciRoute?.component).toBeDefined();
+    expect(ciRoute?.children?.find((c) => c.path === 'industrialisation')).toBeDefined();
+  });
+
   it('should send unknown paths to sign-in', () => {
     expect(routes.find((r) => r.path === '**')?.redirectTo).toBe('sign-in');
   });
