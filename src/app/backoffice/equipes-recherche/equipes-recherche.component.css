@@ -119,10 +119,9 @@
   margin: 0.25rem 0 0;
   font-size: 0.75rem;
   color: var(--muted-foreground);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leader-row {
@@ -132,8 +131,9 @@
   margin-top: 0.75rem;
   font-size: 0.8125rem;
   min-width: 0;
+  min-height: 1.5rem;
 }
-.leader-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leader-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .leader-icon { font-size: 14px; width: 14px; height: 14px; }
 .chef  { color: #f59e0b; }
 .muted { color: rgba(148,163,184,0.4); }
@@ -152,7 +152,9 @@
 
 .card-actions {
   display: flex;
-  gap: 0.375rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
   margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--border);
@@ -162,12 +164,15 @@
 .danger-icon { color: var(--destructive); }
 .danger-icon:hover { background: #fef2f2; }
 
+.invisible { visibility: hidden; }
+
 .btn-assign-chef {
   font-size: 0.6875rem;
   color: var(--primary);
   margin-left: auto;
   padding: 0 0.375rem;
   height: 1.5rem;
+  flex-shrink: 0;
 }
 .btn-assign-chef:hover { background: #fef2f2; }
 
@@ -190,10 +195,13 @@
   overflow: hidden;
 }
 
-
-.eq-table { width: 100%; border-collapse: collapse; }
+.eq-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
 .eq-table th {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -204,23 +212,57 @@
   border-bottom: 1px solid var(--border);
 }
 .eq-table td {
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.625rem;
+  font-size: 0.8125rem;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 .eq-table tbody tr:last-child td { border-bottom: none; }
 .eq-table tbody tr:hover { background: rgba(248,250,252,0.4); }
+
+/* column widths */
+.col-nom     { width: 22%; }
+.col-chef    { width: 24%; }
+.col-domaine { width: 13%; }
+.col-membres { width: 9%; }
+.col-date    { width: 13%; }
+.col-statut  { width: 10%; }
+.col-actions { width: 9%; }
+
+/* cell content */
 .cell-name { font-weight: 600; }
-.leader-cell { display: inline-flex; align-items: center; gap: 0.5rem; }
-.muted-text { color: var(--muted-foreground); }
-.text-right { text-align: right; }
-.action-btns {
+.cell-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.cell-chef { vertical-align: middle; }
+.cell-domaine { vertical-align: middle; }
+.cell-membres { vertical-align: middle; text-align: center; }
+.cell-date { vertical-align: middle; }
+.cell-statut { vertical-align: middle; }
+.cell-actions { vertical-align: middle; padding: 0.375rem 0.625rem !important; }
+
+/* chef inner row: always star + text + button */
+.chef-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+.chef-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.chef-icon.chef  { color: #f59e0b; }
+.chef-icon.muted { color: rgba(148,163,184,0.4); }
+.chef-inner .cell-truncate { flex: 1; min-width: 0; }
+
+/* action buttons cell */
+.cell-actions .action-btns {
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.125rem;
 }
 
 .action-btn {
@@ -277,7 +319,7 @@
   color: var(--primary);
   padding: 0 0.25rem;
   height: 1.375rem;
-  margin-left: 0.375rem;
+  flex-shrink: 0;
 }
 .btn-assign-chef-list:hover { background: #fef2f2; }
 

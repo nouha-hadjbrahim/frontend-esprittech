@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { finalize } from 'rxjs';
 import { EquipeService } from '../../../core/services/equipe.service';
@@ -42,14 +42,14 @@ import { ButtonComponent } from '../../../ui/button/button.component';
       </div>
 
       <div class="results">
-        <div *ngIf="query.length >= 2 && !chargement && candidats.length === 0" class="empty-state">
-          <mat-icon class="empty-icon">search_off</mat-icon>
-          <p class="empty-text">Aucun résultat pour "{{ query }}"</p>
+        <div *ngIf="chargement && candidats.length === 0" class="empty-state">
+          <div class="search-spinner-lg"></div>
+          <p class="empty-text">Chargement des utilisateurs…</p>
         </div>
 
-        <div *ngIf="query.length < 2 && !chargement" class="empty-state">
-          <mat-icon class="empty-icon">search</mat-icon>
-          <p class="empty-text">Tapez au moins 2 caractères pour chercher</p>
+        <div *ngIf="!chargement && candidats.length === 0" class="empty-state">
+          <mat-icon class="empty-icon">search_off</mat-icon>
+          <p class="empty-text">{{ query ? 'Aucun résultat pour "' + query + '"' : 'Aucun utilisateur éligible' }}</p>
         </div>
 
         <div
@@ -174,6 +174,14 @@ import { ButtonComponent } from '../../../ui/button/button.component';
       width: 16px;
       height: 16px;
       border: 2px solid var(--border, #e5e7eb);
+      border-top-color: var(--primary, #E63946);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    .search-spinner-lg {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border, #e5e7eb);
       border-top-color: var(--primary, #E63946);
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
@@ -327,23 +335,23 @@ export class DialogueAjouterMembresComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.chargement = true;
+    this.adminSvc.chercherUtilisateursEligibles('', this.eq.id, 'MEMBER', 0, 100).subscribe({
+      next: (res) => { this.candidats = res.content; this.chargement = false; },
+      error: () => { this.chargement = false; this.snack.open('Erreur lors du chargement', '✕', { duration: 3500, panelClass: ['snack-error'] }); },
+    });
+
     this.search$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       switchMap((q) => {
-        if (q.trim().length < 2) {
-          this.candidats = [];
-          this.chargement = false;
-          return of(null);
-        }
         this.chargement = true;
-        return this.adminSvc.chercherUtilisateursEligibles(q, this.eq.id, 'MEMBER');
+        return this.adminSvc.chercherUtilisateursEligibles(q, this.eq.id, 'MEMBER', 0, 100);
       }),
       takeUntil(this.destroy$),
     ).subscribe((res) => {
       this.chargement = false;
-      if (!res) { this.candidats = []; return; }
-      this.candidats = res.content.filter((u) => !this.selection.find((s) => s.id === u.id));
+      this.candidats = res.content;
     });
   }
 
@@ -360,12 +368,9 @@ export class DialogueAjouterMembresComponent implements OnInit, OnDestroy {
     const idx = this.selection.findIndex((s) => s.id === u.id);
     if (idx >= 0) {
       this.selection.splice(idx, 1);
-      this.candidats.unshift(u);
     } else {
       this.selection.push(u);
-      this.candidats = this.candidats.filter((c) => c.id !== u.id);
     }
-    this.candidats = [...this.candidats];
     this.selection = [...this.selection];
   }
 

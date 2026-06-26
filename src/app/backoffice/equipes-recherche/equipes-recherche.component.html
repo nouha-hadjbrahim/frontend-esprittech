@@ -57,24 +57,26 @@
           <div class="leader-row">
             <mat-icon [class.chef]="!!e.chef" [class.muted]="!e.chef" class="leader-icon">star</mat-icon>
             <span [class.no-chef]="!e.chef">{{ e.chef ? (e.chef.prenom + ' ' + e.chef.nom) : 'Aucun chef désigné' }}</span>
-            <button *ngIf="!e.chef" app-button variant="ghost" size="sm" class="btn-assign-chef" (click)="ouvrirAssignerChef(e); $event.stopPropagation()" matTooltip="Assigner un chef">
+            <button [class.invisible]="!!e.chef" app-button variant="ghost" size="sm" class="btn-assign-chef" (click)="ouvrirAssignerChef(e); $event.stopPropagation()" matTooltip="Assigner un chef">
               <mat-icon class="icon-xs">person_add</mat-icon> Assigner
             </button>
           </div>
           <div class="meta-row">
-            <span><mat-icon class="mi">group</mat-icon>{{ e.nbMembres }} membres</span>
+            <span><mat-icon class="mi">group</mat-icon>{{ e.nbMembres }} membre{{ e.nbMembres !== 1 ? 's' : '' }}</span>
             <span><mat-icon class="mi">calendar_today</mat-icon>{{ e.createdAt | date:'dd/MM/yyyy' }}</span>
           </div>
           <div class="card-actions">
             <button app-button variant="outline" size="sm" class="flex-1" (click)="ouvrirDetails(e)">
               <mat-icon class="icon-xs">visibility</mat-icon> Voir détails
             </button>
-            <button app-button variant="ghost" size="icon" (click)="ouvrirModification(e)" matTooltip="Modifier">
+            <button class="action-btn edit" matTooltip="Modifier" (click)="ouvrirModification(e)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button app-button variant="ghost" size="icon" class="danger-icon" (click)="supprimer(e)" matTooltip="Supprimer">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <span [matTooltip]="e.nbMembres > 0 ? 'Videz d\'abord l\'équipe' : 'Supprimer'">
+              <button class="action-btn delete" (click)="supprimer(e)" [disabled]="e.nbMembres > 0">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </span>
           </div>
         </app-card>
       </div>
@@ -83,39 +85,32 @@
         <table class="eq-table">
           <thead>
             <tr>
-              <th>Nom</th>
-              <th>Chef d'équipe</th>
-              <th>Domaine</th>
-              <th>Membres</th>
-              <th>Créée le</th>
-              <th>Statut</th>
-              <th>Actions</th>
+              <th class="col-nom">Nom</th>
+              <th class="col-chef">Chef d'équipe</th>
+              <th class="col-domaine">Domaine</th>
+              <th class="col-membres">Membres</th>
+              <th class="col-date">Créée le</th>
+              <th class="col-statut">Statut</th>
+              <th class="col-actions">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let e of filtered">
-              <td class="cell-name">{{ e.nom }}</td>
-              <td>
-                <span *ngIf="e.chef" class="leader-cell">
-                  <mat-icon class="chef" style="font-size:16px;width:16px;height:16px">star</mat-icon>
-                  {{ e.chef.prenom }} {{ e.chef.nom }}
-                </span>
-                <span *ngIf="!e.chef" class="no-chef">
-                  Aucun chef désigné
-                </span>
-                <button *ngIf="!e.chef" app-button variant="ghost" size="sm" class="btn-assign-chef-list" (click)="ouvrirAssignerChef(e)">
-                  Assigner
-                </button>
+              <td class="cell-name"><span class="cell-truncate">{{ e.nom }}</span></td>
+              <td class="cell-chef">
+                <div class="chef-inner">
+                  <mat-icon class="chef-icon" [class.chef]="!!e.chef" [class.muted]="!e.chef">star</mat-icon>
+                  <span class="cell-truncate" [class.no-chef]="!e.chef">{{ e.chef ? (e.chef.prenom + ' ' + e.chef.nom) : 'Aucun chef désigné' }}</span>
+                  <button [class.invisible]="!!e.chef" app-button variant="ghost" size="sm" class="btn-assign-chef-list" (click)="ouvrirAssignerChef(e)">
+                    Assigner
+                  </button>
+                </div>
               </td>
-              <td><app-badge variant="outline" class="badge-xs">{{ e.domaine }}</app-badge></td>
-              <td>{{ e.nbMembres }}</td>
-              <td class="muted-text">{{ e.createdAt | date:'dd/MM/yyyy' }}</td>
-              <td>
-                <app-badge variant="outline" [class.badge-success]="e.statut === 'Actif'">
-                  {{ e.statut }}
-                </app-badge>
-              </td>
-              <td class="action-btns">
+              <td class="cell-domaine"><app-badge variant="outline" class="badge-xs">{{ e.domaine }}</app-badge></td>
+              <td class="cell-membres"><span class="cell-truncate">{{ e.nbMembres }}</span></td>
+              <td class="cell-date"><span class="cell-truncate">{{ e.createdAt | date:'dd/MM/yyyy' }}</span></td>
+              <td class="cell-statut"><app-badge variant="outline" class="badge-xs" [class.badge-success]="e.statut === 'Actif'">{{ e.statut }}</app-badge></td>
+              <td class="cell-actions"><div class="action-btns">
                 <button class="action-btn view" matTooltip="Voir détails" (click)="ouvrirDetails(e)">
                   <mat-icon>visibility</mat-icon>
                 </button>
@@ -127,7 +122,7 @@
                     <mat-icon>delete</mat-icon>
                   </button>
                 </span>
-              </td>
+              </div></td>
             </tr>
           </tbody>
         </table>

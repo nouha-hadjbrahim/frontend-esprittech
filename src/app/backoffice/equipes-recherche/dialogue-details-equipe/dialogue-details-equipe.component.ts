@@ -88,7 +88,7 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
 
         </div>
 
-        <div class="section">
+        <div class="section members-section">
           <div class="section-header">
             <mat-icon class="si">group</mat-icon>
             <span>Membres de l'équipe</span>
@@ -123,43 +123,48 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
       </div>
 
       <div class="dlg-footer">
-        <button app-button variant="outline" (click)="ref.close()">Fermer</button>
+        <button app-button variant="outline" (click)="ref.close(modifications ? 'updated' : undefined)">Fermer</button>
       </div>
     </div>
   `,
   styles: [`
-    :host { display: block; max-width: 36rem; }
-    .dlg-wrap { padding: 1.5rem; }
+    :host { display: flex; flex-direction: column; max-width: 36rem; max-height: 90vh; overflow: hidden; }
+    .dlg-wrap { padding: 1.5rem; display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
     .dlg-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
-    .dlg-title { margin: 0; font-size: 1.25rem; font-weight: 600; }
-    .dlg-desc { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--muted-foreground); }
+    .dlg-header > div { min-width: 0; overflow: hidden; }
+    .dlg-title { margin: 0; font-size: 1.25rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dlg-desc { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .badge-success { background: #f0fdf4 !important; color: #16a34a !important; border-color: #bbf7d0 !important; }
+    .dlg-header app-badge { flex-shrink: 0; }
     .badge-chef { background: #fffbeb !important; color: #b45309 !important; border-color: #fde68a !important; }
 
-    .dlg-body { display: flex; flex-direction: column; gap: 0.75rem; }
+    .dlg-body { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; flex: 1; overflow-y: auto; min-height: 0; }
     .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
     .tile {
       padding: 0.75rem; border-radius: calc(var(--radius) - 2px);
       border: 1px solid var(--border); background: rgba(248,250,252,0.5);
       display: flex; flex-direction: column; gap: 0.25rem;
+      min-width: 0;
     }
     .tile-chef .ti { color: #f59e0b; }
     .tile-lbl {
       display: flex; align-items: center; gap: 0.375rem;
       font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.05em; color: var(--muted-foreground);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .ti { font-size: 12px; width: 12px; height: 12px; }
+    .ti { font-size: 12px; width: 12px; height: 12px; flex-shrink: 0; }
     .tile-val { font-size: 0.8125rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .contact-bar {
       display: flex; align-items: center; gap: 0.5rem;
       padding: 0.75rem; border-radius: calc(var(--radius) - 2px);
       background: #fef2f2; font-size: 0.875rem;
+      overflow: hidden; min-width: 0;
     }
-    .ci { color: var(--primary); font-size: 16px; width: 16px; }
-    .cl { color: var(--muted-foreground); }
-    .cv { font-weight: 500; }
+    .ci { color: var(--primary); font-size: 16px; width: 16px; flex-shrink: 0; }
+    .cl { color: var(--muted-foreground); flex-shrink: 0; }
+    .cv { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .warn-bar {
       display: flex; align-items: center; gap: 0.5rem;
@@ -173,31 +178,58 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
       border: 1px solid var(--border);
       border-radius: calc(var(--radius) - 2px);
       padding: 0.75rem;
+      overflow: hidden;
+    }
+    .members-section {
+      overflow-y: auto;
+      min-height: 0;
+      max-height: 165px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148,163,184,0.4) transparent;
+    }
+    .members-section::-webkit-scrollbar {
+      width: 5px;
+    }
+    .members-section::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .members-section::-webkit-scrollbar-thumb {
+      background: rgba(148,163,184,0.4);
+      border-radius: 3px;
+    }
+    .members-section::-webkit-scrollbar-thumb:hover {
+      background: rgba(148,163,184,0.7);
     }
     .section-header {
       display: flex; align-items: center; gap: 0.5rem;
       font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem;
     }
-    .section-header-btn { margin-left: auto; }
-    .si { font-size: 16px; width: 16px; height: 16px; color: var(--primary); }
+    .section-header-btn { margin-left: auto; flex-shrink: 0; }
+    .si { font-size: 16px; width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; }
 
     .member-row {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.375rem 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.625rem;
+      padding: 0.5rem 0; border-bottom: 1px solid var(--border);
+      min-width: 0;
     }
     .member-row:last-of-type { border-bottom: none; }
-    .chef-row { background: #fffbeb; border-radius: calc(var(--radius) - 4px); padding: 0.375rem 0.5rem; }
+    .chef-row {
+      background: #fffbeb;
+      border-radius: calc(var(--radius) - 4px);
+      padding: 0.875rem 0.75rem;
+    }
     .avatar {
       border-radius: 50%; display: inline-grid; place-items: center;
       font-weight: 600; color: #fff; flex-shrink: 0;
     }
     .avatar.sm { width: 28px; height: 28px; font-size: 11px; }
     .member-info { flex: 1; min-width: 0; }
-    .member-name { display: block; font-size: 0.8125rem; font-weight: 500; }
-    .member-email { display: block; font-size: 0.6875rem; color: var(--muted-foreground); }
-    .btn-remove { color: var(--muted-foreground); }
+    .member-name { display: block; font-size: 0.8125rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .member-email { display: block; font-size: 0.6875rem; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge-chef { flex-shrink: 0; }
+    .btn-remove { color: var(--muted-foreground); flex-shrink: 0; }
     .btn-remove:hover { color: var(--destructive); }
-    .btn-revoke { color: var(--muted-foreground); }
+    .btn-revoke { color: var(--muted-foreground); flex-shrink: 0; }
     .btn-revoke:hover { color: var(--destructive); }
     .center-msg { padding: 1rem 0; text-align: center; color: var(--muted-foreground); font-size: 0.8125rem; }
     .center-msg-sm { padding: 0.5rem 0; }
@@ -207,7 +239,8 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
 
     .dlg-footer {
       display: flex; justify-content: flex-end; gap: 0.5rem;
-      margin-top: 1.5rem; padding-top: 0; align-items: center;
+      padding-top: 1rem; align-items: center;
+      flex-shrink: 0;
     }
     .btn-i { font-size: 16px; width: 16px; height: 16px; margin-right: 0.375rem; }
   `],
@@ -221,6 +254,7 @@ export class DialogueDetailsEquipeComponent implements OnInit {
   chargement = false;
   retraitEnCours = false;
   revocationEnCours = false;
+  modifications = false;
 
   constructor(
     public ref: MatDialogRef<DialogueDetailsEquipeComponent>,
@@ -233,7 +267,7 @@ export class DialogueDetailsEquipeComponent implements OnInit {
 
   private chargerMembres() {
     if (this.eq.members && this.eq.members.length) {
-      this.membresList = [...this.eq.members];
+      this.membresList = this.eq.members.filter((u) => !this.eq.chef || u.id !== this.eq.chef.id);
       return;
     }
     this.chargement = true;
@@ -255,8 +289,8 @@ export class DialogueDetailsEquipeComponent implements OnInit {
       this.svc.retirerMembre(this.eq.id, user.id).subscribe({
         next: () => {
           this.membresList = this.membresList.filter((m) => m.id !== user.id);
+          this.modifications = true;
           this.toast('Membre retiré', 'succes');
-          this.ref.close('updated');
         },
         error: () => this.toast('Erreur lors du retrait du membre'),
         complete: () => (this.retraitEnCours = false),
@@ -269,8 +303,9 @@ export class DialogueDetailsEquipeComponent implements OnInit {
       .afterClosed().subscribe((updated) => {
         if (!updated) return;
         this.eq.chef = updated.chef;
+        this.modifications = true;
         this.toast('Chef assigné', 'succes');
-        this.ref.close('updated');
+        this.rechargerEquipe();
       });
   }
 
@@ -284,8 +319,9 @@ export class DialogueDetailsEquipeComponent implements OnInit {
       this.svc.retirerChef(this.eq.id).subscribe({
         next: () => {
           this.eq.chef = null;
+          this.modifications = true;
           this.toast('Chef révoqué', 'succes');
-          this.ref.close('updated');
+          this.rechargerEquipe();
         },
         error: () => this.toast('Erreur lors de la révocation du chef'),
         complete: () => (this.revocationEnCours = false),
@@ -297,9 +333,20 @@ export class DialogueDetailsEquipeComponent implements OnInit {
     this.dialog.open(DialogueAjouterMembresComponent, { width: '480px', data: this.eq })
       .afterClosed().subscribe((result) => {
         if (!result) return;
+        this.modifications = true;
         this.toast('Membre(s) ajouté(s)', 'succes');
-        this.ref.close('updated');
+        this.rechargerEquipe();
       });
+  }
+
+  private rechargerEquipe() {
+    this.svc.getById(this.eq.id).subscribe({
+      next: (data) => {
+        this.eq = data;
+        this.chargerMembres();
+      },
+      error: () => this.toast('Erreur lors du rechargement'),
+    });
   }
 
   initiales(u: User): string {

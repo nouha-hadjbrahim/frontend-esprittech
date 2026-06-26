@@ -22,6 +22,8 @@ import { MatIconModule } from '@angular/material/icon';
       padding: 24px;
       text-align: center;
       min-width: 280px;
+      max-width: 100%;
+      overflow: hidden;
     }
     .confirm-icon {
       font-size: 40px;
@@ -37,7 +39,9 @@ import { MatIconModule } from '@angular/material/icon';
       margin: 0 0 20px;
       font-size: 0.95rem;
       color: #374151;
-      line-height: 1.4;
+      line-height: 1.5;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
     .confirm-actions {
       display: flex;

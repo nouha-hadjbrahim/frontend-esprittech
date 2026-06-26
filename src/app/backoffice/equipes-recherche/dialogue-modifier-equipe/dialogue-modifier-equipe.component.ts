@@ -84,7 +84,6 @@ import { LabelComponent } from '../../../ui/label/label.component';
                     [(ngModel)]="queryChef"
                     (ngModelChange)="onChefQueryChange($event)"
                     (focus)="showDropdownChef = true"
-                    (blur)="touchedChef = true"
                     (keydown)="onChefKeydown($event)"
                     [placeholder]="chefPlaceholder"
                     autocomplete="off"
@@ -112,7 +111,6 @@ import { LabelComponent } from '../../../ui/label/label.component';
                 </div>
                 <p *ngIf="!chargementChef && queryChef.length >= 2 && candidatsChef.length === 0 && showDropdownChef" class="no-result">Aucun résultat pour "{{ queryChef }}"</p>
               </div>
-              <p *ngIf="!chefs.length && touchedChef" class="field-error">Veuillez sélectionner un chef d'équipe.</p>
             </div>
 
             <!-- Members picker -->
@@ -172,7 +170,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
 
       <div class="modal-footer">
         <button type="button" app-button variant="outline" (click)="ref.close()">Annuler</button>
-        <button type="submit" app-button variant="default" (click)="submit()" [disabled]="!form.nom.trim() || !form.description.trim() || !form.domaine.trim() || !chefs.length">
+        <button type="submit" app-button variant="default" (click)="submit()" [disabled]="!form.nom.trim() || !form.description.trim() || !form.domaine.trim()">
           <mat-icon class="btn-i">save</mat-icon> Enregistrer
         </button>
       </div>
@@ -655,7 +653,6 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
   retirerChef() {
     const ancien = this.chefs[0];
     this.chefs = [];
-    this.touchedChef = true;
     if (ancien) {
       this.membres = this.membres.filter((m) => m.id !== ancien.id);
     }
@@ -734,11 +731,10 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
   /* ── Submit ── */
 
   submit() {
-    if (!this.form.nom.trim() || !this.form.description.trim() || !this.form.domaine.trim() || !this.chefs.length) {
-      this.touchedChef = this.chefs.length === 0;
+    if (!this.form.nom.trim() || !this.form.description.trim() || !this.form.domaine.trim()) {
       return;
     }
-    const chef = this.chefs[0];
+    const chef = this.chefs[0] ?? null;
     const membreIds = this.membres
       .filter((m) => !chef || m.id !== chef.id)
       .map((m) => m.id);
