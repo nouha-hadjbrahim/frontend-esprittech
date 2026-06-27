@@ -9,7 +9,9 @@ import { takeUntil } from 'rxjs/operators';
 import { inject } from '@angular/core';
 import { Equipe } from '../../../core/models/equipe.model';
 import { User } from '../../../core/models/user.model';
+import { EquipeDomaine } from '../../../core/models/equipe-domaine.model';
 import { EquipeService } from '../../../core/services/equipe.service';
+import { EquipeDomaineService } from '../../../core/services/equipe-domaine.service';
 import { ButtonComponent } from '../../../ui/button/button.component';
 import { LabelComponent } from '../../../ui/label/label.component';
 
@@ -48,7 +50,13 @@ import { LabelComponent } from '../../../ui/label/label.component';
             <div class="grid-2">
               <div class="field">
                 <app-label for="e-domaine">Domaine <span class="req">*</span></app-label>
-                <input id="e-domaine" name="domaine" [(ngModel)]="form.domaine" required placeholder="Ex: Intelligence Artificielle" class="inp" autocomplete="off" />
+                <div class="sel-wrap">
+                  <select id="e-domaine" name="domaineId" [(ngModel)]="form.domaineId" required class="inp sel">
+                    <option [ngValue]="null" disabled>Sélectionnez un domaine…</option>
+                    <option *ngFor="let d of domaines" [ngValue]="d.id">{{ d.nom }}</option>
+                  </select>
+                  <mat-icon class="sel-arrow">expand_more</mat-icon>
+                </div>
               </div>
               <div class="field">
                 <app-label for="e-statut">Statut</app-label>
@@ -170,7 +178,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
 
       <div class="modal-footer">
         <button type="button" app-button variant="outline" (click)="ref.close()">Annuler</button>
-        <button type="submit" app-button variant="default" (click)="submit()" [disabled]="!form.nom.trim() || !form.description.trim() || !form.domaine.trim()">
+        <button type="submit" app-button variant="default" (click)="submit()" [disabled]="!form.nom.trim() || !form.description.trim() || !form.domaineId">
           <mat-icon class="btn-i">save</mat-icon> Enregistrer
         </button>
       </div>
@@ -534,6 +542,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
 })
 export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
   private readonly equipeSvc = inject(EquipeService);
+  private readonly domaineSvc = inject(EquipeDomaineService);
   private readonly snack = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
 
@@ -541,7 +550,8 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
   @ViewChild('membresPickerWrap') membresPickerRef!: ElementRef;
   @ViewChild('chefInput', { read: ElementRef }) chefInputRef?: ElementRef;
 
-  form!: { nom: string; description: string; domaine: string; statut: 'Actif' | 'Inactif' };
+  form!: { nom: string; description: string; domaineId: number | null; statut: 'Actif' | 'Inactif' };
+  domaines: EquipeDomaine[] = [];
 
   // Chef picker
   chefs: User[] = [];
@@ -570,10 +580,14 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.domaineSvc.getAll().subscribe({
+      next: (domaines) => { this.domaines = domaines; },
+    });
+
     this.form = {
       nom: this.equipe.nom,
       description: this.equipe.description ?? '',
-      domaine: this.equipe.domaine,
+      domaineId: this.equipe.domaineId,
       statut: this.equipe.statut,
     };
     if (this.equipe.chef) {
@@ -731,7 +745,7 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
   /* ── Submit ── */
 
   submit() {
-    if (!this.form.nom.trim() || !this.form.description.trim() || !this.form.domaine.trim()) {
+    if (!this.form.nom.trim() || !this.form.description.trim() || !this.form.domaineId) {
       return;
     }
     const chef = this.chefs[0] ?? null;
@@ -740,8 +754,10 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
       .map((m) => m.id);
     const updated: Equipe = {
       ...this.equipe,
-      ...this.form,
+      nom: this.form.nom.trim(),
       description: this.form.description.trim(),
+      domaineId: this.form.domaineId,
+      domaine: this.domaines.find((d) => d.id === this.form.domaineId)?.nom ?? '',
       chef: chef ?? null,
       chefId: chef?.id ?? null,
       memberIds: membreIds.length ? membreIds : null,

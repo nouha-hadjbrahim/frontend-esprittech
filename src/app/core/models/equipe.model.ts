@@ -9,6 +9,7 @@ export interface Equipe {
   emailChef?: string;
   nbMembres: number;
   createdAt: string;
+  domaineId: number;
   domaine: string;
   statut: 'Actif' | 'Inactif';
   members?: User[];
@@ -20,7 +21,7 @@ export interface Equipe {
 export interface CreateEquipeRequest {
   nom: string;
   description?: string;
-  domaine: string;
+  domaineId: number;
   chefId?: number;
   memberIds?: number[];
 }
@@ -29,7 +30,7 @@ export interface CreateEquipeRequest {
 export interface CreateEquipePayload {
   nom: string;
   description: string | null;
-  domaine: string;
+  domaineId: number;
   chefId: number | null;
   memberIds: number[] | null;
 }

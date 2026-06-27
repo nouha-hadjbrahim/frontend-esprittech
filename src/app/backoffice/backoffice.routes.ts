@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { BackofficeLayoutComponent } from './backoffice-layout/backoffice-layout.component';
 import { UsersComponent } from './users/users.component';
 import { EquipesRechercheComponent } from './equipes-recherche/equipes-recherche.component';
+import { DomainesComponent } from './equipes-recherche/domaines/domaines.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SubjectsComponent } from './subjects/subjects.component';
 import { FormulairesComponent } from './subjects/formulaires/formulaires.component';
@@ -26,6 +27,7 @@ export const backofficeRoutes: Routes = [
             { path: 'catalog', component: CatalogComponent },
             { path: 'applications', component: ApplicationsComponent },
             { path: 'equipes-recherche', component: EquipesRechercheComponent },
+            { path: 'equipes-recherche/domaines', component: DomainesComponent },
             { path: 'supervisors', component: SupervisorsComponent },
             { path: 'users', component: UsersComponent },
             { path: 'history', component: HistoryComponent },

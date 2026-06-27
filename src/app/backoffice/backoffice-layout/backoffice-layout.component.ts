@@ -30,7 +30,10 @@ export class BackofficeLayoutComponent {
 
     readonly user = this.authService.currentUser;
 
-    sujetsExpanded = true;
+    expandedState: Record<string, boolean> = {
+        'Sujets': true,
+        'Équipes de recherche': true,
+    };
 
     readonly initials = computed(() => {
         const u = this.user();
@@ -62,7 +65,14 @@ export class BackofficeLayoutComponent {
         },
         { label: 'Catalogue applicatif', icon: 'layers', route: '/backoffice/catalog' },
         { label: 'Candidatures', icon: 'file-text', route: '/backoffice/applications' },
-        { label: 'Équipes de recherche', icon: 'users', route: '/backoffice/equipes-recherche' },
+        {
+            label: 'Équipes de recherche',
+            icon: 'users',
+            children: [
+                { label: 'Équipes', route: '/backoffice/equipes-recherche' },
+                { label: 'Domaines', route: '/backoffice/equipes-recherche/domaines' },
+            ],
+        },
         { label: 'Encadrants', icon: 'award', route: '/backoffice/supervisors' },
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
@@ -75,12 +85,19 @@ export class BackofficeLayoutComponent {
 
     isProfileOpen = false;
 
+    private readonly groupRoutes: Record<string, string> = {
+        'Sujets': '/backoffice/subjects',
+        'Équipes de recherche': '/backoffice/equipes-recherche',
+    };
+
     constructor() {
         this.router.events
             .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
             .subscribe(() => {
-                if (this.isSujetsSectionActive()) {
-                    this.sujetsExpanded = true;
+                for (const label of Object.keys(this.groupRoutes)) {
+                    if (this.router.url.startsWith(this.groupRoutes[label])) {
+                        this.expandedState[label] = true;
+                    }
                 }
             });
     }
@@ -89,24 +106,18 @@ export class BackofficeLayoutComponent {
         this.isProfileOpen = !this.isProfileOpen;
     }
 
-    toggleSujetsMenu(): void {
-        this.sujetsExpanded = !this.sujetsExpanded;
-    }
-
-    isSujetsSectionActive(): boolean {
-        return this.router.url.startsWith('/backoffice/subjects');
+    toggleNavGroup(label: string): void {
+        this.expandedState[label] = !this.expandedState[label];
     }
 
     isChildActive(route: string): boolean {
-        if (route === '/backoffice/subjects') {
-            return this.router.url === '/backoffice/subjects';
-        }
         return this.router.url === route || this.router.url.startsWith(route + '?');
     }
 
     isNavItemActive(item: NavItem): boolean {
         if (item.children) {
-            return this.isSujetsSectionActive();
+            const basePath = this.groupRoutes[item.label];
+            return basePath ? this.router.url.startsWith(basePath) : false;
         }
         return item.route ? this.router.url.startsWith(item.route) : false;
     }

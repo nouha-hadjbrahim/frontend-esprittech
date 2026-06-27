@@ -24,11 +24,24 @@ export class EquipeService {
   }
 
   creer(payload: CreateEquipePayload): Observable<Equipe> {
-    return this.http.post<Equipe>(this.baseUrl, payload);
+    const body = {
+      nom: payload.nom,
+      description: payload.description,
+      domaineId: payload.domaineId,
+      chefId: payload.chefId,
+      memberIds: payload.memberIds,
+    };
+    return this.http.post<Equipe>(this.baseUrl, body);
   }
 
   modifier(id: number, payload: Partial<Equipe>): Observable<Equipe> {
-    return this.http.put<Equipe>(`${this.baseUrl}/${id}`, payload);
+    const body: Record<string, unknown> = {};
+    if (payload.nom !== undefined) body['nom'] = payload.nom;
+    if (payload.description !== undefined) body['description'] = payload.description;
+    if (payload.domaineId !== undefined) body['domaineId'] = payload.domaineId;
+    if (payload.chefId !== undefined) body['chefId'] = payload.chefId;
+    if (payload.statut !== undefined) body['statut'] = payload.statut;
+    return this.http.put<Equipe>(`${this.baseUrl}/${id}`, body);
   }
 
   supprimer(id: number): Observable<void> {

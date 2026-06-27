@@ -7,7 +7,9 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs
 import { takeUntil } from 'rxjs/operators';
 import { CreateEquipePayload } from '../../../core/models/equipe.model';
 import { User } from '../../../core/models/user.model';
+import { EquipeDomaine } from '../../../core/models/equipe-domaine.model';
 import { EquipeService } from '../../../core/services/equipe.service';
+import { EquipeDomaineService } from '../../../core/services/equipe-domaine.service';
 import { ButtonComponent } from '../../../ui/button/button.component';
 import { LabelComponent } from '../../../ui/label/label.component';
 
@@ -45,7 +47,13 @@ import { LabelComponent } from '../../../ui/label/label.component';
 
             <div class="field">
               <app-label for="e-domaine">Domaine de recherche <span class="req">*</span></app-label>
-              <input id="e-domaine" name="domaine" [(ngModel)]="form.domaine" required placeholder="Ex: Intelligence Artificielle" class="inp" autocomplete="off" />
+              <div class="sel-wrap">
+                <select id="e-domaine" name="domaineId" [(ngModel)]="domaineId" required class="inp sel">
+                  <option [ngValue]="null" disabled>Sélectionnez un domaine…</option>
+                  <option *ngFor="let d of domaines" [ngValue]="d.id">{{ d.nom }}</option>
+                </select>
+                <mat-icon class="sel-arrow">expand_more</mat-icon>
+              </div>
             </div>
 
             <!-- Chef picker -->
@@ -157,7 +165,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
 
       <div class="modal-footer">
         <button type="button" app-button variant="outline" (click)="ref.close()">Annuler</button>
-        <button type="submit" app-button variant="default" (click)="submit()" [disabled]="!form.nom.trim() || !form.description.trim() || !form.domaine.trim()">
+        <button type="submit" app-button variant="default" (click)="submit()" [disabled]="!form.nom.trim() || !form.description.trim() || !domaineId">
           <mat-icon class="btn-i">add</mat-icon> Créer l'équipe
         </button>
       </div>
@@ -255,6 +263,23 @@ import { LabelComponent } from '../../../ui/label/label.component';
     }
 
     .ta { height: auto; min-height: 5rem; padding: 0.75rem 0.875rem; resize: vertical; line-height: 1.5; }
+
+    .sel-wrap { position: relative; }
+    .sel {
+      appearance: none;
+      cursor: pointer;
+      padding-right: 2.5rem;
+      background: var(--background, #fff);
+    }
+    .sel-arrow {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--muted-foreground, #94a3b8);
+      font-size: 20px;
+    }
 
     .hint { margin: 0; font-size: 0.6875rem; color: var(--muted-foreground, #64748b); }
 
@@ -484,13 +509,16 @@ import { LabelComponent } from '../../../ui/label/label.component';
 })
 export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
   private readonly equipeSvc = inject(EquipeService);
+  private readonly domaineSvc = inject(EquipeDomaineService);
   private readonly destroy$ = new Subject<void>();
 
   @ViewChild('chefPickerWrap') chefPickerRef!: ElementRef;
   @ViewChild('membresPickerWrap') membresPickerRef!: ElementRef;
   @ViewChild('chefInput', { read: ElementRef }) chefInputRef?: ElementRef;
 
-  form = { nom: '', description: '', domaine: '' };
+  form = { nom: '', description: '' };
+  domaines: EquipeDomaine[] = [];
+  domaineId: number | null = null;
 
   // Chef picker
   chefs: User[] = [];
@@ -515,6 +543,10 @@ export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
   constructor(public ref: MatDialogRef<DialogueCreerEquipeComponent>) {}
 
   ngOnInit() {
+    this.domaineSvc.getAll().subscribe({
+      next: (domaines) => { this.domaines = domaines; },
+    });
+
     this.searchChef$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -659,7 +691,7 @@ export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
   /* ── Submit ── */
 
   submit() {
-    if (!this.form.nom.trim() || !this.form.description.trim() || !this.form.domaine.trim()) return;
+    if (!this.form.nom.trim() || !this.form.description.trim() || !this.domaineId) return;
     const chef = this.chefs[0];
     const membreIds = this.membres
       .filter((m) => !chef || m.id !== chef.id)
@@ -667,7 +699,7 @@ export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
     const payload: CreateEquipePayload = {
       nom: this.form.nom.trim(),
       description: this.form.description.trim(),
-      domaine: this.form.domaine.trim(),
+      domaineId: this.domaineId,
       chefId: chef?.id ?? null,
       memberIds: membreIds.length ? membreIds : null,
     };

@@ -54,7 +54,13 @@ export class EquipesRechercheComponent implements OnInit {
     { label: 'Chefs désignés', value: this.nbChefs(), color: 'rouge', icon: 'star' },
   ]);
 
-  ngOnInit() { this.charger(); }
+  ngOnInit() {
+    this.charger();
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // Equipes tab
+  // ═══════════════════════════════════════════════════════════════
 
   charger() {
     this.chargement = true;
@@ -145,6 +151,10 @@ export class EquipesRechercheComponent implements OnInit {
       this.toast('Chef assigné avec succès', 'succes');
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // Shared
+  // ═══════════════════════════════════════════════════════════════
 
   private toast(msg: string, type: 'succes' | 'erreur' = 'erreur') {
     this.snack.open(msg, '✕', {

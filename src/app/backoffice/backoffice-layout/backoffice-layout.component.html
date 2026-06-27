@@ -19,23 +19,32 @@
                         type="button"
                         class="nav-item nav-group__toggle"
                         [class.active]="isNavItemActive(item)"
-                        (click)="toggleSujetsMenu()"
+                        (click)="toggleNavGroup(item.label)"
                     >
                         <span class="icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <!-- Sujets icon -->
+                            <svg *ngIf="item.label === 'Sujets'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                                 <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
                                 <path d="M9 12h6M9 16h6M9 8h6"></path>
                             </svg>
+                            <!-- Research Teams icon -->
+                            <svg *ngIf="item.label === 'Équipes de recherche'" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
                         </span>
                         <span class="label">{{ item.label }}</span>
-                        <svg class="nav-chevron" [class.nav-chevron--open]="sujetsExpanded" width="16" height="16"
+                        <svg class="nav-chevron" [class.nav-chevron--open]="expandedState[item.label]" width="16" height="16"
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
-                    <div class="nav-subitems" *ngIf="sujetsExpanded">
+                    <div class="nav-subitems" *ngIf="expandedState[item.label]">
                         <a
                             *ngFor="let child of item.children"
                             [routerLink]="child.route"
