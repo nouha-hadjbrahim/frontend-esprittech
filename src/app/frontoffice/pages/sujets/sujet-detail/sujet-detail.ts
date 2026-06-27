@@ -66,8 +66,10 @@ export class SujetDetail implements OnInit {
   industrialisationCommentaire = '';
   industrialisationForm: IndustrialisationFormResponse | null = null;
   industrialisationSaving = false;
+  industrialisationUploadingQuestionId: number | null = null;
   industrialisationError = '';
   industrialisationMessage = '';
+  industrialisationSubmitAttempted = false;
   answers: Record<number, ReponseIndustrialisationRequest> = {};
 
   readonly tabs = [
@@ -295,11 +297,15 @@ export class SujetDetail implements OnInit {
     this.industrialisationForm = null;
     this.industrialisationError = '';
     this.industrialisationMessage = '';
+    this.industrialisationSubmitAttempted = false;
+    this.industrialisationUploadingQuestionId = null;
     this.answers = {};
   }
 
   closeIndustrialisation(): void {
     this.industrialisationOpen = false;
+    this.industrialisationSubmitAttempted = false;
+    this.industrialisationUploadingQuestionId = null;
   }
 
   createIndustrialisation(): void {
@@ -322,6 +328,7 @@ export class SujetDetail implements OnInit {
       next: (form) => {
         this.industrialisationForm = form;
         this.answers = {};
+        this.industrialisationSubmitAttempted = false;
         for (const question of form.questions) {
           const existing = form.reponses.find((r) => r.questionId === question.id);
           this.answers[question.id] = {
@@ -347,6 +354,7 @@ export class SujetDetail implements OnInit {
   saveIndustrialisationAnswers(): void {
     if (!this.industrialisationForm) return;
     this.industrialisationSaving = true;
+    this.industrialisationError = '';
     this.industrialisationService.saveReponses(this.industrialisationForm.candidature.id, {
       reponses: this.buildIndustrialisationAnswers(),
     }).subscribe({
@@ -367,17 +375,34 @@ export class SujetDetail implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    this.industrialisationUploadingQuestionId = question.id;
+    this.industrialisationError = '';
     this.industrialisationService.uploadPreuve(this.industrialisationForm.candidature.id, question.id, file).subscribe({
       next: (candidature: CandidatureIndustrialisation) => {
         this.industrialisationForm = { ...this.industrialisationForm!, candidature };
         this.industrialisationMessage = 'Preuve ajoutee.';
+        this.industrialisationUploadingQuestionId = null;
+        input.value = '';
       },
-      error: (err) => this.industrialisationError = err?.error?.detail ?? 'Upload de preuve impossible.',
+      error: (err) => {
+        this.industrialisationError = err?.error?.detail ?? 'Upload de preuve impossible.';
+        this.industrialisationUploadingQuestionId = null;
+      },
     });
   }
 
   submitIndustrialisation(): void {
     if (!this.industrialisationForm) return;
+    this.industrialisationSubmitAttempted = true;
+    const missingQuestions = this.missingRequiredQuestions();
+    if (missingQuestions.length > 0) {
+      this.industrialisationError = `Reponse obligatoire manquante : ${missingQuestions.join(', ')}.`;
+      return;
+    }
+    if (this.hasBlockingEliminatoryAnswer()) {
+      this.industrialisationError = 'Cette demande contient un critere eliminatoire non conforme.';
+      return;
+    }
     this.industrialisationSaving = true;
     this.industrialisationError = '';
     const candidatureId = this.industrialisationForm.candidature.id;
@@ -414,26 +439,217 @@ export class SujetDetail implements OnInit {
     }
     return this.industrialisationForm.questions.map((question) => {
       const answer = this.answers[question.id] ?? { questionId: question.id };
-      const valeurBoolean = typeof answer.valeurBoolean === 'boolean' ? answer.valeurBoolean : null;
       return {
         questionId: question.id,
-        valeurTexte: this.cleanText(answer.valeurTexte),
-        valeurBoolean,
-        valeurNumerique: answer.valeurNumerique === undefined || answer.valeurNumerique === null
-          ? null
-          : Number(answer.valeurNumerique),
-        valeurUrl: this.cleanText(answer.valeurUrl),
-        reponseEliminatoire: answer.reponseEliminatoire ?? null,
-        noteObtenue: answer.noteObtenue === undefined || answer.noteObtenue === null
-          ? null
-          : Number(answer.noteObtenue),
+        valeurTexte: this.textValueForPayload(question, answer),
+        valeurBoolean: question.typeReponse === 'BOOLEAN' && typeof answer.valeurBoolean === 'boolean'
+          ? answer.valeurBoolean
+          : null,
+        valeurNumerique: question.typeReponse === 'NUMERIQUE' && answer.valeurNumerique !== undefined && answer.valeurNumerique !== null
+          ? Number(answer.valeurNumerique)
+          : null,
+        valeurUrl: question.typeReponse === 'URL' ? this.cleanText(answer.valeurUrl) : null,
+        reponseEliminatoire: question.typeCritere === 'ELIMINATOIRE'
+          ? this.automaticEliminatoryResult(question)
+          : null,
+        noteObtenue: question.typeCritere === 'NOTE' && answer.noteObtenue !== undefined && answer.noteObtenue !== null
+          ? Number(answer.noteObtenue)
+          : null,
         justificatif: this.cleanText(answer.justificatif),
       };
     });
   }
 
+  setBooleanAnswer(question: QuestionIndustrialisation, value: boolean): void {
+    this.ensureAnswer(question).valeurBoolean = value;
+    this.ensureAnswer(question).reponseEliminatoire = this.automaticEliminatoryResult(question);
+    this.industrialisationMessage = '';
+    this.industrialisationError = '';
+  }
+
+  onIndustrialisationAnswerChange(): void {
+    this.industrialisationMessage = '';
+    this.industrialisationError = '';
+  }
+
+  automaticEliminatoryResult(question: QuestionIndustrialisation): ReponseEliminatoire | null {
+    if (question.typeCritere !== 'ELIMINATOIRE') {
+      return null;
+    }
+    const answer = this.answers[question.id];
+    if (!answer) {
+      return null;
+    }
+    if (question.typeReponse === 'BOOLEAN') {
+      if (typeof answer.valeurBoolean !== 'boolean') {
+        return null;
+      }
+      return answer.valeurBoolean ? ReponseEliminatoire.OK : ReponseEliminatoire.NOT_OK;
+    }
+    return this.isQuestionAnswered(question) ? ReponseEliminatoire.OK : null;
+  }
+
+  eliminatoryPreviewLabel(question: QuestionIndustrialisation): string {
+    const result = this.automaticEliminatoryResult(question);
+    if (result === ReponseEliminatoire.OK) {
+      return 'Conforme';
+    }
+    if (result === ReponseEliminatoire.NOT_OK) {
+      return 'Bloquant';
+    }
+    return 'En attente';
+  }
+
+  eliminatoryPreviewClass(question: QuestionIndustrialisation): string {
+    const result = this.automaticEliminatoryResult(question);
+    if (result === ReponseEliminatoire.OK) {
+      return 'auto-result--ok';
+    }
+    if (result === ReponseEliminatoire.NOT_OK) {
+      return 'auto-result--ko';
+    }
+    return 'auto-result--pending';
+  }
+
+  hasBlockingEliminatoryAnswer(): boolean {
+    return this.industrialisationForm?.questions.some(
+      (question) => this.automaticEliminatoryResult(question) === ReponseEliminatoire.NOT_OK
+    ) ?? false;
+  }
+
+  canSubmitIndustrialisation(): boolean {
+    return !!this.industrialisationForm
+      && !this.isIndustrialisationBusy()
+      && this.missingRequiredQuestions().length === 0
+      && !this.hasBlockingEliminatoryAnswer();
+  }
+
+  isIndustrialisationBusy(): boolean {
+    return this.industrialisationSaving || this.industrialisationUploadingQuestionId !== null;
+  }
+
+  isQuestionUploading(question: QuestionIndustrialisation): boolean {
+    return this.industrialisationUploadingQuestionId === question.id;
+  }
+
+  isRequiredQuestionInvalid(question: QuestionIndustrialisation): boolean {
+    return this.industrialisationSubmitAttempted && question.obligatoire && !this.isQuestionAnswered(question);
+  }
+
+  isRequiredNoteInvalid(question: QuestionIndustrialisation): boolean {
+    return this.industrialisationSubmitAttempted && question.obligatoire && !this.isCriterionPayloadComplete(question);
+  }
+
+  questionnaireReadyForSubmission(): boolean {
+    return !!this.industrialisationForm
+      && this.missingRequiredQuestions().length === 0
+      && !this.hasBlockingEliminatoryAnswer();
+  }
+
+  isIndustrialisationStepActive(step: 1 | 2 | 3): boolean {
+    if (step === 1) {
+      return !this.industrialisationForm;
+    }
+    if (step === 2) {
+      return !!this.industrialisationForm && !this.questionnaireReadyForSubmission();
+    }
+    return !!this.industrialisationForm && this.questionnaireReadyForSubmission();
+  }
+
+  isIndustrialisationStepCompleted(step: 1 | 2 | 3): boolean {
+    if (step === 1) {
+      return !!this.industrialisationForm;
+    }
+    if (step === 2) {
+      return !!this.industrialisationForm && this.questionnaireReadyForSubmission();
+    }
+    return false;
+  }
+
+  isQuestionAnswered(question: QuestionIndustrialisation): boolean {
+    const answer = this.answers[question.id];
+    if (!answer) {
+      return false;
+    }
+    switch (question.typeReponse) {
+      case 'BOOLEAN':
+        return typeof answer.valeurBoolean === 'boolean';
+      case 'NUMERIQUE':
+        return answer.valeurNumerique !== null && answer.valeurNumerique !== undefined && !Number.isNaN(Number(answer.valeurNumerique));
+      case 'URL':
+        return !!this.cleanText(answer.valeurUrl);
+      case 'FICHIER':
+        return this.hasUploadedProof(question);
+      case 'TEXTE':
+      case 'CHOIX':
+      default:
+        return !!this.cleanText(answer.valeurTexte);
+    }
+  }
+
+  isNoteAnswered(question: QuestionIndustrialisation): boolean {
+    if (question.typeCritere !== 'NOTE') {
+      return true;
+    }
+    const value = this.answers[question.id]?.noteObtenue;
+    return value !== null && value !== undefined && !Number.isNaN(Number(value));
+  }
+
+  questionTypeLabel(question: QuestionIndustrialisation): string {
+    switch (question.typeReponse) {
+      case 'BOOLEAN':
+        return 'Oui / Non';
+      case 'NUMERIQUE':
+        return 'Numerique';
+      case 'URL':
+        return 'URL';
+      case 'FICHIER':
+        return 'Fichier';
+      case 'CHOIX':
+        return 'Choix';
+      case 'TEXTE':
+      default:
+        return 'Texte';
+    }
+  }
+
+  private missingRequiredQuestions(): string[] {
+    return this.industrialisationForm?.questions
+      .filter((question) => question.obligatoire && (!this.isQuestionAnswered(question) || !this.isCriterionPayloadComplete(question)))
+      .map((question) => question.libelle) ?? [];
+  }
+
+  private isCriterionPayloadComplete(question: QuestionIndustrialisation): boolean {
+    if (question.typeCritere === 'NOTE') {
+      return this.isNoteAnswered(question);
+    }
+    if (question.typeCritere === 'ELIMINATOIRE') {
+      return this.automaticEliminatoryResult(question) !== null;
+    }
+    return true;
+  }
+
+  hasUploadedProof(question: QuestionIndustrialisation): boolean {
+    const fromForm = this.industrialisationForm?.reponses.find((response) => response.questionId === question.id);
+    const fromCandidature = this.industrialisationForm?.candidature.reponses.find((response) => response.questionId === question.id);
+    return !!(fromForm?.preuveObjectName || fromForm?.preuveOriginalFileName || fromCandidature?.preuveObjectName || fromCandidature?.preuveOriginalFileName);
+  }
+
+  private ensureAnswer(question: QuestionIndustrialisation): ReponseIndustrialisationRequest {
+    if (!this.answers[question.id]) {
+      this.answers[question.id] = { questionId: question.id };
+    }
+    return this.answers[question.id];
+  }
+
   private cleanText(value: string | null | undefined): string | null {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
+  }
+
+  private textValueForPayload(question: QuestionIndustrialisation, answer: ReponseIndustrialisationRequest): string | null {
+    return question.typeReponse === 'TEXTE' || question.typeReponse === 'CHOIX'
+      ? this.cleanText(answer.valeurTexte)
+      : null;
   }
 }

@@ -8,6 +8,7 @@ import {
   DecisionGoRequest,
   DecisionNoGoRequest,
   IndustrialisationFormResponse,
+  IndustrialisationScore,
   QuestionIndustrialisation,
   QuestionIndustrialisationRequest,
   ReponsesIndustrialisationRequest,
@@ -63,6 +64,10 @@ export class IndustrialisationService {
 
   getCiDetail(id: number): Observable<CandidatureIndustrialisation> {
     return this.http.get<CandidatureIndustrialisation>(`${this.apiUrl}/ci/industrialisation/${id}`);
+  }
+
+  getCiScore(id: number): Observable<IndustrialisationScore> {
+    return this.http.get<IndustrialisationScore>(`${this.apiUrl}/ci/industrialisation/${id}/score`);
   }
 
   decideGo(id: number, request: DecisionGoRequest): Observable<CandidatureIndustrialisation> {

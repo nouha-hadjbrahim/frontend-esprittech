@@ -346,13 +346,40 @@
       </header>
 
       <div class="industrialisation-steps">
-        <span class="industrialisation-step industrialisation-step--active">1. Type</span>
-        <span class="industrialisation-step" [class.industrialisation-step--active]="industrialisationForm">2. Questionnaire</span>
-        <span class="industrialisation-step">3. Soumission</span>
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(1)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(1)"
+          [attr.aria-current]="isIndustrialisationStepActive(1) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">1</span>
+          <span>Type</span>
+        </span>
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(2)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(2)"
+          [attr.aria-current]="isIndustrialisationStepActive(2) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">2</span>
+          <span>Questionnaire</span>
+        </span>
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(3)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(3)"
+          [attr.aria-current]="isIndustrialisationStepActive(3) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">3</span>
+          <span>Soumission</span>
+        </span>
       </div>
 
       @if (industrialisationError) { <div class="tab-alert tab-alert--danger">{{ industrialisationError }}</div> }
       @if (industrialisationMessage) { <div class="tab-alert tab-alert--success">{{ industrialisationMessage }}</div> }
+      @if (hasBlockingEliminatoryAnswer()) {
+        <div class="tab-alert tab-alert--warning">Cette demande contient un critere eliminatoire non conforme.</div>
+      }
 
       @if (!industrialisationForm) {
         <section class="industrialisation-summary">
@@ -386,7 +413,7 @@
             <textarea rows="4" [(ngModel)]="industrialisationCommentaire"></textarea>
           </label>
         </div>
-        <button type="button" class="action-btn" [disabled]="industrialisationSaving" (click)="createIndustrialisation()">
+        <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy()" (click)="createIndustrialisation()">
             {{ industrialisationSaving ? 'Preparation...' : 'Continuer vers le questionnaire' }}
           </button>
         } @else {
@@ -396,47 +423,123 @@
           </div>
           <div class="question-list">
           @for (question of industrialisationForm.questions; track question.id) {
-            <section class="question-card">
-              <h3>{{ question.libelle }}</h3>
-              @if (question.description) { <p>{{ question.description }}</p> }
+            <section
+              class="question-card"
+              [class.question-card--invalid]="isRequiredQuestionInvalid(question) || (question.typeCritere === 'NOTE' && isRequiredNoteInvalid(question))"
+              [class.question-card--blocking]="automaticEliminatoryResult(question) === ReponseEliminatoire.NOT_OK"
+            >
+              <div class="question-card__header">
+                <div class="question-card__title">
+                  <div class="question-card__meta">
+                    <span>Question {{ question.ordre }}</span>
+                    <span>{{ questionTypeLabel(question) }}</span>
+                    @if (question.obligatoire) { <span>Obligatoire</span> }
+                  </div>
+                  <h3>{{ question.libelle }}</h3>
+                </div>
+                @if (question.typeCritere === 'ELIMINATOIRE') {
+                  <span class="criterion-badge criterion-badge--elim">Critere eliminatoire</span>
+                } @else {
+                  <span class="criterion-badge">Critere note</span>
+                }
+              </div>
+              @if (question.description) { <p class="question-card__description">{{ question.description }}</p> }
+
+              <div class="question-field">
+                <span class="question-field__label">Reponse</span>
               @switch (question.typeReponse) {
                 @case ('BOOLEAN') {
-                  <select [(ngModel)]="answers[question.id].valeurBoolean">
-                    <option [ngValue]="null">Selectionner</option>
-                    <option [ngValue]="true">Oui</option>
-                    <option [ngValue]="false">Non</option>
-                  </select>
+                  <div class="boolean-choice" role="radiogroup" [attr.aria-label]="question.libelle">
+                    <button
+                      type="button"
+                      class="boolean-choice__pill"
+                      [class.boolean-choice__pill--selected]="answers[question.id].valeurBoolean === true"
+                      [attr.aria-pressed]="answers[question.id].valeurBoolean === true"
+                      (click)="setBooleanAnswer(question, true)"
+                    >
+                      Oui
+                    </button>
+                    <button
+                      type="button"
+                      class="boolean-choice__pill"
+                      [class.boolean-choice__pill--selected]="answers[question.id].valeurBoolean === false"
+                      [attr.aria-pressed]="answers[question.id].valeurBoolean === false"
+                      (click)="setBooleanAnswer(question, false)"
+                    >
+                      Non
+                    </button>
+                  </div>
                 }
                 @case ('NUMERIQUE') {
-                  <input type="number" [(ngModel)]="answers[question.id].valeurNumerique" />
+                  <input type="number" [(ngModel)]="answers[question.id].valeurNumerique" (ngModelChange)="onIndustrialisationAnswerChange()" />
                 }
                 @case ('URL') {
-                  <input type="url" [(ngModel)]="answers[question.id].valeurUrl" />
+                  <input type="url" [(ngModel)]="answers[question.id].valeurUrl" (ngModelChange)="onIndustrialisationAnswerChange()" />
                 }
                 @case ('FICHIER') {
-                  <input type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt" (change)="uploadProof(question, $event)" />
+                  <div class="file-answer">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt"
+                      [disabled]="isIndustrialisationBusy()"
+                      (change)="uploadProof(question, $event)"
+                    />
+                    @if (isQuestionUploading(question)) {
+                      <span class="file-answer__state">Upload...</span>
+                    } @else if (hasUploadedProof(question)) {
+                      <span class="file-answer__state file-answer__state--ok">Preuve ajoutee</span>
+                    }
+                  </div>
+                }
+                @case ('CHOIX') {
+                  <input type="text" [(ngModel)]="answers[question.id].valeurTexte" (ngModelChange)="onIndustrialisationAnswerChange()" />
                 }
                 @default {
-                  <textarea rows="3" [(ngModel)]="answers[question.id].valeurTexte"></textarea>
+                  <textarea rows="3" [(ngModel)]="answers[question.id].valeurTexte" (ngModelChange)="onIndustrialisationAnswerChange()"></textarea>
                 }
               }
+                @if (isRequiredQuestionInvalid(question)) {
+                  <span class="field-error">Reponse obligatoire.</span>
+                }
+              </div>
+
               @if (question.typeCritere === 'ELIMINATOIRE') {
-                <select [(ngModel)]="answers[question.id].reponseEliminatoire">
-                  <option [ngValue]="null">Resultat eliminatoire</option>
-                  <option [ngValue]="ReponseEliminatoire.OK">OK</option>
-                  <option [ngValue]="ReponseEliminatoire.NOT_OK">NOT_OK</option>
-                </select>
+                <div class="auto-result-row">
+                  <span class="question-field__label">Resultat automatique</span>
+                  <span
+                    class="auto-result"
+                    [class.auto-result--ok]="automaticEliminatoryResult(question) === ReponseEliminatoire.OK"
+                    [class.auto-result--ko]="automaticEliminatoryResult(question) === ReponseEliminatoire.NOT_OK"
+                    [class.auto-result--pending]="automaticEliminatoryResult(question) === null"
+                  >
+                    {{ eliminatoryPreviewLabel(question) }}
+                  </span>
+                </div>
               }
               @if (question.typeCritere === 'NOTE') {
-                <input type="number" placeholder="Note obtenue" [(ngModel)]="answers[question.id].noteObtenue" />
+                <label class="question-field question-field--compact">
+                  <span class="question-field__label">Note obtenue</span>
+                  <input
+                    type="number"
+                    [(ngModel)]="answers[question.id].noteObtenue"
+                    [class.input-invalid]="isRequiredNoteInvalid(question)"
+                    (ngModelChange)="onIndustrialisationAnswerChange()"
+                  />
+                  @if (isRequiredNoteInvalid(question)) {
+                    <span class="field-error">Note obligatoire pour ce critere.</span>
+                  }
+                </label>
               }
-              <textarea rows="2" placeholder="Justificatif" [(ngModel)]="answers[question.id].justificatif"></textarea>
+              <label class="question-field">
+                <span class="question-field__label">Justificatif</span>
+                <textarea rows="2" [(ngModel)]="answers[question.id].justificatif" (ngModelChange)="onIndustrialisationAnswerChange()"></textarea>
+              </label>
             </section>
           }
         </div>
         <div class="modal-actions">
-          <button type="button" class="action-btn action-btn--ghost" [disabled]="industrialisationSaving" (click)="saveIndustrialisationAnswers()">Enregistrer brouillon</button>
-          <button type="button" class="action-btn" [disabled]="industrialisationSaving" (click)="submitIndustrialisation()">
+          <button type="button" class="action-btn action-btn--ghost" [disabled]="isIndustrialisationBusy()" (click)="saveIndustrialisationAnswers()">Enregistrer brouillon</button>
+          <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy() || hasBlockingEliminatoryAnswer()" (click)="submitIndustrialisation()">
             {{ industrialisationSaving ? 'Soumission...' : 'Soumettre a la CI' }}
           </button>
         </div>
