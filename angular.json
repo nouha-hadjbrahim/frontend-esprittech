@@ -99,7 +99,14 @@
             "styles": [
               "src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "codeCoverageExclude": [
+              "src/main.ts",
+              "src/environments/**",
+              "src/**/*.model.ts",
+              "src/**/*.routes.ts",
+              "src/app/app.config.ts"
+            ]
           }
         }
       }

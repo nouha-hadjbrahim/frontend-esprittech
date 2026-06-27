@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { CritereEliminatoire, CritereNote, CritereEliminatoireRequest, CritereNoteRequest, MODE_EVALUATION_OPTIONS, ReponseEliminatoire } from '../../core/models/critere.model';
@@ -23,23 +23,65 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   criteresEliminatoires = signal<CritereEliminatoire[]>([]);
   loadingEliminatoires = signal(false);
   errorEliminatoires = signal<string | null>(null);
+  eliminatoiresSearch = signal('');
 
   // Critères notés
   criteresNotes = signal<CritereNote[]>([]);
   loadingNotes = signal(false);
   errorNotes = signal<string | null>(null);
+  notesSearch = signal('');
 
   // Pagination
   readonly pageSize = 8;
   eliminatoiresPage = signal(1);
   notesPage = signal(1);
 
+  filteredEliminatoires = computed(() => {
+    const query = this.normalize(this.eliminatoiresSearch());
+    if (!query) {
+      return this.criteresEliminatoires();
+    }
+    return this.criteresEliminatoires().filter((crit) =>
+      this.normalize([
+        crit.ordre,
+        crit.libelle,
+        crit.description,
+        crit.domaine,
+        crit.reponseAttendue,
+        crit.actif ? 'actif' : 'inactif',
+        crit.modeEvaluation,
+        crit.ruleDescription,
+      ].join(' ')).includes(query)
+    );
+  });
+
+  filteredNotes = computed(() => {
+    const query = this.normalize(this.notesSearch());
+    if (!query) {
+      return this.criteresNotes();
+    }
+    return this.criteresNotes().filter((crit) =>
+      this.normalize([
+        crit.ordre,
+        crit.libelle,
+        crit.description,
+        crit.domaine,
+        crit.bareme,
+        crit.poids,
+        crit.seuil,
+        crit.actif ? 'actif' : 'inactif',
+        crit.modeEvaluation,
+        crit.ruleDescription,
+      ].join(' ')).includes(query)
+    );
+  });
+
   get eliminatoiresTotalPages(): number {
-    return Math.max(1, Math.ceil(this.criteresEliminatoires().length / this.pageSize));
+    return Math.max(1, Math.ceil(this.filteredEliminatoires().length / this.pageSize));
   }
 
   get notesTotalPages(): number {
-    return Math.max(1, Math.ceil(this.criteresNotes().length / this.pageSize));
+    return Math.max(1, Math.ceil(this.filteredNotes().length / this.pageSize));
   }
 
   get eliminatoiresCount(): number {
@@ -60,12 +102,12 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
 
   get visibleEliminatoires(): CritereEliminatoire[] {
     const start = (this.eliminatoiresPage() - 1) * this.pageSize;
-    return this.criteresEliminatoires().slice(start, start + this.pageSize);
+    return this.filteredEliminatoires().slice(start, start + this.pageSize);
   }
 
   get visibleNotes(): CritereNote[] {
     const start = (this.notesPage() - 1) * this.pageSize;
-    return this.criteresNotes().slice(start, start + this.pageSize);
+    return this.filteredNotes().slice(start, start + this.pageSize);
   }
 
   // Modales
@@ -376,5 +418,23 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
 
   goToNotesPage(page: number): void {
     this.notesPage.set(Math.min(Math.max(page, 1), this.notesTotalPages));
+  }
+
+  updateEliminatoiresSearch(value: string): void {
+    this.eliminatoiresSearch.set(value);
+    this.eliminatoiresPage.set(1);
+  }
+
+  updateNotesSearch(value: string): void {
+    this.notesSearch.set(value);
+    this.notesPage.set(1);
+  }
+
+  private normalize(value: unknown): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 }

@@ -30,9 +30,10 @@ export class BackofficeLayoutComponent {
 
     readonly user = this.authService.currentUser;
 
-    expandedState: Record<string, boolean> = {
-        'Sujets': true,
+    expandedGroups: Record<string, boolean> = {
+        Sujets: true,
         'Équipes de recherche': true,
+        'Évaluations': false,
     };
 
     readonly initials = computed(() => {
@@ -77,52 +78,72 @@ export class BackofficeLayoutComponent {
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
         { label: 'Paramètres', icon: 'settings', route: '/backoffice/settings' },
-        { label: 'Évaluations', icon: 'check-circle', route: '/backoffice/admin/evaluations' },
-        { label: 'Critères Evaluation Projets', icon: 'check-square', route: '/backoffice/criteres' },
-        { label: 'Questions industrialisation', icon: 'check-square', route: '/backoffice/admin/industrialisation/questions' },
-        { label: 'Livrables', icon: 'file-text', route: '/backoffice/admin/livrables' }
+        {
+            label: 'Évaluations',
+            icon: 'clipboard-check',
+            children: [
+                { label: 'Évaluations', route: '/backoffice/admin/evaluations' },
+                { label: 'Critères Evaluation Projets', route: '/backoffice/criteres' },
+                { label: 'Questions industrialisation', route: '/backoffice/admin/industrialisation/questions' },
+                { label: 'Livrables', route: '/backoffice/admin/livrables' },
+            ],
+        },
     ];
 
     isProfileOpen = false;
 
-    private readonly groupRoutes: Record<string, string> = {
+    private readonly groupBaseRoutes: Record<string, string> = {
         'Sujets': '/backoffice/subjects',
         'Équipes de recherche': '/backoffice/equipes-recherche',
+        'Évaluations': '/backoffice/admin/evaluations',
     };
 
     constructor() {
+        this.expandActiveGroups();
+
         this.router.events
             .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-            .subscribe(() => {
-                for (const label of Object.keys(this.groupRoutes)) {
-                    this.expandedState[label] = this.router.url.startsWith(this.groupRoutes[label]);
-                }
-            });
+            .subscribe(() => this.expandActiveGroups());
     }
 
     toggleProfileMenu(): void {
         this.isProfileOpen = !this.isProfileOpen;
     }
 
-    toggleNavGroup(label: string): void {
-        const route = this.groupRoutes[label];
-        if (route) {
-            this.router.navigateByUrl(route);
-        } else {
-            this.expandedState[label] = !this.expandedState[label];
+    toggleNavGroup(item: NavItem): void {
+        this.expandedGroups[item.label] = !this.expandedGroups[item.label];
+    }
+
+    isNavGroupExpanded(item: NavItem): boolean {
+        return !!this.expandedGroups[item.label];
+    }
+
+    isNavGroupActive(item: NavItem): boolean {
+        const baseRoute = this.groupBaseRoutes[item.label];
+        if (baseRoute) {
+            return this.router.url.startsWith(baseRoute);
         }
+        return item.children?.some((child) => this.isChildActive(child.route)) ?? false;
     }
 
     isChildActive(route: string): boolean {
+        if (route === '/backoffice/subjects') {
+            return this.router.url === '/backoffice/subjects';
+        }
         return this.router.url === route || this.router.url.startsWith(route + '?');
     }
 
     isNavItemActive(item: NavItem): boolean {
         if (item.children) {
-            const basePath = this.groupRoutes[item.label];
-            return basePath ? this.router.url.startsWith(basePath) : false;
+            return this.isNavGroupActive(item);
         }
         return item.route ? this.router.url.startsWith(item.route) : false;
+    }
+
+    private expandActiveGroups(): void {
+        for (const label of Object.keys(this.groupBaseRoutes)) {
+            this.expandedGroups[label] = this.router.url.startsWith(this.groupBaseRoutes[label]);
+        }
     }
 
     logout(): void {

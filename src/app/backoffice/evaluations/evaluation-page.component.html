@@ -31,6 +31,22 @@
         <h2>Projets termines</h2>
         <p>Selectionnez un projet pour consulter son evaluation detaillee.</p>
       </div>
+      <label class="search-field" for="evaluation-project-search">
+        <span class="search-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input
+          id="evaluation-project-search"
+          type="search"
+          placeholder="Rechercher un projet..."
+          [value]="projectSearch()"
+          (input)="updateProjectSearch($any($event.target).value)"
+        />
+      </label>
     </div>
 
     <div *ngIf="loadingProjects()" class="loading">Chargement des evaluations...</div>
@@ -39,7 +55,11 @@
       Aucun projet termine a evaluer.
     </div>
 
-    <div *ngIf="!loadingProjects() && projects().length > 0" class="table-responsive">
+    <div *ngIf="!loadingProjects() && projects().length > 0 && filteredProjects().length === 0" class="empty-state">
+      Aucun projet ne correspond a la recherche.
+    </div>
+
+    <div *ngIf="!loadingProjects() && filteredProjects().length > 0" class="table-responsive">
       <table class="projects-table">
         <thead>
           <tr>
@@ -53,7 +73,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let p of projects()" [class.selected]="selectedProject?.id === p.id">
+          <tr *ngFor="let p of filteredProjects()" [class.selected]="selectedProject?.id === p.id">
             <td>#{{ p.id }}</td>
             <td><strong>{{ p.titre }}</strong></td>
             <td><span class="status-chip">{{ statusLabel(p.statut) }}</span></td>

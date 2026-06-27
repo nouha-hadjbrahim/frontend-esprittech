@@ -68,7 +68,7 @@ export class FrontofficeLayout {
     mesCandidatures: { label: 'Mes candidatures', path: '/frontoffice/mes-candidatures' },
     validationSujets: { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
     demandesIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/frontoffice/demandes-industrialisation' },
-    espaceCiIndustrialisation: { label: 'Industrialisation CI', path: '/ci/industrialisation' },
+    espaceCiIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/ci/industrialisation' },
   };
 
   // Navigation calculée à partir du rôle réel de l'utilisateur connecté
