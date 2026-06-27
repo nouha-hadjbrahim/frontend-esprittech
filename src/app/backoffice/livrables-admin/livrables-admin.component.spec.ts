@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
+import { Livrable } from '../../core/models/livrable.model';
 import { LivrableService } from '../../core/services/livrable.service';
 import { LivrablesAdminComponent } from './livrables-admin.component';
 
@@ -10,7 +11,7 @@ describe('LivrablesAdminComponent', () => {
   let fixture: ComponentFixture<LivrablesAdminComponent>;
   let service: jasmine.SpyObj<LivrableService>;
 
-  const livrable = {
+  const livrable: Livrable = {
     id: 1,
     sujetProjetId: 42,
     projetTitre: 'Plateforme IoT',
@@ -26,7 +27,7 @@ describe('LivrablesAdminComponent', () => {
     deposantNom: 'Jean Dupont',
     dateDepot: new Date().toISOString(),
     actif: true,
-  } as never;
+  };
 
   beforeEach(async () => {
     service = jasmine.createSpyObj<LivrableService>('LivrableService', ['findAllAdmin', 'updateAdmin', 'deleteAdmin', 'downloadUrl']);
@@ -50,6 +51,13 @@ describe('LivrablesAdminComponent', () => {
     expect(service.findAllAdmin).toHaveBeenCalled();
     expect(component.filteredLivrables().length).toBe(1);
 
+    component.selectedType.set('RAPPORT');
+    expect(component.filteredLivrables().length).toBe(1);
+
+    component.selectedType.set('DOCUMENTATION');
+    expect(component.filteredLivrables().length).toBe(0);
+
+    component.selectedType.set('');
     component.query.set('plateforme');
     expect(component.filteredLivrables().length).toBe(1);
 
@@ -96,5 +104,24 @@ describe('LivrablesAdminComponent', () => {
     service.findAllAdmin.and.returnValue(throwError(() => new Error('boom')));
     component.load();
     expect(component.error()).toBe('Impossible de charger les livrables.');
+  });
+
+  it('should expose update and delete errors', () => {
+    component.openEdit(livrable);
+    component.editForm.nom = 'Nouveau nom';
+    service.updateAdmin.and.returnValue(throwError(() => ({ error: { detail: 'Nom invalide' } })));
+
+    component.saveEdit();
+
+    expect(component.error()).toBe('Nom invalide');
+
+    service.updateAdmin.and.returnValue(throwError(() => new Error('boom')));
+    component.saveEdit();
+    expect(component.error()).toBe('Mise a jour impossible.');
+
+    service.deleteAdmin.and.returnValue(throwError(() => new Error('boom')));
+    component.delete(livrable);
+
+    expect(component.error()).toBe('Suppression impossible.');
   });
 });
