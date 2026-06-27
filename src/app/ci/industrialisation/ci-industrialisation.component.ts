@@ -37,12 +37,12 @@ export class CiIndustrialisationComponent implements OnInit {
   detailLoading = signal(false);
   error = signal<string | null>(null);
   message = signal<string | null>(null);
+  private readonly searchTermSignal = signal('');
+  private readonly domaineFilterSignal = signal('');
+  private readonly sortBySignal = signal<'date-desc' | 'score-desc' | 'score-asc' | 'title-asc'>('date-desc');
 
   statutFilter = '';
   typeFilter = '';
-  searchTerm = '';
-  domaineFilter = '';
-  sortBy: 'date-desc' | 'score-desc' | 'score-asc' | 'title-asc' = 'date-desc';
   decisionMode: 'GO' | 'NO_GO' | null = null;
   livrablesModalOpen = false;
   orientation: OrientationIndustrialisation | '' = '';
@@ -68,8 +68,8 @@ export class CiIndustrialisationComponent implements OnInit {
   );
 
   readonly displayedDemandes = computed(() => {
-    const search = this.normalize(this.searchTerm);
-    const domaine = this.domaineFilter;
+    const search = this.normalize(this.searchTermSignal());
+    const domaine = this.domaineFilterSignal();
     const demandes = this.demandes().filter((demande) => {
       const matchesSearch = !search || this.normalize([
         demande.projetTitre,
@@ -83,6 +83,30 @@ export class CiIndustrialisationComponent implements OnInit {
     });
     return [...demandes].sort((a, b) => this.compareDemandes(a, b));
   });
+
+  get searchTerm(): string {
+    return this.searchTermSignal();
+  }
+
+  set searchTerm(value: string) {
+    this.searchTermSignal.set(value);
+  }
+
+  get domaineFilter(): string {
+    return this.domaineFilterSignal();
+  }
+
+  set domaineFilter(value: string) {
+    this.domaineFilterSignal.set(value);
+  }
+
+  get sortBy(): 'date-desc' | 'score-desc' | 'score-asc' | 'title-asc' {
+    return this.sortBySignal();
+  }
+
+  set sortBy(value: 'date-desc' | 'score-desc' | 'score-asc' | 'title-asc') {
+    this.sortBySignal.set(value);
+  }
 
   ngOnInit(): void {
     this.load();
@@ -351,13 +375,14 @@ export class CiIndustrialisationComponent implements OnInit {
   }
 
   private compareDemandes(a: CandidatureIndustrialisation, b: CandidatureIndustrialisation): number {
-    if (this.sortBy === 'score-desc') {
+    const sortBy = this.sortBySignal();
+    if (sortBy === 'score-desc') {
       return (this.scoreValue(b) ?? -1) - (this.scoreValue(a) ?? -1);
     }
-    if (this.sortBy === 'score-asc') {
+    if (sortBy === 'score-asc') {
       return (this.scoreValue(a) ?? 101) - (this.scoreValue(b) ?? 101);
     }
-    if (this.sortBy === 'title-asc') {
+    if (sortBy === 'title-asc') {
       return a.projetTitre.localeCompare(b.projetTitre);
     }
     return new Date(b.dateSoumission ?? b.dateDemande).getTime() - new Date(a.dateSoumission ?? a.dateDemande).getTime();
