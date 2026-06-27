@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { EvaluationResponse, ProjetEvaluable } from '../../core/models/evaluation.model';
 import { EvaluationService } from '../../core/services/evaluation.service';
@@ -24,6 +24,25 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   readonly savingProjectId = signal<number | null>(null);
   readonly evalResult = signal<EvaluationResponse | null>(null);
   readonly evalError = signal<string | null>(null);
+  readonly projectSearch = signal('');
+
+  readonly filteredProjects = computed(() => {
+    const query = this.normalize(this.projectSearch());
+    if (!query) {
+      return this.projects();
+    }
+    return this.projects().filter((project) =>
+      this.normalize([
+        project.id,
+        project.titre,
+        project.statut,
+        project.scoreFinal,
+        project.eligibleIndustrialisation == null
+          ? 'en attente'
+          : project.eligibleIndustrialisation ? 'eligible' : 'non eligible',
+      ].join(' ')).includes(query)
+    );
+  });
 
   selectedProject: ProjetEvaluable | null = null;
 
@@ -112,5 +131,17 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
 
   statusLabel(status: string): string {
     return status === 'REALISATION_TERMINEE' ? 'Realisation terminee' : status;
+  }
+
+  updateProjectSearch(value: string): void {
+    this.projectSearch.set(value);
+  }
+
+  private normalize(value: unknown): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 }

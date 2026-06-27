@@ -21,6 +21,7 @@ export type OrientationIndustrialisation =
   | 'VALORISATION_RDI'
   | 'EXTERNE';
 export type TypeReponseIndustrialisation = 'TEXTE' | 'BOOLEAN' | 'NUMERIQUE' | 'URL' | 'FICHIER' | 'CHOIX';
+export type DecisionRecommandeeIndustrialisation = 'GO' | 'NO_GO' | 'A_INSTRUIRE';
 
 export interface QuestionIndustrialisation {
   id: number;
@@ -141,6 +142,39 @@ export interface IndustrialisationFormResponse {
   candidature: CandidatureIndustrialisation;
   questions: QuestionIndustrialisation[];
   reponses: ReponseIndustrialisation[];
+}
+
+export interface BlocageEliminatoire {
+  source: string;
+  referenceId: number | null;
+  libelle: string;
+  raison: string;
+}
+
+export interface ScoreBreakdown {
+  composant: string;
+  reference: string;
+  libelle: string;
+  score: number | null;
+  poids: number | null;
+  statut: string;
+  details: string;
+  revueManuelleRequise: boolean;
+}
+
+export interface IndustrialisationScore {
+  candidatureId: number;
+  projetId: number;
+  scoreFinal: number;
+  decisionRecommandee: DecisionRecommandeeIndustrialisation;
+  estBloqueParEliminatoire: boolean;
+  blocagesEliminatoires: BlocageEliminatoire[];
+  scoreQuestions: number;
+  scoreLivrables: number;
+  scoreCriteresNotes: number;
+  detailsCalcul: ScoreBreakdown[];
+  elementsManquants: string[];
+  message: string;
 }
 
 export interface DecisionGoRequest {

@@ -30,7 +30,10 @@ export class BackofficeLayoutComponent {
 
     readonly user = this.authService.currentUser;
 
-    sujetsExpanded = true;
+    expandedGroups: Record<string, boolean> = {
+        Sujets: true,
+        'Évaluations': false,
+    };
 
     readonly initials = computed(() => {
         const u = this.user();
@@ -67,34 +70,42 @@ export class BackofficeLayoutComponent {
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
         { label: 'Paramètres', icon: 'settings', route: '/backoffice/settings' },
-        { label: 'Évaluations', icon: 'check-circle', route: '/backoffice/admin/evaluations' },
-        { label: 'Critères Evaluation Projets', icon: 'check-square', route: '/backoffice/criteres' },
-        { label: 'Questions industrialisation', icon: 'check-square', route: '/backoffice/admin/industrialisation/questions' },
-        { label: 'Livrables', icon: 'file-text', route: '/backoffice/admin/livrables' }
+        {
+            label: 'Évaluations',
+            icon: 'clipboard-check',
+            children: [
+                { label: 'Évaluations', route: '/backoffice/admin/evaluations' },
+                { label: 'Critères Evaluation Projets', route: '/backoffice/criteres' },
+                { label: 'Questions industrialisation', route: '/backoffice/admin/industrialisation/questions' },
+                { label: 'Livrables', route: '/backoffice/admin/livrables' },
+            ],
+        },
     ];
 
     isProfileOpen = false;
 
     constructor() {
+        this.expandActiveGroups();
+
         this.router.events
             .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-            .subscribe(() => {
-                if (this.isSujetsSectionActive()) {
-                    this.sujetsExpanded = true;
-                }
-            });
+            .subscribe(() => this.expandActiveGroups());
     }
 
     toggleProfileMenu(): void {
         this.isProfileOpen = !this.isProfileOpen;
     }
 
-    toggleSujetsMenu(): void {
-        this.sujetsExpanded = !this.sujetsExpanded;
+    toggleNavGroup(item: NavItem): void {
+        this.expandedGroups[item.label] = !this.isNavGroupExpanded(item);
     }
 
-    isSujetsSectionActive(): boolean {
-        return this.router.url.startsWith('/backoffice/subjects');
+    isNavGroupExpanded(item: NavItem): boolean {
+        return !!this.expandedGroups[item.label];
+    }
+
+    isNavGroupActive(item: NavItem): boolean {
+        return item.children?.some((child) => this.isChildActive(child.route)) ?? false;
     }
 
     isChildActive(route: string): boolean {
@@ -106,9 +117,19 @@ export class BackofficeLayoutComponent {
 
     isNavItemActive(item: NavItem): boolean {
         if (item.children) {
-            return this.isSujetsSectionActive();
+            return this.isNavGroupActive(item);
         }
         return item.route ? this.router.url.startsWith(item.route) : false;
+    }
+
+    private expandActiveGroups(): void {
+        this.navItems
+            .filter((item) => item.children?.length)
+            .forEach((item) => {
+                if (this.isNavGroupActive(item)) {
+                    this.expandedGroups[item.label] = true;
+                }
+            });
     }
 
     logout(): void {
