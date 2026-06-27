@@ -95,9 +95,7 @@ export class BackofficeLayoutComponent {
             .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
             .subscribe(() => {
                 for (const label of Object.keys(this.groupRoutes)) {
-                    if (this.router.url.startsWith(this.groupRoutes[label])) {
-                        this.expandedState[label] = true;
-                    }
+                    this.expandedState[label] = this.router.url.startsWith(this.groupRoutes[label]);
                 }
             });
     }
@@ -107,7 +105,12 @@ export class BackofficeLayoutComponent {
     }
 
     toggleNavGroup(label: string): void {
-        this.expandedState[label] = !this.expandedState[label];
+        const route = this.groupRoutes[label];
+        if (route) {
+            this.router.navigateByUrl(route);
+        } else {
+            this.expandedState[label] = !this.expandedState[label];
+        }
     }
 
     isChildActive(route: string): boolean {

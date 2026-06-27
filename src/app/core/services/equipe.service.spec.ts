@@ -52,7 +52,7 @@ describe('EquipeService', () => {
 
   it('should create an equipe', () => {
     const payload: CreateEquipePayload = {
-      nom: 'New Team', description: null, domaine: 'AI',
+      nom: 'New Team', description: null, domaineId: 1,
       chefId: 10, memberIds: [20, 21],
     };
     const created = { id: 1, ...payload } as unknown as Equipe;
@@ -69,6 +69,16 @@ describe('EquipeService', () => {
     service.modifier(1, payload).subscribe((res) => expect(res).toEqual(updated));
     const req = http.expectOne(`${API}/1`);
     expect(req.request.method).toBe('PUT');
+    req.flush(updated);
+  });
+
+  it('should update an equipe with all optional fields', () => {
+    const payload = { nom: 'Full', description: 'New desc', domaineId: 2, chefId: 5, statut: 'Inactif' as const };
+    const updated = { id: 1, ...payload } as unknown as Equipe;
+    service.modifier(1, payload).subscribe((res) => expect(res).toEqual(updated));
+    const req = http.expectOne(`${API}/1`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual(payload);
     req.flush(updated);
   });
 
@@ -105,8 +115,16 @@ describe('EquipeService', () => {
     req.flush(equipe);
   });
 
+  it('should retirerChef', () => {
+    const equipe = { id: 1, nom: 'E1' } as Equipe;
+    service.retirerChef(1).subscribe((res) => expect(res).toEqual(equipe));
+    const req = http.expectOne(`${API}/1/chef`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(equipe);
+  });
+
   it('should create an equipe via CreateEquipeRequest', () => {
-    const request: CreateEquipeRequest = { nom: 'E1', domaine: 'Info', chefId: 2 };
+    const request: CreateEquipeRequest = { nom: 'E1', domaineId: 1, chefId: 2 };
     const equipe = { id: 1, nom: 'E1' } as Equipe;
     service.createEquipe(request).subscribe((res) => expect(res).toEqual(equipe));
     const req = http.expectOne(API);

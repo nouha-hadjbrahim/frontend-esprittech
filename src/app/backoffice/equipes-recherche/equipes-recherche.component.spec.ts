@@ -11,7 +11,7 @@ import { EquipesRechercheComponent } from './equipes-recherche.component';
 
 function makeEquipe(over: Partial<Equipe> = {}): Equipe {
   return {
-    id: 1, nom: 'AI Lab', description: 'Research team', domaine: 'Informatique',
+    id: 1, nom: 'AI Lab', description: 'Research team', domaineId: 1, domaine: 'Informatique',
     chef: null, nbMembres: 0, createdAt: '2025-01-15', statut: 'Actif',
     ...over,
   };
@@ -108,7 +108,7 @@ describe('EquipesRechercheComponent', () => {
   });
 
   it('should open create dialog and create equipe', () => {
-    const payload = { nom: 'New', description: null, domaine: 'AI', chefId: null, memberIds: null };
+    const payload = { nom: 'New', description: null, domaineId: 1, chefId: null, memberIds: null };
     const created = makeEquipe({ id: 2, nom: 'New' });
 
     const afterClosed = of(payload);
@@ -143,7 +143,8 @@ describe('EquipesRechercheComponent', () => {
 
   it('should delete equipe after confirmation', () => {
     component.ngOnInit();
-    spyOn(window, 'confirm').and.returnValue(true);
+    const afterClosed = of(true);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
     equipeService.supprimer.and.returnValue(of(void 0));
 
     component.supprimer(component.equipes()[0]);
@@ -152,7 +153,8 @@ describe('EquipesRechercheComponent', () => {
   });
 
   it('should not delete equipe when cancelled', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
+    const afterClosed = of(false);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
     component.supprimer(makeEquipe());
     expect(equipeService.supprimer).not.toHaveBeenCalled();
   });
@@ -205,5 +207,97 @@ describe('EquipesRechercheComponent', () => {
     component.ouvrirAssignerChef(equipe);
     expect(dialog.open).toHaveBeenCalled();
     expect(component.equipes()[0]).toEqual(equipe);
+  });
+
+  it('should show error toast when create fails', () => {
+    const payload = { nom: 'New', description: null, domaineId: 1, chefId: null, memberIds: null };
+    const afterClosed = of(payload);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
+    equipeService.creer.and.returnValue(throwError(() => new Error('fail')));
+
+    component.ouvrirCreation();
+    expect(snackBar.open).toHaveBeenCalled();
+  });
+
+  it('should show success toast with chef message when create has chefId', () => {
+    const payload = { nom: 'New', description: null, domaineId: 1, chefId: 5, memberIds: null };
+    const afterClosed = of(payload);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
+    equipeService.creer.and.returnValue(of(makeEquipe({ id: 2, nom: 'New' })));
+
+    component.ouvrirCreation();
+    expect(snackBar.open).toHaveBeenCalledWith(jasmine.stringMatching(/avec chef/), jasmine.anything(), jasmine.anything());
+  });
+
+  it('should show error toast when update fails', () => {
+    component.ngOnInit();
+    const eq = component.equipes()[0];
+    const updated = { ...eq, nom: 'Updated' };
+    const afterClosed = of(updated);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
+    equipeService.modifier.and.returnValue(throwError(() => new Error('fail')));
+
+    component.ouvrirModification(eq);
+    expect(snackBar.open).toHaveBeenCalled();
+  });
+
+  it('should show error toast with detail when delete fails', () => {
+    component.ngOnInit();
+    const afterClosed = of(true);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
+    equipeService.supprimer.and.returnValue(throwError(() => ({ error: { detail: 'Cannot delete' } })));
+
+    component.supprimer(component.equipes()[0]);
+    expect(snackBar.open).toHaveBeenCalledWith('Cannot delete', jasmine.anything(), jasmine.anything());
+  });
+
+  it('should fallback to generic message when delete error has no detail', () => {
+    component.ngOnInit();
+    const afterClosed = of(true);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
+    equipeService.supprimer.and.returnValue(throwError(() => new Error('fail')));
+
+    component.supprimer(component.equipes()[0]);
+    expect(snackBar.open).toHaveBeenCalledWith('Erreur lors de la suppression', jasmine.anything(), jasmine.anything());
+  });
+
+  it('should not update equipe when modify dialog is cancelled', () => {
+    component.ngOnInit();
+    const eq = component.equipes()[0];
+    dialog.open.and.returnValue({ afterClosed: () => of(undefined) } as any);
+
+    component.ouvrirModification(eq);
+    expect(equipeService.modifier).not.toHaveBeenCalled();
+  });
+
+  it('should preserve non-matching equipes when assigner chef updates one', () => {
+    component.equipes.set([
+      makeEquipe({ id: 1, nom: 'Keep' }),
+      makeEquipe({ id: 2, nom: 'Update' }),
+    ]);
+    const updated = makeEquipe({ id: 2, nom: 'Updated' });
+    const afterClosed = of(updated);
+    dialog.open.and.returnValue({ afterClosed: () => afterClosed } as any);
+
+    component.ouvrirAssignerChef(component.equipes()[1]);
+    expect(component.equipes().length).toBe(2);
+    expect(component.equipes()[0].nom).toBe('Keep');
+    expect(component.equipes()[1].nom).toBe('Updated');
+  });
+
+  it('should preserve non-matching equipes when modifier updates one', () => {
+    component.equipes.set([
+      makeEquipe({ id: 1, nom: 'Keep' }),
+      makeEquipe({ id: 2, nom: 'Update' }),
+    ]);
+    const eq2 = component.equipes()[1];
+    const updated = { ...eq2, nom: 'Updated' };
+    dialog.open.and.returnValue({ afterClosed: () => of(updated) } as any);
+    equipeService.modifier.and.returnValue(of(updated));
+
+    component.ouvrirModification(eq2);
+    expect(component.equipes().length).toBe(2);
+    expect(component.equipes()[0].nom).toBe('Keep');
+    expect(component.equipes()[1].nom).toBe('Updated');
   });
 });
