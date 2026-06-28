@@ -175,7 +175,7 @@ describe('AuthService', () => {
       expect(service.landingRoute()).toBe('/backoffice/users');
     });
 
-    it('should route ROLE_ENSEIGNANT to the catalogue', () => {
+    it('should route ROLE_ENSEIGNANT to mes sujets', () => {
       loginAs('ROLE_ENSEIGNANT');
       expect(service.landingRoute()).toBe('/frontoffice/sujets/mes-sujets');
     });
@@ -190,9 +190,9 @@ describe('AuthService', () => {
       expect(service.landingRoute()).toBe('/frontoffice/tableau-de-bord');
     });
 
-    it('should route ROLE_CI to the dashboard', () => {
+    it('should route ROLE_CI to the industrialisation workspace', () => {
       loginAs('ROLE_CI');
-      expect(service.landingRoute()).toBe('/frontoffice/tableau-de-bord');
+      expect(service.landingRoute()).toBe('/ci/industrialisation');
     });
 
     it('should fall back to available subjects when no role is present', () => {

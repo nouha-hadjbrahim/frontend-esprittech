@@ -1,4 +1,6 @@
 import { WritableSignal, signal } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
@@ -6,6 +8,8 @@ import { MesSujets } from './mes-sujets';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { User } from '../../../../core/models/user.model';
+import { SujetReferenceService } from '../../../../core/services/sujet-reference.service';
+import { CandidatureService } from '../../../../core/services/candidature.service';
 
 const mockSujetBase: any = {
   id: 1, titre: 'Sujet IA', categorie: 'STAGE_INGENIEUR',
@@ -34,21 +38,62 @@ describe('MesSujets', () => {
   let sujetService: jasmine.SpyObj<SujetProjetService>;
   let currentUser: WritableSignal<User | null>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     sujetService = jasmine.createSpyObj('SujetProjetService', [
-      'getMesSujets', 'supprimerSujet',
+      'getMesSujets',
+      'supprimerSujet',
+      'getTechnologies',
+      'getDomainesSuggestions',
+      'getPrerequisSuggestions',
+      'creerSujet',
+      'modifierSujet',
     ]);
     sujetService.getMesSujets.and.returnValue(of([mockSujetBase, mockSujet2]));
+    sujetService.getTechnologies.and.returnValue(of(['Python', 'Angular']));
+    sujetService.getDomainesSuggestions.and.returnValue(of(['IA', 'Web']));
+    sujetService.getPrerequisSuggestions.and.returnValue(of(['Java', 'SQL']));
+    sujetService.creerSujet.and.returnValue(of(mockSujetBase));
+    sujetService.modifierSujet.and.returnValue(of(mockSujetBase));
     currentUser = signal<User | null>(makeUser(10));
+    const referenceService = jasmine.createSpyObj<SujetReferenceService>('SujetReferenceService', [
+      'suggestDomaine',
+      'suggestPrerequis',
+      'suggestTechnologie',
+    ]);
+    referenceService.suggestDomaine.and.returnValue(of({} as any));
+    referenceService.suggestPrerequis.and.returnValue(of({} as any));
+    referenceService.suggestTechnologie.and.returnValue(of({} as any));
+    const candidatureService = jasmine.createSpyObj<CandidatureService>('CandidatureService', [
+      'getCandidaturesParSujet',
+      'getAffectationsParSujet',
+      'ouvrirCandidatures',
+      'fermerCandidatures',
+      'accepterCandidature',
+      'refuserCandidature',
+      'retirerEtudiant',
+      'declarerTerminaison',
+    ]);
+    candidatureService.getCandidaturesParSujet.and.returnValue(of([]));
+    candidatureService.getAffectationsParSujet.and.returnValue(of([]));
+    candidatureService.ouvrirCandidatures.and.returnValue(of(undefined));
+    candidatureService.fermerCandidatures.and.returnValue(of(undefined));
+    candidatureService.accepterCandidature.and.returnValue(of({} as any));
+    candidatureService.refuserCandidature.and.returnValue(of({} as any));
+    candidatureService.retirerEtudiant.and.returnValue(of({} as any));
+    candidatureService.declarerTerminaison.and.returnValue(of(undefined));
 
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [MesSujets],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([]),
         { provide: SujetProjetService, useValue: sujetService },
         { provide: AuthService, useValue: { currentUser, getRole: () => 'ROLE_ENSEIGNANT' } },
+        { provide: SujetReferenceService, useValue: referenceService },
+        { provide: CandidatureService, useValue: candidatureService },
       ],
-    });
+    }).compileComponents();
     component = TestBed.createComponent(MesSujets).componentInstance;
   });
 

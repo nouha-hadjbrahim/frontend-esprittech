@@ -93,6 +93,9 @@ describe('SujetProjetService', () => {
         req.params.get('categorie') === 'PFE' &&
         req.params.get('statut') === 'VALIDE',
     );
+    expect(httpReq.request.method).toBe('GET');
+    expect(httpReq.request.params.get('categorie')).toBe('PFE');
+    expect(httpReq.request.params.get('statut')).toBe('VALIDE');
     httpReq.flush([]);
   });
 
@@ -108,6 +111,8 @@ describe('SujetProjetService', () => {
     const httpReq = httpMock.expectOne(
       (req) => req.url === `${BASE}/disponibles` && req.params.get('categorie') === 'PFE',
     );
+    expect(httpReq.request.method).toBe('GET');
+    expect(httpReq.request.params.get('categorie')).toBe('PFE');
     httpReq.flush([]);
   });
 
