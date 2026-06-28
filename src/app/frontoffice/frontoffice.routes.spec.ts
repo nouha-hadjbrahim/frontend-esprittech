@@ -13,6 +13,13 @@ describe('frontoffice routes', () => {
     expect(children.find((c) => c.path === '')?.redirectTo).toBe('sujets/disponibles');
   });
 
+  it('should declare the clean subject route structure', () => {
+    const sujetsChildren = children.find((c) => c.path === 'sujets')?.children ?? [];
+    expect(sujetsChildren.find((c) => c.path === 'mes-sujets')).toBeDefined();
+    expect(sujetsChildren.find((c) => c.path === 'disponibles')).toBeDefined();
+    expect(children.find((c) => c.path === 'sujets-disponibles')?.redirectTo).toBe('sujets/disponibles');
+  });
+
   it('should lazily resolve every page component', async () => {
     const lazy = children.filter((c) => typeof c.loadComponent === 'function');
     expect(lazy.length).toBeGreaterThan(0);

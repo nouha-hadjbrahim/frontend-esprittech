@@ -312,6 +312,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     deleteUser(user: UserRow): void {
         this.userToDelete = user;
         this.deleteConfirmOpen = true;
+        this.deleteAlertOpen = false;
+        this.deleteAlertMessage = '';
     }
 
     cancelDelete(): void {
@@ -321,27 +323,26 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
 
     confirmDelete(): void {
-        if (!this.userToDelete) {
-            return;
-        }
+        const user = this.userToDelete;
+        if (!user || this.deleting) { return; }
 
         this.deleting = true;
-        this.adminService.deleteUser(this.userToDelete.id).subscribe({
+        this.adminService.deleteUser(user.id).subscribe({
             next: () => {
-                this.deleting = false;
-                this.deleteConfirmOpen = false;
                 if (this.users.length === 1 && this.page > 0) {
                     this.page--;
                 }
+                this.deleting = false;
+                this.deleteConfirmOpen = false;
                 this.userToDelete = null;
                 this.loadUsers();
             },
             error: (err: HttpErrorResponse) => {
                 this.deleting = false;
                 this.deleteConfirmOpen = false;
+                this.userToDelete = null;
                 this.deleteAlertMessage = err.error?.detail ?? 'Échec de la suppression.';
                 this.deleteAlertOpen = true;
-                this.userToDelete = null;
             },
         });
     }

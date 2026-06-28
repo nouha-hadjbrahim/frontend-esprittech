@@ -15,8 +15,11 @@ export class SujetCard {
   @Input() showActions = true;
   @Input() detailsOnly = false;
   @Input() isOwner = false;
+  @Input() dejaPostule = false;
   @Output() edit = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
+  @Output() gererCandidatures = new EventEmitter<void>();
+  @Output() postuler = new EventEmitter<void>();
 
   get domainesLabel(): string {
     return this.sujet.domaines?.length ? this.sujet.domaines.join(', ') : '—';
@@ -30,11 +33,30 @@ export class SujetCard {
     return STATUT_LABELS[this.sujet.statut] ?? { label: this.sujet.statut, cssClass: 'badge--neutral' };
   }
 
+  get showCandidaturesAction(): boolean {
+    const statutsConcernes = [
+      'VALIDE',
+      'CANDIDATURE_OUVERTE',
+      'CANDIDATURE_FERMEE',
+      'REALISATION_EN_COURS',
+      'REALISATION_TERMINEE',
+    ];
+    return statutsConcernes.includes(this.sujet.statut);
+  }
+
   onEditClick(): void {
     this.edit.emit();
   }
 
   onDeleteClick(): void {
     this.delete.emit();
+  }
+
+  onGererCandidaturesClick(): void {
+    this.gererCandidatures.emit();
+  }
+
+  onPostulerClick(): void {
+    this.postuler.emit();
   }
 }
