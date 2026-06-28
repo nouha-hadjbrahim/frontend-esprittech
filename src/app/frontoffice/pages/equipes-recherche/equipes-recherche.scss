@@ -38,54 +38,6 @@
 
 /* ── Tabs ── */
 
-.equipes-recherche__tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 24px;
-}
-
-.equipes-recherche__tab {
-  padding: 10px 20px;
-  border: none;
-  background: none;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: #757575;
-  cursor: pointer;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
-  margin-bottom: -1px;
-}
-
-.equipes-recherche__tab:hover {
-  color: #1a1a1a;
-}
-
-.equipes-recherche__tab--active {
-  color: #E23E3E;
-  border-bottom-color: #E23E3E;
-  font-weight: 600;
-}
-
-.equipes-recherche__tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  margin-left: 6px;
-  border-radius: 20px;
-  background: #E23E3E;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-}
-
 /* ── Hero (chef Mon équipe tab) ── */
 
 .equipes-recherche__hero {
@@ -235,6 +187,12 @@
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.equipes-recherche__search-box:focus-within {
+  border-color: #d1d5db;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.03);
 }
 
 .equipes-recherche__search-icon {
@@ -734,6 +692,65 @@
   border-top: 1px solid #f0f0f0;
 }
 
+/* ── Join button wrap (for refused motif popup) ── */
+
+.join-btn-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.motif-popup {
+  position: relative;
+  display: inline-flex;
+}
+
+.motif-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: help;
+  border: 1px solid #fecaca;
+  transition: background 0.15s;
+}
+
+.motif-trigger:hover {
+  background: #fee2e2;
+}
+
+.motif-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 10;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.motif-popup:hover .motif-tooltip {
+  display: block;
+}
+
 /* ── Loading / Empty states ── */
 
 .equipes-recherche__loading {
@@ -868,6 +885,58 @@
   background: #fee2e2;
 }
 
+/* ── Motif dialog ── */
+
+.motif-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.motif-dialog {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.motif-dialog__title {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.motif-dialog__input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1a1a;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+.motif-dialog__input:focus {
+  outline: none;
+  border-color: #E23E3E;
+}
+
+.motif-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 1100px) {
@@ -913,10 +982,6 @@
 
   .equipes-recherche__stats {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .equipes-recherche__tabs {
-    overflow-x: auto;
   }
 
   .equipes-recherche__members-header {

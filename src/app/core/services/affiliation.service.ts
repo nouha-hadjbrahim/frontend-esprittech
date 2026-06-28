@@ -3,35 +3,33 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  AffiliationDecision,
-  AffiliationDecisionRequest,
-  AffiliationRequest,
-  CreateAffiliationRequest,
+  AffiliationEnseignantResponse,
+  TraiterAffiliationRequest,
 } from '../models/affiliation-request.model';
 
 @Injectable({ providedIn: 'root' })
 export class AffiliationService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/affiliations`;
+  private readonly baseUrl = `${environment.apiUrl}/equipes`;
 
-  getAll(): Observable<AffiliationRequest[]> {
-    return this.http.get<AffiliationRequest[]>(this.baseUrl);
+  getAll(): Observable<AffiliationEnseignantResponse[]> {
+    return this.http.get<AffiliationEnseignantResponse[]>(`${this.baseUrl}/affiliations`);
   }
 
-  getByEquipe(equipeId: number): Observable<AffiliationRequest[]> {
-    return this.http.get<AffiliationRequest[]>(`${this.baseUrl}/equipe/${equipeId}`);
+  getByEquipe(equipeId: number): Observable<AffiliationEnseignantResponse[]> {
+    return this.http.get<AffiliationEnseignantResponse[]>(`${this.baseUrl}/${equipeId}/affiliations`);
   }
 
-  getMesDemandes(): Observable<AffiliationRequest[]> {
-    return this.http.get<AffiliationRequest[]>(`${this.baseUrl}/mes-demandes`);
+  getMesDemandes(): Observable<AffiliationEnseignantResponse[]> {
+    return this.http.get<AffiliationEnseignantResponse[]>(`${this.baseUrl}/affiliations/mine`);
   }
 
-  create(payload: CreateAffiliationRequest): Observable<AffiliationRequest> {
-    return this.http.post<AffiliationRequest>(this.baseUrl, payload);
+  create(equipeId: number): Observable<AffiliationEnseignantResponse> {
+    return this.http.post<AffiliationEnseignantResponse>(`${this.baseUrl}/${equipeId}/affiliations`, {});
   }
 
-  decider(id: number, decision: AffiliationDecision): Observable<AffiliationRequest> {
-    const body: AffiliationDecisionRequest = { decision };
-    return this.http.put<AffiliationRequest>(`${this.baseUrl}/${id}/decider`, body);
+  traiter(affiliationId: number, equipeId: number, statut: 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE', motifDecision?: string): Observable<AffiliationEnseignantResponse> {
+    const body: TraiterAffiliationRequest = { statut, motifDecision };
+    return this.http.put<AffiliationEnseignantResponse>(`${this.baseUrl}/${equipeId}/affiliations/${affiliationId}`, body);
   }
 }

@@ -50,7 +50,33 @@ export const frontofficeRoutes: Routes = [
                 children: [
                     {
                         path: '',
-                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche)
+                        redirectTo: 'equipes',
+                        pathMatch: 'full'
+                    },
+                    {
+                        path: 'toutes-les-equipes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 2 }
+                    },
+                    {
+                        path: 'equipes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 0 }
+                    },
+                    {
+                        path: 'mes-demandes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 1 }
+                    },
+                    {
+                        path: 'mon-equipe',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 0 }
+                    },
+                    {
+                        path: 'demandes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 1 }
                     },
                     {
                         path: ':id',

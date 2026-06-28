@@ -1,25 +1,17 @@
 import { User } from './user.model';
 
-export interface AffiliationRequest {
+export interface AffiliationEnseignantResponse {
   id: number;
+  enseignant: User;
   equipeId: number;
-  equipeNom?: string;
-  encadrantId: number;
-  encadrantNom: string;
-  encadrantPrenom: string;
-  encadrantEmail: string;
-  message: string;
-  statut: 'en_attente' | 'acceptee' | 'refusee';
-  dateCreation: string;
+  equipeNom: string;
+  statut: 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+  dateDemande: string;
+  dateDecision: string | null;
+  motifDecision: string | null;
 }
 
-export interface CreateAffiliationRequest {
-  equipeId: number;
-  message: string;
-}
-
-export type AffiliationDecision = 'acceptee' | 'refusee';
-
-export interface AffiliationDecisionRequest {
-  decision: AffiliationDecision;
+export interface TraiterAffiliationRequest {
+  statut: 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE';
+  motifDecision?: string;
 }

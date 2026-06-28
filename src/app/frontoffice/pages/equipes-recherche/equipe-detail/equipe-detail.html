@@ -31,6 +31,18 @@
             Modifier
           </button>
         }
+        @if (isEnseignant() && !alreadyInTeam() && !isMemberOfThisTeam()) {
+          @if (joinStatus()) {
+            <span class="equipe-detail__hero-join equipe-detail__hero-join--status">{{ joinStatus() }}</span>
+          } @else {
+            <button type="button" class="equipe-detail__hero-join" (click)="rejoindreEquipe()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M7 3V11M3 7H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Rejoindre
+            </button>
+          }
+        }
       </div>
     </div>
 
@@ -54,21 +66,7 @@
       </div>
     </div>
 
-    <!-- Join / request status for non-members -->
-    @if (isEnseignant() && !isMemberOfThisTeam()) {
-      <div class="equipe-detail__join-bar">
-        @if (joinStatus()) {
-          <span class="equipe-detail__join-status">{{ joinStatus() }}</span>
-        } @else {
-          <button type="button" class="btn btn--primary" (click)="rejoindreEquipe()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M7 3V11M3 7H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            </svg>
-            Demander à rejoindre
-          </button>
-        }
-      </div>
-    }
+    
 
     <!-- Members section -->
     <section class="equipe-detail__section">
@@ -134,13 +132,15 @@
           <div class="equipe-detail__request-list">
             @for (r of teamAffiliations(); track r.id) {
               <div class="equipe-detail__request-row">
-                <div class="equipe-detail__request-avatar">{{ initiales(r.encadrantPrenom + ' ' + r.encadrantNom) }}</div>
+                <div class="equipe-detail__request-avatar">{{ initiales(r.enseignant.prenom + ' ' + r.enseignant.nom) }}</div>
                 <div class="equipe-detail__request-info">
-                  <div class="equipe-detail__request-name">{{ r.encadrantPrenom }} {{ r.encadrantNom }}</div>
-                  <div class="equipe-detail__request-date">{{ formatDate(r.dateCreation) }}</div>
-                  <p class="equipe-detail__request-msg">{{ r.message }}</p>
+                  <div class="equipe-detail__request-name">{{ r.enseignant.prenom }} {{ r.enseignant.nom }}</div>
+                  <div class="equipe-detail__request-date">{{ formatDate(r.dateDemande) }}</div>
+                  @if (r.motifDecision) {
+                    <p class="equipe-detail__request-msg">Motif : {{ r.motifDecision }}</p>
+                  }
                 </div>
-                @if (r.statut === 'en_attente') {
+                @if (r.statut === 'EN_ATTENTE') {
                   <div class="equipe-detail__request-actions">
                     <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id)">
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -148,7 +148,7 @@
                       </svg>
                       Accepter
                     </button>
-                    <button type="button" class="btn btn--danger btn--sm" (click)="refuserDemande(r.id)">
+                    <button type="button" class="btn btn--danger btn--sm" (click)="ouvrirRefus(r.id)">
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                         <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                       </svg>
@@ -157,7 +157,7 @@
                   </div>
                 } @else {
                   <span class="equipe-detail__status-badge" [class]="statutClass(r.statut)">
-                    {{ r.statut === 'acceptee' ? 'Acceptée' : 'Refusée' }}
+                    {{ statutLabel(r.statut) }}
                   </span>
                 }
               </div>
@@ -183,3 +183,22 @@
   (closed)="addMemberModalOpen = false"
   (saved)="onMemberAdded()"
 />
+
+<!-- Motif dialog for refusal -->
+@if (motifDialogOpen) {
+  <div class="motif-overlay" (click)="annulerRefus()">
+    <div class="motif-dialog" (click)="$event.stopPropagation()">
+      <h3 class="motif-dialog__title">Motif du refus</h3>
+      <textarea
+        class="motif-dialog__input"
+        [(ngModel)]="motifText"
+        placeholder="Saisissez le motif du refus..."
+        rows="3"
+      ></textarea>
+      <div class="motif-dialog__actions">
+        <button type="button" class="btn btn--outline" (click)="annulerRefus()">Annuler</button>
+        <button type="button" class="btn btn--danger" (click)="confirmerRefus()">Confirmer le refus</button>
+      </div>
+    </div>
+  </div>
+}

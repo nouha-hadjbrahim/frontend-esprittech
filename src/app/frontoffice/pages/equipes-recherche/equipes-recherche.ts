@@ -1,11 +1,11 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { Equipe } from '../../../core/models/equipe.model';
-import { AffiliationRequest } from '../../../core/models/affiliation-request.model';
+import { AffiliationEnseignantResponse } from '../../../core/models/affiliation-request.model';
 import { User } from '../../../core/models/user.model';
 import { EquipeService } from '../../../core/services/equipe.service';
 import { AffiliationService } from '../../../core/services/affiliation.service';
@@ -26,11 +26,12 @@ export class EquipesRecherche implements OnInit {
   private readonly equipeSvc = inject(EquipeService);
   private readonly affiliationSvc = inject(AffiliationService);
   private readonly authSvc = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly currentUser = this.authSvc.currentUser;
 
   equipes = signal<Equipe[]>([]);
-  affiliations = signal<AffiliationRequest[]>([]);
+  affiliations = signal<AffiliationEnseignantResponse[]>([]);
   loading = signal(true);
   activeTab = signal(0);
   searchQuery = '';
@@ -39,6 +40,10 @@ export class EquipesRecherche implements OnInit {
   editModalOpen = false;
   addMemberModalOpen = false;
   confirmDialogOpen = false;
+  motifDialogOpen = false;
+  motifText = '';
+  pendingRefuseId: number | null = null;
+  pendingRefuseEquipeId: number | null = null;
   memberToRemove: { equipeId: number; userId: number; nom: string } | null = null;
 
   isChef = computed(() => this.authSvc.getRole() === 'ROLE_CHEF_EQUIPE');
@@ -58,11 +63,6 @@ export class EquipesRecherche implements OnInit {
       e.memberIds?.includes(user.id)
     ) ?? null;
   });
-
-  chefTabLabels = ['Mon équipe', "Demandes d'affiliation", 'Toutes les équipes'];
-  enseignantTabLabels = ['Équipes', 'Mes demandes'];
-
-  tabLabels = computed(() => (this.isChef() ? this.chefTabLabels : this.enseignantTabLabels));
 
   otherTeams = computed(() => {
     const my = this.myTeam();
@@ -122,47 +122,61 @@ export class EquipesRecherche implements OnInit {
     return this.affiliations().filter((r) => r.equipeId === team.id);
   });
 
-  ignored = computed(() => 0);
   chefPendingCount = computed(() =>
-    this.myTeamAffiliations().filter((r) => r.statut === 'en_attente').length,
+    this.myTeamAffiliations().filter((r) => r.statut === 'EN_ATTENTE').length,
   );
 
   myDemandes = computed(() => {
     const user = this.currentUser();
     if (!user) return [];
-    return this.affiliations().filter((r) => r.encadrantEmail === user.email);
+    return this.affiliations().filter((r) => r.enseignant.email === user.email);
   });
 
   myDemandesPendingCount = computed(() =>
-    this.myDemandes().filter((r) => r.statut === 'en_attente').length,
+    this.myDemandes().filter((r) => r.statut === 'EN_ATTENTE').length,
   );
 
   ngOnInit(): void {
+    const tab = this.route.snapshot.data['tab'];
+    if (tab != null) this.activeTab.set(tab);
     this.loadData();
   }
 
   private loadData(): void {
     this.loading.set(true);
     this.equipeSvc.getAll().pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: (data) => this.equipes.set(data),
+      next: (data) => {
+        this.equipes.set(data);
+        this.loadAffiliationsForRole();
+      },
       error: () => this.equipes.set([]),
     });
+  }
 
-    this.affiliationSvc.getAll().subscribe({
-      next: (data) => this.affiliations.set(data),
-      error: () => this.affiliations.set([]),
-    });
+  private loadAffiliationsForRole(): void {
+    const user = this.currentUser();
+    if (!user) return;
+
+    if (this.isChef()) {
+      const team = this.myTeam();
+      if (team) {
+        this.affiliationSvc.getByEquipe(team.id).subscribe({
+          next: (data) => this.affiliations.set(data),
+          error: () => this.affiliations.set([]),
+        });
+      } else {
+        this.affiliations.set([]);
+      }
+    } else {
+      this.affiliationSvc.getMesDemandes().subscribe({
+        next: (data) => this.affiliations.set(data),
+        error: () => this.affiliations.set([]),
+      });
+    }
   }
 
   reloadAffiliations(): void {
-    this.affiliationSvc.getAll().subscribe({
-      next: (data) => this.affiliations.set(data),
-      error: () => this.affiliations.set([]),
-    });
-  }
-
-  setTab(index: number): void {
-    this.activeTab.set(index);
+    this.loadAffiliationsForRole();
   }
 
   // ── Chef actions ──
@@ -185,18 +199,37 @@ export class EquipesRecherche implements OnInit {
     this.loadData();
   }
 
-  accepterDemande(id: number): void {
-    this.affiliationSvc.decider(id, 'acceptee').subscribe({
-      next: () => this.reloadAffiliations(),
+  accepterDemande(id: number, equipeId: number): void {
+    this.affiliationSvc.traiter(id, equipeId, 'ACCEPTEE').subscribe({
+      next: () => this.loadData(),
       error: () => {},
     });
   }
 
-  refuserDemande(id: number): void {
-    this.affiliationSvc.decider(id, 'refusee').subscribe({
-      next: () => this.reloadAffiliations(),
+  ouvrirRefus(id: number, equipeId: number): void {
+    this.pendingRefuseId = id;
+    this.pendingRefuseEquipeId = equipeId;
+    this.motifText = '';
+    this.motifDialogOpen = true;
+  }
+
+  confirmerRefus(): void {
+    if (this.pendingRefuseId == null || this.pendingRefuseEquipeId == null) return;
+    this.affiliationSvc.traiter(this.pendingRefuseId, this.pendingRefuseEquipeId, 'REFUSEE', this.motifText || undefined).subscribe({
+      next: () => {
+        this.motifDialogOpen = false;
+        this.pendingRefuseId = null;
+        this.pendingRefuseEquipeId = null;
+        this.reloadAffiliations();
+      },
       error: () => {},
     });
+  }
+
+  annulerRefus(): void {
+    this.motifDialogOpen = false;
+    this.pendingRefuseId = null;
+    this.pendingRefuseEquipeId = null;
   }
 
   retirerMembre(equipeId: number, userId: number, nom: string): void {
@@ -225,24 +258,28 @@ export class EquipesRecherche implements OnInit {
     this.memberToRemove = null;
   }
 
-  hasPendingOrAcceptedRequest(equipeId: number): boolean {
+  affiliationState(equipeId: number): string | null {
     const user = this.currentUser();
-    if (!user) return true;
-    return this.affiliations().some(
-      (r) =>
-        r.equipeId === equipeId &&
-        r.encadrantEmail === user.email &&
-        (r.statut === 'en_attente' || r.statut === 'acceptee'),
+    if (!user) return null;
+    const req = this.affiliations().find(
+      (r) => r.equipeId === equipeId && r.enseignant.email === user.email,
     );
+    return req ? req.statut : null;
+  }
+
+  affiliationMotif(equipeId: number): string | null {
+    const user = this.currentUser();
+    if (!user) return null;
+    const req = this.affiliations().find(
+      (r) => r.equipeId === equipeId && r.enseignant.email === user.email,
+    );
+    return req?.motifDecision ?? null;
   }
 
   // ── Enseignant actions ──
 
   rejoindreEquipe(equipeId: number): void {
-    this.affiliationSvc.create({
-      equipeId,
-      message: "Demande d'intégration via la plateforme.",
-    }).subscribe({
+    this.affiliationSvc.create(equipeId).subscribe({
       next: () => this.reloadAffiliations(),
       error: () => {},
     });
@@ -285,9 +322,17 @@ export class EquipesRecherche implements OnInit {
 
   statutClass(statut: string): string {
     switch (statut) {
-      case 'acceptee': return 'status-acceptee';
-      case 'refusee': return 'status-refusee';
+      case 'ACCEPTEE': return 'status-acceptee';
+      case 'REFUSEE': return 'status-refusee';
       default: return 'status-attente';
+    }
+  }
+
+  statutLabel(statut: string): string {
+    switch (statut) {
+      case 'ACCEPTEE': return 'Acceptée';
+      case 'REFUSEE': return 'Refusée';
+      default: return 'En attente';
     }
   }
 

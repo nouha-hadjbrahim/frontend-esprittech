@@ -41,6 +41,7 @@ export class EquipeService {
     if (payload.domaineId !== undefined) body['domaineId'] = payload.domaineId;
     if (payload.chefId !== undefined) body['chefId'] = payload.chefId;
     if (payload.statut !== undefined) body['statut'] = payload.statut;
+    if (payload.memberIds !== undefined) body['memberIds'] = payload.memberIds;
     return this.http.put<Equipe>(`${this.baseUrl}/${id}`, body);
   }
 

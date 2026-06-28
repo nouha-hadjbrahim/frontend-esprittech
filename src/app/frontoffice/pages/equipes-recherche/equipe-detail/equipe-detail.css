@@ -178,23 +178,38 @@
   white-space: nowrap;
 }
 
-/* ── Join bar ── */
+/* ── Hero join button (top-left) ── */
 
-.equipe-detail__join-bar {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-
-.equipe-detail__join-status {
+.equipe-detail__hero-join {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: #f0fdf4;
-  color: #16a34a;
+  gap: 5px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  backdrop-filter: blur(4px);
+}
+
+.equipe-detail__hero-join:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.equipe-detail__hero-join--status {
+  background: rgba(240, 253, 244, 0.9);
+  color: #16a34a;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(22, 163, 74, 0.3);
 }
 
 /* ── Sections (bordered) ── */
@@ -528,6 +543,58 @@
   .equipe-detail__member-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Motif dialog ── */
+
+.motif-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.motif-dialog {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.motif-dialog__title {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.motif-dialog__input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1a1a;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+}
+
+.motif-dialog__input:focus {
+  outline: none;
+  border-color: #E23E3E;
+}
+
+.motif-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 @media (max-width: 1100px) {
