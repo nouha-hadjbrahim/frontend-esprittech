@@ -1,0 +1,78 @@
+@if (isOpen) {
+  <div class="modal-overlay" (click)="onOverlayClick($event)">
+    <div class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <header class="modal__header">
+        <div>
+          <h2 id="modal-title" class="modal__title">Ajouter des membres</h2>
+          <p class="modal__subtitle">Recherchez et sélectionnez des enseignants à ajouter à l'équipe.</p>
+        </div>
+        <button type="button" class="modal__close" aria-label="Fermer" (click)="close()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal__body">
+        <div class="search-wrap">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Rechercher un enseignant..."
+            [ngModel]="searchQuery"
+            (ngModelChange)="onSearchChange($event)"
+          />
+        </div>
+
+        @if (loading && users.length === 0) {
+          <div class="center-msg">Recherche en cours...</div>
+        }
+
+        @if (errorMessage) {
+          <p class="modal__error">{{ errorMessage }}</p>
+        }
+
+        @if (!loading && searchQuery && users.length === 0) {
+          <div class="center-msg">Aucun utilisateur trouvé.</div>
+        }
+
+        @if (!searchQuery && users.length === 0 && !loading) {
+          <div class="center-msg">Commencez à taper pour rechercher des enseignants.</div>
+        }
+
+        <div class="user-list">
+          @for (u of users; track u.id) {
+            <label class="user-row" [class.user-row--selected]="selectedIds.has(u.id)">
+              <input
+                type="checkbox"
+                class="user-checkbox"
+                [checked]="selectedIds.has(u.id)"
+                (change)="toggleUser(u.id)"
+              />
+              <span class="user-avatar">{{ initiales(u) }}</span>
+              <div class="user-info">
+                <div class="user-name">{{ nomComplet(u) }}</div>
+                <div class="user-email">{{ u.email }}</div>
+              </div>
+            </label>
+          }
+        </div>
+
+        @if (selectedIds.size > 0) {
+          <div class="selection-info">{{ selectedIds.size }} enseignant(s) sélectionné(s)</div>
+        }
+
+        <footer class="modal__footer">
+          <button type="button" class="btn btn--outline" (click)="close()" [disabled]="loading">Annuler</button>
+          <button type="button" class="btn btn--primary" (click)="ajouter()" [disabled]="selectedIds.size === 0 || loading">
+            {{ loading ? 'Ajout...' : 'Ajouter à l\'équipe' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  </div>
+}

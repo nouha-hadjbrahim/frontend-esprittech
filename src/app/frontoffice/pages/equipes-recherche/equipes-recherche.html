@@ -1,1 +1,431 @@
-<p>equipes-recherche works!</p>
+<div class="equipes-recherche">
+  <!-- Header -->
+  <header class="equipes-recherche__header">
+    <div class="equipes-recherche__header-text">
+      <h1 class="equipes-recherche__title">Équipes de recherche</h1>
+      <p class="equipes-recherche__subtitle">
+        @if (isChef()) {
+          Gérez votre équipe, consultez les demandes d'affiliation et découvrez les autres équipes RDI.
+        } @else {
+          Découvrez les équipes RDI et rejoignez celle qui correspond à votre domaine.
+        }
+      </p>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="equipes-recherche__tabs">
+    @for (label of tabLabels(); track $index) {
+      <button
+        type="button"
+        class="equipes-recherche__tab"
+        [class.equipes-recherche__tab--active]="activeTab() === $index"
+        (click)="setTab($index)"
+      >
+        {{ label }}
+        @if (isChef() && $index === 1 && chefPendingCount() > 0) {
+          <span class="equipes-recherche__tab-badge">{{ chefPendingCount() }}</span>
+        }
+        @if (isEnseignant() && $index === 1 && myDemandesPendingCount() > 0) {
+          <span class="equipes-recherche__tab-badge">{{ myDemandesPendingCount() }}</span>
+        }
+      </button>
+    }
+  </div>
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- TAB 0: Mon équipe (Chef only)          -->
+  <!-- ════════════════════════════════════════ -->
+  @if (activeTab() === 0 && isChef()) {
+    @if (loading()) {
+      <div class="equipes-recherche__loading">Chargement de l'équipe...</div>
+    } @else if (myTeam(); as team) {
+      <!-- Hero -->
+      <div class="equipes-recherche__hero">
+        <div class="equipes-recherche__hero-bg">
+          <svg class="equipes-recherche__hero-pattern" width="200" height="200" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+            <circle cx="100" cy="100" r="100" fill="currentColor" opacity="0.08"/>
+            <circle cx="100" cy="100" r="66" fill="currentColor" opacity="0.06"/>
+            <circle cx="100" cy="100" r="33" fill="currentColor" opacity="0.04"/>
+          </svg>
+        </div>
+        <div class="equipes-recherche__hero-content">
+          <span class="equipes-recherche__hero-domaine">{{ team.domaine }}</span>
+          <h1 class="equipes-recherche__hero-title--lg">{{ team.nom }}</h1>
+          <p class="equipes-recherche__hero-desc">{{ team.description }}</p>
+          <div class="equipes-recherche__hero-meta">
+            <div class="equipes-recherche__meta-item">
+              <span class="equipes-recherche__meta-label">Membres</span>
+              <span class="equipes-recherche__meta-value">{{ team.nbMembres }}</span>
+            </div>
+            <div class="equipes-recherche__meta-item">
+              <span class="equipes-recherche__meta-label">Créée le</span>
+              <span class="equipes-recherche__meta-value">{{ formatDate(team.createdAt) }}</span>
+            </div>
+            <div class="equipes-recherche__meta-item">
+              <span class="equipes-recherche__meta-label">Statut</span>
+              <span class="equipes-recherche__meta-value">{{ team.statut }}</span>
+            </div>
+          </div>
+          <div class="equipes-recherche__hero-actions">
+            <button type="button" class="btn btn--outline" (click)="openEditModal()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M10 1.5L12.5 4L4.5 12H2V9.5L10 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              </svg>
+              Modifier l'équipe
+            </button>
+            <button type="button" class="btn btn--outline" (click)="openAddMemberModal()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M7 3V11M3 7H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              Ajouter un membre
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info tiles -->
+      <div class="equipes-recherche__tiles">
+        <div class="equipes-recherche__tile">
+          <div class="equipes-recherche__tile-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M9 1.5L2.25 5.25L9 9L15.75 5.25L9 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M2.25 9L9 12.75L15.75 9" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M2.25 12.75L9 16.5L15.75 12.75" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="equipes-recherche__tile-label">Domaine</div>
+          <div class="equipes-recherche__tile-value">{{ team.domaine }}</div>
+        </div>
+        <div class="equipes-recherche__tile">
+          <div class="equipes-recherche__tile-icon" style="color: #f59e0b;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M9 1.5L11.1 6.3L16.5 7.095L12.75 10.725L13.65 16.5L9 13.8L4.35 16.5L5.25 10.725L1.5 7.095L6.9 6.3L9 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="equipes-recherche__tile-label">Chef d'équipe</div>
+          <div class="equipes-recherche__tile-value">{{ chefName(team) }}</div>
+        </div>
+        <div class="equipes-recherche__tile">
+          <div class="equipes-recherche__tile-icon" style="color: #0ea5e9;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M6 6C7.65685 6 9 4.65685 9 3C9 1.34315 7.65685 0 6 0C4.34315 0 3 1.34315 3 3C3 4.65685 4.34315 6 6 6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M13 2C14.1046 2 15 1.10457 15 0C15 -1.10457 14.1046 -2 13 -2C11.8954 -2 11 -1.10457 11 0C11 1.10457 11.8954 2 13 2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M6 8C2.68629 8 0 10.2386 0 13V16H12V13C12 10.2386 9.31371 8 6 8Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M13 8C10.2386 8 8 10.2386 8 13V16H18V13C18 10.2386 15.7614 8 13 8Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="equipes-recherche__tile-label">Membres</div>
+          <div class="equipes-recherche__tile-value">{{ team.nbMembres }}</div>
+        </div>
+        <div class="equipes-recherche__tile">
+          <div class="equipes-recherche__tile-icon" style="color: #10b981;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M14 2H4C2.89543 2 2 2.89543 2 4V14C2 15.1046 2.89543 16 4 16H14C15.1046 16 16 15.1046 16 14V4C16 2.89543 15.1046 2 14 2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M6 6H12M6 9H12M6 12H9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="equipes-recherche__tile-label">Statut</div>
+          <div class="equipes-recherche__tile-value">{{ team.statut }}</div>
+        </div>
+      </div>
+
+      <!-- Chef section -->
+      @if (team.chef) {
+        <section class="equipes-recherche__section">
+          <div class="equipes-recherche__section-header">
+            <h3 class="equipes-recherche__section-title">Chef d'équipe</h3>
+          </div>
+          <div class="equipes-recherche__chef-card">
+            <div class="equipes-recherche__chef-avatar" [style.background]="couleurAvatar(team.chef)">
+              {{ membreInitiales(team.chef) }}
+            </div>
+            <div class="equipes-recherche__chef-info">
+              <div class="equipes-recherche__chef-name">{{ team.chef.prenom }} {{ team.chef.nom }}</div>
+              <div class="equipes-recherche__chef-email">{{ team.chef.email }}</div>
+            </div>
+            <span class="equipes-recherche__chef-badge">Chef</span>
+          </div>
+        </section>
+      }
+
+      <!-- Members section -->
+      <section class="equipes-recherche__section">
+        <div class="equipes-recherche__section-header">
+          <h3 class="equipes-recherche__section-title">Membres ({{ team.nbMembres }})</h3>
+        </div>
+        @if (!team.members || team.members.length === 0) {
+          <div class="equipes-recherche__empty">Aucun membre dans cette équipe.</div>
+        } @else {
+          <div class="equipes-recherche__member-grid">
+            @for (m of team.members; track m.id) {
+              <div class="equipes-recherche__member-card">
+                <div class="equipes-recherche__member-avatar" [style.background]="couleurAvatar(m)">
+                  {{ membreInitiales(m) }}
+                </div>
+                <div class="equipes-recherche__member-info">
+                  <div class="equipes-recherche__member-name">{{ m.prenom }} {{ m.nom }}</div>
+                  <div class="equipes-recherche__member-email">{{ m.email }}</div>
+                </div>
+                <button
+                  type="button"
+                  class="equipes-recherche__member-remove"
+                  title="Retirer de l'équipe"
+                  (click)="retirerMembre(team.id, m.id)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M4 4L10 10M10 4L4 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+    } @else {
+      <div class="equipes-recherche__empty">
+        <h3 class="equipes-recherche__empty-title">Aucune équipe assignée</h3>
+        <p class="equipes-recherche__empty-text">Vous n'êtes pas encore chef d'une équipe de recherche.</p>
+      </div>
+    }
+  }
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- TAB 1: Demandes d'affiliation (Chef)   -->
+  <!-- ════════════════════════════════════════ -->
+  @if (activeTab() === 1 && isChef()) {
+    <section class="equipes-recherche__section">
+      <div class="equipes-recherche__section-header">
+        <h3 class="equipes-recherche__section-title">Demandes d'affiliation pour votre équipe</h3>
+      </div>
+      @if (myTeamAffiliations().length === 0) {
+        <div class="equipes-recherche__empty">Aucune demande d'affiliation pour votre équipe.</div>
+      } @else {
+        <div class="equipes-recherche__request-list">
+          @for (r of myTeamAffiliations(); track r.id) {
+            <div class="equipes-recherche__request-row">
+              <div class="equipes-recherche__request-avatar">{{ initiales(r.encadrantPrenom + ' ' + r.encadrantNom) }}</div>
+              <div class="equipes-recherche__request-info">
+                <div class="equipes-recherche__request-name">{{ r.encadrantPrenom }} {{ r.encadrantNom }}</div>
+                <div class="equipes-recherche__request-date">{{ formatDate(r.dateCreation) }}</div>
+                <p class="equipes-recherche__request-msg">{{ r.message }}</p>
+              </div>
+              @if (r.statut === 'en_attente') {
+                <div class="equipes-recherche__request-actions">
+                  <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id)">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d="M2.5 6.5L5 9L9.5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Accepter
+                  </button>
+                  <button type="button" class="btn btn--danger btn--sm" (click)="refuserDemande(r.id)">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    Refuser
+                  </button>
+                </div>
+              } @else {
+                <span class="equipes-recherche__status-badge" [class]="statutClass(r.statut)">
+                  {{ r.statut === 'acceptee' ? 'Acceptée' : 'Refusée' }}
+                </span>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- TAB: Toutes les équipes / Équipes      -->
+  <!-- ════════════════════════════════════════ -->
+  @if ((activeTab() === 2 && isChef()) || (activeTab() === 0 && !isChef())) {
+    <!-- Search bar -->
+    <div class="equipes-recherche__toolbar">
+      <div class="equipes-recherche__search-box">
+        <svg class="equipes-recherche__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="text"
+          class="equipes-recherche__search-input"
+          placeholder="Rechercher une équipe..."
+          [(ngModel)]="searchQuery"
+        />
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="equipes-recherche__loading">Chargement des équipes...</div>
+    } @else {
+      <!-- Enseignant: show their team first -->
+      @if (isEnseignant() && enseignantTeam(); as monEquipe) {
+        <section class="equipes-recherche__section">
+          <div class="equipes-recherche__section-header">
+            <h3 class="equipes-recherche__section-title">Votre équipe</h3>
+          </div>
+          <div class="equipes-recherche__featured-card">
+            <div class="equipes-recherche__featured-banner">
+              <div class="equipes-recherche__featured-content">
+                <span class="equipes-recherche__hero-domaine">{{ monEquipe.domaine }}</span>
+                <h3 class="equipes-recherche__featured-name">{{ monEquipe.nom }}</h3>
+                <p class="equipes-recherche__featured-desc">{{ monEquipe.description }}</p>
+                <div class="equipes-recherche__featured-meta">
+                  <span>{{ monEquipe.nbMembres }} membre{{ monEquipe.nbMembres !== 1 ? 's' : '' }}</span>
+                  <span>· Créée le {{ formatDate(monEquipe.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="equipes-recherche__featured-actions">
+              <a [routerLink]="['/frontoffice/equipes-recherche', monEquipe.id]" class="btn btn--outline btn--sm">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/>
+                  <path d="M6 4.5V7.5M4.5 6H7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+                Voir les détails
+              </a>
+              <span class="equipes-recherche__featured-badge">Membre</span>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- Other teams -->
+      @let teamsSource = isChef() ? filteredTeams() : enseignantTeamsList();
+      @if (teamsSource.length === 0) {
+        <div class="equipes-recherche__empty">
+          <div class="equipes-recherche__empty-icon" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="34" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
+              <path d="M34 11V17M31 14H37" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="equipes-recherche__empty-title">Aucune équipe trouvée</h3>
+          <p class="equipes-recherche__empty-text">Aucune équipe ne correspond à votre recherche.</p>
+        </div>
+      } @else {
+        @if (isEnseignant() && enseignantTeam()) {
+          <div class="equipes-recherche__section-subtitle">Autres équipes</div>
+        }
+        <div class="equipes-recherche__grid">
+          @for (t of teamsSource; track t.id) {
+            <div class="equipes-recherche__card">
+              <div class="equipes-recherche__card-banner">
+                <div class="equipes-recherche__card-pattern" aria-hidden="true">
+                  <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                    <circle cx="40" cy="40" r="40" fill="currentColor" opacity="0.08"/>
+                    <circle cx="40" cy="40" r="26" fill="currentColor" opacity="0.06"/>
+                    <circle cx="40" cy="40" r="12" fill="currentColor" opacity="0.04"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="equipes-recherche__card-body">
+                <span class="equipes-recherche__card-domaine">{{ t.domaine }}</span>
+                <h3 class="equipes-recherche__card-name">{{ t.nom }}</h3>
+                <p class="equipes-recherche__card-desc">{{ t.description }}</p>
+
+                <div class="equipes-recherche__card-chef">
+                  <div class="equipes-recherche__card-chef-avatar">{{ t.chef ? initiales(t.chef.prenom + ' ' + t.chef.nom) : '?' }}</div>
+                  <div class="equipes-recherche__card-chef-info">
+                    <span class="equipes-recherche__card-chef-name">{{ chefName(t) }}</span>
+                    <span class="equipes-recherche__card-chef-label">Chef d'équipe</span>
+                  </div>
+                </div>
+
+                <div class="equipes-recherche__card-members">
+                  @for (m of (t.members ?? []).slice(0, 5); track m.id) {
+                    <div class="equipes-recherche__card-member-avatar" [style.background]="couleurAvatar(m)" [title]="m.prenom + ' ' + m.nom">
+                      {{ membreInitiales(m) }}
+                    </div>
+                  }
+                  <span class="equipes-recherche__card-member-count">{{ t.nbMembres }} membre{{ t.nbMembres !== 1 ? 's' : '' }}</span>
+                </div>
+
+                <div class="equipes-recherche__card-actions">
+                  <a [routerLink]="['/frontoffice/equipes-recherche', t.id]" class="btn btn--outline btn--sm">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/>
+                      <path d="M6 4.5V7.5M4.5 6H7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                    </svg>
+                    Détails
+                  </a>
+                  @if (isEnseignant() && !enseignantDejaMembre(t)) {
+                    <button
+                      type="button"
+                      class="btn btn--primary btn--sm"
+                      [disabled]="hasPendingOrAcceptedRequest(t.id)"
+                      (click)="rejoindreEquipe(t.id)"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                      </svg>
+                      {{ hasPendingOrAcceptedRequest(t.id) ? 'Demande envoyée' : 'Rejoindre' }}
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+
+  <!-- ════════════════════════════════════════ -->
+  <!-- TAB: Mes demandes (Enseignant)         -->
+  <!-- ════════════════════════════════════════ -->
+  @if (activeTab() === 1 && isEnseignant()) {
+    <section class="equipes-recherche__section">
+      <div class="equipes-recherche__section-header">
+        <h3 class="equipes-recherche__section-title">Mes demandes d'affiliation</h3>
+      </div>
+      @if (myDemandes().length === 0) {
+        <div class="equipes-recherche__empty">
+          <h3 class="equipes-recherche__empty-title">Aucune demande</h3>
+          <p class="equipes-recherche__empty-text">Vous n'avez pas encore de demande d'affiliation en cours.</p>
+        </div>
+      } @else {
+        <div class="equipes-recherche__request-list">
+          @for (r of myDemandes(); track r.id) {
+            <div class="equipes-recherche__request-row">
+              <div class="equipes-recherche__request-info">
+                <div class="equipes-recherche__request-name">Équipe {{ r.equipeNom || '#' + r.equipeId }}</div>
+                <div class="equipes-recherche__request-date">{{ formatDate(r.dateCreation) }}</div>
+                <p class="equipes-recherche__request-msg">{{ r.message }}</p>
+              </div>
+              <span class="equipes-recherche__status-badge" [class]="statutClass(r.statut)">
+                @if (r.statut === 'acceptee') {
+                  Acceptée
+                } @else if (r.statut === 'refusee') {
+                  Refusée
+                } @else {
+                  En attente
+                }
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>
+
+<!-- Modals -->
+<app-modifier-equipe-modal
+  [isOpen]="editModalOpen"
+  [equipe]="myTeam()!"
+  (closed)="editModalOpen = false"
+  (saved)="onEditSaved()"
+/>
+
+<app-ajouter-membre-modal
+  [isOpen]="addMemberModalOpen"
+  [equipe]="myTeam()!"
+  (closed)="addMemberModalOpen = false"
+  (saved)="onMemberAdded()"
+/>

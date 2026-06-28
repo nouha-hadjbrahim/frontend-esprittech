@@ -47,7 +47,16 @@ export const frontofficeRoutes: Routes = [
             {
                 path: 'equipes-recherche',
                 canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE'])],
-                loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche)
+                children: [
+                    {
+                        path: '',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche)
+                    },
+                    {
+                        path: ':id',
+                        loadComponent: () => import('./pages/equipes-recherche/equipe-detail/equipe-detail').then(m => m.EquipeDetail)
+                    }
+                ]
             },
             {
                 path: 'mes-candidatures',
