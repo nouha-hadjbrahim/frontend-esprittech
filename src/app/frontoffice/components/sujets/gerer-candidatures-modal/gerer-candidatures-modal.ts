@@ -45,7 +45,7 @@ export class GererCandidaturesModal implements OnChanges {
   motifTargetType: 'refus' | 'retrait' | null = null;
   motifText = '';
 
-  livrablePlaceholderOpen = false;
+
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen && this.sujet) {
@@ -63,7 +63,7 @@ export class GererCandidaturesModal implements OnChanges {
     this.motifTargetId = null;
     this.motifTargetType = null;
     this.motifText = '';
-    this.livrablePlaceholderOpen = false;
+
   }
 
   private loadData(): void {
@@ -249,13 +249,5 @@ export class GererCandidaturesModal implements OnChanges {
     });
   }
 
-  // ── US-23 : Livrables — bouton uniquement, logique à venir ───────
-  get showLivrables(): boolean {
-    const statut = this.sujet?.statut;
-    return statut === 'REALISATION_EN_COURS' || statut === 'REALISATION_TERMINEE';
-  }
 
-  toggleLivrablePlaceholder(): void {
-    this.livrablePlaceholderOpen = !this.livrablePlaceholderOpen;
-  }
 }
