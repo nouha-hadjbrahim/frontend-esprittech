@@ -31,21 +31,12 @@
               Déclarer la terminaison
             </button>
           }
-          @if (showLivrables) {
-            <button type="button" class="gcm-btn gcm-btn--ghost" (click)="toggleLivrablePlaceholder()">
-              Ajouter un livrable
-            </button>
-          }
-          @if (!canOuvrir && !canFermer && !canTerminer && !showLivrables) {
+
+          @if (!canOuvrir && !canFermer && !canTerminer ) {
             <p class="gcm-hint">Aucune action disponible pour le statut actuel ({{ sujet.statut }}).</p>
           }
         </section>
 
-        @if (livrablePlaceholderOpen) {
-          <div class="gcm-placeholder">
-            Le dépôt de livrables sera disponible prochainement.
-          </div>
-        }
 
         @if (isLoading) {
           <p class="gcm-hint">Chargement...</p>
