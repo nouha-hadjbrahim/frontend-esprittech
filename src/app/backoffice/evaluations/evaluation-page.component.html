@@ -1,132 +1,149 @@
 <div class="evaluations-container">
-  <div class="page-header">
-    <h1>Évaluations</h1>
-    <p class="subtitle">Calculez le score final des projets terminés.</p>
-  </div>
+  <header class="page-header">
+    <div>
+      <h1>Evaluations</h1>
+      <p class="subtitle">Calcul automatique et recalcul des scores pour les projets termines.</p>
+    </div>
+  </header>
 
-  <div class="projects-section card">
+  <section class="kpi-grid">
+    <article class="kpi-card">
+      <span>Projets termines</span>
+      <strong>{{ projects().length }}</strong>
+    </article>
+    <article class="kpi-card">
+      <span>Evalues</span>
+      <strong>{{ evaluatedCount }}</strong>
+    </article>
+    <article class="kpi-card">
+      <span>Eligibles</span>
+      <strong>{{ eligibleCount }}</strong>
+    </article>
+    <article class="kpi-card">
+      <span>Non eligibles</span>
+      <strong>{{ nonEligibleCount }}</strong>
+    </article>
+  </section>
+
+  <section class="card projects-section">
     <div class="section-header">
-      <h2>Projets évaluables</h2>
+      <div>
+        <h2>Projets termines</h2>
+        <p>Selectionnez un projet pour consulter son evaluation detaillee.</p>
+      </div>
+      <label class="search-field" for="evaluation-project-search">
+        <span class="search-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input
+          id="evaluation-project-search"
+          type="search"
+          placeholder="Rechercher un projet..."
+          [value]="projectSearch()"
+          (input)="updateProjectSearch($any($event.target).value)"
+        />
+      </label>
     </div>
 
-    <div *ngIf="loadingProjects()" class="loading">Chargement...</div>
-    <div *ngIf="projectsError()" class="alert alert-error">{{ projectsError() }}</div>
+    <div *ngIf="loadingProjects()" class="loading">Chargement des evaluations...</div>
+    <div *ngIf="projectsError() && !loadingProjects()" class="alert alert-error">{{ projectsError() }}</div>
+    <div *ngIf="!loadingProjects() && !projectsError() && projects().length === 0" class="empty-state">
+      Aucun projet termine a evaluer.
+    </div>
 
-    <table *ngIf="!loadingProjects() && projects().length > 0" class="projects-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Titre</th>
-          <th>Statut</th>
-          <th>Score</th>
-          <th>Éligible</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let p of projects()">
-          <td>{{ p.id }}</td>
-          <td>{{ p.titre }}</td>
-          <td>{{ p.statut }}</td>
-          <td>{{ p.scoreFinalEvaluation ?? '-' }}</td>
-          <td>
-            <span class="badge" [class.badge-success]="p.eligibleIndustrialisation" [class.badge-danger]="!p.eligibleIndustrialisation && p.eligibleIndustrialisation !== undefined">
-              {{ p.eligibleIndustrialisation === undefined ? '-' : (p.eligibleIndustrialisation ? 'Oui' : 'Non') }}
-            </span>
-          </td>
-          <td>
-            <button class="btn btn-primary" (click)="selectProject(p)">Évaluer</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <div *ngIf="!loadingProjects() && projects().length > 0 && filteredProjects().length === 0" class="empty-state">
+      Aucun projet ne correspond a la recherche.
+    </div>
 
-  <div *ngIf="selectedProject" class="evaluation-panel card">
-    <h3>Évaluer : {{ selectedProject.titre }} (ID: {{ selectedProject.id }})</h3>
+    <div *ngIf="!loadingProjects() && filteredProjects().length > 0" class="table-responsive">
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Projet</th>
+            <th>Statut</th>
+            <th>Score</th>
+            <th>Eligibilite</th>
+            <th>Dernier calcul</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of filteredProjects()" [class.selected]="selectedProject?.id === p.id">
+            <td>#{{ p.id }}</td>
+            <td><strong>{{ p.titre }}</strong></td>
+            <td><span class="status-chip">{{ statusLabel(p.statut) }}</span></td>
+            <td>
+              <span class="score-chip">{{ p.scoreFinal == null ? 'Non calcule' : (p.scoreFinal + ' / 100') }}</span>
+            </td>
+            <td>
+              <span class="badge"
+                [class.badge-success]="p.eligibleIndustrialisation"
+                [class.badge-danger]="p.eligibleIndustrialisation === false"
+                [class.badge-secondary]="p.eligibleIndustrialisation == null">
+                {{ p.eligibleIndustrialisation == null ? 'En attente' : (p.eligibleIndustrialisation ? 'Eligible' : 'Non eligible') }}
+              </span>
+            </td>
+            <td>-</td>
+            <td class="actions-cell">
+              <button class="btn btn-secondary" type="button" (click)="selectProject(p)">Voir detail</button>
+              <button class="btn btn-primary" type="button" [disabled]="savingProjectId() === p.id" (click)="calculate(p)">
+                {{ savingProjectId() === p.id ? 'Calcul...' : (p.scoreFinal == null ? 'Calculer score' : 'Recalculer') }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section *ngIf="selectedProject" class="card result-card">
+    <div class="section-header">
+      <div>
+        <h2>Evaluation du projet</h2>
+        <p>{{ selectedProject.titre }}</p>
+      </div>
+    </div>
 
     <div *ngIf="evalError()" class="alert alert-error">{{ evalError() }}</div>
 
-    <form [formGroup]="evaluationForm">
-      <section class="criteria-block">
-        <h4>Critères éliminatoires</h4>
-        <div *ngIf="eliminatoires.length === 0">Aucun critère éliminatoire actif.</div>
-        <div formArrayName="eliminatoires">
-          <div *ngFor="let ctrl of eliminatoiresArray.controls; let i = index" [formGroupName]="i" class="crit-item">
-            <div class="crit-header">
-              <strong>{{ eliminatoires[i].libelle }}</strong>
-              <span class="domain">{{ eliminatoires[i].domaine }}</span>
-            </div>
-            <p *ngIf="eliminatoires[i].description" class="description">{{ eliminatoires[i].description }}</p>
-
-            <div class="row">
-              <label>Réponse *</label>
-              <select formControlName="reponse" class="form-control">
-                <option [ngValue]="'OK'">OK</option>
-                <option [ngValue]="'NOT_OK'">NOT_OK</option>
-              </select>
-            </div>
-
-            <div class="row">
-              <label>Commentaire</label>
-              <input type="text" formControlName="commentaire" class="form-control" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="criteria-block">
-        <h4>Critères notés</h4>
-        <div *ngIf="notes.length === 0">Aucun critère noté actif.</div>
-        <div formArrayName="notes">
-          <div *ngFor="let ctrl of notesArray.controls; let i = index" [formGroupName]="i" class="crit-item">
-            <div class="crit-header">
-              <strong>{{ notes[i].libelle }}</strong>
-              <span class="domain">{{ notes[i].domaine }}</span>
-            </div>
-            <p class="meta">Barème: {{ notes[i].bareme }} — Poids: {{ notes[i].poids }} — Seuil: {{ notes[i].seuil }}</p>
-
-            <div class="row">
-              <label>Note obtenue *</label>
-              <input type="number" formControlName="noteObtenue" class="form-control" [min]="0" [max]="notes[i].bareme" step="0.1" />
-            </div>
-
-            <div class="row">
-              <label>Commentaire</label>
-              <input type="text" formControlName="commentaire" class="form-control" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="actions">
-        <button class="btn btn-secondary" type="button" (click)="selectedProject = null">Fermer</button>
-        <button class="btn btn-primary" type="button" [disabled]="!canCalculate() || saving()" (click)="calculateEvaluation()">
-          {{ saving() ? 'Calcul en cours...' : 'Calculer l\'évaluation' }}
-        </button>
+    <ng-container *ngIf="evalResult(); else noEvaluation">
+      <div class="summary-grid">
+        <article class="metric">
+          <span>Score final</span>
+          <strong>{{ evalResult()!.scoreFinal }} / 100</strong>
+        </article>
+        <article class="metric">
+          <span>Eligibilite</span>
+          <strong>{{ evalResult()!.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Blocage eliminatoire</span>
+          <strong>{{ evalResult()!.bloqueParEliminatoire ? 'Oui' : 'Non' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Calcule le</span>
+          <strong>{{ evalResult()!.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Calcule par</span>
+          <strong>{{ evalResult()!.calculatedBy || 'SYSTEM' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Motif</span>
+          <strong>{{ evalResult()!.recalculationReason || 'Calcul initial' }}</strong>
+        </article>
       </div>
-    </form>
 
-    <div *ngIf="evalResult()" class="result-card card">
-      <h4>Résultat</h4>
-      <p><strong>Score final:</strong> {{ evalResult()!.scoreFinal }} / 100</p>
-      <p><strong>Éligible:</strong> <span [class.badge-success]="evalResult()!.eligibleIndustrialisation" [class.badge-danger]="!evalResult()!.eligibleIndustrialisation">{{ evalResult()!.eligibleIndustrialisation ? 'Oui' : 'Non' }}</span></p>
-      <p><strong>Bloqué par éliminatoire:</strong> {{ evalResult()!.bloqueParEliminatoire ? 'Oui' : 'Non' }}</p>
-      <p><strong>Commentaire:</strong> {{ evalResult()!.commentaire }}</p>
-      <p><strong>Date:</strong> {{ evalResult()!.dateCalcul }}</p>
+      <app-evaluation-checklist [evaluation]="evalResult()!" [projectTitle]="selectedProject.titre"></app-evaluation-checklist>
+    </ng-container>
 
-      <div *ngIf="(evalResult()?.resultats?.length || 0) > 0" class="result-details">
-        <h5>Détails</h5>
-        <ul>
-          <li *ngFor="let r of evalResult()!.resultats">
-            Critère {{ r.critereId }} — Type: {{ r.typeCritere }} —
-            <span *ngIf="r.reponseEliminatoire">Réponse: {{ r.reponseEliminatoire }}</span>
-            <span *ngIf="r.noteObtenue">Note: {{ r.noteObtenue }}</span>
-            <span *ngIf="r.scorePondere"> — Score pondéré: {{ r.scorePondere }}</span>
-            <div *ngIf="r.commentaire">Commentaire: {{ r.commentaire }}</div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
+    <ng-template #noEvaluation>
+      <p class="empty-state">Aucune evaluation enregistree pour ce projet.</p>
+    </ng-template>
+  </section>
 </div>

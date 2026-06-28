@@ -177,12 +177,12 @@ describe('AuthService', () => {
 
     it('should route ROLE_ENSEIGNANT to the catalogue', () => {
       loginAs('ROLE_ENSEIGNANT');
-      expect(service.landingRoute()).toBe('/frontoffice/catalogue');
+      expect(service.landingRoute()).toBe('/frontoffice/sujets/mes-sujets');
     });
 
     it('should route ROLE_ETUDIANT to available subjects', () => {
       loginAs('ROLE_ETUDIANT');
-      expect(service.landingRoute()).toBe('/frontoffice/sujets-disponibles');
+      expect(service.landingRoute()).toBe('/frontoffice/sujets/disponibles');
     });
 
     it('should route ROLE_CHEF_EQUIPE to the dashboard', () => {
@@ -196,7 +196,7 @@ describe('AuthService', () => {
     });
 
     it('should fall back to available subjects when no role is present', () => {
-      expect(service.landingRoute()).toBe('/frontoffice/sujets-disponibles');
+      expect(service.landingRoute()).toBe('/frontoffice/sujets/disponibles');
     });
   });
 });

@@ -1,0 +1,535 @@
+<div class="ci-page">
+  <header class="ci-header">
+    <div>
+      <span class="eyebrow">Espace CI</span>
+      <h1>Demandes d'industrialisation</h1>
+      <p>Vue de decision pour analyser les dossiers, livrables et evaluations avant Go / No Go.</p>
+    </div>
+    <div class="header-metrics">
+      <div>
+        <span>Dossiers</span>
+        <strong>{{ demandes().length }}</strong>
+      </div>
+      <div>
+        <span>En instruction</span>
+        <strong>{{ demandesEnInstruction() }}</strong>
+      </div>
+    </div>
+  </header>
+
+  @if (message()) { <div class="alert alert--success">{{ message() }}</div> }
+  @if (error()) { <div class="alert alert--danger">{{ error() }}</div> }
+
+  <section class="filters-card" aria-label="Filtres des demandes">
+    <label class="search-field">
+      <span>Recherche</span>
+      <input type="search" [(ngModel)]="searchTerm" placeholder="Projet, demandeur, domaine..." />
+    </label>
+
+    <label>
+      <span>Statut</span>
+      <select [(ngModel)]="statutFilter" (ngModelChange)="load()">
+        <option value="">Tous les statuts</option>
+        @for (statut of statuts; track statut) {
+          <option [value]="statut">{{ statutLabels[statut] }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Type</span>
+      <select [(ngModel)]="typeFilter" (ngModelChange)="load()">
+        <option value="">Interne et externe</option>
+        @for (type of types; track type) {
+          <option [value]="type">{{ typeLabels[type] }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Domaine</span>
+      <select [(ngModel)]="domaineFilter">
+        <option value="">Tous les domaines</option>
+        @for (domaine of domaines(); track domaine) {
+          <option [value]="domaine">{{ domaine }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Tri</span>
+      <select [(ngModel)]="sortBy">
+        <option value="date-desc">Plus recentes</option>
+        <option value="score-desc">Score eleve</option>
+        <option value="score-asc">Score faible</option>
+        <option value="title-asc">Projet A-Z</option>
+      </select>
+    </label>
+  </section>
+
+  <main class="ci-grid">
+    <section class="panel list-panel">
+      <div class="panel-title">
+        <div>
+          <h2>Dossiers recus</h2>
+          <p>{{ displayedDemandes().length }} demande(s) affichee(s)</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="state-card">
+          <span class="state-spinner"></span>
+          <strong>Chargement des demandes</strong>
+          <p>Les dossiers CI sont en cours de synchronisation.</p>
+        </div>
+      } @else if (displayedDemandes().length === 0) {
+        <div class="state-card">
+          <span class="state-icon">CI</span>
+          <strong>Aucune demande trouvee</strong>
+          <p>Modifiez les filtres ou revenez lorsque de nouvelles demandes sont soumises.</p>
+        </div>
+      } @else {
+        <div class="request-list">
+          @for (demande of displayedDemandes(); track demande.id) {
+            <article class="request-card" [class.request-card--active]="selected()?.id === demande.id">
+              <button type="button" class="request-main" (click)="openDetail(demande.id)">
+                <span class="request-thumb">{{ initials(demande) }}</span>
+                <span class="request-body">
+                  <span class="request-topline">
+                    <span class="status-pill" [ngClass]="statusClass(demande.statut)">
+                      {{ statusLabel(demande.statut) }}
+                    </span>
+                    <span class="type-pill">{{ typeLabels[demande.typeIndustrialisation] }}</span>
+                  </span>
+                  <strong>{{ demande.projetTitre }}</strong>
+                  <span>{{ demande.projetDomaine || 'Domaine non renseigne' }} · {{ demande.demandeurNom }}</span>
+                  <span class="request-reference">{{ requestReference(demande) }} · {{ (demande.dateSoumission || demande.dateDemande) | date:'dd/MM/yyyy' }}</span>
+                </span>
+                <span class="request-score" [ngClass]="scoreClass(demande)">
+                  <strong>{{ scoreValue(demande) ?? '-' }}</strong>
+                  <span>/100</span>
+                </span>
+              </button>
+
+              @if (selected()?.id === demande.id && canDecide(selected())) {
+                <div class="request-actions">
+                  <button type="button" class="btn btn--success btn--sm" (click)="openDecision('GO')">GO</button>
+                  <button type="button" class="btn btn--danger btn--sm" (click)="openDecision('NO_GO')">NO GO</button>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="detail-panel">
+      @if (detailLoading()) {
+        <div class="panel detail-empty">
+          <span class="state-spinner"></span>
+          <strong>Chargement du dossier</strong>
+          <p>Preparation des informations projet et evaluation.</p>
+        </div>
+      } @else if (!selected()) {
+        <div class="panel detail-empty">
+          <span class="state-icon">CI</span>
+          <strong>Selectionnez une demande</strong>
+          <p>Le detail du dossier apparaitra ici pour analyse.</p>
+        </div>
+      } @else {
+        <section class="project-hero">
+          <div class="hero-content">
+            <div class="hero-badges">
+              <span class="status-pill" [ngClass]="statusClass(selected()!.statut)">
+                {{ statusLabel(selected()!.statut) }}
+              </span>
+              <span class="type-pill">{{ typeLabels[selected()!.typeIndustrialisation] }}</span>
+              @if (selected()!.orientation) {
+                <span class="type-pill">{{ selected()!.orientation }}</span>
+              }
+            </div>
+            <span class="hero-reference">{{ requestReference(selected()!) }} · {{ projectYear(selected()!) }}</span>
+            <h2>{{ selected()!.projetTitre }}</h2>
+            <p>{{ selected()!.projetDescription || 'Aucune description projet disponible pour ce dossier.' }}</p>
+            <div class="hero-tags">
+              <span>{{ selected()!.projetDomaine || 'Domaine non renseigne' }}</span>
+              <span>{{ selected()!.projetCategorie || 'Categorie non renseignee' }}</span>
+              <span>{{ selected()!.projetStatut }}</span>
+            </div>
+            @if (technologyTags(selected()!).length) {
+              <div class="tech-list">
+                @for (tech of technologyTags(selected()!); track tech) {
+                  <span>{{ tech }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          <aside class="score-card" [ngClass]="scoreClass(selected()!)">
+            <span>Score final</span>
+            <strong>{{ score()?.scoreFinal ?? scoreValue(selected()!) ?? '-' }}</strong>
+            <small>/100</small>
+            <p>{{ score()?.decisionRecommandee ? decisionLabel(score()!.decisionRecommandee) : (selected()!.eligibleIndustrialisation ? 'Eligible industrialisation' : 'Non eligible') }}</p>
+          </aside>
+        </section>
+
+        <section class="decision-strip">
+          <div>
+            <span>Statut courant</span>
+            <strong>{{ statusLabel(selected()!.statut) }}</strong>
+          </div>
+          <div>
+            <span>Recommendation</span>
+            <strong>{{ recommendation(selected()!) }}</strong>
+          </div>
+          <div>
+            <span>Blocages</span>
+            <strong>{{ blockingCriteriaCount(selected()!) }}</strong>
+          </div>
+          @if (canDecide(selected())) {
+            <div class="decision-strip__actions">
+              <button type="button" class="btn btn--success" (click)="openDecision('GO')">GO</button>
+              <button type="button" class="btn btn--danger" (click)="openDecision('NO_GO')">NO GO</button>
+            </div>
+          }
+        </section>
+
+        <div class="detail-grid">
+          <section class="panel section-card identification-card">
+            <header class="section-header">
+              <div>
+                <span class="section-kicker">Identification</span>
+                <h3>Dossier projet</h3>
+              </div>
+            </header>
+            <div class="info-grid">
+              <div>
+                <span>Reference</span>
+                <strong>{{ requestReference(selected()!) }}</strong>
+              </div>
+              <div>
+                <span>Domaine</span>
+                <strong>{{ selected()!.projetDomaine || '-' }}</strong>
+              </div>
+              <div>
+                <span>Categorie</span>
+                <strong>{{ selected()!.projetCategorie || '-' }}</strong>
+              </div>
+              <div>
+                <span>Terminaison</span>
+                <strong>{{ selected()!.projetDateTerminaison ? (selected()!.projetDateTerminaison | date:'dd/MM/yyyy') : '-' }}</strong>
+              </div>
+            </div>
+            @if (selected()!.projetObjectifs) {
+              <p class="section-note"><strong>Objectifs :</strong> {{ selected()!.projetObjectifs }}</p>
+            }
+            @if (selected()!.projetPrerequis) {
+              <p class="section-note"><strong>Prerequis :</strong> {{ selected()!.projetPrerequis }}</p>
+            }
+          </section>
+
+          <section class="panel section-card">
+            <header class="section-header">
+              <div>
+                <span class="section-kicker">Encadrement</span>
+                <h3>Equipe & depot</h3>
+              </div>
+            </header>
+            <div class="person-row">
+              <span class="person-avatar">{{ selected()!.demandeurNom.charAt(0) }}</span>
+              <div>
+                <strong>{{ selected()!.demandeurNom }}</strong>
+                <span>Demandeur / encadrant</span>
+              </div>
+            </div>
+            <div class="info-grid info-grid--compact">
+              <div>
+                <span>Date demande</span>
+                <strong>{{ selected()!.dateDemande | date:'dd/MM/yyyy' }}</strong>
+              </div>
+              <div>
+                <span>Date soumission</span>
+                <strong>{{ selected()!.dateSoumission ? (selected()!.dateSoumission | date:'dd/MM/yyyy') : '-' }}</strong>
+              </div>
+              <div>
+                <span>Decision CI</span>
+                <strong>{{ selected()!.ciDecideurNom || '-' }}</strong>
+              </div>
+              <div>
+                <span>Date decision</span>
+                <strong>{{ selected()!.dateDecisionCI ? (selected()!.dateDecisionCI | date:'dd/MM/yyyy') : '-' }}</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel decision-helper">
+          <header class="section-header">
+            <div>
+              <span class="section-kicker">Decision</span>
+              <h3>Aide a la decision CI</h3>
+            </div>
+          </header>
+          @if (score(); as scoreData) {
+            <div class="helper-grid helper-grid--score">
+              <div>
+                <span>Score final</span>
+                <strong>{{ scoreData.scoreFinal }}/100</strong>
+              </div>
+              <div>
+                <span>Decision recommandee</span>
+                <strong class="status-pill" [ngClass]="decisionClass(scoreData.decisionRecommandee)">
+                  {{ decisionLabel(scoreData.decisionRecommandee) }}
+                </strong>
+              </div>
+              <div>
+                <span>Blocages eliminatoires</span>
+                <strong>{{ scoreData.blocagesEliminatoires.length }}</strong>
+              </div>
+              <div>
+                <span>Revue CI requise</span>
+                <strong>{{ manualReviewCount(scoreData) }}</strong>
+              </div>
+            </div>
+          } @else {
+            <div class="helper-grid">
+              <div>
+                <span>Score utilise</span>
+                <strong>{{ selected()!.latestEvaluation?.scoreFinal ?? selected()!.scoreEvaluationProjet ?? '-' }}/100</strong>
+              </div>
+              <div>
+                <span>Evaluation</span>
+                <strong>{{ selected()!.latestEvaluation?.evaluationComplete === false ? 'Incomplete' : 'Complete' }}</strong>
+              </div>
+              <div>
+                <span>Regles non configurees</span>
+                <strong>{{ nonConfiguredCount(selected()!) }}</strong>
+              </div>
+              <div>
+                <span>Livrables</span>
+                <strong>{{ selected()!.livrables.length }}</strong>
+              </div>
+            </div>
+          }
+          <p class="helper-explanation">{{ recommendationExplanation(selected()!) }}</p>
+        </section>
+
+        @if (score(); as scoreData) {
+          <section class="panel section-card score-breakdown">
+            <header class="section-header">
+              <div>
+                <span class="section-kicker">Calcul backend</span>
+                <h3>Score industrialisation</h3>
+              </div>
+            </header>
+
+            <div class="component-grid">
+              <article class="component-score">
+                <span>Questionnaire</span>
+                <strong>{{ scoreData.scoreQuestions }}/100</strong>
+                <small>Poids 40%</small>
+              </article>
+              <article class="component-score">
+                <span>Livrables</span>
+                <strong>{{ scoreData.scoreLivrables }}/100</strong>
+                <small>Poids 30%</small>
+              </article>
+              <article class="component-score">
+                <span>Criteres notes</span>
+                <strong>{{ scoreData.scoreCriteresNotes }}/100</strong>
+                <small>Poids 30%</small>
+              </article>
+            </div>
+
+            @if (scoreData.blocagesEliminatoires.length) {
+              <div class="blocker-list">
+                <strong>Blocages eliminatoires</strong>
+                @for (blocage of scoreData.blocagesEliminatoires; track blocage.source + blocage.referenceId) {
+                  <p>{{ blocage.libelle }} - {{ blocage.raison }}</p>
+                }
+              </div>
+            }
+
+            @if (scoreData.elementsManquants.length) {
+              <div class="missing-list">
+                <strong>Elements manquants</strong>
+                @for (item of scoreData.elementsManquants; track item) {
+                  <p>{{ item }}</p>
+                }
+              </div>
+            }
+
+            <div class="calculation-list">
+              @for (detail of scoreData.detailsCalcul; track detail.composant + detail.reference + $index) {
+                <article class="calculation-row" [class.calculation-row--manual]="detail.revueManuelleRequise">
+                  <div>
+                    <span>{{ componentLabel(detail.composant) }} - {{ detail.statut }}</span>
+                    <strong>{{ detail.libelle }}</strong>
+                    <p>{{ detail.details }}</p>
+                  </div>
+                  <div class="calculation-score">
+                    <strong>{{ detail.score ?? '-' }}</strong>
+                    <span>/100</span>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        }
+
+        @if (selected()!.latestEvaluation) {
+          <section class="section-card checklist-wrapper">
+            <app-evaluation-checklist [evaluation]="selected()!.latestEvaluation!" [projectTitle]="selected()!.projetTitre"></app-evaluation-checklist>
+          </section>
+        }
+
+        <section class="panel section-card livrables-summary">
+          <header class="section-header">
+            <div>
+              <span class="section-kicker">Pieces jointes</span>
+              <h3>Livrables du projet</h3>
+            </div>
+            <button type="button" class="btn btn--ghost" (click)="openLivrablesModal()">Voir les livrables</button>
+          </header>
+
+          @if (selected()!.livrables.length === 0) {
+            <div class="inline-empty">
+              <strong>Aucun livrable</strong>
+              <p>Aucune piece n'est associee a ce dossier.</p>
+            </div>
+          } @else {
+            <div class="livrable-preview-grid">
+              @for (livrable of selected()!.livrables.slice(0, 3); track livrable.id) {
+                <article class="livrable-preview">
+                  <span class="file-icon">{{ livrable.typeLivrable.charAt(0) }}</span>
+                  <div>
+                    <strong>{{ livrable.nom }}</strong>
+                    <span>{{ livrableLabels[livrable.typeLivrable] }} · {{ formatSize(livrable.size) }}</span>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="panel section-card lifecycle-card">
+          <header class="section-header">
+            <div>
+              <span class="section-kicker">Cycle de vie</span>
+              <h3>Historique</h3>
+            </div>
+          </header>
+          @for (history of selected()!.historique; track history.id) {
+            <div class="history-row">
+              <span class="history-dot"></span>
+              <div>
+                <strong>{{ statutLabels[history.statutCible] }}</strong>
+                <span>{{ history.acteurNom }} · {{ history.dateTransition | date:'dd/MM/yyyy HH:mm' }}</span>
+                @if (history.motif || history.commentaire) { <p>{{ history.motif || history.commentaire }}</p> }
+              </div>
+            </div>
+          } @empty {
+            <div class="inline-empty">
+              <strong>Aucun historique disponible</strong>
+              <p>Les transitions du dossier apparaitront ici.</p>
+            </div>
+          }
+        </section>
+      }
+    </section>
+  </main>
+</div>
+
+@if (decisionMode) {
+  <div class="modal-backdrop" (click)="closeDecision()">
+    <div class="modal decision-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div>
+          <span class="section-kicker">Decision CI</span>
+          <h2>{{ decisionMode === 'GO' ? 'Confirmer GO' : 'Confirmer NO GO' }}</h2>
+        </div>
+        <button type="button" class="modal-close" (click)="closeDecision()">Fermer</button>
+      </header>
+
+      @if (decisionMode === 'GO') {
+        <label>
+          Orientation
+          <select [(ngModel)]="orientation">
+            <option value="">Selectionner</option>
+            @for (item of orientations; track item.value) {
+              <option [value]="item.value">{{ item.label }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Note de decision
+          <textarea rows="4" [(ngModel)]="commentaire" placeholder="Commentaire facultatif"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn--ghost" (click)="closeDecision()">Annuler</button>
+          <button type="button" class="btn btn--success" (click)="decideGo()">Valider GO</button>
+        </div>
+      } @else {
+        <label>
+          Motif
+          <textarea rows="5" [(ngModel)]="motif" placeholder="Motif obligatoire"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn--ghost" (click)="closeDecision()">Annuler</button>
+          <button type="button" class="btn btn--danger" (click)="decideNoGo()">Valider NO GO</button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (livrablesModalOpen && selected()) {
+  <div class="modal-backdrop" (click)="closeLivrablesModal()">
+    <div class="modal livrables-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <div>
+          <span class="section-kicker">Pieces jointes</span>
+          <h2>Livrables du projet</h2>
+          <p>{{ selected()!.projetTitre }}</p>
+        </div>
+        <button type="button" class="modal-close" (click)="closeLivrablesModal()">Fermer</button>
+      </header>
+
+      @if (selected()!.livrables.length === 0) {
+        <div class="state-card">
+          <span class="state-icon">0</span>
+          <strong>Aucun livrable</strong>
+          <p>Aucun document, fichier ou lien n'est disponible pour ce dossier.</p>
+        </div>
+      } @else {
+        <div class="file-grid">
+          @for (livrable of selected()!.livrables; track livrable.id) {
+            <article class="file-card">
+              <span class="file-icon">{{ livrable.typeLivrable.charAt(0) }}</span>
+              <div class="file-content">
+                <strong>{{ livrable.nom }}</strong>
+                <span>{{ livrable.originalFileName || livrable.lienExterne || 'Reference externe' }}</span>
+                @if (livrable.description) { <p>{{ livrable.description }}</p> }
+                <div class="file-meta">
+                  <span>{{ livrableLabels[livrable.typeLivrable] }}</span>
+                  <span>{{ formatSize(livrable.size) }}</span>
+                  <span>{{ livrable.dateDepot | date:'dd/MM/yyyy' }}</span>
+                  <span>{{ livrable.deposantNom }}</span>
+                </div>
+              </div>
+              @if (livrable.objectName) {
+                <a class="btn btn--ghost btn--sm" [href]="downloadLivrable(livrable.id)" target="_blank" rel="noreferrer">
+                  {{ livrableActionLabel(livrable) }}
+                </a>
+              } @else if (livrable.lienExterne) {
+                <a class="btn btn--ghost btn--sm" [href]="livrable.lienExterne" target="_blank" rel="noreferrer">
+                  {{ livrableActionLabel(livrable) }}
+                </a>
+              }
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,7 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Equipe } from '../models/equipe.model';
 import { Page } from '../models/page.model';
 import { User } from '../models/user.model';
 import { AdminService, MessageResponse } from './admin.service';
@@ -49,23 +48,6 @@ describe('AdminService', () => {
     expect(req.request.body instanceof FormData).toBeTrue();
     expect((req.request.body as FormData).get('file')).toBe(file);
     req.flush(message);
-  });
-
-  it('should create an equipe', () => {
-    const equipe = { id: 1, nom: 'E1' } as Equipe;
-    service.createEquipe({ nom: 'E1', chefId: 2 }).subscribe((res) => expect(res).toEqual(equipe));
-    const req = http.expectOne(`${API}/equipes`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ nom: 'E1', chefId: 2 });
-    req.flush(equipe);
-  });
-
-  it('should assign a chef to an equipe', () => {
-    service.assignChef(7, 9).subscribe();
-    const req = http.expectOne(`${API}/equipes/7/chef`);
-    expect(req.request.method).toBe('PUT');
-    expect(req.request.body).toEqual({ chefId: 9 });
-    req.flush({ id: 7 } as Equipe);
   });
 
   it('should create a user', () => {

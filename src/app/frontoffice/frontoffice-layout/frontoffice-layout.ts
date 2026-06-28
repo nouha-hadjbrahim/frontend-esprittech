@@ -68,6 +68,7 @@ export class FrontofficeLayout {
     mesCandidatures: { label: 'Mes candidatures', path: '/frontoffice/mes-candidatures' },
     validationSujets: { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
     demandesIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/frontoffice/demandes-industrialisation' },
+    espaceCiIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/ci/industrialisation' },
   };
 
   // Navigation calculée à partir du rôle réel de l'utilisateur connecté
@@ -76,7 +77,8 @@ export class FrontofficeLayout {
       case 'ROLE_ENSEIGNANT':
         return [
           this.allLinks.catalogue,
-          this.allLinks.sujetsDisponibles,
+          this.allLinks.sujets,
+          this.allLinks.demandesIndustrialisation,
           this.allLinks.equipesRecherche
         ];
       case 'ROLE_ETUDIANT':
@@ -96,7 +98,7 @@ export class FrontofficeLayout {
       case 'ROLE_CI':
         return [
           this.allLinks.tableauDeBord,
-          this.allLinks.demandesIndustrialisation,
+          this.allLinks.espaceCiIndustrialisation,
           this.allLinks.catalogueSimple,
           this.allLinks.sujetsDisponibles
         ];

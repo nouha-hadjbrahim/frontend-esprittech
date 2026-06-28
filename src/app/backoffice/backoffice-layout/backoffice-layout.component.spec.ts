@@ -32,7 +32,23 @@ describe('BackofficeLayoutComponent', () => {
 
   it('should create with the full navigation', () => {
     expect(component).toBeTruthy();
-    expect(component.navItems.length).toBe(11);
+    expect(component.navItems.length).toBe(10);
+  });
+
+  it('should group evaluation links under the evaluations parent menu', () => {
+    const evaluations = component.navItems.find((item) => item.label === 'Évaluations');
+
+    expect(evaluations).toBeTruthy();
+    expect(evaluations?.children?.map((child) => child.route)).toEqual([
+      '/backoffice/admin/evaluations',
+      '/backoffice/criteres',
+      '/backoffice/admin/industrialisation/questions',
+      '/backoffice/admin/livrables',
+    ]);
+    expect(component.navItems.some((item) => item.route === '/backoffice/admin/evaluations')).toBeFalse();
+    expect(component.navItems.some((item) => item.route === '/backoffice/criteres')).toBeFalse();
+    expect(component.navItems.some((item) => item.route === '/backoffice/admin/industrialisation/questions')).toBeFalse();
+    expect(component.navItems.some((item) => item.route === '/backoffice/admin/livrables')).toBeFalse();
   });
 
   it('should fall back to "AD" initials and empty role label without a user', () => {

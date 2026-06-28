@@ -1,0 +1,83 @@
+<section class="evaluation-checklist">
+  <header class="evaluation-checklist__header">
+    <div>
+      <h3>Evaluation CTI - Checklist Go/No-Go</h3>
+      <p *ngIf="projectTitle">{{ projectTitle }}</p>
+    </div>
+    <span class="decision-badge" [ngClass]="statusClass">
+      {{ statusLabel }}
+    </span>
+  </header>
+
+  <div class="checklist-score">
+    <strong>{{ evaluation.scoreFinal }} / 100</strong>
+    <span>Seuil indicatif : 70/100</span>
+    <span *ngIf="evaluation.scoreCalculationCoverageMessage" class="coverage-message">
+      {{ evaluation.scoreCalculationCoverageMessage }}
+    </span>
+    <span *ngIf="!evaluationComplete" class="coverage-warning">Evaluation incomplete</span>
+    <span *ngIf="hasBlockingCriteria" class="blocking-message">
+      Le score note est eleve, mais le projet reste non eligible car au moins un critere eliminatoire est NOT_OK.
+    </span>
+    <span *ngIf="blockingCriteriaNames.length" class="blocking-list">
+      Critere(s) bloquant(s) : {{ blockingCriteriaNames.join(', ') }}
+    </span>
+    <div class="checklist-progress" aria-hidden="true">
+      <div class="checklist-progress__bar" [class]="progressClass" [style.width.%]="scorePercent"></div>
+    </div>
+  </div>
+
+  <div class="checklist-columns">
+    <section class="checklist-column">
+      <div class="checklist-column__title">
+        <h4>Criteres eliminatoires</h4>
+        <span>{{ eliminatoiresOk }}/{{ eliminatoires.length }} satisfaits</span>
+      </div>
+
+      <div *ngIf="eliminatoires.length === 0" class="checklist-empty">Aucun critere eliminatoire.</div>
+
+      <article *ngFor="let resultat of eliminatoires" class="checklist-row">
+        <div class="checklist-row__main">
+          <div>
+            <strong>{{ resultat.critereLibelle || 'Critere sans libelle' }}</strong>
+            <span>{{ resultat.critereDomaine || resultat.critereDescription || 'Domaine non renseigne' }}</span>
+          </div>
+          <span class="result-badge"
+            [class.result-badge--ok]="resultat.reponseEliminatoire === 'OK'"
+            [class.result-badge--ko]="resultat.reponseEliminatoire === 'NOT_OK'"
+            [class.result-badge--warning]="resultat.ruleConfigured === false">
+            {{ resultat.ruleConfigured === false ? 'Regle non configuree' : resultLabel(resultat) }}
+          </span>
+        </div>
+        <p *ngIf="resultat.evidenceSummary" class="checklist-evidence" [class.checklist-evidence--danger]="isBlocking(resultat)">Preuve : {{ resultat.evidenceSummary }}</p>
+        <p *ngIf="resultat.commentaire" class="checklist-comment" [class.checklist-comment--danger]="isBlocking(resultat)">{{ resultat.commentaire }}</p>
+      </article>
+    </section>
+
+    <section class="checklist-column">
+      <div class="checklist-column__title">
+        <h4>Criteres notes</h4>
+        <span>{{ notes.length }} critere(s)</span>
+      </div>
+
+      <div *ngIf="notes.length === 0" class="checklist-empty">Aucun critere note.</div>
+
+      <article *ngFor="let resultat of notes" class="checklist-row">
+        <div class="checklist-row__main">
+          <div>
+            <strong>{{ resultat.critereLibelle || 'Critere sans libelle' }}</strong>
+            <span>
+              {{ resultat.critereDomaine || resultat.critereDescription || 'Domaine non renseigne' }}
+              <ng-container *ngIf="resultat.poids"> - Poids {{ resultat.poids }}</ng-container>
+            </span>
+          </div>
+          <span class="result-badge result-badge--note" [class.result-badge--warning]="resultat.ruleConfigured === false">
+            {{ resultat.ruleConfigured === false ? 'Regle non configuree' : resultLabel(resultat) }}
+          </span>
+        </div>
+        <p *ngIf="resultat.evidenceSummary" class="checklist-evidence">Preuve : {{ resultat.evidenceSummary }}</p>
+        <p *ngIf="resultat.commentaire" class="checklist-comment">{{ resultat.commentaire }}</p>
+      </article>
+    </section>
+  </div>
+</section>
