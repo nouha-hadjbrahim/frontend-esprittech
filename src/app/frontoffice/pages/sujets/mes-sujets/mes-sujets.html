@@ -86,6 +86,7 @@
           [isOwner]="isOwner(sujet)"
           (edit)="openEditModal(sujet)"
           (delete)="deleteSujet(sujet)"
+          (gererCandidatures)="openCandidaturesModal(sujet)"
         />
       }
     </div>
@@ -116,4 +117,11 @@
   [message]="deleteAlertMessage"
   [alertOnly]="true"
   (cancelled)="closeDeleteAlert()"
+/>
+
+<app-gerer-candidatures-modal
+  [isOpen]="candidaturesModalOpen"
+  [sujet]="sujetCandidatures"
+  (closed)="closeCandidaturesModal()"
+  (changed)="onCandidaturesChanged()"
 />

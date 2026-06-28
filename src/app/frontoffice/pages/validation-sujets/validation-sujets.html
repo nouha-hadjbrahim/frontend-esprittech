@@ -1,1 +1,79 @@
-<p>validation-sujets works!</p>
+<div class="page-container">
+  <h1>Validation des sujets</h1>
+  <p class="page-subtitle">Sujets soumis par les enseignants de votre équipe, en attente de décision.</p>
+
+  @if (errorMessage) {
+    <div class="alert">{{ errorMessage }}</div>
+  }
+
+  @if (isLoading) {
+    <p class="hint">Chargement...</p>
+  } @else if (sujets.length === 0) {
+    <div class="empty-card">Aucun sujet en attente de validation pour le moment.</div>
+  } @else {
+    <div class="cards">
+      @for (sujet of sujets; track sujet.id) {
+        <div class="sujet-card">
+          <div class="sujet-card__header">
+            <span class="badge" [class]="categorieLabels[sujet.categorie].cssClass">
+              {{ categorieLabels[sujet.categorie].label }}
+            </span>
+            <span class="badge badge--warning">Soumis en validation</span>
+          </div>
+
+          <h3 class="sujet-card__title">{{ sujet.titre }}</h3>
+          <p class="sujet-card__meta">Encadrant : {{ sujet.encadrantNom }}</p>
+          <p class="sujet-card__description">{{ sujet.description }}</p>
+
+          @if (sujet.domaines?.length) {
+            <p class="sujet-card__meta">Domaines : {{ sujet.domaines.join(', ') }}</p>
+          }
+          @if (sujet.technologies?.length) {
+            <p class="sujet-card__meta">Technologies : {{ sujet.technologies.join(', ') }}</p>
+          }
+
+          @if (motifTargetId === sujet.id) {
+            <div class="motif-form">
+              <textarea
+                class="textarea"
+                rows="2"
+                placeholder="Motif de l'invalidation..."
+                [(ngModel)]="motifText"
+              ></textarea>
+              <div class="motif-actions">
+                <button type="button" class="btn btn--ghost" (click)="annulerMotif()">Annuler</button>
+                <button
+                  type="button"
+                  class="btn btn--danger"
+                  [disabled]="!motifText.trim() || actionLoadingId === sujet.id"
+                  (click)="confirmerInvalidation()"
+                >
+                  Confirmer l'invalidation
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="sujet-card__actions">
+              <button
+                type="button"
+                class="btn btn--success"
+                [disabled]="actionLoadingId === sujet.id"
+                (click)="valider(sujet)"
+              >
+                Valider
+              </button>
+              <button
+                type="button"
+                class="btn btn--danger"
+                [disabled]="actionLoadingId === sujet.id"
+                (click)="ouvrirMotifInvalidation(sujet)"
+              >
+                Invalider
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

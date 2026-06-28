@@ -310,8 +310,23 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
 
     deleteUser(user: UserRow): void {
+        if (!confirm(`Voulez-vous vraiment supprimer l'utilisateur ${user.name} ? Cette action est irréversible.`)) {
+            return;
+        }
         this.userToDelete = user;
-        this.deleteConfirmOpen = true;
+        this.adminService.deleteUser(user.id).subscribe({
+            next: () => {
+                if (this.users.length === 1 && this.page > 0) {
+                    this.page--;
+                }
+                this.userToDelete = null;
+                this.loadUsers();
+            },
+            error: (err: HttpErrorResponse) => {
+                this.userToDelete = null;
+                alert(err.error?.detail ?? 'Échec de la suppression.');
+            },
+        });
     }
 
     cancelDelete(): void {
@@ -321,29 +336,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
 
     confirmDelete(): void {
-        if (!this.userToDelete) {
-            return;
-        }
-
-        this.deleting = true;
-        this.adminService.deleteUser(this.userToDelete.id).subscribe({
-            next: () => {
-                this.deleting = false;
-                this.deleteConfirmOpen = false;
-                if (this.users.length === 1 && this.page > 0) {
-                    this.page--;
-                }
-                this.userToDelete = null;
-                this.loadUsers();
-            },
-            error: (err: HttpErrorResponse) => {
-                this.deleting = false;
-                this.deleteConfirmOpen = false;
-                this.deleteAlertMessage = err.error?.detail ?? 'Échec de la suppression.';
-                this.deleteAlertOpen = true;
-                this.userToDelete = null;
-            },
-        });
+        if (!this.userToDelete) { return; }
+        this.deleteUser(this.userToDelete);
     }
 
     closeDeleteAlert(): void {

@@ -76,7 +76,7 @@ export class FrontofficeLayout {
       case 'ROLE_ENSEIGNANT':
         return [
           this.allLinks.catalogue,
-          this.allLinks.sujets,
+          this.allLinks.sujetsDisponibles,
           this.allLinks.equipesRecherche
         ];
       case 'ROLE_ETUDIANT':
