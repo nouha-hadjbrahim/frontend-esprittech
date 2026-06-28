@@ -106,10 +106,10 @@ export class AjouterMembreModal implements OnChanges {
   }
 
   initiales(u: User): string {
-    return `${u.prenom} ${u.nom}`.trim().split(' ').map((p) => p[0]?.toUpperCase() ?? '').slice(0, 2).join('');
+    return `${u.prenom ?? ''} ${u.nom ?? ''}`.trim().split(' ').map((p) => p[0]?.toUpperCase() ?? '').slice(0, 2).join('');
   }
 
   nomComplet(u: User): string {
-    return `${u.prenom} ${u.nom}`;
+    return `${u.prenom ?? ''} ${u.nom ?? ''}`.trim();
   }
 }
