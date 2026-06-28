@@ -114,14 +114,14 @@ export class AuthService {
       case 'ROLE_ADMIN':
         return '/backoffice/users';
       case 'ROLE_ENSEIGNANT':
-        return '/frontoffice/sujets/mes-sujets';
+        return '/frontoffice/catalogue';
       case 'ROLE_ETUDIANT':
-        return '/frontoffice/sujets/disponibles';
+        return '/frontoffice/sujets-disponibles';
       case 'ROLE_CHEF_EQUIPE':
       case 'ROLE_CI':
         return '/frontoffice/tableau-de-bord';
       default:
-        return '/frontoffice/sujets/disponibles';
+        return '/frontoffice/sujets-disponibles';
     }
   }
 

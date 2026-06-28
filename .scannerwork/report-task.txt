@@ -1,0 +1,6 @@
+projectKey=frontend_EspritTech
+serverUrl=http://localhost:9000
+serverVersion=26.6.0.123539
+dashboardUrl=http://localhost:9000/dashboard?id=frontend_EspritTech
+ceTaskId=0d2ba8e5-b950-4f1c-8e70-8cf84576d6ee
+ceTaskUrl=http://localhost:9000/api/ce/task?id=0d2ba8e5-b950-4f1c-8e70-8cf84576d6ee
