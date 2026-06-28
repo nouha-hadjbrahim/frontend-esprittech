@@ -24,6 +24,7 @@
   background: #fff;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   animation: modal-in 0.2s ease;
+  overflow: hidden;
 }
 
 @keyframes modal-in {

@@ -83,6 +83,7 @@ export class ModifierEquipeModal implements OnInit, OnChanges {
       nom: this.form.value.nom,
       description: this.form.value.description || null,
       domaineId: this.form.value.domaineId,
+      chefId: this.equipe.chef?.id,
     };
 
     this.equipeSvc.modifier(this.equipe.id, payload).subscribe({
@@ -100,5 +101,11 @@ export class ModifierEquipeModal implements OnInit, OnChanges {
   isInvalid(field: 'nom' | 'description' | 'domaineId'): boolean {
     const control = this.form.controls[field];
     return control.invalid && control.touched;
+  }
+
+  couleurDomaine(id: number | undefined): string {
+    if (!id || id === 0) return 'transparent';
+    const colors = ['#E63946', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899'];
+    return colors[id % colors.length];
   }
 }

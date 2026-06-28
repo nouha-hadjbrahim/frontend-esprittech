@@ -13,13 +13,14 @@ import { AuthService } from '../../../core/services/auth.service';
 
 import { ModifierEquipeModal } from './modifier-equipe-modal/modifier-equipe-modal';
 import { AjouterMembreModal } from './ajouter-membre-modal/ajouter-membre-modal';
+import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-equipes-recherche',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ModifierEquipeModal, AjouterMembreModal],
+  imports: [CommonModule, FormsModule, RouterModule, ModifierEquipeModal, AjouterMembreModal, ConfirmDialog],
   templateUrl: './equipes-recherche.html',
-  styleUrl: './equipes-recherche.css',
+  styleUrl: './equipes-recherche.scss',
 })
 export class EquipesRecherche implements OnInit {
   private readonly equipeSvc = inject(EquipeService);
@@ -33,9 +34,12 @@ export class EquipesRecherche implements OnInit {
   loading = signal(true);
   activeTab = signal(0);
   searchQuery = '';
+  newMemberName = '';
 
   editModalOpen = false;
   addMemberModalOpen = false;
+  confirmDialogOpen = false;
+  memberToRemove: { equipeId: number; userId: number; nom: string } | null = null;
 
   isChef = computed(() => this.authSvc.getRole() === 'ROLE_CHEF_EQUIPE');
   isEnseignant = computed(() => this.authSvc.getRole() === 'ROLE_ENSEIGNANT');
@@ -49,7 +53,10 @@ export class EquipesRecherche implements OnInit {
   enseignantTeam = computed(() => {
     const user = this.currentUser();
     if (!user) return null;
-    return this.equipes().find((e) => e.members?.some((m) => m.id === user.id)) ?? null;
+    return this.equipes().find((e) =>
+      e.members?.some((m) => m.id === user.id) ||
+      e.memberIds?.includes(user.id)
+    ) ?? null;
   });
 
   chefTabLabels = ['Mon équipe', "Demandes d'affiliation", 'Toutes les équipes'];
@@ -90,6 +97,25 @@ export class EquipesRecherche implements OnInit {
     return list;
   });
 
+  allTeamsUnified = computed(() => {
+    const user = this.currentUser();
+    if (!user) return this.equipes();
+    const my = this.enseignantTeam();
+    if (!my) return this.filtredByQuery(this.equipes());
+    return this.filtredByQuery([my, ...this.equipes().filter((e) => e.id !== my.id)]);
+  });
+
+  private filtredByQuery(list: Equipe[]): Equipe[] {
+    const q = this.searchQuery.toLowerCase().trim();
+    if (!q) return list;
+    return list.filter(
+      (t) =>
+        t.nom.toLowerCase().includes(q) ||
+        t.domaine.toLowerCase().includes(q) ||
+        (t.chef && `${t.chef.prenom} ${t.chef.nom}`.toLowerCase().includes(q)),
+    );
+  }
+
   myTeamAffiliations = computed(() => {
     const team = this.myTeam();
     if (!team) return [];
@@ -110,17 +136,6 @@ export class EquipesRecherche implements OnInit {
   myDemandesPendingCount = computed(() =>
     this.myDemandes().filter((r) => r.statut === 'en_attente').length,
   );
-
-  hasPendingOrAcceptedRequest(equipeId: number): boolean {
-    const user = this.currentUser();
-    if (!user) return true;
-    return this.affiliations().some(
-      (r) =>
-        r.equipeId === equipeId &&
-        r.encadrantEmail === user.email &&
-        (r.statut === 'en_attente' || r.statut === 'acceptee'),
-    );
-  }
 
   ngOnInit(): void {
     this.loadData();
@@ -184,22 +199,41 @@ export class EquipesRecherche implements OnInit {
     });
   }
 
-  retirerMembre(equipeId: number, userId: number): void {
-    this.equipeSvc.retirerMembre(equipeId, userId).subscribe({
-      next: () => this.loadData(),
-      error: () => {},
+  retirerMembre(equipeId: number, userId: number, nom: string): void {
+    this.memberToRemove = { equipeId, userId, nom };
+    this.confirmDialogOpen = true;
+  }
+
+  onRemoveConfirmed(): void {
+    const target = this.memberToRemove;
+    if (!target) return;
+    this.equipeSvc.retirerMembre(target.equipeId, target.userId).subscribe({
+      next: () => {
+        this.confirmDialogOpen = false;
+        this.memberToRemove = null;
+        this.loadData();
+      },
+      error: () => {
+        this.confirmDialogOpen = false;
+        this.memberToRemove = null;
+      },
     });
   }
 
-  enseignantDejaMembre(equipe: Equipe): boolean {
+  cancelRemove(): void {
+    this.confirmDialogOpen = false;
+    this.memberToRemove = null;
+  }
+
+  hasPendingOrAcceptedRequest(equipeId: number): boolean {
     const user = this.currentUser();
     if (!user) return true;
-    const memberIds = equipe.members?.map((m) => m.id) ?? [];
-    const team = this.myTeam();
-    if (team && team.id === equipe.id) return true;
-    const eTeam = this.enseignantTeam();
-    if (eTeam && eTeam.id === equipe.id) return true;
-    return memberIds.includes(user.id);
+    return this.affiliations().some(
+      (r) =>
+        r.equipeId === equipeId &&
+        r.encadrantEmail === user.email &&
+        (r.statut === 'en_attente' || r.statut === 'acceptee'),
+    );
   }
 
   // ── Enseignant actions ──
@@ -215,6 +249,20 @@ export class EquipesRecherche implements OnInit {
   }
 
   // ── Helpers ──
+
+  isUserTeam(equipe: Equipe): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    if (this.isChef()) return this.myTeam()?.id === equipe.id;
+    return this.enseignantTeam()?.id === equipe.id;
+  }
+
+  membersAvecChef(equipe: Equipe): User[] {
+    const members = equipe.members ?? [];
+    if (!equipe.chef) return members;
+    const hasChef = members.some((m) => m.id === equipe.chef!.id);
+    return hasChef ? members : [equipe.chef, ...members];
+  }
 
   chefName(equipe: Equipe): string {
     return equipe.chef ? `${equipe.chef.prenom} ${equipe.chef.nom}` : 'Non assigné';

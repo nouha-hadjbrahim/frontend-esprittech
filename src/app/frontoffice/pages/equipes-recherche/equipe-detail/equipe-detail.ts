@@ -119,13 +119,20 @@ export class EquipeDetail implements OnInit {
   }
 
   private loadMembres(equipeId: number): void {
+    const addChef = (list: User[]): User[] => {
+      const eq = this.equipe();
+      if (!eq?.chef) return list;
+      const hasChef = list.some((m) => m.id === eq.chef!.id);
+      return hasChef ? list : [eq.chef, ...list];
+    };
+
     if (this.equipe()?.members && this.equipe()!.members!.length > 0) {
-      this.membres.set(this.equipe()!.members!);
+      this.membres.set(addChef(this.equipe()!.members!));
       this.loading.set(false);
       return;
     }
     this.equipeSvc.getMembres(equipeId).pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: (data) => this.membres.set(data),
+      next: (data) => this.membres.set(addChef(data)),
       error: () => this.membres.set([]),
     });
   }

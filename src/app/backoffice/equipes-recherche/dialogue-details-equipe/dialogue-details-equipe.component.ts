@@ -23,7 +23,6 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
       <div class="dlg-header">
         <div>
           <h2 class="dlg-title">{{ eq.nom }}</h2>
-          <p class="dlg-desc">{{ eq.description }}</p>
         </div>
         <app-badge variant="outline" [class.badge-success]="eq.statut === 'Actif'">
           {{ eq.statut }}
@@ -48,6 +47,11 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
             <span class="tile-lbl"><mat-icon class="ti">star</mat-icon>Chef</span>
             <span class="tile-val">{{ eq.chef ? (eq.chef.prenom + ' ' + eq.chef.nom) : '—' }}</span>
           </div>
+        </div>
+
+        <div *ngIf="eq.description" class="dlg-desc-card">
+          <mat-icon class="dc-icon">description</mat-icon>
+          <div class="dc-text">{{ eq.description }}</div>
         </div>
 
         <div class="contact-bar" *ngIf="eq.emailChef || eq.chef?.email">
@@ -130,16 +134,37 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
   styles: [`
     :host { display: flex; flex-direction: column; max-width: 36rem; max-height: 90vh; overflow: hidden; }
     .dlg-wrap { padding: 1.5rem; display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
-    .dlg-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
+    .dlg-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; flex-shrink: 0; }
     .dlg-header > div { min-width: 0; overflow: hidden; }
     .dlg-title { margin: 0; font-size: 1.25rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .dlg-desc { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .badge-success { background: #f0fdf4 !important; color: #16a34a !important; border-color: #bbf7d0 !important; }
     .dlg-header app-badge { flex-shrink: 0; }
     .badge-chef { background: #fffbeb !important; color: #b45309 !important; border-color: #fde68a !important; }
+    .dlg-desc-card {
+      display: flex; align-items: flex-start; gap: 0.625rem;
+      padding: 0.875rem 1rem;
+      border-radius: calc(var(--radius) - 2px);
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    .dc-icon { font-size: 16px; width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; margin-top: 1px; }
+    .dc-text { font-size: 0.875rem; color: #334155; line-height: 1.55; word-break: break-word; }
 
-    .dlg-body { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; flex: 1; overflow-y: auto; min-height: 0; }
-    .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .dlg-body {
+      display: flex; flex-direction: column; gap: 0.75rem;
+      min-width: 0; flex: 1; overflow-y: auto; min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148,163,184,0.5) transparent;
+      scrollbar-gutter: stable;
+    }
+    .dlg-body::-webkit-scrollbar { width: 5px; }
+    .dlg-body::-webkit-scrollbar-track { background: transparent; }
+    .dlg-body::-webkit-scrollbar-thumb {
+      background: rgba(148,163,184,0.5);
+      border-radius: 3px;
+    }
+    .dlg-body::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.75); }
+    .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; flex-shrink: 0; }
     .tile {
       padding: 0.75rem; border-radius: calc(var(--radius) - 2px);
       border: 1px solid var(--border); background: rgba(248,250,252,0.5);
@@ -160,7 +185,7 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
       display: flex; align-items: center; gap: 0.5rem;
       padding: 0.75rem; border-radius: calc(var(--radius) - 2px);
       background: #fef2f2; font-size: 0.875rem;
-      overflow: hidden; min-width: 0;
+      overflow: hidden; min-width: 0; flex-shrink: 0;
     }
     .ci { color: var(--primary); font-size: 16px; width: 16px; flex-shrink: 0; }
     .cl { color: var(--muted-foreground); flex-shrink: 0; }
@@ -179,30 +204,15 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
       border-radius: calc(var(--radius) - 2px);
       padding: 0.75rem;
       overflow: hidden;
+      flex-shrink: 0;
     }
     .members-section {
-      overflow-y: auto;
       min-height: 0;
-      max-height: 165px;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(148,163,184,0.4) transparent;
-    }
-    .members-section::-webkit-scrollbar {
-      width: 5px;
-    }
-    .members-section::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .members-section::-webkit-scrollbar-thumb {
-      background: rgba(148,163,184,0.4);
-      border-radius: 3px;
-    }
-    .members-section::-webkit-scrollbar-thumb:hover {
-      background: rgba(148,163,184,0.7);
     }
     .section-header {
       display: flex; align-items: center; gap: 0.5rem;
       font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem;
+      flex-shrink: 0;
     }
     .section-header-btn { margin-left: auto; flex-shrink: 0; }
     .si { font-size: 16px; width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; }
@@ -210,7 +220,7 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
     .member-row {
       display: flex; align-items: center; gap: 0.625rem;
       padding: 0.5rem 0; border-bottom: 1px solid var(--border);
-      min-width: 0;
+      min-width: 0; flex-shrink: 0;
     }
     .member-row:last-of-type { border-bottom: none; }
     .chef-row {
@@ -221,8 +231,9 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
     .avatar {
       border-radius: 50%; display: inline-grid; place-items: center;
       font-weight: 600; color: #fff; flex-shrink: 0;
+      width: 28px; height: 28px; min-width: 28px;
     }
-    .avatar.sm { width: 28px; height: 28px; font-size: 11px; }
+    .avatar.sm { font-size: 11px; }
     .member-info { flex: 1; min-width: 0; }
     .member-name { display: block; font-size: 0.8125rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .member-email { display: block; font-size: 0.6875rem; color: var(--muted-foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -231,11 +242,11 @@ import { DialogueAjouterMembresComponent } from '../dialogue-ajouter-membres/dia
     .btn-remove:hover { color: var(--destructive); }
     .btn-revoke { color: var(--muted-foreground); flex-shrink: 0; }
     .btn-revoke:hover { color: var(--destructive); }
-    .center-msg { padding: 1rem 0; text-align: center; color: var(--muted-foreground); font-size: 0.8125rem; }
+    .center-msg { padding: 1rem 0; text-align: center; color: var(--muted-foreground); font-size: 0.8125rem; flex-shrink: 0; }
     .center-msg-sm { padding: 0.5rem 0; }
     .muted { color: var(--muted-foreground); }
-    .badge-xs { font-size: 0.625rem; padding: 0 0.5rem; height: 1.25rem; }
-    .icon-xs { font-size: 14px; width: 14px; height: 14px; }
+    .badge-xs { font-size: 0.625rem; padding: 0 0.5rem; height: 1.25rem; flex-shrink: 0; }
+    .icon-xs { font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; }
 
     .dlg-footer {
       display: flex; justify-content: flex-end; gap: 0.5rem;
