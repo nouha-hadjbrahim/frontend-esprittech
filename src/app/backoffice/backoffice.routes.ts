@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { BackofficeLayoutComponent } from './backoffice-layout/backoffice-layout.component';
 import { UsersComponent } from './users/users.component';
-import { ResearchTeamsComponent } from './research-teams/research-teams.component';
+import { EquipesRechercheComponent } from './equipes-recherche/equipes-recherche.component';
+import { DomainesComponent } from './equipes-recherche/domaines/domaines.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SubjectsComponent } from './subjects/subjects.component';
 import { FormulairesComponent } from './subjects/formulaires/formulaires.component';
@@ -25,7 +26,8 @@ export const backofficeRoutes: Routes = [
             { path: 'subjects/technologies', redirectTo: 'subjects/formulaires', pathMatch: 'full' },
             { path: 'catalog', component: CatalogComponent },
             { path: 'applications', component: ApplicationsComponent },
-            { path: 'research-teams', component: ResearchTeamsComponent },
+            { path: 'equipes-recherche', component: EquipesRechercheComponent },
+            { path: 'equipes-recherche/domaines', component: DomainesComponent },
             { path: 'supervisors', component: SupervisorsComponent },
             { path: 'users', component: UsersComponent },
             { path: 'history', component: HistoryComponent },

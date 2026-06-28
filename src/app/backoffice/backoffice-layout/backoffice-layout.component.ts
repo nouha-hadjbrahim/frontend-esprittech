@@ -32,6 +32,7 @@ export class BackofficeLayoutComponent {
 
     expandedGroups: Record<string, boolean> = {
         Sujets: true,
+        'Équipes de recherche': true,
         'Évaluations': false,
     };
 
@@ -65,7 +66,14 @@ export class BackofficeLayoutComponent {
         },
         { label: 'Catalogue applicatif', icon: 'layers', route: '/backoffice/catalog' },
         { label: 'Candidatures', icon: 'file-text', route: '/backoffice/applications' },
-        { label: 'Équipes de recherche', icon: 'users', route: '/backoffice/research-teams' },
+        {
+            label: 'Équipes de recherche',
+            icon: 'users',
+            children: [
+                { label: 'Équipes', route: '/backoffice/equipes-recherche' },
+                { label: 'Domaines', route: '/backoffice/equipes-recherche/domaines' },
+            ],
+        },
         { label: 'Encadrants', icon: 'award', route: '/backoffice/supervisors' },
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
@@ -84,6 +92,12 @@ export class BackofficeLayoutComponent {
 
     isProfileOpen = false;
 
+    private readonly groupBaseRoutes: Record<string, string> = {
+        'Sujets': '/backoffice/subjects',
+        'Équipes de recherche': '/backoffice/equipes-recherche',
+        'Évaluations': '/backoffice/admin/evaluations',
+    };
+
     constructor() {
         this.expandActiveGroups();
 
@@ -97,7 +111,7 @@ export class BackofficeLayoutComponent {
     }
 
     toggleNavGroup(item: NavItem): void {
-        this.expandedGroups[item.label] = !this.isNavGroupExpanded(item);
+        this.expandedGroups[item.label] = !this.expandedGroups[item.label];
     }
 
     isNavGroupExpanded(item: NavItem): boolean {
@@ -105,6 +119,10 @@ export class BackofficeLayoutComponent {
     }
 
     isNavGroupActive(item: NavItem): boolean {
+        const baseRoute = this.groupBaseRoutes[item.label];
+        if (baseRoute) {
+            return this.router.url.startsWith(baseRoute);
+        }
         return item.children?.some((child) => this.isChildActive(child.route)) ?? false;
     }
 
@@ -123,13 +141,9 @@ export class BackofficeLayoutComponent {
     }
 
     private expandActiveGroups(): void {
-        this.navItems
-            .filter((item) => item.children?.length)
-            .forEach((item) => {
-                if (this.isNavGroupActive(item)) {
-                    this.expandedGroups[item.label] = true;
-                }
-            });
+        for (const label of Object.keys(this.groupBaseRoutes)) {
+            this.expandedGroups[label] = this.router.url.startsWith(this.groupBaseRoutes[label]);
+        }
     }
 
     logout(): void {

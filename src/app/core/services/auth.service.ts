@@ -117,8 +117,9 @@ export class AuthService {
         return '/frontoffice/sujets/mes-sujets';
       case 'ROLE_ETUDIANT':
         return '/frontoffice/sujets/disponibles';
-      case 'ROLE_CHEF_EQUIPE':
       case 'ROLE_CI':
+        return '/ci/industrialisation';
+      case 'ROLE_CHEF_EQUIPE':
         return '/frontoffice/tableau-de-bord';
       default:
         return '/frontoffice/sujets/disponibles';

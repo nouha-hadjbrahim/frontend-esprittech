@@ -2,21 +2,24 @@ import { Component, OnInit, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CategorieSujet, SujetProjet } from '../../../../core/models/sujet-projet.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CandidatureService } from '../../../../core/services/candidature.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
 import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-modal/deposer-sujet-modal';
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
+import { PostulerModal } from '../../../components/sujets/postuler-modal/postuler-modal';
 import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
 import { CATEGORIE_OPTIONS } from '../../../constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-sujets-disponibles',
-  imports: [FormsModule, DeposerSujetModal, SujetCard, FilterDropdown],
+  imports: [FormsModule, DeposerSujetModal, SujetCard, FilterDropdown, PostulerModal],
   templateUrl: './sujets-disponibles.html',
   styleUrl: './sujets-disponibles.css',
 })
 export class SujetsDisponibles implements OnInit {
   private readonly sujetProjetService = inject(SujetProjetService);
   private readonly authService = inject(AuthService);
+  private readonly candidatureService = inject(CandidatureService);
 
   sujets: SujetProjet[] = [];
   filteredSujets: SujetProjet[] = [];
@@ -25,6 +28,11 @@ export class SujetsDisponibles implements OnInit {
   searchQuery = '';
   selectedCategorie = '';
   sortOrder = 'recent';
+
+  // Postuler modal
+  showPostulerModal = false;
+  selectedSujet: SujetProjet | null = null;
+  mesCandidaturesSujetIds: Set<number> = new Set();
 
   readonly isEnseignant = computed(() => this.authService.getRole() === 'ROLE_ENSEIGNANT');
 
@@ -36,6 +44,7 @@ export class SujetsDisponibles implements OnInit {
 
   ngOnInit(): void {
     this.loadSujets();
+    this.loadMesCandidatures();
   }
 
   loadSujets(): void {
@@ -54,6 +63,21 @@ export class SujetsDisponibles implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  loadMesCandidatures(): void {
+    this.candidatureService.getMesCandidatures().subscribe({
+      next: (candidatures) => {
+        this.mesCandidaturesSujetIds = new Set(
+          candidatures.map((c: any) => c.sujetId as number)
+        );
+      },
+      error: () => {} // silent — not critical
+    });
+  }
+
+  dejaPostule(sujet: SujetProjet): boolean {
+    return this.mesCandidaturesSujetIds.has(sujet.id);
   }
 
   openModal(): void {
@@ -83,6 +107,21 @@ export class SujetsDisponibles implements OnInit {
     this.applyFilters();
   }
 
+  ouvrirPostuler(sujet: SujetProjet): void {
+    this.selectedSujet = sujet;
+    this.showPostulerModal = true;
+  }
+
+  fermerPostuler(): void {
+    this.showPostulerModal = false;
+    this.selectedSujet = null;
+  }
+
+  onCandidatureSoumise(): void {
+    this.fermerPostuler();
+    this.loadMesCandidatures();
+  }
+
   private applyFilters(): void {
     let result = [...this.sujets];
 
@@ -90,7 +129,6 @@ export class SujetsDisponibles implements OnInit {
       const query = this.searchQuery.toLowerCase();
       result = result.filter(
         (s) =>
-          s.titre.toLowerCase().includes(query) ||
           s.domaines.some((d) => d.toLowerCase().includes(query)) ||
           s.technologies.some((t) => t.toLowerCase().includes(query)) ||
           (s.encadrantNom?.toLowerCase().includes(query) ?? false),

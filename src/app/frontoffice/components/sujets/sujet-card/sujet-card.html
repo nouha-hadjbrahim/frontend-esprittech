@@ -81,8 +81,9 @@
           </button>
         }
       </div>
-      @if (!detailsOnly) {
-        <button type="button" class="sujet-card__btn sujet-card__btn--candidatures">
+
+      @if (!detailsOnly && isOwner && showCandidaturesAction) {
+        <button type="button" class="sujet-card__btn sujet-card__btn--candidatures" (click)="onGererCandidaturesClick()">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2"/>
             <path d="M1 12.5C1 10 2.8 8.5 5 8.5C7.2 8.5 9 10 9 12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
@@ -92,6 +93,19 @@
           Candidatures
         </button>
       }
+
+      @if (detailsOnly) {
+        @if (dejaPostule) {
+          <button type="button" class="sujet-card__btn sujet-card__btn--deja-postule" disabled>
+            ✅ Candidature déposée
+          </button>
+        } @else {
+          <button type="button" class="sujet-card__btn sujet-card__btn--postuler" (click)="onPostulerClick()">
+            🎓 Postuler
+          </button>
+        }
+      }
+
     </footer>
   }
 </article>

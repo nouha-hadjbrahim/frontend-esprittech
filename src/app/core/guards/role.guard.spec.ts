@@ -38,9 +38,9 @@ describe('roleGuard', () => {
 
   it('should redirect to the landing route when the role is not allowed', () => {
     authService.getRole.and.returnValue('ROLE_ETUDIANT');
-    authService.landingRoute.and.returnValue('/frontoffice/sujets-disponibles');
+    authService.landingRoute.and.returnValue('/frontoffice/sujets/disponibles');
     const result = run(['ROLE_ADMIN']);
     expect(result).toBeInstanceOf(UrlTree);
-    expect(router.serializeUrl(result as UrlTree)).toContain('/frontoffice/sujets-disponibles');
+    expect(router.serializeUrl(result as UrlTree)).toContain('/frontoffice/sujets/disponibles');
   });
 });
