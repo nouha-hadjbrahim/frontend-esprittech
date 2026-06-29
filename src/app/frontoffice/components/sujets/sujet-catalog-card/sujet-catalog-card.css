@@ -1,0 +1,158 @@
+.catalog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: box-shadow 0.15s ease;
+}
+
+.catalog-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.catalog-card__header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalog-card__status {
+  justify-self: center;
+}
+
+.catalog-card__id {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge--pfe {
+  background: #fff5f5;
+  color: #E23E3E;
+}
+
+.badge--stage {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.badge--rdi {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.badge--success {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.badge--warning {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.badge--progress {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge--info {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.badge--neutral {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.catalog-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.catalog-card__subtitle {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.catalog-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.catalog-card__tag {
+  padding: 3px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.catalog-card__info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.catalog-card__info-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.catalog-card__info-label {
+  color: #9ca3af;
+}
+
+.catalog-card__footer {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.catalog-card__details-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.catalog-card__details-btn:hover {
+  color: #E23E3E;
+  border-color: #fecaca;
+  background: #fef2f2;
+}

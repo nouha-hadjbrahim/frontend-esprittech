@@ -49,4 +49,19 @@ export class SujetProjetService {
   getDomainesSuggestions(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/suggestions/domaines`);
   }
+
+  getSujetsAValider(categorie?: CategorieSujet, statut?: StatutSujet): Observable<SujetProjet[]> {
+    let params = new HttpParams();
+    if (categorie) params = params.set('categorie', categorie);
+    if (statut) params = params.set('statut', statut);
+    return this.http.get<SujetProjet[]>(`${this.baseUrl}/a-valider`, { params });
+  }
+
+  validerSujet(id: number): Observable<SujetProjet> {
+    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/valider`, {});
+  }
+
+  invaliderSujet(id: number, motif: string): Observable<SujetProjet> {
+    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/invalider`, { motif });
+  }
 }

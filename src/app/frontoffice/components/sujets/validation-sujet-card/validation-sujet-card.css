@@ -1,0 +1,222 @@
+.validation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.15s ease;
+}
+
+.validation-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.validation-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.validation-card__author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.validation-card__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f472b6, #ec4899);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.validation-card__name {
+  margin: 0 0 1px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.validation-card__email {
+  margin: 0;
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.validation-card__status {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.validation-card__status.badge--warning,
+.validation-card__status.badge--progress {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.validation-card__status.badge--danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.validation-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.validation-card__tag {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.validation-card__tag--type.badge--stage {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.validation-card__tag--type.badge--pfe {
+  background: #fff5f5;
+  color: #E23E3E;
+}
+
+.validation-card__tag--type.badge--rdi {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.validation-card__tag--domain {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.validation-card__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.validation-card__description {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.validation-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.validation-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.validation-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.validation-card__details-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.validation-card__details-btn:hover {
+  color: #111827;
+}
+
+.validation-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.validation-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.validation-card__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.validation-card__btn--validate {
+  border: none;
+  background: #E23E3E;
+  color: #ffffff;
+}
+
+.validation-card__btn--validate:hover:not(:disabled) {
+  background: #c93434;
+}
+
+.validation-card__btn--reject {
+  border: 1.5px solid #E23E3E;
+  background: #ffffff;
+  color: #E23E3E;
+}
+
+.validation-card__btn--reject:hover:not(:disabled) {
+  background: #fff5f5;
+}

@@ -1,0 +1,28 @@
+@import '../sujet-list-row/sujet-list-row.css';
+
+.sujet-list-row__btn--validate {
+  border: none;
+  background: #E23E3E;
+  color: #ffffff;
+}
+
+.sujet-list-row__btn--validate:hover:not(:disabled) {
+  background: #c93434;
+}
+
+.sujet-list-row__btn--reject {
+  border: 1px solid #E23E3E;
+  background: #ffffff;
+  color: #E23E3E;
+}
+
+.sujet-list-row__btn--reject:hover:not(:disabled) {
+  background: #fff5f5;
+  border-color: #fca5a5;
+}
+
+.sujet-list-row__btn--validate:disabled,
+.sujet-list-row__btn--reject:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

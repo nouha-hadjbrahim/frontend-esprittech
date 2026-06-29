@@ -30,11 +30,15 @@ export class SujetCard {
     return STATUT_LABELS[this.sujet.statut] ?? { label: this.sujet.statut, cssClass: 'badge--neutral' };
   }
 
-  onEditClick(): void {
+  onEditClick(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
     this.edit.emit();
   }
 
-  onDeleteClick(): void {
+  onDeleteClick(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
     this.delete.emit();
   }
 }

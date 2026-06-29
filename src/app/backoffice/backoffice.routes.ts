@@ -4,6 +4,7 @@ import { UsersComponent } from './users/users.component';
 import { ResearchTeamsComponent } from './research-teams/research-teams.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SubjectsComponent } from './subjects/subjects.component';
+import { SubjectDetailComponent } from './subjects/subject-detail/subject-detail.component';
 import { FormulairesComponent } from './subjects/formulaires/formulaires.component';
 import { CatalogComponent } from './catalog/catalog.component';
 import { ApplicationsComponent } from './applications/applications.component';
@@ -20,6 +21,8 @@ export const backofficeRoutes: Routes = [
             { path: 'dashboard', component: DashboardComponent },
             { path: 'subjects', component: SubjectsComponent },
             { path: 'subjects/formulaires', component: FormulairesComponent },
+            { path: 'subjects/:id/edit', redirectTo: 'subjects/:id', pathMatch: 'full' },
+            { path: 'subjects/:id', component: SubjectDetailComponent },
             { path: 'subjects/domaines', redirectTo: 'subjects/formulaires', pathMatch: 'full' },
             { path: 'subjects/prerequis', redirectTo: 'subjects/formulaires', pathMatch: 'full' },
             { path: 'subjects/technologies', redirectTo: 'subjects/formulaires', pathMatch: 'full' },

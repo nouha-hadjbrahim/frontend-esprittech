@@ -13,6 +13,7 @@ export class ConfirmDialog {
   @Input() confirmLabel = 'Confirmer';
   @Input() cancelLabel = 'Annuler';
   @Input() alertOnly = false;
+  @Input() showIcon = true;
   @Input() loading = false;
   @Input() errorMessage = '';
 
