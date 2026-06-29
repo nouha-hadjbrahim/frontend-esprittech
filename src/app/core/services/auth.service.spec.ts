@@ -19,6 +19,9 @@ function userWith(role: Role): User {
     departement: null,
     enabled: true,
     createdAt: null,
+    isAffilieToEquipe: false,
+    equipeId: null,
+    equipeNom: null,
   };
 }
 

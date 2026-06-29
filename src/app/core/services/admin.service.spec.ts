@@ -18,6 +18,9 @@ const USER: User = {
   departement: null,
   enabled: true,
   createdAt: '2025-01-01T00:00:00Z',
+  isAffilieToEquipe: false,
+  equipeId: null,
+  equipeNom: null,
 };
 
 describe('AdminService', () => {

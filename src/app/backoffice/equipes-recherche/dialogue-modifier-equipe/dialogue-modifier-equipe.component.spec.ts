@@ -9,10 +9,10 @@ import { EquipeService } from '../../../core/services/equipe.service';
 import { EquipeDomaineService } from '../../../core/services/equipe-domaine.service';
 import { DialogueModifierEquipeComponent } from './dialogue-modifier-equipe.component';
 
-const chef: User = { id: 5, prenom: 'Chef', nom: 'Equipe', email: 'chef@test.tn', identifiant: 'ce', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' };
+const chef: User = { id: 5, prenom: 'Chef', nom: 'Equipe', email: 'chef@test.tn', identifiant: 'ce', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: true, equipeId: 1, equipeNom: 'AI Lab' };
 const members: User[] = [
-  { id: 10, prenom: 'Membre1', nom: 'Un', email: 'm1@test.tn', identifiant: 'm1', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' },
-  { id: 11, prenom: 'Membre2', nom: 'Deux', email: 'm2@test.tn', identifiant: 'm2', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' },
+  { id: 10, prenom: 'Membre1', nom: 'Un', email: 'm1@test.tn', identifiant: 'm1', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: true, equipeId: 1, equipeNom: 'AI Lab' },
+  { id: 11, prenom: 'Membre2', nom: 'Deux', email: 'm2@test.tn', identifiant: 'm2', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: true, equipeId: 1, equipeNom: 'AI Lab' },
 ];
 
 const mockEquipe: Equipe = {
@@ -26,8 +26,8 @@ const domaines: EquipeDomaine[] = [
 ];
 
 const mockUsers: User[] = [
-  { id: 20, prenom: 'Nouveau', nom: 'Chef', email: 'nch@test.tn', identifiant: 'nc', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' },
-  { id: 21, prenom: 'Autre', nom: 'Membre', email: 'am@test.tn', identifiant: 'am', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' },
+  { id: 20, prenom: 'Nouveau', nom: 'Chef', email: 'nch@test.tn', identifiant: 'nc', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
+  { id: 21, prenom: 'Autre', nom: 'Membre', email: 'am@test.tn', identifiant: 'am', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
 ];
 
 describe('DialogueModifierEquipeComponent', () => {

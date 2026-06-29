@@ -9,6 +9,7 @@ function userWith(role: Role): User {
   return {
     id: 1, nom: 'Dupont', prenom: 'Jean', email: 'j@esprit.tn', identifiant: 'JD1',
     role, typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: null,
+    isAffilieToEquipe: false, equipeId: null, equipeNom: null,
   };
 }
 
@@ -24,7 +25,7 @@ describe('FrontofficeLayout', () => {
       imports: [FrontofficeLayout],
       providers: [
         provideRouter([]),
-        { provide: AuthService, useValue: { currentUser, logout } },
+        { provide: AuthService, useValue: { currentUser, logout, isAffilieToEquipe: () => false, equipeId: () => null, equipeNom: () => null } },
       ],
     });
     component = TestBed.createComponent(FrontofficeLayout).componentInstance;

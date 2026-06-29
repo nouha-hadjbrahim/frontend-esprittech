@@ -1,0 +1,79 @@
+<div class="page-container">
+  <h1>Validation projets</h1>
+  <p class="page-subtitle">Projets soumis par les enseignants de votre équipe, en attente de décision.</p>
+
+  @if (successMessage) {
+    <div class="alert alert--success">{{ successMessage }}</div>
+  }
+  @if (errorMessage) {
+    <div class="alert alert--error">{{ errorMessage }}</div>
+  }
+
+  @if (isLoading) {
+    <p class="hint">Chargement...</p>
+  } @else if (projets.length === 0) {
+    <div class="empty-card">Aucun projet en attente de validation pour le moment.</div>
+  } @else {
+    <div class="cards">
+      @for (projet of projets; track projet.id) {
+        <div class="projet-card">
+          <div class="projet-card__header">
+            <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">
+              {{ typeLabels[projet.typeProjet].label }}
+            </span>
+            <span class="badge badge--soumis">Soumis en validation</span>
+          </div>
+
+          <h3 class="projet-card__title">{{ projet.titre }}</h3>
+          <p class="projet-card__meta">Encadrant : {{ projet.encadrantNom }}</p>
+          <p class="projet-card__description">{{ projet.description }}</p>
+
+          @if (projet.domaines.length) {
+            <p class="projet-card__meta">Domaines : {{ projet.domaines.join(', ') }}</p>
+          }
+          @if (projet.technologies.length) {
+            <p class="projet-card__meta">Technologies : {{ projet.technologies.join(', ') }}</p>
+          }
+
+          @if (motifTargetId === projet.id) {
+            <div class="motif-form">
+              <textarea
+                class="textarea"
+                rows="2"
+                placeholder="Motif du refus (5 caractères minimum)..."
+                [(ngModel)]="motifText"
+              ></textarea>
+              <div class="motif-actions">
+                <button type="button" class="btn btn--ghost" (click)="annulerMotif()">Annuler</button>
+                <button
+                  type="button"
+                  class="btn btn--danger"
+                  [disabled]="motifInvalide || actionLoadingId === projet.id"
+                  (click)="confirmerRefus()"
+                >Confirmer le refus</button>
+              </div>
+            </div>
+          } @else {
+            <div class="projet-card__actions">
+              <button type="button" class="btn btn--success"
+                      [disabled]="actionLoadingId === projet.id" (click)="demanderValidation(projet)">Valider</button>
+              <button type="button" class="btn btn--danger"
+                      [disabled]="actionLoadingId === projet.id" (click)="ouvrirMotif(projet)">Refuser</button>
+              <a class="btn btn--ghost" [routerLink]="['/frontoffice/validation-projets', projet.id]">Voir détails</a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<app-confirm-dialog
+  [isOpen]="validerTarget !== null"
+  title="Valider le projet"
+  [message]="validerTarget ? 'Confirmez-vous la validation de « ' + validerTarget.titre + ' » ? Il sera publié au catalogue.' : ''"
+  confirmLabel="Valider"
+  [loading]="actionLoadingId !== null"
+  (confirmed)="confirmerValidation()"
+  (cancelled)="annulerValidation()"
+></app-confirm-dialog>

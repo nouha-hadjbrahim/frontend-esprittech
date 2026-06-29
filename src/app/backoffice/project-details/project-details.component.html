@@ -1,0 +1,159 @@
+<div class="project-details-page">
+    <a routerLink="/backoffice/my-projects" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Retour
+    </a>
+
+    <!-- Header Banner -->
+    <div class="header-banner">
+        <div class="banner-content">
+            <div class="badges-row">
+                <span class="badge badge-type">{{ project.type }}</span>
+                <span class="badge badge-status" [class.valide]="project.status === 'Validé'">{{ project.status
+                    }}</span>
+            </div>
+            <h1 class="project-title">{{ project.title }}</h1>
+            <p class="project-subtitle">
+                {{ project.supervisor }} • {{ project.equipe }} • {{ project.domains }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Info Cards Row -->
+    <div class="info-cards-row">
+        <div class="info-card">
+            <span class="card-label">Catégorie</span>
+            <span class="card-value">{{ project.type }}</span>
+        </div>
+        <div class="info-card">
+            <span class="card-label">Équipe</span>
+            <span class="card-value">{{ project.equipe }}</span>
+        </div>
+        <div class="info-card">
+            <span class="card-label">Domaine</span>
+            <span class="card-value">{{ project.domains }}</span>
+        </div>
+        <div class="info-card">
+            <span class="card-label">Encadrant</span>
+            <span class="card-value">{{ project.supervisor }}</span>
+        </div>
+        <div class="info-card">
+            <span class="card-label">Période</span>
+            <span class="card-value">{{ project.startDate }} - {{ project.endDate }}</span>
+        </div>
+        <!-- Hand-drawn Score Card -->
+        <div class="info-card custom-score-card">
+            <div class="score-sketch">
+                <span class="score-sketch-val">{{ project.score }}</span><span class="score-sketch-max">/100</span>
+                <div class="score-sketch-label">score:</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="content-layout">
+        <div class="main-column">
+            <!-- Tabs -->
+            <div class="tabs-nav">
+                <button *ngFor="let tab of tabs" class="tab-btn" [class.active]="activeTab === tab"
+                    (click)="setActiveTab(tab)">
+                    <!-- Tab icons matching design -->
+                    <svg *ngIf="tab === 'Informations'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <svg *ngIf="tab.startsWith('Candidatures')" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    </svg>
+                    <svg *ngIf="tab === 'Livrables'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                        </path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <svg *ngIf="tab === 'Progression'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    <svg *ngIf="tab === 'Historique'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <svg *ngIf="tab === 'Commentaires'" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+
+                    {{ tab }}
+                </button>
+            </div>
+
+            <!-- Tab Content: Informations -->
+            <div class="tab-content" *ngIf="activeTab === 'Informations'">
+                <div class="section-card no-shadow">
+                    <h3 class="section-title">DESCRIPTION</h3>
+                    <p class="section-text">{{ project.description }}</p>
+                </div>
+
+                <div class="section-card no-shadow">
+                    <h3 class="section-title">OBJECTIFS</h3>
+                    <div class="objective-item">
+                        <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
+                        <p class="section-text">{{ project.objectives }}</p>
+                    </div>
+                </div>
+
+                <div class="section-card no-shadow">
+                    <h3 class="section-title">LIVRABLES ATTENDUS</h3>
+                    <p class="section-text">{{ project.livrablesAttendus }}</p>
+                </div>
+            </div>
+
+            <!-- Empty states for other tabs -->
+            <div class="tab-content" *ngIf="activeTab !== 'Informations'">
+                <div class="section-card">
+                    <p class="section-text">Contenu indisponible pour ce tab (Mock).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column / Sidebar -->
+        <div class="right-column">
+            <div class="side-card">
+                <h4 class="side-title">TECHNOLOGIES</h4>
+                <div class="tags-container">
+                    <span class="tech-tag" *ngFor="let tech of project.technologies"
+                        [style.background-color]="tech.bgColor" [style.color]="tech.color">
+                        {{ tech.name }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <h4 class="side-title">PRÉREQUIS / CLASSES CIBLES</h4>
+                <div class="tags-container">
+                    <span class="generic-tag" *ngFor="let req of project.prerequisites">{{ req }}</span>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <h4 class="side-title">MOTS-CLÉS</h4>
+                <div class="tags-container">
+                    <span class="keyword-tag" *ngFor="let kw of project.keywords">{{ kw }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

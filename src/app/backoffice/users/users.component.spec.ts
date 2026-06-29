@@ -10,7 +10,7 @@ function makeUser(over: Partial<User> = {}): User {
   return {
     id: 1, nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn', identifiant: 'JD1',
     role: 'ROLE_ETUDIANT', typeUtilisateur: 'ETUDIANT', departement: null, enabled: true,
-    createdAt: '2025-01-15T10:00:00Z', ...over,
+    createdAt: '2025-01-15T10:00:00Z', isAffilieToEquipe: false, equipeId: null, equipeNom: null, ...over,
   };
 }
 

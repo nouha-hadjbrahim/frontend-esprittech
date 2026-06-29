@@ -7,10 +7,10 @@ import { User } from '../../../core/models/user.model';
 import { EquipeService } from '../../../core/services/equipe.service';
 import { DialogueDetailsEquipeComponent } from './dialogue-details-equipe.component';
 
-const chef: User = { id: 5, prenom: 'Chef', nom: 'Equipe', email: 'chef@test.tn', identifiant: 'ce', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' };
+const chef: User = { id: 5, prenom: 'Chef', nom: 'Equipe', email: 'chef@test.tn', identifiant: 'ce', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null };
 const members: User[] = [
-  { id: 10, prenom: 'Membre1', nom: 'Un', email: 'm1@test.tn', identifiant: 'm1', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' },
-  { id: 11, prenom: 'Membre2', nom: 'Deux', email: 'm2@test.tn', identifiant: 'm2', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' },
+  { id: 10, prenom: 'Membre1', nom: 'Un', email: 'm1@test.tn', identifiant: 'm1', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
+  { id: 11, prenom: 'Membre2', nom: 'Deux', email: 'm2@test.tn', identifiant: 'm2', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
 ];
 
 const mockEquipe: Equipe = {
@@ -203,7 +203,7 @@ describe('DialogueDetailsEquipeComponent', () => {
   });
 
   it('should compute initiales and couleurAvatar correctly', () => {
-    const u: User = { id: 99, prenom: 'Jean', nom: 'Dupont', email: 'j@t.tn', identifiant: 'jd', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01' };
+    const u: User = { id: 99, prenom: 'Jean', nom: 'Dupont', email: 'j@t.tn', identifiant: 'jd', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null };
     expect(component.initiales(u)).toBe('JD');
 
     const noPrenom: User = { ...u, prenom: null as any };

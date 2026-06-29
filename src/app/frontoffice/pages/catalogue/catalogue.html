@@ -1,1 +1,90 @@
-<p>catalogue works!</p>
+<div class="page-container">
+  <h1>Catalogue des projets</h1>
+  <p class="page-subtitle">Projets labellisés et industrialisés de la plateforme.</p>
+
+  @if (errorMessage) {
+    <div class="alert alert--error">{{ errorMessage }}</div>
+  }
+
+  <!-- Boutons de type -->
+  <div class="type-tabs">
+    @for (t of typeButtons; track t.value) {
+      <button type="button" class="type-tab" [class.type-tab--active]="selectedType === t.value"
+              (click)="selectType(t.value)">{{ t.label }}</button>
+    }
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters">
+    <input type="text" class="filters__search" placeholder="Rechercher (titre, encadrant, technologie)..."
+           [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" />
+
+    <select class="filters__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
+      @for (opt of statutOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+
+    <select class="filters__select" [(ngModel)]="selectedDomaine" (ngModelChange)="onFilterChange()">
+      <option value="">Tous les domaines</option>
+      @for (d of domaineOptions; track d) {
+        <option [value]="d">{{ d }}</option>
+      }
+    </select>
+
+    <select class="filters__select" [(ngModel)]="selectedAnnee" (ngModelChange)="onFilterChange()">
+      <option value="">Toutes les années</option>
+      @for (a of anneeOptions; track a) {
+        <option [value]="a">{{ a }}</option>
+      }
+    </select>
+
+    <select class="filters__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
+      @for (opt of sortOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (isLoading) {
+    <p class="hint">Chargement...</p>
+  } @else if (filtered.length === 0) {
+    <div class="empty-card">Aucun projet ne correspond à votre recherche.</div>
+  } @else {
+    <div class="cards">
+      @for (projet of filtered; track projet.id) {
+        <div class="projet-card">
+          <div class="projet-card__top">
+            <div class="projet-card__badges">
+              <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">
+                {{ typeLabels[projet.typeProjet].label }}
+              </span>
+              <span class="badge" [class]="statutLabels[projet.statut].cssClass">
+                {{ statutLabels[projet.statut].label }}
+              </span>
+              @if (estLabellise(projet.statut)) {
+                <span class="badge badge--label">Labellisé</span>
+              }
+            </div>
+            <div class="score-circle" [title]="'Score : ' + projet.score">{{ projet.score }}</div>
+          </div>
+
+          <h3 class="projet-card__title">{{ projet.titre }}</h3>
+          <p class="projet-card__description">{{ projet.description }}</p>
+          <p class="projet-card__meta">Encadrant : {{ projet.encadrantNom }}</p>
+          @if (projet.equipeNom) {
+            <p class="projet-card__meta">Équipe : {{ projet.equipeNom }}</p>
+          }
+
+          @if (projet.technologies.length) {
+            <div class="tags">
+              @for (t of projet.technologies; track t) { <span class="tag">{{ t }}</span> }
+            </div>
+          }
+
+          <a class="details-link" [routerLink]="['/frontoffice/catalogue', projet.id]">Voir détails →</a>
+        </div>
+      }
+    </div>
+  }
+</div>
