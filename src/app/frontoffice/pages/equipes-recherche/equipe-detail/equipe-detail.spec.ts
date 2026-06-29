@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { ActivatedRoute, ParamMap, convertToParamMap } from '@angular/router';
+import { Location } from '@angular/common';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { signal, WritableSignal } from '@angular/core';
 import { EquipeDetail } from './equipe-detail';
@@ -446,6 +447,7 @@ describe('EquipeDetail', () => {
       configureModule();
       createComponent();
       fixture.detectChanges();
+      equipeSvc.getById.calls.reset();
     });
 
     it('should do nothing when equipe is null', () => {
@@ -831,7 +833,8 @@ describe('EquipeDetail', () => {
       });
 
       it('should be false when affiliation already exists (EN_ATTENTE)', () => {
-        affiliationSvc.getMesDemandes.and.returnValue(of([mockEnAttente]));
+        const enAttente = { ...mockEnAttente, enseignant: enseignantUser };
+        affiliationSvc.getMesDemandes.and.returnValue(of([enAttente]));
         configureModule();
         createComponent();
         fixture.detectChanges();
