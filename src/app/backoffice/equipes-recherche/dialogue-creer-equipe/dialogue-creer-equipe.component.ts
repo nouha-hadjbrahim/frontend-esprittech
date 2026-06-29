@@ -47,13 +47,14 @@ import { LabelComponent } from '../../../ui/label/label.component';
 
             <div class="field">
               <app-label for="e-domaine">Domaine de recherche <span class="req">*</span></app-label>
-              <div class="sel-wrap">
-                <select id="e-domaine" name="domaineId" [(ngModel)]="domaineId" required class="inp sel">
-                  <option [ngValue]="null" disabled>Sélectionnez un domaine…</option>
-                  <option *ngFor="let d of domaines" [ngValue]="d.id">{{ d.nom }}</option>
-                </select>
-                <mat-icon class="sel-arrow">expand_more</mat-icon>
-              </div>
+                  <div class="sel-wrap" [class.has-value]="domaineId != null">
+                    <span class="sel-dot" *ngIf="domaineId != null" [style.background]="couleurDomaine(domaineId)"></span>
+                    <select id="e-domaine" name="domaineId" [(ngModel)]="domaineId" required class="inp sel">
+                      <option [ngValue]="null" disabled>Sélectionnez un domaine…</option>
+                      <option *ngFor="let d of domaines" [ngValue]="d.id">{{ d.nom }}</option>
+                    </select>
+                    <mat-icon class="sel-arrow">expand_more</mat-icon>
+                  </div>
             </div>
 
             <!-- Chef picker -->
@@ -268,9 +269,12 @@ import { LabelComponent } from '../../../ui/label/label.component';
     .sel {
       appearance: none;
       cursor: pointer;
+      padding-left: 0.875rem;
       padding-right: 2.5rem;
       background: var(--background, #fff);
+      transition: padding-left 0.2s;
     }
+    .sel-wrap.has-value .sel { padding-left: 2rem; }
     .sel-arrow {
       position: absolute;
       right: 0.75rem;
@@ -279,6 +283,19 @@ import { LabelComponent } from '../../../ui/label/label.component';
       pointer-events: none;
       color: var(--muted-foreground, #94a3b8);
       font-size: 20px;
+      transition: transform 0.2s;
+    }
+    .sel-dot {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      pointer-events: none;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+      z-index: 1;
     }
 
     .hint { margin: 0; font-size: 0.6875rem; color: var(--muted-foreground, #64748b); }
@@ -716,5 +733,11 @@ export class DialogueCreerEquipeComponent implements OnInit, OnDestroy {
     const colors = ['#E63946', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899'];
     const idx = String(u.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
     return colors[idx];
+  }
+
+  couleurDomaine(id: number | null): string {
+    if (id == null) return 'transparent';
+    const colors = ['#E63946', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899'];
+    return colors[id % colors.length];
   }
 }

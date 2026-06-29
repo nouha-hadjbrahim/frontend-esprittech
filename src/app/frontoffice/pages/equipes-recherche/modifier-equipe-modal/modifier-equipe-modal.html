@@ -1,0 +1,83 @@
+@if (isOpen) {
+  <div class="modal-overlay" (click)="onOverlayClick($event)">
+    <div class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <header class="modal__header">
+        <div>
+          <h2 id="modal-title" class="modal__title">{{ modalTitle }}</h2>
+          <p class="modal__subtitle">Modifiez les informations de l'équipe.</p>
+        </div>
+        <button type="button" class="modal__close" aria-label="Fermer" (click)="close()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <form class="modal__body" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-field">
+          <label class="form-label" for="nom">Nom de l'équipe</label>
+          <input
+            id="nom"
+            type="text"
+            class="form-input"
+            [class.form-input--error]="isInvalid('nom')"
+            formControlName="nom"
+            placeholder="Nom de l'équipe"
+          />
+          @if (isInvalid('nom')) {
+            <span class="form-error">Le nom est requis (min. 2 caractères).</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="description">Description</label>
+          <textarea
+            id="description"
+            class="form-textarea"
+            [class.form-input--error]="isInvalid('description')"
+            formControlName="description"
+            rows="5"
+            placeholder="Description de l'équipe..."
+          ></textarea>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="domaineId">Domaine</label>
+          <div class="sel-wrap" [class.has-value]="form.get('domaineId')?.value !== 0">
+            @if (form.get('domaineId')?.value !== 0) {
+              <span class="sel-dot" [style.background]="couleurDomaine(form.get('domaineId')?.value)"></span>
+            }
+            <select
+              id="domaineId"
+              class="form-select"
+              [class.form-input--error]="isInvalid('domaineId')"
+              formControlName="domaineId"
+            >
+              <option [value]="0" disabled>Sélectionnez un domaine</option>
+              @for (d of domaines; track d.id) {
+                <option [value]="d.id">{{ d.nom }}</option>
+              }
+            </select>
+            <svg class="sel-chevron" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+              <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          @if (isInvalid('domaineId')) {
+            <span class="form-error">Veuillez sélectionner un domaine.</span>
+          }
+        </div>
+
+        @if (errorMessage) {
+          <p class="modal__error">{{ errorMessage }}</p>
+        }
+
+        <footer class="modal__footer">
+          <button type="button" class="btn btn--outline" (click)="close()" [disabled]="isSubmitting">Annuler</button>
+          <button type="submit" class="btn btn--primary" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+}
