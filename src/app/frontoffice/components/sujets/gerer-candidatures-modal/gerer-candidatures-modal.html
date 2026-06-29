@@ -1,0 +1,175 @@
+@if (isOpen && sujet) {
+  <div class="gcm-overlay" (click)="onOverlayClick($event)">
+    <div class="gcm-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header class="gcm-header">
+        <div>
+          <h2 class="gcm-title">Gérer les candidatures</h2>
+          <p class="gcm-subtitle">{{ sujet.titre }}</p>
+        </div>
+        <button type="button" class="gcm-close" aria-label="Fermer" (click)="close()">✕</button>
+      </header>
+
+      @if (errorMessage) {
+        <div class="gcm-alert">{{ errorMessage }}</div>
+      }
+
+      <div class="gcm-body">
+        <!-- Actions principales liées au workflow du sujet -->
+        <section class="gcm-actions">
+          @if (canOuvrir) {
+            <button type="button" class="gcm-btn gcm-btn--primary" [disabled]="actionLoading" (click)="ouvrirCandidatures()">
+              Ouvrir les candidatures
+            </button>
+          }
+          @if (canFermer) {
+            <button type="button" class="gcm-btn gcm-btn--warning" [disabled]="actionLoading" (click)="fermerCandidatures()">
+              Fermer les candidatures
+            </button>
+          }
+          @if (canTerminer) {
+            <button type="button" class="gcm-btn gcm-btn--success" [disabled]="actionLoading" (click)="declarerTerminaison()">
+              Déclarer la terminaison
+            </button>
+          }
+
+          @if (!canOuvrir && !canFermer && !canTerminer ) {
+            <p class="gcm-hint">Aucune action disponible pour le statut actuel ({{ sujet.statut }}).</p>
+          }
+        </section>
+
+
+        @if (isLoading) {
+          <p class="gcm-hint">Chargement...</p>
+        } @else {
+          <!-- Liste des candidatures -->
+          @if (showCandidatures) {
+            <section class="gcm-section">
+              <h3 class="gcm-section-title">Candidatures ({{ candidatures.length }})</h3>
+
+              @if (candidatures.length === 0) {
+                <p class="gcm-hint">Aucune candidature pour ce sujet.</p>
+              } @else {
+                <ul class="gcm-list">
+                  @for (c of candidatures; track c.id) {
+                    <li class="gcm-list-item">
+                      <div class="gcm-list-item__main">
+                        <span class="gcm-list-item__name">{{ c.etudiantPrenom }} {{ c.etudiantNom }}</span>
+                        <span class="gcm-badge" [class]="'gcm-badge--' + c.statut.toLowerCase()">{{ c.statut }}</span>
+                      </div>
+                      @if (c.messageEtudiant) {
+                        <p class="gcm-list-item__message">{{ c.messageEtudiant }}</p>
+                      }
+                      @if (c.motifRefus) {
+                        <p class="gcm-list-item__motif">Motif de refus : {{ c.motifRefus }}</p>
+                      }
+
+                      @if (c.statut === 'DEPOSEE') {
+                        @if (motifTargetType === 'refus' && motifTargetId === c.id) {
+                          <div class="gcm-motif-form">
+                            <textarea
+                              class="gcm-textarea"
+                              rows="2"
+                              placeholder="Motif du refus..."
+                              [(ngModel)]="motifText"
+                            ></textarea>
+                            <div class="gcm-motif-actions">
+                              <button type="button" class="gcm-btn gcm-btn--ghost gcm-btn--small" (click)="annulerMotif()">Annuler</button>
+                              <button
+                                type="button"
+                                class="gcm-btn gcm-btn--danger gcm-btn--small"
+                                [disabled]="!motifText.trim() || actionLoading"
+                                (click)="confirmerMotif()"
+                              >
+                                Confirmer le refus
+                              </button>
+                            </div>
+                          </div>
+                        } @else {
+                          <div class="gcm-list-item__actions">
+                            <button type="button" class="gcm-btn gcm-btn--success gcm-btn--small" [disabled]="actionLoading" (click)="accepterCandidature(c)">
+                              Accepter
+                            </button>
+                            <button type="button" class="gcm-btn gcm-btn--danger gcm-btn--small" [disabled]="actionLoading" (click)="ouvrirMotifRefus(c)">
+                              Refuser
+                            </button>
+                          </div>
+                        }
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          }
+
+          <!-- Liste des affectations (étudiants affectés au sujet) -->
+          @if (showAffectations) {
+            <section class="gcm-section">
+              <h3 class="gcm-section-title">Étudiants affectés ({{ affectationsActives.length }})</h3>
+
+              @if (affectationsActives.length === 0) {
+                <p class="gcm-hint">Aucun étudiant actif sur ce sujet.</p>
+              } @else {
+                <ul class="gcm-list">
+                  @for (a of affectationsActives; track a.id) {
+                    <li class="gcm-list-item">
+                      <div class="gcm-list-item__main">
+                        <span class="gcm-list-item__name">{{ a.etudiantPrenom }} {{ a.etudiantNom }}</span>
+                        <span class="gcm-badge gcm-badge--active">Actif</span>
+                      </div>
+
+                      @if (motifTargetType === 'retrait' && motifTargetId === a.id) {
+                        <div class="gcm-motif-form">
+                          <textarea
+                            class="gcm-textarea"
+                            rows="2"
+                            placeholder="Motif du retrait..."
+                            [(ngModel)]="motifText"
+                          ></textarea>
+                          <div class="gcm-motif-actions">
+                            <button type="button" class="gcm-btn gcm-btn--ghost gcm-btn--small" (click)="annulerMotif()">Annuler</button>
+                            <button
+                              type="button"
+                              class="gcm-btn gcm-btn--danger gcm-btn--small"
+                              [disabled]="!motifText.trim() || actionLoading"
+                              (click)="confirmerMotif()"
+                            >
+                              Confirmer le retrait
+                            </button>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="gcm-list-item__actions">
+                          <button type="button" class="gcm-btn gcm-btn--danger gcm-btn--small" [disabled]="actionLoading" (click)="ouvrirMotifRetrait(a)">
+                            Retirer (archiver)
+                          </button>
+                        </div>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+
+              @if (affectationsArchivees.length > 0) {
+                <h4 class="gcm-section-subtitle">Archivés ({{ affectationsArchivees.length }})</h4>
+                <ul class="gcm-list">
+                  @for (a of affectationsArchivees; track a.id) {
+                    <li class="gcm-list-item gcm-list-item--archived">
+                      <div class="gcm-list-item__main">
+                        <span class="gcm-list-item__name">{{ a.etudiantPrenom }} {{ a.etudiantNom }}</span>
+                        <span class="gcm-badge gcm-badge--archivee">Retiré</span>
+                      </div>
+                      @if (a.motifRetrait) {
+                        <p class="gcm-list-item__motif">Motif : {{ a.motifRetrait }} ({{ a.dateRetrait | date:'dd/MM/yyyy' }})</p>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}

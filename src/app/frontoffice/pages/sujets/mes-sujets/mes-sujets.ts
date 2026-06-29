@@ -8,13 +8,14 @@ import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filte
 import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
 import { SujetListRow } from '../../../components/sujets/sujet-list-row/sujet-list-row';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { GererCandidaturesModal } from '../../../components/sujets/gerer-candidatures-modal/gerer-candidatures-modal';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 export type ViewMode = 'cards' | 'list';
 
 @Component({
   selector: 'app-mes-sujets',
-  imports: [FormsModule, DeposerSujetModal, SujetCard, SujetListRow, FilterDropdown, ConfirmDialog],
+  imports: [FormsModule, DeposerSujetModal, SujetCard, SujetListRow, FilterDropdown, ConfirmDialog, GererCandidaturesModal],
   templateUrl: './mes-sujets.html',
   styleUrl: './mes-sujets.css',
 })
@@ -32,6 +33,10 @@ export class MesSujets implements OnInit {
   selectedStatut = '';
   sortOrder = 'recent';
   viewMode: ViewMode = 'cards';
+
+  candidaturesModalOpen = false;
+  sujetCandidatures?: SujetProjet;
+
 
   deleteConfirmOpen = false;
   deleteAlertOpen = false;
@@ -66,6 +71,9 @@ export class MesSujets implements OnInit {
         this.sujets = sujets;
         this.applyFilters();
         this.isLoading = false;
+        if (this.candidaturesModalOpen && this.sujetCandidatures) {
+          this.sujetCandidatures = sujets.find((s) => s.id === this.sujetCandidatures?.id) ?? this.sujetCandidatures;
+        }
       },
       error: () => {
         this.sujets = [];
@@ -175,6 +183,20 @@ export class MesSujets implements OnInit {
   isOwner(sujet: SujetProjet): boolean {
     const userId = this.authService.currentUser()?.id;
     return userId != null && sujet.encadrantId === userId;
+  }
+
+  openCandidaturesModal(sujet: SujetProjet): void {
+    this.sujetCandidatures = sujet;
+    this.candidaturesModalOpen = true;
+  }
+
+  closeCandidaturesModal(): void {
+    this.candidaturesModalOpen = false;
+    this.sujetCandidatures = undefined;
+  }
+
+  onCandidaturesChanged(): void {
+    this.loadSujets();
   }
 
   private applyFilters(): void {

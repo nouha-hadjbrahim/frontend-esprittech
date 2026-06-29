@@ -1,46 +1,33 @@
-import { ReponseEliminatoire } from './critere.model';
+import { ModeEvaluation, ReponseEliminatoire } from './critere.model';
 
 export interface ProjetEvaluable {
   id: number;
   titre: string;
   statut: string;
-  scoreFinalEvaluation?: number;
+  scoreFinal?: number | null;
   eligibleIndustrialisation?: boolean;
   bloqueParEliminatoire?: boolean;
 }
 
-/** Résultat pour un critère éliminatoire. */
-export interface ResultatEliminatoireRequest {
-  critereId: number;
-  reponse: ReponseEliminatoire;
-  commentaire?: string;
-}
-
-/** Résultat pour un critère noté. */
-export interface ResultatNoteRequest {
-  critereId: number;
-  noteObtenue: number;
-  commentaire?: string;
-}
-
-/** Requête d'évaluation d'un projet. */
-export interface EvaluationRequest {
-  eliminatoires: ResultatEliminatoireRequest[];
-  notes: ResultatNoteRequest[];
-}
-
-/** Résultat détaillé par critère renvoyé par le backend. */
 export interface ResultatCritereResponse {
   id: number;
   critereId: number;
+  critereLibelle: string;
+  critereDescription?: string | null;
+  critereDomaine?: string | null;
   typeCritere: 'ELIMINATOIRE' | 'NOTE';
+  modeEvaluation?: ModeEvaluation | null;
   reponseEliminatoire?: ReponseEliminatoire;
   noteObtenue?: number;
   scorePondere?: number;
+  bareme?: number | null;
+  poids?: number | null;
+  evidenceSummary?: string | null;
+  evidenceLivrableIds?: number[];
+  ruleConfigured?: boolean;
   commentaire?: string;
 }
 
-/** Réponse d'évaluation d'un projet. */
 export interface EvaluationResponse {
   id: number;
   sujetProjetId: number;
@@ -49,5 +36,16 @@ export interface EvaluationResponse {
   bloqueParEliminatoire: boolean;
   dateCalcul: string;
   commentaire: string;
+  calculatedBy?: string | null;
+  recalculationReason?: string | null;
   resultats?: ResultatCritereResponse[];
+  totalCriteresNotes?: number | null;
+  criteresNotesConfigures?: number | null;
+  criteresNotesNonConfigures?: number | null;
+  totalCriteresEliminatoires?: number | null;
+  criteresEliminatoiresSatisfaits?: number | null;
+  criteresEliminatoiresNonConfigures?: number | null;
+  evaluationComplete?: boolean | null;
+  scoreCalculationCoverageMessage?: string | null;
+  blockingCriteriaNames?: string[];
 }

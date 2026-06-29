@@ -2,23 +2,26 @@ import { Component, OnInit, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CategorieSujet, StatutSujet, SujetProjet } from '../../../../core/models/sujet-projet.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CandidatureService } from '../../../../core/services/candidature.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
 import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-modal/deposer-sujet-modal';
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
-import { SujetDisponibleCard } from '../../../components/sujets/sujet-disponible-card/sujet-disponible-card';
+import { PostulerModal } from '../../../components/sujets/postuler-modal/postuler-modal';
+import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 const CATALOGUE_STATUTS: StatutSujet[] = ['VALIDE', 'CANDIDATURE_OUVERTE', 'CANDIDATURE_FERMEE'];
 
 @Component({
   selector: 'app-sujets-disponibles',
-  imports: [FormsModule, DeposerSujetModal, SujetDisponibleCard, FilterDropdown],
+  imports: [FormsModule, DeposerSujetModal, SujetCard, FilterDropdown, PostulerModal],
   templateUrl: './sujets-disponibles.html',
   styleUrl: './sujets-disponibles.css',
 })
 export class SujetsDisponibles implements OnInit {
   private readonly sujetProjetService = inject(SujetProjetService);
   private readonly authService = inject(AuthService);
+  private readonly candidatureService = inject(CandidatureService);
 
   sujets: SujetProjet[] = [];
   filteredSujets: SujetProjet[] = [];
@@ -31,6 +34,10 @@ export class SujetsDisponibles implements OnInit {
   selectedEncadrant = '';
   sortOrder = 'recent';
 
+  showPostulerModal = false;
+  selectedSujet: SujetProjet | null = null;
+  mesCandidaturesSujetIds: Set<number> = new Set();
+
   readonly isEnseignant = computed(() => this.authService.getRole() === 'ROLE_ENSEIGNANT');
   readonly isEtudiant = computed(() => this.authService.getRole() === 'ROLE_ETUDIANT');
 
@@ -42,6 +49,7 @@ export class SujetsDisponibles implements OnInit {
 
   ngOnInit(): void {
     this.loadSujets();
+    this.loadMesCandidatures();
   }
 
   loadSujets(): void {
@@ -81,6 +89,21 @@ export class SujetsDisponibles implements OnInit {
   get encadrantOptions(): { value: string; label: string }[] {
     const encadrants = [...new Set(this.sujets.map((s) => s.encadrantNom).filter(Boolean))].sort();
     return [{ value: '', label: 'Encadrant' }, ...encadrants.map((e) => ({ value: e, label: e }))];
+  }
+
+  loadMesCandidatures(): void {
+    this.candidatureService.getMesCandidatures().subscribe({
+      next: (candidatures) => {
+        this.mesCandidaturesSujetIds = new Set(
+          candidatures.map((c: { sujetId: number }) => c.sujetId),
+        );
+      },
+      error: () => {},
+    });
+  }
+
+  dejaPostule(sujet: SujetProjet): boolean {
+    return this.mesCandidaturesSujetIds.has(sujet.id);
   }
 
   openModal(): void {
@@ -123,6 +146,21 @@ export class SujetsDisponibles implements OnInit {
 
   onSearchChange(): void {
     this.applyFilters();
+  }
+
+  ouvrirPostuler(sujet: SujetProjet): void {
+    this.selectedSujet = sujet;
+    this.showPostulerModal = true;
+  }
+
+  fermerPostuler(): void {
+    this.showPostulerModal = false;
+    this.selectedSujet = null;
+  }
+
+  onCandidatureSoumise(): void {
+    this.fermerPostuler();
+    this.loadMesCandidatures();
   }
 
   private applyFilters(): void {

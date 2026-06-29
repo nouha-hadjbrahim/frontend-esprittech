@@ -64,10 +64,27 @@ export class FrontofficeLayout {
       ]
     },
     sujetsDisponibles: { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles' },
-    equipesRecherche: { label: 'Équipes de recherche', path: '/frontoffice/equipes-recherche' },
+    equipesRechercheEnseignant: {
+      label: 'Équipes de recherche',
+      path: '/frontoffice/equipes-recherche/equipes',
+      children: [
+        { label: 'Équipes', path: '/frontoffice/equipes-recherche/equipes' },
+        { label: 'Mes demandes', path: '/frontoffice/equipes-recherche/mes-demandes' },
+      ]
+    },
+    equipesRechercheChef: {
+      label: 'Équipes de recherche',
+      path: '/frontoffice/equipes-recherche/mon-equipe',
+      children: [
+        { label: 'Mon équipe', path: '/frontoffice/equipes-recherche/mon-equipe' },
+        { label: 'Demandes d\'affiliation', path: '/frontoffice/equipes-recherche/demandes' },
+        { label: 'Toutes les équipes', path: '/frontoffice/equipes-recherche/toutes-les-equipes' },
+      ]
+    },
     mesCandidatures: { label: 'Mes candidatures', path: '/frontoffice/mes-candidatures' },
     validationSujets: { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
     demandesIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/frontoffice/demandes-industrialisation' },
+    espaceCiIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/ci/industrialisation' },
   };
 
   // Navigation calculée à partir du rôle réel de l'utilisateur connecté
@@ -77,7 +94,8 @@ export class FrontofficeLayout {
         return [
           this.allLinks.catalogue,
           this.allLinks.sujets,
-          this.allLinks.equipesRecherche
+          this.allLinks.demandesIndustrialisation,
+          this.allLinks.equipesRechercheEnseignant
         ];
       case 'ROLE_ETUDIANT':
         return [
@@ -89,14 +107,14 @@ export class FrontofficeLayout {
           this.allLinks.tableauDeBord,
           this.allLinks.validationSujets,
           this.allLinks.demandesIndustrialisation,
-          this.allLinks.equipesRecherche,
+          this.allLinks.equipesRechercheChef,
           this.allLinks.catalogueSimple,
           this.allLinks.sujetsDisponibles
         ];
       case 'ROLE_CI':
         return [
           this.allLinks.tableauDeBord,
-          this.allLinks.demandesIndustrialisation,
+          this.allLinks.espaceCiIndustrialisation,
           this.allLinks.catalogueSimple,
           this.allLinks.sujetsDisponibles
         ];

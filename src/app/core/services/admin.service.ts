@@ -2,7 +2,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateEquipeRequest, Equipe } from '../models/equipe.model';
 import { Page } from '../models/page.model';
 import { CategorieSujet, StatutSujet, SujetProjet, SujetProjetRequest } from '../models/sujet-projet.model';
 import { CreateUserRequest, UpdateUserRequest, User } from '../models/user.model';
@@ -29,16 +28,6 @@ export class AdminService {
     return this.http.post<MessageResponse>(`${this.baseUrl}/import-referentiel`, formData);
   }
 
-  /** Crée une équipe de recherche en désignant son chef. */
-  createEquipe(request: CreateEquipeRequest): Observable<Equipe> {
-    return this.http.post<Equipe>(`${this.baseUrl}/equipes`, request);
-  }
-
-  /** (Ré)assigne le chef d'une équipe existante. */
-  assignChef(equipeId: number, chefId: number): Observable<Equipe> {
-    return this.http.put<Equipe>(`${this.baseUrl}/equipes/${equipeId}/chef`, { chefId });
-  }
-
   // ----- Gestion des utilisateurs -----
 
   /** Crée directement un utilisateur (action admin, sans référentiel). */
@@ -48,6 +37,14 @@ export class AdminService {
 
   /** Liste paginée des utilisateurs, avec recherche libre optionnelle. */
   getUsers(page: number, size: number, search?: string): Observable<Page<User>> {
+    return this._getUsers(page, size, search);
+  }
+
+  chercherUtilisateurs(search: string, page = 0, size = 6): Observable<Page<User>> {
+    return this._getUsers(page, size, search);
+  }
+
+  private _getUsers(page: number, size: number, search?: string): Observable<Page<User>> {
     let params = new HttpParams().set('page', page).set('size', size);
     if (search?.trim()) {
       params = params.set('search', search.trim());

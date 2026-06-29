@@ -286,28 +286,28 @@ describe('UsersComponent', () => {
       joined: '2025-01-15', initials: 'JD', color: '#000',
     };
 
-    it('should not delete when not confirmed', () => {
-      spyOn(window, 'confirm').and.returnValue(false);
+    it('should not delete when cancelled', () => {
       component.deleteUser(row);
+      component.cancelDelete();
       expect(adminService.deleteUser).not.toHaveBeenCalled();
     });
 
     it('should delete, step back a page when emptying it, and reload', () => {
-      spyOn(window, 'confirm').and.returnValue(true);
       adminService.deleteUser.and.returnValue(of({ message: 'ok', timestamp: 'now' }));
       component.users = [row];
       component.page = 2;
       component.deleteUser(row);
+      component.confirmDelete();
       expect(component.page).toBe(1);
       expect(adminService.deleteUser).toHaveBeenCalledWith(2);
     });
 
-    it('should alert on delete failure', () => {
-      spyOn(window, 'confirm').and.returnValue(true);
-      const alertSpy = spyOn(window, 'alert');
+    it('should open an alert dialog on delete failure', () => {
       adminService.deleteUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
       component.deleteUser(row);
-      expect(alertSpy).toHaveBeenCalledWith('Échec de la suppression.');
+      component.confirmDelete();
+      expect(component.deleteAlertOpen).toBeTrue();
+      expect(component.deleteAlertMessage).toBe('Échec de la suppression.');
     });
   });
 

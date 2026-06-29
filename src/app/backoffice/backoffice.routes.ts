@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
 import { BackofficeLayoutComponent } from './backoffice-layout/backoffice-layout.component';
 import { UsersComponent } from './users/users.component';
-import { ResearchTeamsComponent } from './research-teams/research-teams.component';
+import { EquipesRechercheComponent } from './equipes-recherche/equipes-recherche.component';
+import { DomainesComponent } from './equipes-recherche/domaines/domaines.component';
+import { DemandesAffiliationComponent } from './equipes-recherche/demandes-affiliation/demandes-affiliation.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SubjectsComponent } from './subjects/subjects.component';
 import { SubjectDetailComponent } from './subjects/subject-detail/subject-detail.component';
@@ -28,7 +30,9 @@ export const backofficeRoutes: Routes = [
             { path: 'subjects/technologies', redirectTo: 'subjects/formulaires', pathMatch: 'full' },
             { path: 'catalog', component: CatalogComponent },
             { path: 'applications', component: ApplicationsComponent },
-            { path: 'research-teams', component: ResearchTeamsComponent },
+            { path: 'equipes-recherche', component: EquipesRechercheComponent },
+            { path: 'equipes-recherche/domaines', component: DomainesComponent },
+            { path: 'equipes-recherche/demandes', component: DemandesAffiliationComponent },
             { path: 'supervisors', component: SupervisorsComponent },
             { path: 'users', component: UsersComponent },
             { path: 'history', component: HistoryComponent },
@@ -42,6 +46,14 @@ export const backofficeRoutes: Routes = [
               loadComponent: () =>
                 import('./criteresEvaluationAdmin/admin-criteres-page.component')
                   .then(m => m.AdminCriteresPageComponent) },
+            { path: 'admin/industrialisation/questions',
+              loadComponent: () =>
+                import('./industrialisation-questions/industrialisation-questions.component')
+                  .then(m => m.IndustrialisationQuestionsComponent) },
+            { path: 'admin/livrables',
+              loadComponent: () =>
+                import('./livrables-admin/livrables-admin.component')
+                  .then(m => m.LivrablesAdminComponent) },
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
     }

@@ -38,6 +38,24 @@ export class SujetProjetService {
     return this.http.get<SujetProjet>(`${this.baseUrl}/${id}`);
   }
 
+  /** Admin uniquement : sujets validés ou plus avancés, pour la page de gestion des candidatures. */
+  getSujetsPourCandidatures(): Observable<SujetProjet[]> {
+    return this.http.get<SujetProjet[]>(`${this.baseUrl}/admin/candidatures`);
+  }
+
+  /** Chef d'équipe (ou admin) : sujets soumis et en attente de validation. */
+  getSujetsEnAttenteValidation(): Observable<SujetProjet[]> {
+    return this.http.get<SujetProjet[]>(`${this.baseUrl}/en-attente-validation`);
+  }
+
+  validerSujet(id: number): Observable<SujetProjet> {
+    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/valider`, {});
+  }
+
+  invaliderSujet(id: number, motif: string): Observable<SujetProjet> {
+    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/invalider`, { motif });
+  }
+
   getTechnologies(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/technologies`);
   }
@@ -55,13 +73,5 @@ export class SujetProjetService {
     if (categorie) params = params.set('categorie', categorie);
     if (statut) params = params.set('statut', statut);
     return this.http.get<SujetProjet[]>(`${this.baseUrl}/a-valider`, { params });
-  }
-
-  validerSujet(id: number): Observable<SujetProjet> {
-    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/valider`, {});
-  }
-
-  invaliderSujet(id: number, motif: string): Observable<SujetProjet> {
-    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/invalider`, { motif });
   }
 }

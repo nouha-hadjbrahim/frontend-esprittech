@@ -352,22 +352,3 @@
     [alertOnly]="true"
     (cancelled)="closeDeleteAlert()"
 />
-
-<app-confirm-dialog
-    [isOpen]="deleteConfirmOpen"
-    title="Supprimer l'utilisateur"
-    [message]="deleteConfirmMessage"
-    confirmLabel="Supprimer"
-    cancelLabel="Annuler"
-    [loading]="deleting"
-    (confirmed)="confirmDelete()"
-    (cancelled)="cancelDelete()"
-/>
-
-<app-confirm-dialog
-    [isOpen]="deleteAlertOpen"
-    title="Erreur"
-    [message]="deleteAlertMessage"
-    [alertOnly]="true"
-    (cancelled)="closeDeleteAlert()"
-/>

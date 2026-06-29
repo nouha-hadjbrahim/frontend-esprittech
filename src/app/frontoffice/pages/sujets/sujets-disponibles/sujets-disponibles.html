@@ -104,7 +104,12 @@
   } @else {
     <div class="sujets-disponibles__grid">
       @for (sujet of filteredSujets; track sujet.id) {
-        <app-sujet-disponible-card [sujet]="sujet" [showPostuler]="isEtudiant()" />
+        <app-sujet-card
+          [sujet]="sujet"
+          [detailsOnly]="true"
+          [dejaPostule]="dejaPostule(sujet)"
+          (postuler)="ouvrirPostuler(sujet)"
+        />
       }
     </div>
   }
@@ -115,5 +120,13 @@
     [isOpen]="isModalOpen"
     (closed)="closeModal()"
     (saved)="onSujetSaved()"
+  />
+}
+
+@if (showPostulerModal && selectedSujet) {
+  <app-postuler-modal
+    [sujet]="selectedSujet"
+    (closed)="fermerPostuler()"
+    (submitted)="onCandidatureSoumise()"
   />
 }

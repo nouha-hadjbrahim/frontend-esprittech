@@ -1,0 +1,204 @@
+<div class="equipe-detail">
+  <!-- Back button -->
+  <button type="button" class="equipe-detail__back" (click)="goBack()">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Retour aux équipes
+  </button>
+
+  @if (loading()) {
+    <div class="equipe-detail__loading">Chargement de l'équipe...</div>
+  } @else if (error()) {
+    <div class="equipe-detail__error">{{ error() }}</div>
+  } @else if (equipe(); as eq) {
+    <!-- Hero -->
+    <div class="equipe-detail__hero">
+      <div class="equipe-detail__hero-banner">
+        <div class="equipe-detail__hero-bg"></div>
+        <div class="equipe-detail__hero-overlay"></div>
+        <div class="equipe-detail__hero-body">
+          <span class="equipe-detail__hero-domaine">{{ eq.domaine }}</span>
+          <h1 class="equipe-detail__hero-title">{{ eq.nom }}</h1>
+          <p class="equipe-detail__hero-desc">{{ eq.description }}</p>
+        </div>
+        @if (isChefOfThisTeam()) {
+          <button type="button" class="equipe-detail__hero-edit" title="Modifier l'équipe" (click)="openEditModal()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M11.5 1.5L14.5 4.5L5.5 13.5H2.5V10.5L11.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M9.5 3.5L12.5 6.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            </svg>
+            Modifier
+          </button>
+        }
+        @if (isEnseignant() && !alreadyInTeam() && !isMemberOfThisTeam()) {
+          @if (joinStatus()) {
+            <span class="equipe-detail__hero-join equipe-detail__hero-join--status">{{ joinStatus() }}</span>
+          } @else {
+            <button type="button" class="equipe-detail__hero-join" (click)="rejoindreEquipe()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M7 3V11M3 7H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Rejoindre
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="equipe-detail__stats">
+      <div class="equipe-detail__stat-card">
+        <span class="equipe-detail__stat-label">Domaine</span>
+        <span class="equipe-detail__stat-value">{{ eq.domaine }}</span>
+      </div>
+      <div class="equipe-detail__stat-card">
+        <span class="equipe-detail__stat-label">Chef d'équipe</span>
+        <span class="equipe-detail__stat-value">{{ chefName() }}</span>
+      </div>
+      <div class="equipe-detail__stat-card">
+        <span class="equipe-detail__stat-label">Membres</span>
+        <span class="equipe-detail__stat-value">{{ eq.nbMembres }}</span>
+      </div>
+      <div class="equipe-detail__stat-card">
+        <span class="equipe-detail__stat-label">Statut</span>
+        <span class="equipe-detail__stat-value">{{ eq.statut }}</span>
+      </div>
+    </div>
+
+    
+
+    <!-- Members section -->
+    <section class="equipe-detail__section">
+      <div class="equipe-detail__section-header">
+        <h3 class="equipe-detail__section-title">Membres ({{ membres().length }})</h3>
+        @if (isChefOfThisTeam()) {
+          <button type="button" class="btn btn--add btn--sm" (click)="openAddMemberModal()">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            Ajouter
+          </button>
+        }
+      </div>
+      @if (membres().length === 0) {
+        <div class="equipe-detail__empty">Aucun membre dans cette équipe.</div>
+      } @else {
+        <div class="equipe-detail__member-grid">
+          @for (m of membres(); track m.id) {
+            <div class="equipe-detail__member-card">
+              <div class="equipe-detail__member-avatar" [style.background]="couleurAvatar(m)">
+                {{ membreInitiales(m) }}
+              </div>
+              <div class="equipe-detail__member-info">
+                <div class="equipe-detail__member-name">{{ m.prenom }} {{ m.nom }}</div>
+                <div class="equipe-detail__member-email">{{ m.email }}</div>
+                <div class="equipe-detail__member-badges">
+                  <span class="equipe-detail__member-badge">
+                    {{ eq.chef && m.id === eq.chef.id ? 'Chef d\'équipe' : 'Membre' }}
+                  </span>
+                  @if (m.departement) {
+                    <span class="equipe-detail__member-badge">{{ m.departement }}</span>
+                  }
+                </div>
+              </div>
+              @if (isChefOfThisTeam() && eq.chef && m.id !== eq.chef.id) {
+                <button
+                  type="button"
+                  class="equipe-detail__member-remove"
+                  title="Retirer de l'équipe"
+                  (click)="retirerMembre(m.id)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M4 4L10 10M10 4L4 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Affiliation requests (chef of this team only) -->
+    @if (isChefOfThisTeam()) {
+      <section class="equipe-detail__section">
+        <div class="equipe-detail__section-header">
+          <h3 class="equipe-detail__section-title">Demandes d'intégration ({{ teamAffiliations().length }})</h3>
+        </div>
+        @if (teamAffiliations().length === 0) {
+          <div class="equipe-detail__empty">Aucune demande pour cette équipe.</div>
+        } @else {
+          <div class="equipe-detail__request-list">
+            @for (r of teamAffiliations(); track r.id) {
+              <div class="equipe-detail__request-row">
+                <div class="equipe-detail__request-avatar">{{ initiales(r.enseignant.prenom + ' ' + r.enseignant.nom) }}</div>
+                <div class="equipe-detail__request-info">
+                  <div class="equipe-detail__request-name">{{ r.enseignant.prenom }} {{ r.enseignant.nom }}</div>
+                  <div class="equipe-detail__request-date">{{ formatDate(r.dateDemande) }}</div>
+                  @if (r.motifDecision) {
+                    <p class="equipe-detail__request-msg">Motif : {{ r.motifDecision }}</p>
+                  }
+                </div>
+                @if (r.statut === 'EN_ATTENTE') {
+                  <div class="equipe-detail__request-actions">
+                    <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id)">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M2.5 6.5L5 9L9.5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      Accepter
+                    </button>
+                    <button type="button" class="btn btn--danger btn--sm" (click)="ouvrirRefus(r.id)">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                      Refuser
+                    </button>
+                  </div>
+                } @else {
+                  <span class="equipe-detail__status-badge" [class]="statutClass(r.statut)">
+                    {{ statutLabel(r.statut) }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</div>
+
+<!-- Modals -->
+<app-modifier-equipe-modal
+  [isOpen]="editModalOpen"
+  [equipe]="equipe()!"
+  (closed)="editModalOpen = false"
+  (saved)="onEditSaved()"
+/>
+
+<app-ajouter-membre-modal
+  [isOpen]="addMemberModalOpen"
+  [equipe]="equipe()!"
+  (closed)="addMemberModalOpen = false"
+  (saved)="onMemberAdded()"
+/>
+
+<!-- Motif dialog for refusal -->
+@if (motifDialogOpen) {
+  <div class="motif-overlay" (click)="annulerRefus()">
+    <div class="motif-dialog" (click)="$event.stopPropagation()">
+      <h3 class="motif-dialog__title">Motif du refus</h3>
+      <textarea
+        class="motif-dialog__input"
+        [(ngModel)]="motifText"
+        placeholder="Saisissez le motif du refus..."
+        rows="3"
+      ></textarea>
+      <div class="motif-dialog__actions">
+        <button type="button" class="btn btn--outline" (click)="annulerRefus()">Annuler</button>
+        <button type="button" class="btn btn--danger" (click)="confirmerRefus()">Confirmer le refus</button>
+      </div>
+    </div>
+  </div>
+}

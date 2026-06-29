@@ -54,8 +54,8 @@
         <button
           type="button"
           class="sujet-detail__tab"
-          [class.sujet-detail__tab--active]="tab.active"
-          [disabled]="!tab.active"
+          [class.sujet-detail__tab--active]="activeTab === tab.label"
+          (click)="selectTab(tab.label)"
         >
           @switch (tab.icon) {
             @case ('info') {
@@ -83,8 +83,80 @@
       }
     </nav>
 
+    @if (activeTab === 'Informations') {
     <div class="sujet-detail__content">
       <div class="sujet-detail__main">
+        <article class="detail-panel evaluation-panel">
+          <section class="detail-panel__section">
+            <div class="evaluation-panel__header">
+              <div>
+                <h2 class="detail-panel__title">Évaluation du projet</h2>
+                <p class="detail-panel__text">
+                  @if (sujet.statut !== 'REALISATION_TERMINEE') {
+                    Le score sera calculé automatiquement après la terminaison du projet.
+                  } @else {
+                    Dernière évaluation disponible pour ce projet terminé.
+                  }
+                </p>
+              </div>
+              @if (canRecalculateScore) {
+                <button type="button" class="action-btn" [disabled]="recalculatingScore" (click)="recalculateScore()">
+                  {{ recalculatingScore ? 'Recalcul...' : 'Recalculer score' }}
+                </button>
+              }
+            </div>
+            @if (evaluationMessage) { <div class="tab-alert tab-alert--success">{{ evaluationMessage }}</div> }
+            @if (evaluationError) { <div class="tab-alert tab-alert--danger">{{ evaluationError }}</div> }
+            @if (evaluationLoading) {
+              <div class="sujet-detail__loading">Chargement de l'évaluation...</div>
+            } @else if (evaluation) {
+              <div class="evaluation-grid">
+                <div class="summary-card">
+                  <span class="summary-card__label">Score final</span>
+                  <span class="summary-card__value">{{ evaluation.scoreFinal }} / 100</span>
+                </div>
+                <div class="summary-card">
+                  <span class="summary-card__label">Éligibilité</span>
+                  <span class="summary-card__value">{{ evaluation.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</span>
+                </div>
+                <div class="summary-card">
+                  <span class="summary-card__label">Blocage éliminatoire</span>
+                  <span class="summary-card__value">{{ evaluation.bloqueParEliminatoire ? 'Oui' : 'Non' }}</span>
+                </div>
+                <div class="summary-card">
+                  <span class="summary-card__label">Calculé le</span>
+                  <span class="summary-card__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</span>
+                </div>
+              </div>
+
+              <app-evaluation-checklist [evaluation]="evaluation" [projectTitle]="sujet.titre"></app-evaluation-checklist>
+
+              @if (evaluation.resultats?.length) {
+                <div class="evaluation-results">
+                  @for (resultat of evaluation.resultats; track resultat.id) {
+                    <div class="evaluation-result-row">
+                      <div>
+                        <strong>{{ resultat.critereLibelle }}</strong>
+                        @if (resultat.critereDomaine) { <span> · {{ resultat.critereDomaine }}</span> }
+                        @if (resultat.commentaire) { <p>{{ resultat.commentaire }}</p> }
+                      </div>
+                      <strong>
+                        @if (resultat.typeCritere === 'ELIMINATOIRE') {
+                          {{ resultat.reponseEliminatoire }}
+                        } @else {
+                          {{ resultat.noteObtenue }}
+                        }
+                      </strong>
+                    </div>
+                  }
+                </div>
+              }
+            } @else if (sujet.statut === 'REALISATION_TERMINEE') {
+              <p class="detail-panel__text">Aucune évaluation enregistrée pour ce projet.</p>
+            }
+          </section>
+        </article>
+
         <article class="detail-panel">
           <section class="detail-panel__section">
             <h2 class="detail-panel__title">Description</h2>
@@ -143,5 +215,335 @@
         </div>
       </aside>
     </div>
+    } @else if (activeTab === 'Livrables') {
+      <div class="tab-panel">
+        @if (livrableMessage) { <div class="tab-alert tab-alert--success">{{ livrableMessage }}</div> }
+        @if (livrableError) { <div class="tab-alert tab-alert--danger">{{ livrableError }}</div> }
+
+        @if (canManageLivrables) {
+          <div class="livrable-forms">
+            <section class="detail-panel livrable-form">
+              <h2 class="detail-panel__title">Depot fichier</h2>
+              <div class="form-grid">
+                <label>
+                  Type
+                  <select [(ngModel)]="uploadForm.typeLivrable">
+                    @for (type of typeLivrableOptions; track type.value) {
+                      <option [value]="type.value">{{ type.label }}</option>
+                    }
+                  </select>
+                </label>
+                <label>
+                  Nom
+                  <input type="text" [(ngModel)]="uploadForm.nom" />
+                </label>
+                <label>
+                  Fichier
+                  <input type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt" (change)="onUploadFileSelected($event)" />
+                </label>
+                <label class="form-grid__wide">
+                  Description
+                  <textarea rows="3" [(ngModel)]="uploadForm.description"></textarea>
+                </label>
+              </div>
+              <button type="button" class="action-btn" (click)="uploadLivrable()">Deposer</button>
+            </section>
+
+            <section class="detail-panel livrable-form">
+              <h2 class="detail-panel__title">Lien externe</h2>
+              <div class="form-grid">
+                <label>
+                  Type
+                  <select [(ngModel)]="linkForm.typeLivrable">
+                    @for (type of typeLivrableOptions; track type.value) {
+                      <option [value]="type.value">{{ type.label }}</option>
+                    }
+                  </select>
+                </label>
+                <label>
+                  Nom
+                  <input type="text" [(ngModel)]="linkForm.nom" />
+                </label>
+                <label>
+                  URL
+                  <input type="url" [(ngModel)]="linkForm.lienExterne" />
+                </label>
+                <label class="form-grid__wide">
+                  Description
+                  <textarea rows="3" [(ngModel)]="linkForm.description"></textarea>
+                </label>
+              </div>
+              <button type="button" class="action-btn" (click)="addLivrableLink()">Ajouter le lien</button>
+            </section>
+          </div>
+        }
+
+        <section class="detail-panel livrables-list">
+          <h2 class="detail-panel__title">Livrables du projet</h2>
+          @if (livrablesLoading) {
+            <div class="sujet-detail__loading">Chargement...</div>
+          } @else if (livrables.length === 0) {
+            <p class="detail-panel__text">Aucun livrable depose.</p>
+          } @else {
+            <div class="livrable-table">
+              @for (livrable of livrables; track livrable.id) {
+                <div class="livrable-row">
+                  <div>
+                    <strong>{{ livrable.nom }}</strong>
+                    <span>{{ livrableLabels[livrable.typeLivrable] }} - {{ livrable.deposantNom }}</span>
+                  </div>
+                  <div class="livrable-actions">
+                    @if (livrable.objectName) {
+                      <a [href]="downloadLivrable(livrable)" target="_blank" rel="noreferrer">Telecharger</a>
+                    } @else if (livrable.lienExterne) {
+                      <a [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
+                    }
+                    @if (canManageLivrables) {
+                      <button type="button" (click)="deleteLivrable(livrable)">Supprimer</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      </div>
+    } @else {
+      <div class="tab-panel industrialisation-panel">
+        <section class="detail-panel">
+          <div class="industrialisation-header">
+            <div>
+              <h2 class="detail-panel__title">Demande d'industrialisation</h2>
+              <p class="detail-panel__text">
+                Score: {{ sujet.scoreFinal ?? 'non calcule' }} / 100 -
+                {{ sujet.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}
+              </p>
+            </div>
+            @if (canRequestIndustrialisation) {
+              <button type="button" class="action-btn" (click)="openIndustrialisation()">Demander industrialisation</button>
+            }
+          </div>
+          @if (!canRequestIndustrialisation) {
+            <p class="detail-panel__text">
+              La demande est disponible pour l'encadrant lorsque le projet est termine et eligible.
+            </p>
+          }
+        </section>
+      </div>
+    }
   }
 </div>
+
+@if (industrialisationOpen) {
+  <div class="modal-backdrop" (click)="closeIndustrialisation()">
+    <div class="industrialisation-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h2>Demande d'industrialisation</h2>
+          <p class="modal-subtitle">Une seule demande guidee : type, questionnaire, puis soumission a la CI.</p>
+        </div>
+        <button type="button" class="modal-close" (click)="closeIndustrialisation()">Fermer</button>
+      </header>
+
+      <div class="industrialisation-steps">
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(1)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(1)"
+          [attr.aria-current]="isIndustrialisationStepActive(1) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">1</span>
+          <span>Type</span>
+        </span>
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(2)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(2)"
+          [attr.aria-current]="isIndustrialisationStepActive(2) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">2</span>
+          <span>Questionnaire</span>
+        </span>
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(3)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(3)"
+          [attr.aria-current]="isIndustrialisationStepActive(3) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">3</span>
+          <span>Soumission</span>
+        </span>
+      </div>
+
+      @if (industrialisationError) { <div class="tab-alert tab-alert--danger">{{ industrialisationError }}</div> }
+      @if (industrialisationMessage) { <div class="tab-alert tab-alert--success">{{ industrialisationMessage }}</div> }
+      @if (hasBlockingEliminatoryAnswer()) {
+        <div class="tab-alert tab-alert--warning">Cette demande contient un critere eliminatoire non conforme.</div>
+      }
+
+      @if (!industrialisationForm) {
+        <section class="industrialisation-summary">
+          <div>
+            <span>Projet</span>
+            <strong>{{ sujet?.titre }}</strong>
+          </div>
+          <div>
+            <span>Score</span>
+            <strong>{{ sujet?.scoreFinal ?? evaluation?.scoreFinal ?? 'non calcule' }} / 100</strong>
+          </div>
+          <div>
+            <span>Eligibilite</span>
+            <strong>{{ sujet?.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</strong>
+          </div>
+          <div>
+            <span>Livrables</span>
+            <strong>{{ livrables.length }}</strong>
+          </div>
+        </section>
+        <div class="form-grid">
+          <label>
+            Type
+            <select [(ngModel)]="industrialisationType">
+              <option value="INTERNE">{{ typeIndustrialisationLabels.INTERNE }}</option>
+              <option value="EXTERNE">{{ typeIndustrialisationLabels.EXTERNE }}</option>
+            </select>
+          </label>
+          <label class="form-grid__wide">
+            Commentaire
+            <textarea rows="4" [(ngModel)]="industrialisationCommentaire"></textarea>
+          </label>
+        </div>
+        <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy()" (click)="createIndustrialisation()">
+            {{ industrialisationSaving ? 'Preparation...' : 'Continuer vers le questionnaire' }}
+          </button>
+        } @else {
+          <div class="wizard-section-title">
+            <h3>Formulaire d'industrialisation</h3>
+            <span>{{ industrialisationForm.candidature.statut }}</span>
+          </div>
+          <div class="question-list">
+          @for (question of industrialisationForm.questions; track question.id) {
+            <section
+              class="question-card"
+              [class.question-card--invalid]="isRequiredQuestionInvalid(question) || (question.typeCritere === 'NOTE' && isRequiredNoteInvalid(question))"
+              [class.question-card--blocking]="automaticEliminatoryResult(question) === ReponseEliminatoire.NOT_OK"
+            >
+              <div class="question-card__header">
+                <div class="question-card__title">
+                  <div class="question-card__meta">
+                    <span>Question {{ question.ordre }}</span>
+                    <span>{{ questionTypeLabel(question) }}</span>
+                    @if (question.obligatoire) { <span>Obligatoire</span> }
+                  </div>
+                  <h3>{{ question.libelle }}</h3>
+                </div>
+                @if (question.typeCritere === 'ELIMINATOIRE') {
+                  <span class="criterion-badge criterion-badge--elim">Critere eliminatoire</span>
+                } @else {
+                  <span class="criterion-badge">Critere note</span>
+                }
+              </div>
+              @if (question.description) { <p class="question-card__description">{{ question.description }}</p> }
+
+              <div class="question-field">
+                <span class="question-field__label">Reponse</span>
+              @switch (question.typeReponse) {
+                @case ('BOOLEAN') {
+                  <div class="boolean-choice" role="radiogroup" [attr.aria-label]="question.libelle">
+                    <button
+                      type="button"
+                      class="boolean-choice__pill"
+                      [class.boolean-choice__pill--selected]="answers[question.id].valeurBoolean === true"
+                      [attr.aria-pressed]="answers[question.id].valeurBoolean === true"
+                      (click)="setBooleanAnswer(question, true)"
+                    >
+                      Oui
+                    </button>
+                    <button
+                      type="button"
+                      class="boolean-choice__pill"
+                      [class.boolean-choice__pill--selected]="answers[question.id].valeurBoolean === false"
+                      [attr.aria-pressed]="answers[question.id].valeurBoolean === false"
+                      (click)="setBooleanAnswer(question, false)"
+                    >
+                      Non
+                    </button>
+                  </div>
+                }
+                @case ('NUMERIQUE') {
+                  <input type="number" [(ngModel)]="answers[question.id].valeurNumerique" (ngModelChange)="onIndustrialisationAnswerChange()" />
+                }
+                @case ('URL') {
+                  <input type="url" [(ngModel)]="answers[question.id].valeurUrl" (ngModelChange)="onIndustrialisationAnswerChange()" />
+                }
+                @case ('FICHIER') {
+                  <div class="file-answer">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt"
+                      [disabled]="isIndustrialisationBusy()"
+                      (change)="uploadProof(question, $event)"
+                    />
+                    @if (isQuestionUploading(question)) {
+                      <span class="file-answer__state">Upload...</span>
+                    } @else if (hasUploadedProof(question)) {
+                      <span class="file-answer__state file-answer__state--ok">Preuve ajoutee</span>
+                    }
+                  </div>
+                }
+                @case ('CHOIX') {
+                  <input type="text" [(ngModel)]="answers[question.id].valeurTexte" (ngModelChange)="onIndustrialisationAnswerChange()" />
+                }
+                @default {
+                  <textarea rows="3" [(ngModel)]="answers[question.id].valeurTexte" (ngModelChange)="onIndustrialisationAnswerChange()"></textarea>
+                }
+              }
+                @if (isRequiredQuestionInvalid(question)) {
+                  <span class="field-error">Reponse obligatoire.</span>
+                }
+              </div>
+
+              @if (question.typeCritere === 'ELIMINATOIRE') {
+                <div class="auto-result-row">
+                  <span class="question-field__label">Resultat automatique</span>
+                  <span
+                    class="auto-result"
+                    [class.auto-result--ok]="automaticEliminatoryResult(question) === ReponseEliminatoire.OK"
+                    [class.auto-result--ko]="automaticEliminatoryResult(question) === ReponseEliminatoire.NOT_OK"
+                    [class.auto-result--pending]="automaticEliminatoryResult(question) === null"
+                  >
+                    {{ eliminatoryPreviewLabel(question) }}
+                  </span>
+                </div>
+              }
+              @if (question.typeCritere === 'NOTE') {
+                <label class="question-field question-field--compact">
+                  <span class="question-field__label">Note obtenue</span>
+                  <input
+                    type="number"
+                    [(ngModel)]="answers[question.id].noteObtenue"
+                    [class.input-invalid]="isRequiredNoteInvalid(question)"
+                    (ngModelChange)="onIndustrialisationAnswerChange()"
+                  />
+                  @if (isRequiredNoteInvalid(question)) {
+                    <span class="field-error">Note obligatoire pour ce critere.</span>
+                  }
+                </label>
+              }
+              <label class="question-field">
+                <span class="question-field__label">Justificatif</span>
+                <textarea rows="2" [(ngModel)]="answers[question.id].justificatif" (ngModelChange)="onIndustrialisationAnswerChange()"></textarea>
+              </label>
+            </section>
+          }
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="action-btn action-btn--ghost" [disabled]="isIndustrialisationBusy()" (click)="saveIndustrialisationAnswers()">Enregistrer brouillon</button>
+          <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy() || hasBlockingEliminatoryAnswer()" (click)="submitIndustrialisation()">
+            {{ industrialisationSaving ? 'Soumission...' : 'Soumettre a la CI' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

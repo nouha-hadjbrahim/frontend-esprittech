@@ -1,0 +1,78 @@
+<div class="page-container">
+  <h1>Candidatures</h1>
+  <p class="page-subtitle">Ouverture, fermeture et gestion des candidatures par sujet.</p>
+
+  @if (errorMessage) {
+    <div class="alert">{{ errorMessage }}</div>
+  }
+
+  @if (isLoading) {
+    <p class="hint">Chargement...</p>
+  } @else if (sujets.length === 0) {
+    <div class="empty-card">Aucun sujet validé ou en cours de candidature pour le moment.</div>
+  } @else {
+    <div class="table-card">
+      <table class="sujets-table" aria-label="Liste des sujets avec leurs statuts de candidature">
+        <thead>
+          <tr>
+            <th>Titre</th>
+            <th>Catégorie</th>
+            <th>Encadrant</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sujet of sujets; track sujet.id) {
+            <tr>
+              <td class="cell-titre">{{ sujet.titre }}</td>
+              <td>
+                <span class="badge" [class]="categorieLabels[sujet.categorie].cssClass">
+                  {{ categorieLabels[sujet.categorie].label }}
+                </span>
+              </td>
+              <td>{{ sujet.encadrantNom }}</td>
+              <td>
+                <span class="badge" [class]="statutLabels[sujet.statut].cssClass">
+                  {{ statutLabels[sujet.statut].label }}
+                </span>
+              </td>
+              <td class="cell-actions">
+                @if (sujet.statut === 'VALIDE') {
+                  <button
+                    type="button"
+                    class="btn btn--primary"
+                    [disabled]="actionLoadingId === sujet.id"
+                    (click)="ouvrirCandidatures(sujet)"
+                  >
+                    Ouvrir candidature
+                  </button>
+                }
+                @if (sujet.statut === 'CANDIDATURE_OUVERTE') {
+                  <button
+                    type="button"
+                    class="btn btn--warning"
+                    [disabled]="actionLoadingId === sujet.id"
+                    (click)="fermerCandidatures(sujet)"
+                  >
+                    Fermer candidature
+                  </button>
+                }
+                <button type="button" class="btn btn--ghost" (click)="openModal(sujet)">
+                  Gérer
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<app-gerer-candidatures-modal
+  [isOpen]="modalOpen"
+  [sujet]="selectedSujet"
+  (closed)="closeModal()"
+  (changed)="onModalChanged()"
+/>

@@ -175,14 +175,14 @@ describe('AuthService', () => {
       expect(service.landingRoute()).toBe('/backoffice/users');
     });
 
-    it('should route ROLE_ENSEIGNANT to the catalogue', () => {
+    it('should route ROLE_ENSEIGNANT to mes sujets', () => {
       loginAs('ROLE_ENSEIGNANT');
-      expect(service.landingRoute()).toBe('/frontoffice/catalogue');
+      expect(service.landingRoute()).toBe('/frontoffice/sujets/mes-sujets');
     });
 
     it('should route ROLE_ETUDIANT to available subjects', () => {
       loginAs('ROLE_ETUDIANT');
-      expect(service.landingRoute()).toBe('/frontoffice/sujets-disponibles');
+      expect(service.landingRoute()).toBe('/frontoffice/sujets/disponibles');
     });
 
     it('should route ROLE_CHEF_EQUIPE to the dashboard', () => {
@@ -190,13 +190,13 @@ describe('AuthService', () => {
       expect(service.landingRoute()).toBe('/frontoffice/tableau-de-bord');
     });
 
-    it('should route ROLE_CI to the dashboard', () => {
+    it('should route ROLE_CI to the industrialisation workspace', () => {
       loginAs('ROLE_CI');
-      expect(service.landingRoute()).toBe('/frontoffice/tableau-de-bord');
+      expect(service.landingRoute()).toBe('/ci/industrialisation');
     });
 
     it('should fall back to available subjects when no role is present', () => {
-      expect(service.landingRoute()).toBe('/frontoffice/sujets-disponibles');
+      expect(service.landingRoute()).toBe('/frontoffice/sujets/disponibles');
     });
   });
 });

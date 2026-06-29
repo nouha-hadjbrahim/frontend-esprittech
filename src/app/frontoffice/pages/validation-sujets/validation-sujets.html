@@ -1,11 +1,9 @@
 <div class="validation-sujets">
   <header class="validation-sujets__header">
-    <div class="validation-sujets__header-text">
-      <h1 class="validation-sujets__title">Validation des sujets</h1>
-      <p class="validation-sujets__subtitle">
-        Examinez et validez les demandes de sujets déposées par les enseignants de votre équipe.
-      </p>
-    </div>
+    <h1 class="validation-sujets__title">Validation des sujets</h1>
+    <p class="validation-sujets__subtitle">
+      Sujets soumis par les enseignants de votre équipe, en attente de décision.
+    </p>
   </header>
 
   <div class="validation-sujets__toolbar">
@@ -17,7 +15,7 @@
       <input
         type="text"
         class="validation-sujets__search-input"
-        placeholder="Rechercher une demande, encadrant..."
+        placeholder="Rechercher une demande..."
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange()"
       />
@@ -58,12 +56,6 @@
           (click)="setViewMode('cards')"
           [attr.aria-pressed]="viewMode === 'cards'"
         >
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-            <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-            <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-            <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
-          </svg>
           Cartes
         </button>
         <button
@@ -73,57 +65,37 @@
           (click)="setViewMode('list')"
           [attr.aria-pressed]="viewMode === 'list'"
         >
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M2 4H6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <circle cx="9" cy="4" r="0.75" fill="currentColor"/>
-            <path d="M11 4H14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <path d="M2 8H6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <circle cx="9" cy="8" r="0.75" fill="currentColor"/>
-            <path d="M11 8H14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <path d="M2 12H6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <circle cx="9" cy="12" r="0.75" fill="currentColor"/>
-            <path d="M11 12H14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
           Liste
         </button>
       </div>
     </div>
   </div>
 
-  @if (!isLoading && filteredSujets.length > 0) {
+  @if (loadError) {
+    <div class="alert">{{ loadError }}</div>
+  }
+
+  @if (!isLoading) {
     <p class="validation-sujets__count">{{ filteredSujets.length }} demande(s)</p>
   }
 
   @if (isLoading) {
     <div class="validation-sujets__loading">Chargement des demandes...</div>
-  } @else if (loadError) {
-    <div class="validation-sujets__empty">
-      <h2 class="validation-sujets__empty-title">Erreur de chargement</h2>
-      <p class="validation-sujets__empty-text">{{ loadError }}</p>
-      <button type="button" class="validation-sujets__retry-btn" (click)="loadSujets()">Réessayer</button>
-    </div>
   } @else if (filteredSujets.length === 0) {
     <div class="validation-sujets__empty">
-      <div class="validation-sujets__empty-icon" aria-hidden="true">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <rect x="8" y="12" width="32" height="28" rx="4" stroke="#e5e7eb" stroke-width="2"/>
-          <path d="M16 20H32M16 26H28M16 32H24" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="36" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
-          <path d="M33 14H39M36 11V17" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <h2 class="validation-sujets__empty-title">Aucune demande trouvée</h2>
+      <h2 class="validation-sujets__empty-title">Aucune demande en attente</h2>
       <p class="validation-sujets__empty-text">
-        Aucune demande de sujet en attente ou aucun résultat ne correspond à vos filtres.
+        Aucun sujet ne correspond à vos filtres pour le moment.
       </p>
+      <button type="button" class="validation-sujets__retry-btn" (click)="loadSujets()">Réessayer</button>
     </div>
   } @else if (viewMode === 'list') {
     <div class="validation-sujets__list">
       @for (sujet of filteredSujets; track sujet.id) {
         <app-validation-sujet-list-row
           [sujet]="sujet"
-          [validating]="isActionLoading(sujet) && validateConfirmOpen"
-          [rejecting]="isActionLoading(sujet) && rejectDialogOpen"
+          [validating]="isActionLoading(sujet)"
+          [rejecting]="isActionLoading(sujet)"
           (validate)="openValidateConfirm(sujet)"
           (reject)="openRejectDialog(sujet)"
         />
@@ -134,8 +106,8 @@
       @for (sujet of filteredSujets; track sujet.id) {
         <app-validation-sujet-card
           [sujet]="sujet"
-          [validating]="isActionLoading(sujet) && validateConfirmOpen"
-          [rejecting]="isActionLoading(sujet) && rejectDialogOpen"
+          [validating]="isActionLoading(sujet)"
+          [rejecting]="isActionLoading(sujet)"
           (validate)="openValidateConfirm(sujet)"
           (reject)="openRejectDialog(sujet)"
         />
@@ -146,11 +118,10 @@
 
 <app-confirm-dialog
   [isOpen]="validateConfirmOpen"
-  title="Valider le sujet"
+  title="Valider la demande"
   [message]="validateConfirmMessage"
   confirmLabel="Valider"
   cancelLabel="Annuler"
-  [showIcon]="false"
   [loading]="actionLoading"
   (confirmed)="confirmValidate()"
   (cancelled)="cancelValidate()"
@@ -161,7 +132,7 @@
     <div class="reject-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <h3 class="reject-dialog__title">Refuser le sujet</h3>
       <p class="reject-dialog__message">
-        Indiquez le motif de refus pour « {{ sujetEnCours?.titre }} ».
+        Indiquez le motif de refus pour « {{ sujetEnCours?.titre }} ». Ce motif sera enregistré.
       </p>
       <textarea
         class="reject-dialog__textarea"

@@ -1,0 +1,80 @@
+<div class="modal-overlay" (click)="close()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon">📝</div>
+        <div>
+          <h2 class="modal-title">Soumettre une candidature</h2>
+          <p class="modal-subtitle" *ngIf="sujet">{{ sujet.titre }}</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="close()">✕</button>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-state" *ngIf="success">
+      <div class="success-icon">✅</div>
+      <p class="success-text">Candidature soumise avec succès !</p>
+      <p class="success-sub">L'encadrant va examiner votre candidature.</p>
+    </div>
+
+    <!-- Form -->
+    <div class="modal-body" *ngIf="!success">
+
+      <!-- Sujet info -->
+      <div class="sujet-info" *ngIf="sujet">
+        <div class="info-row">
+          <span class="info-label">Catégorie</span>
+          <span class="badge-categorie">{{ sujet.categorie }}</span>
+        </div>
+        <div class="info-row" *ngIf="sujet.encadrantNom">
+          <span class="info-label">Encadrant</span>
+          <span class="info-value">{{ sujet.encadrantNom }}</span>
+        </div>
+        <div class="info-row" *ngIf="sujet.domaines?.length">
+          <span class="info-label">Domaine</span>
+          <span class="info-value">{{ sujet.domaines.join(', ') }}</span>
+        </div>
+        <div class="info-row" *ngIf="sujet.technologies?.length">
+          <span class="info-label">Technologies</span>
+          <div class="tech-tags">
+            <span class="tech-tag" *ngFor="let t of sujet.technologies">{{ t }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message field -->
+      <div class="field-group">
+        <label class="field-label">
+          Message de motivation <span class="optional">(optionnel)</span>
+        </label>
+        <textarea
+          class="field-textarea"
+          [(ngModel)]="message"
+          placeholder="Expliquez brièvement votre motivation et vos compétences en lien avec ce sujet..."
+          rows="5"
+          [disabled]="loading">
+        </textarea>
+      </div>
+
+      <!-- Error -->
+      <div class="error-banner" *ngIf="error">
+        ⚠️ {{ error }}
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="close()" [disabled]="loading">
+          Annuler
+        </button>
+        <button class="btn-submit" (click)="postuler()" [disabled]="loading">
+          <span *ngIf="!loading">🎓 Soumettre ma candidature</span>
+          <span *ngIf="loading">Envoi en cours...</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -47,7 +47,42 @@ export const frontofficeRoutes: Routes = [
             {
                 path: 'equipes-recherche',
                 canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE'])],
-                loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche)
+                children: [
+                    {
+                        path: '',
+                        redirectTo: 'equipes',
+                        pathMatch: 'full'
+                    },
+                    {
+                        path: 'toutes-les-equipes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 2 }
+                    },
+                    {
+                        path: 'equipes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 0 }
+                    },
+                    {
+                        path: 'mes-demandes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 1 }
+                    },
+                    {
+                        path: 'mon-equipe',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 0 }
+                    },
+                    {
+                        path: 'demandes',
+                        loadComponent: () => import('./pages/equipes-recherche/equipes-recherche').then(m => m.EquipesRecherche),
+                        data: { tab: 1 }
+                    },
+                    {
+                        path: ':id',
+                        loadComponent: () => import('./pages/equipes-recherche/equipe-detail/equipe-detail').then(m => m.EquipeDetail)
+                    }
+                ]
             },
             {
                 path: 'mes-candidatures',
@@ -66,7 +101,7 @@ export const frontofficeRoutes: Routes = [
             },
             {
                 path: 'demandes-industrialisation',
-                canActivate: [roleGuard(['ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
+                canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
                 loadComponent: () => import('./pages/demandes-industrialisation/demandes-industrialisation').then(m => m.DemandesIndustrialisation)
             },
             { path: '', redirectTo: 'sujets/disponibles', pathMatch: 'full' }

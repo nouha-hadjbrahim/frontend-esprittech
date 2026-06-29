@@ -1,1 +1,50 @@
-<p>demandes-industrialisation works!</p>
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Demandes d'industrialisation</h1>
+      <p>Suivi des brouillons, soumissions et decisions CI.</p>
+    </div>
+    @if (isCi) {
+      <a routerLink="/ci/industrialisation" class="primary-link">Ouvrir l'espace CI</a>
+    }
+  </header>
+
+  @if (isCi) {
+    <section class="empty">
+      <p>Le traitement CI se fait dans l'espace dedie.</p>
+      <a routerLink="/ci/industrialisation">Aller a l'espace CI</a>
+    </section>
+  } @else if (loading()) {
+    <section class="empty">Chargement...</section>
+  } @else if (error()) {
+    <section class="alert">{{ error() }}</section>
+  } @else if (demandes().length === 0) {
+    <section class="empty">
+      <p>Aucune demande pour le moment.</p>
+      <span>Demarrez une demande depuis le detail d'un projet termine.</span>
+    </section>
+  } @else {
+    <section class="requests">
+      @for (demande of demandes(); track demande.id) {
+        <article class="request-card">
+          <div>
+            <span class="type">{{ typeLabels[demande.typeIndustrialisation] }}</span>
+            <h2>{{ demande.projetTitre }}</h2>
+            <p>{{ demande.commentaire || 'Aucun commentaire' }}</p>
+          </div>
+          <div class="status-block">
+            <span class="status" [class.status--go]="demande.statut === 'GO'" [class.status--nogo]="demande.statut === 'NO_GO'">
+              {{ statutLabels[demande.statut] }}
+            </span>
+            @if (demande.orientation) {
+              <strong>Orientation: {{ demande.orientation }}</strong>
+            }
+            @if (demande.motifDecision) {
+              <strong>Motif: {{ demande.motifDecision }}</strong>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+</div>

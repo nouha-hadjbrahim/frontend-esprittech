@@ -37,6 +37,9 @@ describe('SubjectsComponent', () => {
       first: true,
       last: true,
     });
+    httpMock.expectOne(`${environment.apiUrl}/sujet-projets/technologies`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/sujet-projets/suggestions/domaines`).flush([]);
+    httpMock.expectOne(`${environment.apiUrl}/sujet-projets/suggestions/prerequis`).flush([]);
 
     expect(fixture.componentInstance).toBeTruthy();
   });

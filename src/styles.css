@@ -11,6 +11,28 @@
   --input-focus: #E6394633;
   --glow-color: rgba(230, 57, 70, 0.15);
   --font-family: 'Inter', sans-serif;
+
+  /* shadcn/ui-inspired tokens */
+  --background: #ffffff;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --primary: #E63946;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #1e293b;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #E63946;
+  --radius: 0.5rem;
 }
 
 * {
@@ -178,3 +200,11 @@ body {
     0 2px 4px -2px rgba(0, 0, 0, 0.05),
     0 20px 25px -5px rgba(0, 0, 0, 0.05);
 }
+html, body { height: 100%; }
+
+.snack-success .mdc-snackbar__surface { background: #16a34a !important; }
+.snack-error   .mdc-snackbar__surface { background: #dc2626 !important; }
+.snack-success .mdc-snackbar__label,
+.snack-error   .mdc-snackbar__label   { color: #fff !important; }
+.snack-success .mat-mdc-snack-bar-action,
+.snack-error   .mat-mdc-snack-bar-action { color: rgba(255,255,255,.8) !important; }
