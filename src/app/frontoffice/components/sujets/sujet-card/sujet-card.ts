@@ -33,6 +33,12 @@ export class SujetCard {
     return STATUT_LABELS[this.sujet.statut] ?? { label: this.sujet.statut, cssClass: 'badge--neutral' };
   }
 
+  onEditClick(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.edit.emit();
+  }
+
   get showCandidaturesAction(): boolean {
     const statutsConcernes = [
       'VALIDE',
@@ -44,11 +50,9 @@ export class SujetCard {
     return statutsConcernes.includes(this.sujet.statut);
   }
 
-  onEditClick(): void {
-    this.edit.emit();
-  }
-
-  onDeleteClick(): void {
+  onDeleteClick(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
     this.delete.emit();
   }
 

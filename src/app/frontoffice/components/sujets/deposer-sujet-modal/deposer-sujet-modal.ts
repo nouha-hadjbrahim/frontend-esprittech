@@ -8,8 +8,11 @@ import {
   SimpleChanges,
   inject,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { AdminService } from '../../../../core/services/admin.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
 import { SujetReferenceService } from '../../../../core/services/sujet-reference.service';
 import { CategorieSujet, SujetProjet, SujetProjetRequest } from '../../../../core/models/sujet-projet.model';
@@ -23,18 +26,26 @@ import { EditableOptionsField } from '../editable-options-field/editable-options
 
 @Component({
   selector: 'app-deposer-sujet-modal',
-  imports: [ReactiveFormsModule, FormsModule, EditableOptionsField],
+  imports: [ReactiveFormsModule, FormsModule, EditableOptionsField, RouterLink, NgTemplateOutlet],
   templateUrl: './deposer-sujet-modal.html',
   styleUrl: './deposer-sujet-modal.css',
 })
 export class DeposerSujetModal implements OnInit, OnChanges {
   private readonly fb = inject(FormBuilder);
   private readonly sujetProjetService = inject(SujetProjetService);
+  private readonly adminService = inject(AdminService);
   private readonly referenceService = inject(SujetReferenceService);
   private readonly authService = inject(AuthService);
 
+  /** `modal` = overlay dialog ; `page` = formulaire pleine page (backoffice). */
+  @Input() layout: 'modal' | 'page' = 'modal';
+  /** Utilise l'API admin pour la modification (backoffice). */
+  @Input() adminMode = false;
   @Input() isOpen = false;
   @Input() editSujet?: SujetProjet;
+  /** Nom affiché en mode admin (encadrant du sujet). */
+  @Input() encadrantDisplayName = '';
+  @Input() backLink = '/backoffice/subjects';
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
 
@@ -79,19 +90,41 @@ export class DeposerSujetModal implements OnInit, OnChanges {
   }
 
   get encadrantName(): string {
+    if (this.encadrantDisplayName) {
+      return this.encadrantDisplayName;
+    }
     const user = this.authService.currentUser();
     return user ? `${user.prenom} ${user.nom}` : '';
   }
 
+  get isPageLayout(): boolean {
+    return this.layout === 'page';
+  }
+
+  get isVisible(): boolean {
+    return this.isPageLayout || this.isOpen;
+  }
+
   ngOnInit(): void {
     this.loadSuggestions();
+    if (this.isPageLayout && this.editSujet) {
+      this.populateForm(this.editSujet);
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isOpen']?.currentValue === true) {
+    const opened = changes['isOpen']?.currentValue === true;
+    const closed = changes['isOpen']?.currentValue === false;
+    const editChanged = !!changes['editSujet'];
+
+    if (closed) {
+      return;
+    }
+
+    if (opened || (this.isVisible && editChanged)) {
       if (this.editSujet) {
         this.populateForm(this.editSujet);
-      } else {
+      } else if (opened || this.isPageLayout) {
         this.resetForm();
       }
     }
@@ -212,13 +245,17 @@ export class DeposerSujetModal implements OnInit, OnChanges {
   }
 
   close(): void {
+    if (!this.isVisible) {
+      return;
+    }
     this.errorMessage = '';
     this.closed.emit();
   }
 
-  onOverlayClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains('modal-overlay')) {
-      this.close();
+  onFormEnter(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName !== 'TEXTAREA') {
+      event.preventDefault();
     }
   }
 
@@ -257,10 +294,14 @@ export class DeposerSujetModal implements OnInit, OnChanges {
 
     this.isSubmitting = true;
 
-    const operation =
-      this.isEditMode && this.editSujet
-        ? this.sujetProjetService.modifierSujet(this.editSujet.id, request)
-        : this.sujetProjetService.creerSujet(request);
+    let operation;
+    if (this.isEditMode && this.editSujet) {
+      operation = this.adminMode
+        ? this.adminService.updateSujet(this.editSujet.id, request)
+        : this.sujetProjetService.modifierSujet(this.editSujet.id, request);
+    } else {
+      operation = this.sujetProjetService.creerSujet(request);
+    }
 
     operation.subscribe({
       next: () => {

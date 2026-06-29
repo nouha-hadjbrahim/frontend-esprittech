@@ -1,79 +1,165 @@
-<div class="page-container">
-  <h1>Validation des sujets</h1>
-  <p class="page-subtitle">Sujets soumis par les enseignants de votre équipe, en attente de décision.</p>
+<div class="validation-sujets">
+  <header class="validation-sujets__header">
+    <h1 class="validation-sujets__title">Validation des sujets</h1>
+    <p class="validation-sujets__subtitle">
+      Sujets soumis par les enseignants de votre équipe, en attente de décision.
+    </p>
+  </header>
 
-  @if (errorMessage) {
-    <div class="alert">{{ errorMessage }}</div>
+  <div class="validation-sujets__toolbar">
+    <div class="validation-sujets__search-box">
+      <svg class="validation-sujets__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="validation-sujets__search-input"
+        placeholder="Rechercher une demande..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="validation-sujets__filters">
+      <app-filter-dropdown
+        class="validation-sujets__filter validation-sujets__filter--type"
+        label="Type"
+        [options]="categorieOptions"
+        [value]="selectedCategorie"
+        (valueChange)="onCategorieChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="validation-sujets__filter validation-sujets__filter--statut"
+        label="Statut"
+        [options]="statutOptions"
+        [value]="selectedStatut"
+        (valueChange)="onStatutChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="validation-sujets__filter validation-sujets__filter--sort"
+        label="Plus récents"
+        [options]="sortOptions"
+        [value]="sortOrder"
+        defaultValue="recent"
+        [showSortIcon]="true"
+        (valueChange)="onSortChange($event)"
+      />
+
+      <div class="validation-sujets__view-toggle" role="group" aria-label="Mode d'affichage">
+        <button
+          type="button"
+          class="validation-sujets__view-btn"
+          [class.validation-sujets__view-btn--active]="viewMode === 'cards'"
+          (click)="setViewMode('cards')"
+          [attr.aria-pressed]="viewMode === 'cards'"
+        >
+          Cartes
+        </button>
+        <button
+          type="button"
+          class="validation-sujets__view-btn"
+          [class.validation-sujets__view-btn--active]="viewMode === 'list'"
+          (click)="setViewMode('list')"
+          [attr.aria-pressed]="viewMode === 'list'"
+        >
+          Liste
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (loadError) {
+    <div class="alert">{{ loadError }}</div>
+  }
+
+  @if (!isLoading) {
+    <p class="validation-sujets__count">{{ filteredSujets.length }} demande(s)</p>
   }
 
   @if (isLoading) {
-    <p class="hint">Chargement...</p>
-  } @else if (sujets.length === 0) {
-    <div class="empty-card">Aucun sujet en attente de validation pour le moment.</div>
+    <div class="validation-sujets__loading">Chargement des demandes...</div>
+  } @else if (filteredSujets.length === 0) {
+    <div class="validation-sujets__empty">
+      <h2 class="validation-sujets__empty-title">Aucune demande en attente</h2>
+      <p class="validation-sujets__empty-text">
+        Aucun sujet ne correspond à vos filtres pour le moment.
+      </p>
+      <button type="button" class="validation-sujets__retry-btn" (click)="loadSujets()">Réessayer</button>
+    </div>
+  } @else if (viewMode === 'list') {
+    <div class="validation-sujets__list">
+      @for (sujet of filteredSujets; track sujet.id) {
+        <app-validation-sujet-list-row
+          [sujet]="sujet"
+          [validating]="isActionLoading(sujet)"
+          [rejecting]="isActionLoading(sujet)"
+          (validate)="openValidateConfirm(sujet)"
+          (reject)="openRejectDialog(sujet)"
+        />
+      }
+    </div>
   } @else {
-    <div class="cards">
-      @for (sujet of sujets; track sujet.id) {
-        <div class="sujet-card">
-          <div class="sujet-card__header">
-            <span class="badge" [class]="categorieLabels[sujet.categorie].cssClass">
-              {{ categorieLabels[sujet.categorie].label }}
-            </span>
-            <span class="badge badge--warning">Soumis en validation</span>
-          </div>
-
-          <h3 class="sujet-card__title">{{ sujet.titre }}</h3>
-          <p class="sujet-card__meta">Encadrant : {{ sujet.encadrantNom }}</p>
-          <p class="sujet-card__description">{{ sujet.description }}</p>
-
-          @if (sujet.domaines?.length) {
-            <p class="sujet-card__meta">Domaines : {{ sujet.domaines.join(', ') }}</p>
-          }
-          @if (sujet.technologies?.length) {
-            <p class="sujet-card__meta">Technologies : {{ sujet.technologies.join(', ') }}</p>
-          }
-
-          @if (motifTargetId === sujet.id) {
-            <div class="motif-form">
-              <textarea
-                class="textarea"
-                rows="2"
-                placeholder="Motif de l'invalidation..."
-                [(ngModel)]="motifText"
-              ></textarea>
-              <div class="motif-actions">
-                <button type="button" class="btn btn--ghost" (click)="annulerMotif()">Annuler</button>
-                <button
-                  type="button"
-                  class="btn btn--danger"
-                  [disabled]="!motifText.trim() || actionLoadingId === sujet.id"
-                  (click)="confirmerInvalidation()"
-                >
-                  Confirmer l'invalidation
-                </button>
-              </div>
-            </div>
-          } @else {
-            <div class="sujet-card__actions">
-              <button
-                type="button"
-                class="btn btn--success"
-                [disabled]="actionLoadingId === sujet.id"
-                (click)="valider(sujet)"
-              >
-                Valider
-              </button>
-              <button
-                type="button"
-                class="btn btn--danger"
-                [disabled]="actionLoadingId === sujet.id"
-                (click)="ouvrirMotifInvalidation(sujet)"
-              >
-                Invalider
-              </button>
-            </div>
-          }
-        </div>
+    <div class="validation-sujets__grid">
+      @for (sujet of filteredSujets; track sujet.id) {
+        <app-validation-sujet-card
+          [sujet]="sujet"
+          [validating]="isActionLoading(sujet)"
+          [rejecting]="isActionLoading(sujet)"
+          (validate)="openValidateConfirm(sujet)"
+          (reject)="openRejectDialog(sujet)"
+        />
       }
     </div>
   }
 </div>
+
+<app-confirm-dialog
+  [isOpen]="validateConfirmOpen"
+  title="Valider la demande"
+  [message]="validateConfirmMessage"
+  confirmLabel="Valider"
+  cancelLabel="Annuler"
+  [loading]="actionLoading"
+  (confirmed)="confirmValidate()"
+  (cancelled)="cancelValidate()"
+/>
+
+@if (rejectDialogOpen) {
+  <div class="reject-overlay" (click)="cancelReject()">
+    <div class="reject-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3 class="reject-dialog__title">Refuser le sujet</h3>
+      <p class="reject-dialog__message">
+        Indiquez le motif de refus pour « {{ sujetEnCours?.titre }} ». Ce motif sera enregistré.
+      </p>
+      <textarea
+        class="reject-dialog__textarea"
+        rows="4"
+        placeholder="Motif du refus..."
+        [(ngModel)]="rejectMotif"
+        [disabled]="actionLoading"
+      ></textarea>
+      @if (rejectError) {
+        <p class="reject-dialog__error">{{ rejectError }}</p>
+      }
+      <div class="reject-dialog__actions">
+        <button type="button" class="reject-dialog__btn reject-dialog__btn--cancel" [disabled]="actionLoading" (click)="cancelReject()">
+          Annuler
+        </button>
+        <button type="button" class="reject-dialog__btn reject-dialog__btn--confirm" [disabled]="actionLoading" (click)="confirmReject()">
+          {{ actionLoading ? 'Traitement…' : 'Refuser' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [isOpen]="actionAlertOpen"
+  title="Erreur"
+  [message]="actionAlertMessage"
+  [alertOnly]="true"
+  (cancelled)="closeActionAlert()"
+/>

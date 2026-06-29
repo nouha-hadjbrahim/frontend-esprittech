@@ -6,13 +6,16 @@ import { SujetProjetService } from '../../../../core/services/sujet-projet.servi
 import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-modal/deposer-sujet-modal';
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
 import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
+import { SujetListRow } from '../../../components/sujets/sujet-list-row/sujet-list-row';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { GererCandidaturesModal } from '../../../components/sujets/gerer-candidatures-modal/gerer-candidatures-modal';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
+export type ViewMode = 'cards' | 'list';
+
 @Component({
   selector: 'app-mes-sujets',
-  imports: [FormsModule, DeposerSujetModal, SujetCard, FilterDropdown, ConfirmDialog, GererCandidaturesModal],
+  imports: [FormsModule, DeposerSujetModal, SujetCard, SujetListRow, FilterDropdown, ConfirmDialog, GererCandidaturesModal],
   templateUrl: './mes-sujets.html',
   styleUrl: './mes-sujets.css',
 })
@@ -29,6 +32,7 @@ export class MesSujets implements OnInit {
   selectedCategorie = '';
   selectedStatut = '';
   sortOrder = 'recent';
+  viewMode: ViewMode = 'cards';
 
   candidaturesModalOpen = false;
   sujetCandidatures?: SujetProjet;
@@ -85,11 +89,19 @@ export class MesSujets implements OnInit {
   }
 
   openEditModal(sujet: SujetProjet): void {
-    this.editSujet = sujet;
+    this.editSujet = {
+      ...sujet,
+      domaines: [...sujet.domaines],
+      prerequis: [...sujet.prerequis],
+      technologies: [...sujet.technologies],
+    };
     this.isModalOpen = true;
   }
 
   closeModal(): void {
+    if (!this.isModalOpen) {
+      return;
+    }
     this.isModalOpen = false;
     this.editSujet = undefined;
   }
@@ -162,6 +174,10 @@ export class MesSujets implements OnInit {
 
   onSearchChange(): void {
     this.applyFilters();
+  }
+
+  setViewMode(mode: ViewMode): void {
+    this.viewMode = mode;
   }
 
   isOwner(sujet: SujetProjet): boolean {

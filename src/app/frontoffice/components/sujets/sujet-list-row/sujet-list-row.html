@@ -1,0 +1,90 @@
+<article class="sujet-list-row">
+  <div class="sujet-list-row__accent-wrap" aria-hidden="true">
+    <div class="sujet-list-row__accent" [class]="accentClass"></div>
+  </div>
+
+  <div class="sujet-list-row__icon-box" [class]="accentClass" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M6 2.5H12L15.5 6V16.5C15.5 17.05 15.05 17.5 14.5 17.5H5.5C4.95 17.5 4.5 17.05 4.5 16.5V3.5C4.5 2.95 4.95 2.5 5.5 2.5H6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+      <path d="M12 2.5V6H15.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+      <path d="M7.5 10H12.5M7.5 13H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="sujet-list-row__content">
+    <div class="sujet-list-row__tags">
+      <span class="sujet-list-row__tag sujet-list-row__tag--domain">{{ primaryDomaine }}</span>
+      <span class="sujet-list-row__tag" [class]="categorieBadge.cssClass">{{ categorieBadge.label }}</span>
+      <span class="sujet-list-row__tag sujet-list-row__tag--statut" [class]="statutBadge.cssClass">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        {{ statutBadge.label }}
+      </span>
+    </div>
+
+    <h3 class="sujet-list-row__title">{{ sujet.titre }}</h3>
+    <p class="sujet-list-row__description">{{ shortDescription }}</p>
+
+    <div class="sujet-list-row__author-meta">
+      <span class="sujet-list-row__avatar">{{ initials }}</span>
+      <span class="sujet-list-row__author-name">{{ sujet.encadrantNom || 'Encadrant' }}</span>
+      <span class="sujet-list-row__meta-sep">·</span>
+      <span class="sujet-list-row__meta-item">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        {{ sujet.dateSoumission ? (sujet.dateSoumission | date:'yyyy-MM-dd') : '—' }}
+      </span>
+      <span class="sujet-list-row__meta-sep">·</span>
+      <span class="sujet-list-row__meta-item">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        {{ timeAgo }}
+      </span>
+    </div>
+  </div>
+
+  <div class="sujet-list-row__actions">
+    <a
+      [routerLink]="['/frontoffice/sujets', sujet.id]"
+      class="sujet-list-row__btn sujet-list-row__btn--outline"
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.2"/>
+        <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+      Détails
+    </a>
+
+    @if (isOwner) {
+      <button type="button" class="sujet-list-row__btn sujet-list-row__btn--outline" (click)="onEdit($event)">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M10 1.5L12.5 4L4.5 12H2V9.5L10 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        </svg>
+        Modifier
+      </button>
+
+      <button type="button" class="sujet-list-row__btn sujet-list-row__btn--outline sujet-list-row__btn--danger-outline" (click)="onDelete($event)">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 4H12M5 4V2.5H9V4M5.5 6V10M8.5 6V10M3.5 4L4 11.5H10L10.5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Supprimer
+      </button>
+    }
+
+    <button type="button" class="sujet-list-row__btn sujet-list-row__btn--primary">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M1 12.5C1 10 2.8 8.5 5 8.5C7.2 8.5 9 10 9 12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="10.5" cy="4.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M13 12.5C13 10.8 11.8 9.5 10.5 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      Candidatures
+    </button>
+  </div>
+</article>

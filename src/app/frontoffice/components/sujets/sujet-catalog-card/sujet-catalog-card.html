@@ -1,0 +1,57 @@
+<article class="catalog-card">
+  <header class="catalog-card__header">
+    <span class="catalog-card__type badge" [class]="categorieBadge.cssClass">{{ categorieBadge.label }}</span>
+    <span class="catalog-card__status badge" [class]="statutBadge.cssClass">{{ statutBadge.label }}</span>
+    <span class="catalog-card__id">#s{{ sujet.id }}</span>
+  </header>
+
+  <h3 class="catalog-card__title">{{ sujet.titre }}</h3>
+  @if (subtitle) {
+    <p class="catalog-card__subtitle">{{ subtitle }}</p>
+  }
+
+  @if (tags.length > 0) {
+    <div class="catalog-card__tags">
+      @for (tag of tags; track tag) {
+        <span class="catalog-card__tag">{{ tag }}</span>
+      }
+    </div>
+  }
+
+  <div class="catalog-card__info-grid">
+    <div class="catalog-card__info-item">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M4.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span>{{ sujet.dateSoumission ? (sujet.dateSoumission | date:'yyyy-MM-dd') : '—' }}</span>
+    </div>
+    <div class="catalog-card__info-item">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span>{{ sujet.capaciteAccueil }} place(s)</span>
+    </div>
+    <div class="catalog-card__info-item">
+      <span class="catalog-card__info-label">Places :</span>
+      <span>0/{{ sujet.capaciteAccueil }}</span>
+    </div>
+    <div class="catalog-card__info-item">
+      <span class="catalog-card__info-label">Candidatures :</span>
+      <span>0</span>
+    </div>
+  </div>
+
+  <footer class="catalog-card__footer">
+    <a [routerLink]="['/frontoffice/sujets', sujet.id]" class="catalog-card__details-btn">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.2"/>
+        <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+      Détails
+    </a>
+  </footer>
+</article>

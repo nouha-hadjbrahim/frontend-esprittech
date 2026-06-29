@@ -41,6 +41,8 @@ export interface SujetProjet {
   catalogue: boolean;
   encadrantId: number;
   encadrantNom: string;
+  encadrantEmail: string | null;
+  equipeNom: string | null;
   dateCreation: string;
   dateSoumission: string | null;
   dateValidation: string | null;

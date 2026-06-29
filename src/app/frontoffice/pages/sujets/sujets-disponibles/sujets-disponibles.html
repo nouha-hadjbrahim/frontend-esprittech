@@ -1,9 +1,9 @@
 <div class="sujets-disponibles">
   <header class="sujets-disponibles__header">
     <div class="sujets-disponibles__header-text">
-      <h1 class="sujets-disponibles__title">Les sujets disponibles</h1>
+      <h1 class="sujets-disponibles__title">Sujets disponibles</h1>
       <p class="sujets-disponibles__subtitle">
-        Parcourez le catalogue des sujets ouverts aux candidatures.
+        Parcourez les sujets publiés par les encadrants et les équipes RDI.
       </p>
     </div>
     @if (isEnseignant()) {
@@ -25,7 +25,7 @@
       <input
         type="text"
         class="sujets-disponibles__search-input"
-        placeholder="Rechercher un sujet..."
+        placeholder="Rechercher un sujet, mots-clés..."
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange()"
       />
@@ -33,11 +33,27 @@
 
     <div class="sujets-disponibles__filters">
       <app-filter-dropdown
-        class="sujets-disponibles__filter sujets-disponibles__filter--type"
-        label="Type"
-        [options]="categorieOptions"
-        [value]="selectedCategorie"
-        (valueChange)="onCategorieChange($event)"
+        class="sujets-disponibles__filter"
+        label="Statut"
+        [options]="statutOptions"
+        [value]="selectedStatut"
+        (valueChange)="onStatutChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="sujets-disponibles__filter"
+        label="Équipe"
+        [options]="equipeOptions"
+        [value]="selectedEquipe"
+        (valueChange)="onEquipeChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="sujets-disponibles__filter"
+        label="Encadrant"
+        [options]="encadrantOptions"
+        [value]="selectedEncadrant"
+        (valueChange)="onEncadrantChange($event)"
       />
 
       <app-filter-dropdown
@@ -52,6 +68,23 @@
     </div>
   </div>
 
+  <div class="sujets-disponibles__type-pills">
+    @for (pill of categoriePills; track pill.value) {
+      <button
+        type="button"
+        class="sujets-disponibles__type-pill"
+        [class.sujets-disponibles__type-pill--active]="selectedCategorie === pill.value"
+        (click)="selectCategoriePill(pill.value)"
+      >
+        {{ pill.label }}
+      </button>
+    }
+  </div>
+
+  @if (!isLoading) {
+    <p class="sujets-disponibles__count">{{ filteredSujets.length }} sujet(s)</p>
+  }
+
   @if (isLoading) {
     <div class="sujets-disponibles__loading">Chargement des sujets...</div>
   } @else if (filteredSujets.length === 0) {
@@ -61,8 +94,6 @@
           <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
           <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
           <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="34" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
-          <path d="M34 11V17M31 14H37" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
       </div>
       <h2 class="sujets-disponibles__empty-title">Aucun sujet disponible</h2>

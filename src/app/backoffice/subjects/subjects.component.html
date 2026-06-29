@@ -1,0 +1,261 @@
+<div class="subjects-page">
+  <div class="page-header">
+    <div class="header-text">
+      <h1>Sujets</h1>
+      <p>Gérez les sujets déposés, traitez les demandes en attente et consultez le catalogue publié.</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        type="button"
+        class="tab"
+        [class.tab--active]="activeTab === tab.id"
+        (click)="switchTab(tab.id)"
+      >
+        @if (tab.id === 'sujets') {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        } @else if (tab.id === 'demandes') {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        } @else {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        }
+        <span>{{ tab.label }}@if (tab.id === 'demandes' && pendingCount !== null) { ({{ pendingCount }}) }</span>
+      </button>
+    }
+  </div>
+
+  <div class="table-container">
+    <div class="table-actions">
+      <div class="search-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <label for="subject-search" class="sr-only">Rechercher un sujet</label>
+        <input
+          id="subject-search"
+          type="text"
+          [placeholder]="isDemandesTab ? 'Titre, encadrant...' : 'Titre, encadrant, domaine...'"
+          #searchBox
+          (input)="onSearchInput(searchBox.value)"
+        />
+      </div>
+
+      <div class="filters-group">
+        <select class="filter-select" [ngModel]="selectedCategorie" (ngModelChange)="onCategorieFilter($event)">
+          @for (opt of categorieOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+
+        @if (showStatutFilter) {
+          <select class="filter-select" [ngModel]="selectedStatut" (ngModelChange)="onStatutFilter($event)">
+            @for (opt of statutOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        }
+      </div>
+    </div>
+
+    <table class="subjects-table">
+      <thead>
+        <tr>
+          <th>Sujet</th>
+          <th>Encadrant</th>
+          <th>Type</th>
+          <th>Statut</th>
+          <th>Déposé le</th>
+          @if (showEquipeColumn) {
+            <th>Équipe</th>
+          }
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="7" class="empty-row">Chargement…</td>
+          </tr>
+        } @else if (loadError()) {
+          <tr>
+            <td colspan="7" class="empty-row error">{{ loadError() }}</td>
+          </tr>
+        } @else if (sujets.length === 0) {
+          <tr>
+            <td colspan="7" class="empty-row">{{ emptyMessage }}</td>
+          </tr>
+        } @else {
+          @for (sujet of sujets; track sujet.id) {
+            <tr>
+              <td>
+                <div class="subject-cell">
+                  <div class="subject-avatar">{{ getInitial(sujet.titre) }}</div>
+                  <div class="subject-info">
+                    <span class="subject-title">{{ sujet.titre }}</span>
+                    <span class="subject-meta">{{ sujet.domaines.join(', ') || '—' }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="encadrant-name">{{ sujet.encadrantNom }}</span>
+                @if (sujet.encadrantEmail) {
+                  <span class="encadrant-email">{{ sujet.encadrantEmail }}</span>
+                }
+              </td>
+              <td>
+                <span class="type-badge">{{ getCategorieLabel(sujet.categorie) }}</span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatutClass(sujet.statut)">
+                  {{ getStatutLabel(sujet.statut) }}
+                </span>
+              </td>
+              <td>
+                <span class="date-text">{{ formatDate(sujet.dateSoumission || sujet.dateCreation) }}</span>
+              </td>
+              @if (showEquipeColumn) {
+                <td><span class="equipe-text">{{ sujet.equipeNom || '—' }}</span></td>
+              }
+              <td class="text-right">
+                <div class="actions-group">
+                  <button type="button" class="icon-btn-action view" title="Voir détails" (click)="viewDetails(sujet)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  @if (isDemandesTab) {
+                    <button
+                      type="button"
+                      class="action-btn action-btn--accept"
+                      title="Accepter"
+                      [disabled]="isActionLoading(sujet)"
+                      (click)="openValidateConfirm(sujet)"
+                    >
+                      Accepter
+                    </button>
+                    <button
+                      type="button"
+                      class="action-btn action-btn--reject"
+                      title="Refuser"
+                      [disabled]="isActionLoading(sujet)"
+                      (click)="openRejectDialog(sujet)"
+                    >
+                      Refuser
+                    </button>
+                  } @else {
+                    <button type="button" class="icon-btn-action edit" title="Modifier" (click)="editSujet(sujet)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                      </svg>
+                    </button>
+                    <button type="button" class="icon-btn-action delete" title="Supprimer" (click)="deleteSujet(sujet)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    @if (!loading() && !loadError() && totalElements > 0) {
+      <div class="pagination">
+        <span class="pagination-info">
+          {{ totalElements }} {{ paginationLabel }} — page {{ page + 1 }} / {{ totalPages }}
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-btn" [disabled]="first" (click)="prevPage()">Précédent</button>
+          <button type="button" class="page-btn" [disabled]="last" (click)="nextPage()">Suivant</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<app-confirm-dialog
+  [isOpen]="validateConfirmOpen"
+  title="Accepter la demande"
+  [message]="validateConfirmMessage"
+  confirmLabel="Accepter"
+  cancelLabel="Annuler"
+  [loading]="actionLoading"
+  (confirmed)="confirmValidate()"
+  (cancelled)="cancelValidate()"
+/>
+
+@if (rejectDialogOpen) {
+  <div class="reject-overlay" (click)="cancelReject()">
+    <div class="reject-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3 class="reject-dialog__title">Refuser le sujet</h3>
+      <p class="reject-dialog__message">
+        Indiquez le motif de refus pour « {{ sujetEnCours?.titre }} ». Ce motif sera enregistré.
+      </p>
+      <textarea
+        class="reject-dialog__textarea"
+        rows="4"
+        placeholder="Motif du refus..."
+        [(ngModel)]="rejectMotif"
+        [disabled]="actionLoading"
+      ></textarea>
+      @if (rejectError) {
+        <p class="reject-dialog__error">{{ rejectError }}</p>
+      }
+      <div class="reject-dialog__actions">
+        <button type="button" class="reject-dialog__btn reject-dialog__btn--cancel" [disabled]="actionLoading" (click)="cancelReject()">
+          Annuler
+        </button>
+        <button type="button" class="reject-dialog__btn reject-dialog__btn--confirm" [disabled]="actionLoading" (click)="confirmReject()">
+          {{ actionLoading ? 'Traitement…' : 'Refuser' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [isOpen]="actionAlertOpen"
+  title="Erreur"
+  [message]="actionAlertMessage"
+  [alertOnly]="true"
+  (cancelled)="closeActionAlert()"
+/>
+
+<app-confirm-dialog
+  [isOpen]="deleteConfirmOpen"
+  title="Supprimer le sujet"
+  [message]="deleteConfirmMessage"
+  confirmLabel="Supprimer"
+  cancelLabel="Annuler"
+  [loading]="deleting"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>
+
+<app-deposer-sujet-modal
+  [isOpen]="editModalOpen"
+  [adminMode]="true"
+  [editSujet]="sujetToEdit"
+  [encadrantDisplayName]="sujetToEdit?.encadrantNom ?? ''"
+  (closed)="closeEditModal()"
+  (saved)="onEditSaved()"
+/>

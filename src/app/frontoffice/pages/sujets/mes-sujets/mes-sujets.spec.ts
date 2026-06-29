@@ -14,7 +14,7 @@ import { CandidatureService } from '../../../../core/services/candidature.servic
 const mockSujetBase: any = {
   id: 1, titre: 'Sujet IA', categorie: 'STAGE_INGENIEUR',
   statut: 'VALIDE', encadrantId: 10, encadrantNom: 'Dr. Martin',
-  domaines: ['IA'], technologies: ['Python'],
+  domaines: ['IA'], technologies: ['Python'], prerequis: [],
   dateCreation: '2026-06-01T00:00:00Z', dateSoumission: null,
   capaciteAccueil: 2,
 };
