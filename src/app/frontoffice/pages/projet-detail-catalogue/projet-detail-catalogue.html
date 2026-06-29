@@ -1,0 +1,105 @@
+<div class="page-container">
+  <a class="back-link" routerLink="/frontoffice/catalogue">← Retour au catalogue</a>
+
+  @if (isLoading) {
+    <p class="hint">Chargement...</p>
+  } @else if (errorMessage) {
+    <div class="alert alert--error">{{ errorMessage }}</div>
+  } @else if (projet) {
+    <!-- Bandeau rouge -->
+    <div class="banner">
+      <div class="banner__badges">
+        <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">{{ typeLabels[projet.typeProjet].label }}</span>
+        <span class="badge" [class]="statutLabels[projet.statut].cssClass">{{ statutLabels[projet.statut].label }}</span>
+      </div>
+      <h1 class="banner__title">{{ projet.titre }}</h1>
+      <p class="banner__meta">
+        {{ projet.encadrantNom }}
+        @if (projet.equipeNom) { · {{ projet.equipeNom }} }
+        @if (projet.domaines.length) { · {{ projet.domaines.join(', ') }} }
+      </p>
+    </div>
+
+    <div class="layout">
+      <div class="main">
+        <!-- 6 cartes récapitulatives -->
+        <div class="info-cards">
+          <div class="info-card">
+            <span class="info-card__label">Catégorie</span>
+            <span class="info-card__value">{{ typeLabels[projet.typeProjet].label }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-card__label">Équipe</span>
+            <span class="info-card__value">{{ projet.equipeNom ?? '—' }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-card__label">Domaine</span>
+            <span class="info-card__value">{{ projet.domaines.length ? projet.domaines.join(', ') : '—' }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-card__label">Encadrant</span>
+            <span class="info-card__value">{{ projet.encadrantNom }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-card__label">Période</span>
+            <span class="info-card__value">{{ projet.dateDebut }} → {{ projet.dateFin }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-card__label">Score</span>
+            <span class="info-card__value">{{ projet.score }}</span>
+          </div>
+        </div>
+
+        <!-- Onglets -->
+        <div class="tabs">
+          @for (tab of tabs; track tab.id) {
+            <button type="button" class="tab" [class.tab--active]="activeTab === tab.id" (click)="setTab(tab.id)">
+              {{ tab.label }}
+            </button>
+          }
+        </div>
+
+        <div class="tab-content">
+          @if (activeTab === 'infos') {
+            <section class="section">
+              <h3 class="section__title">Description</h3>
+              <p class="section__text">{{ projet.description }}</p>
+            </section>
+            <section class="section">
+              <h3 class="section__title">Objectifs</h3>
+              <p class="section__text">{{ projet.objectifs }}</p>
+            </section>
+            <section class="section">
+              <h3 class="section__title">Livrables attendus</h3>
+              <p class="section__text section__text--muted">Les livrables seront publiés ultérieurement.</p>
+            </section>
+          } @else {
+            <div class="placeholder">Section « {{ activeTabLabel }} » à venir.</div>
+          }
+        </div>
+      </div>
+
+      <!-- Barre latérale -->
+      <aside class="sidebar">
+        <div class="sidebar__block">
+          <h4 class="sidebar__title">Technologies</h4>
+          @if (projet.technologies.length) {
+            <div class="tags">@for (t of projet.technologies; track t) { <span class="tag">{{ t }}</span> }</div>
+          } @else { <p class="sidebar__empty">—</p> }
+        </div>
+        <div class="sidebar__block">
+          <h4 class="sidebar__title">Prérequis / Classes cibles</h4>
+          @if (projet.prerequis.length) {
+            <div class="tags">@for (p of projet.prerequis; track p) { <span class="tag">{{ p }}</span> }</div>
+          } @else { <p class="sidebar__empty">—</p> }
+        </div>
+        <div class="sidebar__block">
+          <h4 class="sidebar__title">Mots-clés</h4>
+          @if (projet.domaines.length) {
+            <div class="tags">@for (d of projet.domaines; track d) { <span class="tag">{{ d }}</span> }</div>
+          } @else { <p class="sidebar__empty">—</p> }
+        </div>
+      </aside>
+    </div>
+  }
+</div>

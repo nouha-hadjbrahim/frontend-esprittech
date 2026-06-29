@@ -9,6 +9,7 @@ function userWith(role: Role): User {
   return {
     id: 1, nom: 'Dupont', prenom: 'Jean', email: 'j@esprit.tn', identifiant: 'JD1',
     role, typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: null,
+    isAffilieToEquipe: false, equipeId: null, equipeNom: null,
   };
 }
 
@@ -32,7 +33,7 @@ describe('BackofficeLayoutComponent', () => {
 
   it('should create with the full navigation', () => {
     expect(component).toBeTruthy();
-    expect(component.navItems.length).toBe(10);
+    expect(component.navItems.length).toBe(11);
   });
 
   it('should group evaluation links under the evaluations parent menu', () => {

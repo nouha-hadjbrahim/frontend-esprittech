@@ -56,6 +56,7 @@ export class BackofficeLayoutComponent {
 
     navItems: NavItem[] = [
         { label: 'Tableau de bord', icon: 'grid', route: '/backoffice/dashboard' },
+        { label: 'Mes projets', icon: 'folder', route: '/backoffice/my-projects' },
         {
             label: 'Sujets',
             icon: 'clipboard',

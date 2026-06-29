@@ -8,6 +8,7 @@ function userWith(role: Role): User {
   return {
     id: 1, nom: 'Dupont', prenom: 'Jean', email: 'j@esprit.tn', identifiant: 'JD1',
     role, typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: null,
+    isAffilieToEquipe: false, equipeId: null, equipeNom: null,
   };
 }
 

@@ -108,6 +108,21 @@ export class AuthService {
     return this._currentUser()?.role ?? null;
   }
 
+  /** true si l'utilisateur courant est affilié à une équipe de recherche (membre ou chef). */
+  isAffilieToEquipe(): boolean {
+    return this._currentUser()?.isAffilieToEquipe ?? false;
+  }
+
+  /** Identifiant de l'équipe de recherche de l'utilisateur courant (ou null). */
+  equipeId(): number | null {
+    return this._currentUser()?.equipeId ?? null;
+  }
+
+  /** Nom de l'équipe de recherche de l'utilisateur courant (ou null). */
+  equipeNom(): string | null {
+    return this._currentUser()?.equipeNom ?? null;
+  }
+
   /** Route d'atterrissage après connexion, selon le rôle de l'utilisateur. */
   landingRoute(): string {
     switch (this.getRole()) {

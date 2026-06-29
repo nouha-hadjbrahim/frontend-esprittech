@@ -15,9 +15,29 @@ export const frontofficeRoutes: Routes = [
                 loadComponent: () => import('./pages/catalogue/catalogue').then(m => m.Catalogue)
             },
             {
+                path: 'catalogue/:id',
+                canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
+                loadComponent: () => import('./pages/projet-detail-catalogue/projet-detail-catalogue').then(m => m.ProjetDetailCatalogue)
+            },
+            {
                 path: 'mes-projets',
                 canActivate: [roleGuard(['ROLE_ENSEIGNANT'])],
                 loadComponent: () => import('./pages/mes-projets/mes-projets').then(m => m.MesProjets)
+            },
+            {
+                path: 'mes-projets/:id',
+                canActivate: [roleGuard(['ROLE_ENSEIGNANT'])],
+                loadComponent: () => import('./pages/projet-detail-enseignant/projet-detail-enseignant').then(m => m.ProjetDetailEnseignant)
+            },
+            {
+                path: 'validation-projets',
+                canActivate: [roleGuard(['ROLE_CHEF_EQUIPE'])],
+                loadComponent: () => import('./pages/validation-projets/validation-projets').then(m => m.ValidationProjets)
+            },
+            {
+                path: 'validation-projets/:id',
+                canActivate: [roleGuard(['ROLE_CHEF_EQUIPE'])],
+                loadComponent: () => import('./pages/projet-detail-enseignant/projet-detail-enseignant').then(m => m.ProjetDetailEnseignant)
             },
             {
                 path: 'sujets',

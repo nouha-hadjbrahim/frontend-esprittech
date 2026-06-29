@@ -47,20 +47,13 @@ export class FrontofficeLayout {
   // Routes disponibles
   private readonly allLinks = {
     tableauDeBord: { label: 'Tableau de bord', path: '/frontoffice/tableau-de-bord' },
-    catalogue: {
-      label: 'Catalogue', path: '/frontoffice/catalogue',
-      children: [
-        { label: 'Catalogue', path: '/frontoffice/catalogue' },
-        { label: 'Mes projets', path: '/frontoffice/mes-projets' }
-      ]
-    },
     catalogueSimple: { label: 'Catalogue', path: '/frontoffice/catalogue' },
     sujets: {
       label: 'Sujets',
       path: '/frontoffice/sujets/mes-sujets',
       children: [
-        { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' },
-        { label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' }
+        { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' as NavIcon },
+        { label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' as NavIcon }
       ]
     },
     sujetsDisponibles: { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles' },
@@ -87,12 +80,36 @@ export class FrontofficeLayout {
     espaceCiIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/ci/industrialisation' },
   };
 
+  /**
+   * Nœud « Catalogue » de l'enseignant : « Mes projets » n'apparaît que si
+   * l'enseignant est affilié (affiliation acceptée à une équipe de recherche).
+   */
+  private catalogueEnseignant(): NavLink {
+    const children: NavLink[] = [{ label: 'Catalogue', path: '/frontoffice/catalogue' }];
+    if (this.authService.isAffilieToEquipe()) {
+      children.push({ label: 'Mes projets', path: '/frontoffice/mes-projets' });
+    }
+    return { label: 'Catalogue', path: '/frontoffice/catalogue', children };
+  }
+
+  /** Nœud « Catalogue » du chef d'équipe : « Validation projets » placé juste sous « Catalogue ». */
+  private catalogueChef(): NavLink {
+    return {
+      label: 'Catalogue',
+      path: '/frontoffice/catalogue',
+      children: [
+        { label: 'Catalogue', path: '/frontoffice/catalogue' },
+        { label: 'Validation projets', path: '/frontoffice/validation-projets' }
+      ]
+    };
+  }
+
   // Navigation calculée à partir du rôle réel de l'utilisateur connecté
   readonly navLinks = computed<NavLink[]>(() => {
     switch (this.user()?.role) {
       case 'ROLE_ENSEIGNANT':
         return [
-          this.allLinks.catalogue,
+          this.catalogueEnseignant(),
           this.allLinks.sujets,
           this.allLinks.demandesIndustrialisation,
           this.allLinks.equipesRechercheEnseignant
@@ -105,10 +122,10 @@ export class FrontofficeLayout {
       case 'ROLE_CHEF_EQUIPE':
         return [
           this.allLinks.tableauDeBord,
+          this.catalogueChef(),
           this.allLinks.validationSujets,
           this.allLinks.demandesIndustrialisation,
           this.allLinks.equipesRechercheChef,
-          this.allLinks.catalogueSimple,
           this.allLinks.sujetsDisponibles
         ];
       case 'ROLE_CI':
