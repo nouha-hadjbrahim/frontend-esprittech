@@ -87,14 +87,14 @@ describe('SujetCard', () => {
   it('onEditClick should emit edit event', () => {
     const editSpy = jasmine.createSpy('edit');
     component.edit.subscribe(editSpy);
-    component.onEditClick();
+    component.onEditClick(new Event('click'));
     expect(editSpy).toHaveBeenCalled();
   });
 
   it('onDeleteClick should emit delete event', () => {
     const deleteSpy = jasmine.createSpy('delete');
     component.delete.subscribe(deleteSpy);
-    component.onDeleteClick();
+    component.onDeleteClick(new Event('click'));
     expect(deleteSpy).toHaveBeenCalled();
   });
 

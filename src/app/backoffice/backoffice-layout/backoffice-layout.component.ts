@@ -131,6 +131,9 @@ export class BackofficeLayoutComponent {
         if (route === '/backoffice/subjects') {
             return this.router.url === '/backoffice/subjects';
         }
+        if (route === '/backoffice/subjects/formulaires') {
+            return this.router.url.startsWith('/backoffice/subjects/formulaires');
+        }
         return this.router.url === route || this.router.url.startsWith(route + '?');
     }
 

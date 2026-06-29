@@ -114,15 +114,17 @@ export class SujetDetail implements OnInit {
   }
 
   get backLink(): string {
-    return this.authService.getRole() === 'ROLE_ENSEIGNANT'
-      ? '/frontoffice/sujets/mes-sujets'
-      : '/frontoffice/sujets/disponibles';
+    const role = this.authService.getRole();
+    if (role === 'ROLE_ENSEIGNANT') return '/frontoffice/sujets/mes-sujets';
+    if (role === 'ROLE_CHEF_EQUIPE') return '/frontoffice/validation-sujets';
+    return '/frontoffice/sujets/disponibles';
   }
 
   get backLabel(): string {
-    return this.authService.getRole() === 'ROLE_ENSEIGNANT'
-      ? 'Retour à mes sujets'
-      : 'Retour aux sujets disponibles';
+    const role = this.authService.getRole();
+    if (role === 'ROLE_ENSEIGNANT') return 'Retour à mes sujets';
+    if (role === 'ROLE_CHEF_EQUIPE') return 'Retour à la validation';
+    return 'Retour aux sujets disponibles';
   }
 
   get categorieLabel(): string {

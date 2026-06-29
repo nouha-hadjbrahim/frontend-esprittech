@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CategorieSujet, SujetProjet } from '../../../../core/models/sujet-projet.model';
+import { CategorieSujet, StatutSujet, SujetProjet } from '../../../../core/models/sujet-projet.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CandidatureService } from '../../../../core/services/candidature.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
@@ -8,7 +8,9 @@ import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-moda
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
 import { PostulerModal } from '../../../components/sujets/postuler-modal/postuler-modal';
 import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
-import { CATEGORIE_OPTIONS } from '../../../constants/sujet-projet.constants';
+import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
+
+const CATALOGUE_STATUTS: StatutSujet[] = ['VALIDE', 'CANDIDATURE_OUVERTE', 'CANDIDATURE_FERMEE'];
 
 @Component({
   selector: 'app-sujets-disponibles',
@@ -27,16 +29,19 @@ export class SujetsDisponibles implements OnInit {
   isModalOpen = false;
   searchQuery = '';
   selectedCategorie = '';
+  selectedStatut = '';
+  selectedEquipe = '';
+  selectedEncadrant = '';
   sortOrder = 'recent';
 
-  // Postuler modal
   showPostulerModal = false;
   selectedSujet: SujetProjet | null = null;
   mesCandidaturesSujetIds: Set<number> = new Set();
 
   readonly isEnseignant = computed(() => this.authService.getRole() === 'ROLE_ENSEIGNANT');
+  readonly isEtudiant = computed(() => this.authService.getRole() === 'ROLE_ETUDIANT');
 
-  readonly categorieOptions = [{ value: '', label: 'Tous les types' }, ...CATEGORIE_OPTIONS];
+  readonly categoriePills = [{ value: '', label: 'Tous' }, ...CATEGORIE_OPTIONS];
   readonly sortOptions = [
     { value: 'recent', label: 'Plus récents' },
     { value: 'ancien', label: 'Plus anciens' },
@@ -65,14 +70,35 @@ export class SujetsDisponibles implements OnInit {
     });
   }
 
+  get statutOptions(): { value: string; label: string }[] {
+    const statuts = new Set(this.sujets.map((s) => s.statut));
+    return [
+      { value: '', label: 'Statut' },
+      ...CATALOGUE_STATUTS.filter((s) => statuts.has(s)).map((value) => ({
+        value,
+        label: STATUT_LABELS[value].label,
+      })),
+    ];
+  }
+
+  get equipeOptions(): { value: string; label: string }[] {
+    const equipes = [...new Set(this.sujets.map((s) => s.equipeNom).filter(Boolean) as string[])].sort();
+    return [{ value: '', label: 'Équipe' }, ...equipes.map((e) => ({ value: e, label: e }))];
+  }
+
+  get encadrantOptions(): { value: string; label: string }[] {
+    const encadrants = [...new Set(this.sujets.map((s) => s.encadrantNom).filter(Boolean))].sort();
+    return [{ value: '', label: 'Encadrant' }, ...encadrants.map((e) => ({ value: e, label: e }))];
+  }
+
   loadMesCandidatures(): void {
     this.candidatureService.getMesCandidatures().subscribe({
       next: (candidatures) => {
         this.mesCandidaturesSujetIds = new Set(
-          candidatures.map((c: any) => c.sujetId as number)
+          candidatures.map((c: { sujetId: number }) => c.sujetId),
         );
       },
-      error: () => {} // silent — not critical
+      error: () => {},
     });
   }
 
@@ -93,9 +119,24 @@ export class SujetsDisponibles implements OnInit {
     this.loadSujets();
   }
 
-  onCategorieChange(value: string): void {
+  selectCategoriePill(value: string): void {
     this.selectedCategorie = value;
     this.loadSujets();
+  }
+
+  onStatutChange(value: string): void {
+    this.selectedStatut = value;
+    this.applyFilters();
+  }
+
+  onEquipeChange(value: string): void {
+    this.selectedEquipe = value;
+    this.applyFilters();
+  }
+
+  onEncadrantChange(value: string): void {
+    this.selectedEncadrant = value;
+    this.applyFilters();
   }
 
   onSortChange(value: string): void {
@@ -129,10 +170,24 @@ export class SujetsDisponibles implements OnInit {
       const query = this.searchQuery.toLowerCase();
       result = result.filter(
         (s) =>
+          s.titre.toLowerCase().includes(query) ||
           s.domaines.some((d) => d.toLowerCase().includes(query)) ||
           s.technologies.some((t) => t.toLowerCase().includes(query)) ||
-          (s.encadrantNom?.toLowerCase().includes(query) ?? false),
+          (s.encadrantNom?.toLowerCase().includes(query) ?? false) ||
+          (s.equipeNom?.toLowerCase().includes(query) ?? false),
       );
+    }
+
+    if (this.selectedStatut) {
+      result = result.filter((s) => s.statut === this.selectedStatut);
+    }
+
+    if (this.selectedEquipe) {
+      result = result.filter((s) => s.equipeNom === this.selectedEquipe);
+    }
+
+    if (this.selectedEncadrant) {
+      result = result.filter((s) => s.encadrantNom === this.selectedEncadrant);
     }
 
     result.sort((a, b) => {
