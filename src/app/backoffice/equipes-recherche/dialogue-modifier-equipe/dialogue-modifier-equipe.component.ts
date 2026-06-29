@@ -50,7 +50,8 @@ import { LabelComponent } from '../../../ui/label/label.component';
             <div class="grid-2">
               <div class="field">
                 <app-label for="e-domaine">Domaine <span class="req">*</span></app-label>
-                <div class="sel-wrap">
+                <div class="sel-wrap" [class.has-value]="form.domaineId != null">
+                  <span class="sel-dot" *ngIf="form.domaineId != null" [style.background]="couleurDomaine(form.domaineId)"></span>
                   <select id="e-domaine" name="domaineId" [(ngModel)]="form.domaineId" required class="inp sel">
                     <option [ngValue]="null" disabled>Sélectionnez un domaine…</option>
                     <option *ngFor="let d of domaines" [ngValue]="d.id">{{ d.nom }}</option>
@@ -284,9 +285,12 @@ import { LabelComponent } from '../../../ui/label/label.component';
     .sel {
       appearance: none;
       cursor: pointer;
+      padding-left: 0.875rem;
       padding-right: 2.5rem;
       background: var(--background, #fff);
+      transition: padding-left 0.2s;
     }
+    .sel-wrap.has-value .sel { padding-left: 2rem; }
     .sel-arrow {
       position: absolute;
       right: 0.75rem;
@@ -295,6 +299,19 @@ import { LabelComponent } from '../../../ui/label/label.component';
       pointer-events: none;
       color: var(--muted-foreground, #94a3b8);
       font-size: 20px;
+      transition: transform 0.2s;
+    }
+    .sel-dot {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      pointer-events: none;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+      z-index: 1;
     }
 
     .grid-2 {
@@ -776,5 +793,11 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
     const colors = ['#E63946', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899'];
     const idx = String(u.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
     return colors[idx];
+  }
+
+  couleurDomaine(id: number | null): string {
+    if (id == null) return 'transparent';
+    const colors = ['#E63946', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899'];
+    return colors[id % colors.length];
   }
 }

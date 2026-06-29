@@ -20,6 +20,7 @@ import { DialogueDetailsEquipeComponent } from './dialogue-details-equipe/dialog
 import { DialogueAssignerChefComponent } from './dialogue-assigner-chef/dialogue-assigner-chef.component';
 import { DialogueConfirmationComponent } from '../../ui/dialogue-confirmation/dialogue-confirmation.component';
 
+
 @Component({
   selector: 'app-equipes-recherche',
   standalone: true,

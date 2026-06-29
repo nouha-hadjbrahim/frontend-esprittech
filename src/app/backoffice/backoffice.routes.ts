@@ -5,6 +5,7 @@ import { MyProjectsComponent } from './my-projects/my-projects.component';
 import { ProjectDetailsComponent } from './project-details/project-details.component';
 import { EquipesRechercheComponent } from './equipes-recherche/equipes-recherche.component';
 import { DomainesComponent } from './equipes-recherche/domaines/domaines.component';
+import { DemandesAffiliationComponent } from './equipes-recherche/demandes-affiliation/demandes-affiliation.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SubjectsComponent } from './subjects/subjects.component';
 import { FormulairesComponent } from './subjects/formulaires/formulaires.component';
@@ -32,6 +33,7 @@ export const backofficeRoutes: Routes = [
       { path: 'applications', component: ApplicationsComponent },
       { path: 'equipes-recherche', component: EquipesRechercheComponent },
       { path: 'equipes-recherche/domaines', component: DomainesComponent },
+      { path: 'equipes-recherche/demandes', component: DemandesAffiliationComponent },
       { path: 'supervisors', component: SupervisorsComponent },
       { path: 'users', component: UsersComponent },
       { path: 'history', component: HistoryComponent },

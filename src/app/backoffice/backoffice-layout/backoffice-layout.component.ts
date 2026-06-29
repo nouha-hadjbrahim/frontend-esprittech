@@ -73,6 +73,7 @@ export class BackofficeLayoutComponent {
             children: [
                 { label: 'Équipes', route: '/backoffice/equipes-recherche' },
                 { label: 'Domaines', route: '/backoffice/equipes-recherche/domaines' },
+                { label: 'Demandes', route: '/backoffice/equipes-recherche/demandes' },
             ],
         },
         { label: 'Encadrants', icon: 'award', route: '/backoffice/supervisors' },
