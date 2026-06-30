@@ -1,79 +1,109 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import { CritereEliminatoire, CritereNote, CritereEliminatoireRequest, CritereNoteRequest, MODE_EVALUATION_OPTIONS, ReponseEliminatoire } from '../../core/models/critere.model';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin, Observable, of, Subject, takeUntil } from 'rxjs';
+import {
+  CritereEliminatoire,
+  CritereEliminatoireRequest,
+  CritereNote,
+  CritereNoteRequest,
+  CritereNoteRule,
+  CritereNoteRuleRequest,
+  MODE_EVALUATION_OPTIONS,
+  NoteLevel,
+  NoteLevelRequest,
+  ReponseEliminatoire,
+  RULE_OPERATOR_OPTIONS,
+} from '../../core/models/critere.model';
 import { CritereEliminatoireService } from '../../core/services/critere-eliminatoire.service';
 import { CritereNoteService } from '../../core/services/critere-note.service';
+import { NoteLevelService } from '../../core/services/note-level.service';
 
 @Component({
   selector: 'app-admin-criteres-page',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './admin-criteres-page.component.html',
-  styleUrl: './admin-criteres-page.component.scss'
+  styleUrl: './admin-criteres-page.component.scss',
 })
 export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   private readonly critereEliminatoireService = inject(CritereEliminatoireService);
   private readonly critereNoteService = inject(CritereNoteService);
+  private readonly noteLevelService = inject(NoteLevelService);
   private readonly fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
 
-  // Critères éliminatoires
   criteresEliminatoires = signal<CritereEliminatoire[]>([]);
-  loadingEliminatoires = signal(false);
-  errorEliminatoires = signal<string | null>(null);
-  eliminatoiresSearch = signal('');
-
-  // Critères notés
   criteresNotes = signal<CritereNote[]>([]);
+  noteLevels = signal<NoteLevel[]>([]);
+  rulesByCritere = signal<Record<number, CritereNoteRule[]>>({});
+
+  loadingEliminatoires = signal(false);
   loadingNotes = signal(false);
+  errorEliminatoires = signal<string | null>(null);
   errorNotes = signal<string | null>(null);
+  eliminatoiresSearch = signal('');
   notesSearch = signal('');
 
-  // Pagination
   readonly pageSize = 8;
   eliminatoiresPage = signal(1);
   notesPage = signal(1);
 
+  isModalOpen = signal(false);
+  isRuleModalOpen = signal(false);
+  isNoteLevelModalOpen = signal(false);
+  modalMode: 'create' | 'edit' = 'create';
+  modalType: 'eliminatoire' | 'note' = 'eliminatoire';
+  ruleModalMode: 'create' | 'edit' = 'create';
+  noteLevelModalMode: 'create' | 'edit' = 'create';
+  selectedCritereId: number | null = null;
+  selectedRuleCritere: CritereNote | null = null;
+  selectedRuleId: number | null = null;
+  selectedNoteLevelId: number | null = null;
+
+  eliminatoireForm!: FormGroup;
+  noteForm!: FormGroup;
+  ruleForm!: FormGroup;
+  noteLevelForm!: FormGroup;
+
+  successMessage = signal<string | null>(null);
+  errorMessage = signal<string | null>(null);
+  saving = signal(false);
+  deleting = signal(false);
+
+  readonly ReponseEliminatoire = ReponseEliminatoire;
+  readonly modeEvaluationOptions = MODE_EVALUATION_OPTIONS;
+  readonly ruleOperatorOptions = RULE_OPERATOR_OPTIONS;
+
   filteredEliminatoires = computed(() => {
     const query = this.normalize(this.eliminatoiresSearch());
-    if (!query) {
-      return this.criteresEliminatoires();
-    }
-    return this.criteresEliminatoires().filter((crit) =>
-      this.normalize([
-        crit.ordre,
-        crit.libelle,
-        crit.description,
-        crit.domaine,
-        crit.reponseAttendue,
-        crit.actif ? 'actif' : 'inactif',
-        crit.modeEvaluation,
-        crit.ruleDescription,
-      ].join(' ')).includes(query)
-    );
+    if (!query) return this.criteresEliminatoires();
+    return this.criteresEliminatoires().filter((crit) => this.normalize([
+      crit.ordre,
+      crit.libelle,
+      crit.description,
+      crit.domaine,
+      crit.reponseAttendue,
+      crit.actif ? 'actif' : 'inactif',
+      crit.modeEvaluation,
+      crit.ruleDescription,
+    ].join(' ')).includes(query));
   });
 
   filteredNotes = computed(() => {
     const query = this.normalize(this.notesSearch());
-    if (!query) {
-      return this.criteresNotes();
-    }
-    return this.criteresNotes().filter((crit) =>
-      this.normalize([
-        crit.ordre,
-        crit.libelle,
-        crit.description,
-        crit.domaine,
-        crit.bareme,
-        crit.poids,
-        crit.seuil,
-        crit.actif ? 'actif' : 'inactif',
-        crit.modeEvaluation,
-        crit.ruleDescription,
-      ].join(' ')).includes(query)
-    );
+    if (!query) return this.criteresNotes();
+    return this.criteresNotes().filter((crit) => this.normalize([
+      crit.ordre,
+      crit.libelle,
+      crit.description,
+      crit.domaine,
+      crit.poids,
+      crit.defaultNoteValue,
+      crit.actif ? 'actif' : 'inactif',
+      crit.modeEvaluation,
+      crit.ruleDescription,
+    ].join(' ')).includes(query));
   });
 
   get eliminatoiresTotalPages(): number {
@@ -110,28 +140,10 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     return this.filteredNotes().slice(start, start + this.pageSize);
   }
 
-  // Modales
-  isModalOpen = signal(false);
-  modalMode: 'create' | 'edit' = 'create';
-  modalType: 'eliminatoire' | 'note' = 'eliminatoire';
-  selectedCritereId: number | null = null;
-
-  // Formulaires
-  eliminatoireForm!: FormGroup;
-  noteForm!: FormGroup;
-
-  // Messages de succès/erreur
-  successMessage = signal<string | null>(null);
-  errorMessage = signal<string | null>(null);
-  saving = signal(false);
-  deleting = signal(false);
-
-  readonly ReponseEliminatoire = ReponseEliminatoire;
-  readonly modeEvaluationOptions = MODE_EVALUATION_OPTIONS;
-
   ngOnInit(): void {
     this.initializeForms();
     this.loadCriteres();
+    this.loadNoteLevels();
   }
 
   ngOnDestroy(): void {
@@ -153,7 +165,7 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       minLivrableCount: [1],
       expectedKeyword: [''],
       noteMaxAuto: [null],
-      ruleDescription: ['']
+      ruleDescription: [''],
     });
 
     this.noteForm = this.fb.group({
@@ -161,17 +173,37 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       description: [''],
       domaine: ['', Validators.required],
       ordre: [1, [Validators.required, Validators.min(1)]],
-      bareme: [20, [Validators.required, Validators.min(1)]],
       poids: [1, [Validators.required, Validators.min(0.1)]],
-      seuil: [10, [Validators.required, Validators.min(0)]],
+      defaultNoteValue: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
       actif: [true],
       ruleEnabled: [false],
       modeEvaluation: [null],
       expectedLivrableTypes: [''],
       minLivrableCount: [1],
       expectedKeyword: [''],
-      noteMaxAuto: [20],
-      ruleDescription: ['']
+      noteMaxAuto: [5],
+      ruleDescription: [''],
+    });
+
+    this.ruleForm = this.fb.group({
+      ruleName: ['', [Validators.required, Validators.minLength(3)]],
+      description: [''],
+      metadataKey: ['livrableCount', Validators.required],
+      operator: ['GTE', Validators.required],
+      expectedValue: [''],
+      minValue: [1],
+      maxValue: [null],
+      noteValue: [4, [Validators.required, Validators.min(1), Validators.max(5)]],
+      priority: [1, [Validators.required, Validators.min(1)]],
+      active: [true],
+    });
+
+    this.noteLevelForm = this.fb.group({
+      value: [1, [Validators.required, Validators.min(1), Validators.max(5)]],
+      label: ['', Validators.required],
+      description: [''],
+      active: [true],
+      order: [1, [Validators.required, Validators.min(1)]],
     });
   }
 
@@ -183,38 +215,58 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   private loadEliminatoires(): void {
     this.loadingEliminatoires.set(true);
     this.errorEliminatoires.set(null);
-    this.critereEliminatoireService.findAll()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.criteresEliminatoires.set(data.sort((a, b) => a.ordre - b.ordre));
-          this.eliminatoiresPage.set(1);
-          this.loadingEliminatoires.set(false);
-        },
-        error: (error) => {
-          console.error('Erreur lors du chargement des critères éliminatoires:', error);
-          this.errorEliminatoires.set('Impossible de charger les critères éliminatoires');
-          this.loadingEliminatoires.set(false);
-        }
-      });
+    this.critereEliminatoireService.findAll().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data) => {
+        this.criteresEliminatoires.set(data.sort((a, b) => a.ordre - b.ordre));
+        this.eliminatoiresPage.set(1);
+        this.loadingEliminatoires.set(false);
+      },
+      error: () => {
+        this.errorEliminatoires.set('Impossible de charger les criteres eliminatoires');
+        this.loadingEliminatoires.set(false);
+      },
+    });
   }
 
   private loadNotes(): void {
     this.loadingNotes.set(true);
     this.errorNotes.set(null);
-    this.critereNoteService.findAll()
+    this.critereNoteService.findAll().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (data) => {
+        const sorted = data.sort((a, b) => a.ordre - b.ordre);
+        this.criteresNotes.set(sorted);
+        this.notesPage.set(1);
+        this.loadingNotes.set(false);
+        this.loadRulesForNotes(sorted);
+      },
+      error: () => {
+        this.errorNotes.set('Impossible de charger les criteres notes');
+        this.loadingNotes.set(false);
+      },
+    });
+  }
+
+  private loadNoteLevels(): void {
+    this.noteLevelService.findAll().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (levels) => this.noteLevels.set(levels.sort((a, b) => a.order - b.order)),
+      error: () => this.errorMessage.set('Impossible de charger les niveaux de note.'),
+    });
+  }
+
+  private loadRulesForNotes(notes: CritereNote[]): void {
+    if (!notes.length) {
+      this.rulesByCritere.set({});
+      return;
+    }
+    forkJoin(notes.map((note) => this.critereNoteService.findRules(note.id)) || [of([] as CritereNoteRule[])])
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => {
-          this.criteresNotes.set(data.sort((a, b) => a.ordre - b.ordre));
-          this.notesPage.set(1);
-          this.loadingNotes.set(false);
+        next: (rulesLists) => {
+          const byCritere: Record<number, CritereNoteRule[]> = {};
+          notes.forEach((note, index) => byCritere[note.id] = rulesLists[index] ?? []);
+          this.rulesByCritere.set(byCritere);
         },
-        error: (error) => {
-          console.error('Erreur lors du chargement des critères notés:', error);
-          this.errorNotes.set('Impossible de charger les critères notés');
-          this.loadingNotes.set(false);
-        }
+        error: () => this.errorMessage.set('Impossible de charger les regles de notation.'),
       });
   }
 
@@ -225,7 +277,7 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     if (type === 'eliminatoire') {
       this.eliminatoireForm.reset({ reponseAttendue: ReponseEliminatoire.OK, actif: true, ordre: 1, ruleEnabled: false, minLivrableCount: 1 });
     } else {
-      this.noteForm.reset({ actif: true, ordre: 1, bareme: 20, poids: 1, seuil: 10, ruleEnabled: false, minLivrableCount: 1, noteMaxAuto: 20 });
+      this.noteForm.reset({ actif: true, ordre: 1, poids: 1, defaultNoteValue: 3, ruleEnabled: false, minLivrableCount: 1, noteMaxAuto: 5 });
     }
     this.isModalOpen.set(true);
   }
@@ -234,23 +286,17 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     this.modalType = type;
     this.modalMode = 'edit';
     this.selectedCritereId = critere.id;
-
     if (type === 'eliminatoire') {
       const crit = critere as CritereEliminatoire;
       this.eliminatoireForm.patchValue({
-        libelle: crit.libelle,
-        description: crit.description,
-        domaine: crit.domaine,
-        ordre: crit.ordre,
-        reponseAttendue: crit.reponseAttendue,
-        actif: crit.actif,
+        ...crit,
         ruleEnabled: crit.ruleEnabled ?? false,
         modeEvaluation: crit.modeEvaluation ?? null,
         expectedLivrableTypes: crit.expectedLivrableTypes ?? '',
         minLivrableCount: crit.minLivrableCount ?? 1,
         expectedKeyword: crit.expectedKeyword ?? '',
         noteMaxAuto: crit.noteMaxAuto ?? null,
-        ruleDescription: crit.ruleDescription ?? ''
+        ruleDescription: crit.ruleDescription ?? '',
       });
     } else {
       const crit = critere as CritereNote;
@@ -259,17 +305,16 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
         description: crit.description,
         domaine: crit.domaine,
         ordre: crit.ordre,
-        bareme: crit.bareme,
         poids: crit.poids,
-        seuil: crit.seuil,
+        defaultNoteValue: crit.defaultNoteValue ?? 3,
         actif: crit.actif,
         ruleEnabled: crit.ruleEnabled ?? false,
         modeEvaluation: crit.modeEvaluation ?? null,
         expectedLivrableTypes: crit.expectedLivrableTypes ?? '',
         minLivrableCount: crit.minLivrableCount ?? 1,
         expectedKeyword: crit.expectedKeyword ?? '',
-        noteMaxAuto: crit.noteMaxAuto ?? crit.bareme,
-        ruleDescription: crit.ruleDescription ?? ''
+        noteMaxAuto: crit.noteMaxAuto ?? 5,
+        ruleDescription: crit.ruleDescription ?? '',
       });
     }
     this.isModalOpen.set(true);
@@ -289,127 +334,191 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   }
 
   private saveCritereEliminatoire(): void {
-    if (!this.eliminatoireForm.valid) {
-      this.errorMessage.set('Formulaire invalide. Veuillez vérifier les champs.');
+    if (this.eliminatoireForm.invalid) {
+      this.errorMessage.set('Formulaire invalide.');
       return;
     }
-
-    this.saving.set(true);
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
-
-    const request: CritereEliminatoireRequest = this.eliminatoireForm.value;
-    const operation = this.modalMode === 'create'
-      ? this.critereEliminatoireService.create(request)
-      : this.critereEliminatoireService.update(this.selectedCritereId!, request);
-
-    operation
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.successMessage.set(
-            this.modalMode === 'create'
-              ? 'Critère éliminatoire créé avec succès'
-              : 'Critère éliminatoire mis à jour avec succès'
-          );
-          this.saving.set(false);
-          this.closeModal();
-          this.loadEliminatoires();
-          setTimeout(() => this.successMessage.set(null), 3000);
-        },
-        error: (error) => {
-          console.error('Erreur lors de la sauvegarde du critère éliminatoire:', error);
-          this.errorMessage.set('Erreur lors de la sauvegarde. Veuillez réessayer.');
-          this.saving.set(false);
-        }
-      });
+    this.saveEntity(
+      this.modalMode === 'create'
+        ? this.critereEliminatoireService.create(this.eliminatoireForm.value as CritereEliminatoireRequest)
+        : this.critereEliminatoireService.update(this.selectedCritereId!, this.eliminatoireForm.value as CritereEliminatoireRequest),
+      'Critere eliminatoire enregistre.',
+      () => this.loadEliminatoires(),
+    );
   }
 
   private saveCritereNote(): void {
-    if (!this.noteForm.valid) {
-      this.errorMessage.set('Formulaire invalide. Veuillez vérifier les champs.');
+    if (this.noteForm.invalid) {
+      this.errorMessage.set('Formulaire invalide.');
       return;
     }
+    const request: CritereNoteRequest = { ...this.noteForm.value, bareme: 5, seuil: 3 };
+    this.saveEntity(
+      this.modalMode === 'create'
+        ? this.critereNoteService.create(request)
+        : this.critereNoteService.update(this.selectedCritereId!, request),
+      'Critere note enregistre.',
+      () => this.loadNotes(),
+    );
+  }
 
+  private saveEntity<T>(operation: Observable<T>, message: string, reload: () => void): void {
     this.saving.set(true);
     this.errorMessage.set(null);
-    this.successMessage.set(null);
-
-    const request: CritereNoteRequest = this.noteForm.value;
-    const operation = this.modalMode === 'create'
-      ? this.critereNoteService.create(request)
-      : this.critereNoteService.update(this.selectedCritereId!, request);
-
-    operation
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.successMessage.set(
-            this.modalMode === 'create'
-              ? 'Critère noté créé avec succès'
-              : 'Critère noté mis à jour avec succès'
-          );
-          this.saving.set(false);
-          this.closeModal();
-          this.loadNotes();
-          setTimeout(() => this.successMessage.set(null), 3000);
-        },
-        error: (error) => {
-          console.error('Erreur lors de la sauvegarde du critère noté:', error);
-          this.errorMessage.set('Erreur lors de la sauvegarde. Veuillez réessayer.');
-          this.saving.set(false);
-        }
-      });
+    operation.pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage.set(message);
+        this.saving.set(false);
+        this.closeModal();
+        reload();
+        setTimeout(() => this.successMessage.set(null), 3000);
+      },
+      error: () => {
+        this.errorMessage.set('Enregistrement impossible.');
+        this.saving.set(false);
+      },
+    });
   }
 
   toggleActivation(type: 'eliminatoire' | 'note', critere: CritereEliminatoire | CritereNote): void {
-    if (critere.actif) {
-      this.deactivateCritere(type, critere.id);
-    } else {
-      this.activateCritere(type, critere.id);
+    const service = type === 'eliminatoire' ? this.critereEliminatoireService : this.critereNoteService;
+    this.deleting.set(true);
+    const operation = critere.actif ? service.deactivate(critere.id) : service.activate(critere.id);
+    operation.pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.loadCriteres();
+      },
+      error: () => {
+        this.errorMessage.set('Changement de statut impossible.');
+        this.deleting.set(false);
+      },
+    });
+  }
+
+  rulesFor(critereId: number): CritereNoteRule[] {
+    return this.rulesByCritere()[critereId] ?? [];
+  }
+
+  noteLabel(value: number | null | undefined): string {
+    const level = this.noteLevels().find((item) => item.value === value);
+    return level ? `${level.value} - ${level.label}` : `${value ?? 3}`;
+  }
+
+  openRuleModal(critere: CritereNote, rule?: CritereNoteRule): void {
+    this.selectedRuleCritere = critere;
+    this.selectedRuleId = rule?.id ?? null;
+    this.ruleModalMode = rule ? 'edit' : 'create';
+    this.ruleForm.reset({
+      ruleName: rule?.ruleName ?? '',
+      description: rule?.description ?? '',
+      metadataKey: rule?.metadataKey ?? 'livrableCount',
+      operator: rule?.operator ?? 'GTE',
+      expectedValue: rule?.expectedValue ?? '',
+      minValue: rule?.minValue ?? 1,
+      maxValue: rule?.maxValue ?? null,
+      noteValue: rule?.noteValue ?? 4,
+      priority: rule?.priority ?? 1,
+      active: rule?.active ?? true,
+    });
+    this.isRuleModalOpen.set(true);
+  }
+
+  closeRuleModal(): void {
+    this.isRuleModalOpen.set(false);
+    this.selectedRuleCritere = null;
+    this.selectedRuleId = null;
+  }
+
+  saveRule(): void {
+    if (!this.selectedRuleCritere || this.ruleForm.invalid) {
+      this.errorMessage.set('Regle invalide.');
+      return;
     }
+    const request: CritereNoteRuleRequest = this.ruleForm.value;
+    this.saving.set(true);
+    const operation = this.ruleModalMode === 'create'
+      ? this.critereNoteService.createRule(this.selectedRuleCritere.id, request)
+      : this.critereNoteService.updateRule(this.selectedRuleId!, request);
+    operation.pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage.set('Regle de notation enregistree.');
+        this.saving.set(false);
+        this.closeRuleModal();
+        this.loadRulesForNotes(this.criteresNotes());
+      },
+      error: () => {
+        this.errorMessage.set('Enregistrement de la regle impossible.');
+        this.saving.set(false);
+      },
+    });
   }
 
-  private deactivateCritere(type: 'eliminatoire' | 'note', critereId: number): void {
-    this.deleting.set(true);
-    const service = type === 'eliminatoire' ? this.critereEliminatoireService : this.critereNoteService;
-
-    service.deactivate(critereId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.successMessage.set('Critère désactivé avec succès');
-          this.deleting.set(false);
-          this.loadCriteres();
-          setTimeout(() => this.successMessage.set(null), 3000);
-        },
-        error: (error) => {
-          console.error('Erreur lors de la désactivation:', error);
-          this.errorMessage.set('Erreur lors de la désactivation');
-          this.deleting.set(false);
-        }
-      });
+  deleteRule(rule: CritereNoteRule): void {
+    this.critereNoteService.deleteRule(rule.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => this.loadRulesForNotes(this.criteresNotes()),
+      error: () => this.errorMessage.set('Suppression de la regle impossible.'),
+    });
   }
 
-  private activateCritere(type: 'eliminatoire' | 'note', critereId: number): void {
-    this.deleting.set(true);
-    const service = type === 'eliminatoire' ? this.critereEliminatoireService : this.critereNoteService;
+  toggleRule(rule: CritereNoteRule): void {
+    const operation = rule.active
+      ? this.critereNoteService.deactivateRule(rule.id)
+      : this.critereNoteService.activateRule(rule.id);
+    operation.pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => this.loadRulesForNotes(this.criteresNotes()),
+      error: () => this.errorMessage.set('Changement de statut de la regle impossible.'),
+    });
+  }
 
-    service.activate(critereId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.successMessage.set('Critère activé avec succès');
-          this.deleting.set(false);
-          this.loadCriteres();
-          setTimeout(() => this.successMessage.set(null), 3000);
-        },
-        error: (error) => {
-          console.error('Erreur lors de l\'activation:', error);
-          this.errorMessage.set('Erreur lors de l\'activation');
-          this.deleting.set(false);
-        }
-      });
+  openNoteLevelModal(level?: NoteLevel): void {
+    this.selectedNoteLevelId = level?.id ?? null;
+    this.noteLevelModalMode = level ? 'edit' : 'create';
+    this.noteLevelForm.reset({
+      value: level?.value ?? 1,
+      label: level?.label ?? '',
+      description: level?.description ?? '',
+      active: level?.active ?? true,
+      order: level?.order ?? level?.value ?? 1,
+    });
+    this.isNoteLevelModalOpen.set(true);
+  }
+
+  closeNoteLevelModal(): void {
+    this.isNoteLevelModalOpen.set(false);
+    this.selectedNoteLevelId = null;
+  }
+
+  saveNoteLevel(): void {
+    if (this.noteLevelForm.invalid) {
+      this.errorMessage.set('Niveau de note invalide.');
+      return;
+    }
+    this.saving.set(true);
+    const request: NoteLevelRequest = this.noteLevelForm.value;
+    const operation = this.noteLevelModalMode === 'create'
+      ? this.noteLevelService.create(request)
+      : this.noteLevelService.update(this.selectedNoteLevelId!, request);
+    operation.pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage.set('Niveau de note enregistre.');
+        this.saving.set(false);
+        this.closeNoteLevelModal();
+        this.loadNoteLevels();
+      },
+      error: () => {
+        this.errorMessage.set('Enregistrement du niveau impossible.');
+        this.saving.set(false);
+      },
+    });
+  }
+
+  toggleNoteLevel(level: NoteLevel): void {
+    const operation = level.active ? this.noteLevelService.deactivate(level.id) : this.noteLevelService.activate(level.id);
+    operation.pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => this.loadNoteLevels(),
+      error: () => this.errorMessage.set('Changement de statut du niveau impossible.'),
+    });
   }
 
   goToEliminatoiresPage(page: number): void {
@@ -431,10 +540,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   }
 
   private normalize(value: unknown): string {
-    return String(value ?? '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
+    return String(value ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
 }

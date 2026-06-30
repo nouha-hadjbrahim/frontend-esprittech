@@ -22,6 +22,11 @@ export interface ResultatCritereResponse {
   scorePondere?: number;
   bareme?: number | null;
   poids?: number | null;
+  noteValue?: number | null;
+  noteLabel?: string | null;
+  matchedRule?: string | null;
+  metadataUsed?: string | null;
+  explanation?: string | null;
   evidenceSummary?: string | null;
   evidenceLivrableIds?: number[];
   ruleConfigured?: boolean;
@@ -34,6 +39,9 @@ export interface EvaluationResponse {
   scoreFinal: number;
   eligibleIndustrialisation: boolean;
   bloqueParEliminatoire: boolean;
+  hasEliminatoryWarnings?: boolean | null;
+  eliminatoryWarningsCount?: number | null;
+  eliminatoryWarningsDetails?: string[];
   dateCalcul: string;
   commentaire: string;
   calculatedBy?: string | null;

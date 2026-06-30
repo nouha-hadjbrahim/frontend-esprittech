@@ -38,6 +38,8 @@ export interface SujetProjet {
   statut: StatutSujet;
   scoreFinal: number | null;
   eligibleIndustrialisation: boolean;
+  hasEliminatoryWarnings?: boolean | null;
+  eliminatoryWarningsCount?: number | null;
   catalogue: boolean;
   encadrantId: number;
   encadrantNom: string;

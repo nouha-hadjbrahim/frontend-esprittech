@@ -599,8 +599,8 @@ textarea:focus {
 }
 
 .blocker-list {
-  border: 1px solid #fecaca;
-  background: #fef2f2;
+  border: 1px solid #fde68a;
+  background: #fffbeb;
 }
 
 .missing-list {

@@ -274,4 +274,21 @@ app-evaluation-checklist {
   .search-field {
     width: 100%;
   }
+
+  .actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cooldown-message {
+  display: block;
+  width: 100%;
+  color: #b45309;
+  font-size: 0.78rem;
+  margin-top: 0.25rem;
+}
+
+
 }

@@ -276,15 +276,15 @@ describe('CiIndustrialisationComponent', () => {
 
     component.score.set(null);
     expect(component.scoreValue(blocked)).toBe(50);
-    expect(component.scoreClass(blocked)).toBe('score-card--danger');
+    expect(component.scoreClass(blocked)).toBe('score-card--warning');
     expect(component.scoreClass(lowScore)).toBe('score-card--warning');
     expect(component.blockingCriteriaCount(blocked)).toBe(1);
     expect(component.blockingCriteriaCount({ ...blocked, latestEvaluation: null })).toBe(1);
-    expect(component.recommendation(blocked)).toBe('NO GO recommande');
+    expect(component.recommendation(blocked)).toBe('Analyse necessaire');
     expect(component.recommendation({ ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, evaluationComplete: false } })).toBe('Analyse necessaire');
     expect(component.recommendation({ ...candidature, latestEvaluation: null })).toBe('GO recommande');
     expect(component.recommendation(lowScore)).toBe('Analyse necessaire');
-    expect(component.recommendationExplanation(blocked)).toContain('NO GO');
+    expect(component.recommendationExplanation(blocked)).toContain('Alerte eliminatoire');
     expect(component.recommendationExplanation({ ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, evaluationComplete: false } })).toContain('Analyse necessaire');
     expect(component.nonConfiguredCount(blocked)).toBe(1);
 

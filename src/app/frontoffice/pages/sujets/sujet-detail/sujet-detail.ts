@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReponseEliminatoire } from '../../../../core/models/critere.model';
 import { EvaluationResponse } from '../../../../core/models/evaluation.model';
 import {
   CandidatureIndustrialisation,
+  EliminatoryWarningsConfirmation,
   IndustrialisationFormResponse,
   QuestionIndustrialisation,
   ReponseIndustrialisationRequest,
@@ -28,7 +29,7 @@ import { CATEGORIE_LABELS, STATUT_LABELS } from '../../../constants/sujet-projet
   templateUrl: './sujet-detail.html',
   styleUrl: './sujet-detail.css',
 })
-export class SujetDetail implements OnInit {
+export class SujetDetail implements OnInit,OnDestroy  {
   private readonly route = inject(ActivatedRoute);
   private readonly sujetProjetService = inject(SujetProjetService);
   private readonly authService = inject(AuthService);
@@ -44,6 +45,9 @@ export class SujetDetail implements OnInit {
   evaluationError = '';
   evaluationMessage = '';
   recalculatingScore = false;
+  private readonly SCORE_COOLDOWN_SECONDS = 120;
+scoreCooldownRemaining = 0;
+private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   activeTab = 'Informations';
   livrables: Livrable[] = [];
   livrablesLoading = false;
@@ -70,6 +74,8 @@ export class SujetDetail implements OnInit {
   industrialisationError = '';
   industrialisationMessage = '';
   industrialisationSubmitAttempted = false;
+  eliminatoryWarningConfirmation: EliminatoryWarningsConfirmation | null = null;
+  pendingIndustrialisationAction: 'create' | 'submit' | null = null;
   answers: Record<number, ReponseIndustrialisationRequest> = {};
 
   readonly tabs = [
@@ -213,25 +219,93 @@ export class SujetDetail implements OnInit {
     });
   }
 
-  recalculateScore(): void {
-    if (!this.sujet || !this.canRecalculateScore) {
+
+  get scoreCooldownActive(): boolean {
+  return this.scoreCooldownRemaining > 0;
+}
+
+get scoreCooldownLabel(): string {
+  const minutes = Math.floor(this.scoreCooldownRemaining / 60);
+  const seconds = this.scoreCooldownRemaining % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+private startScoreCooldown(seconds = this.SCORE_COOLDOWN_SECONDS): void {
+  this.clearScoreCooldown();
+
+  this.scoreCooldownRemaining = seconds;
+
+  this.scoreCooldownTimer = setInterval(() => {
+    if (this.scoreCooldownRemaining <= 1) {
+      this.clearScoreCooldown();
       return;
     }
-    this.recalculatingScore = true;
-    this.evaluationError = '';
-    this.evaluationService.calculateScore(this.sujet.id).subscribe({
-      next: (evaluation) => {
-        this.evaluation = evaluation;
-        this.evaluationMessage = 'Score recalculé avec succès.';
-        this.recalculatingScore = false;
-        this.loadSujet();
-      },
-      error: (err) => {
-        this.evaluationError = err?.error?.detail ?? 'Recalcul impossible.';
-        this.recalculatingScore = false;
-      },
-    });
+
+    this.scoreCooldownRemaining -= 1;
+  }, 1000);
+}
+
+private clearScoreCooldown(): void {
+  if (this.scoreCooldownTimer) {
+    clearInterval(this.scoreCooldownTimer);
+    this.scoreCooldownTimer = null;
   }
+
+  this.scoreCooldownRemaining = 0;
+}
+
+ngOnDestroy(): void {
+  this.clearScoreCooldown();
+}
+
+  recalculateScore(): void {
+  if (!this.sujet || !this.canRecalculateScore) {
+    return;
+  }
+
+  if (this.scoreCooldownActive) {
+    this.evaluationMessage = '';
+    this.evaluationError = `Le score vient d’être recalculé. Veuillez patienter ${this.scoreCooldownLabel} avant un nouveau recalcul.`;
+    return;
+  }
+
+  this.recalculatingScore = true;
+  this.evaluationError = '';
+  this.evaluationMessage = '';
+
+  this.evaluationService.calculateScore(this.sujet.id).subscribe({
+    next: (evaluation) => {
+      this.evaluation = evaluation;
+      this.evaluationMessage = 'Score recalculé avec succès.';
+      this.recalculatingScore = false;
+
+      this.startScoreCooldown();
+
+      this.sujet = {
+        ...this.sujet!,
+        scoreFinal: evaluation.scoreFinal,
+        eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
+        hasEliminatoryWarnings: evaluation.hasEliminatoryWarnings,
+      };
+
+      this.loadEvaluation();
+    },
+    error: (err) => {
+      const retryAfterSeconds =
+        Number(err?.error?.retryAfterSeconds ?? err?.headers?.get?.('Retry-After') ?? this.SCORE_COOLDOWN_SECONDS);
+
+      if (err?.status === 409 || err?.status === 429 || err?.status === 401) {
+        this.startScoreCooldown(Number.isNaN(retryAfterSeconds) ? this.SCORE_COOLDOWN_SECONDS : retryAfterSeconds);
+        this.evaluationError = `Le score vient d’être recalculé. Veuillez patienter ${this.scoreCooldownLabel} avant un nouveau recalcul.`;
+      } else {
+        this.evaluationError = err?.error?.detail ?? err?.error?.message ?? 'Recalcul impossible.';
+      }
+
+      this.evaluationMessage = '';
+      this.recalculatingScore = false;
+    },
+  });
+}
 
   onUploadFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -310,15 +384,19 @@ export class SujetDetail implements OnInit {
     this.industrialisationUploadingQuestionId = null;
   }
 
-  createIndustrialisation(): void {
+  createIndustrialisation(confirmEliminatoryWarnings = false): void {
     if (!this.sujet) return;
     this.industrialisationSaving = true;
     this.industrialisationService.create(this.sujet.id, {
       typeIndustrialisation: this.industrialisationType,
       commentaire: this.industrialisationCommentaire.trim(),
+      confirmEliminatoryWarnings,
     }).subscribe({
       next: (candidature) => this.loadIndustrialisationForm(candidature.id),
       error: (err) => {
+        if (this.handleEliminatoryConfirmation(err, 'create')) {
+          return;
+        }
         this.industrialisationError = err?.error?.detail ?? 'Creation de la demande impossible.';
         this.industrialisationSaving = false;
       },
@@ -394,15 +472,15 @@ export class SujetDetail implements OnInit {
   }
 
   submitIndustrialisation(): void {
+    this.submitIndustrialisationWithConfirmation(false);
+  }
+
+  submitIndustrialisationWithConfirmation(confirmEliminatoryWarnings: boolean): void {
     if (!this.industrialisationForm) return;
     this.industrialisationSubmitAttempted = true;
     const missingQuestions = this.missingRequiredQuestions();
     if (missingQuestions.length > 0) {
       this.industrialisationError = `Reponse obligatoire manquante : ${missingQuestions.join(', ')}.`;
-      return;
-    }
-    if (this.hasBlockingEliminatoryAnswer()) {
-      this.industrialisationError = 'Cette demande contient un critere eliminatoire non conforme.';
       return;
     }
     this.industrialisationSaving = true;
@@ -413,7 +491,7 @@ export class SujetDetail implements OnInit {
     }).subscribe({
       next: (savedCandidature) => {
         this.industrialisationForm = { ...this.industrialisationForm!, candidature: savedCandidature };
-        this.industrialisationService.soumettre(candidatureId).subscribe({
+        this.industrialisationService.soumettre(candidatureId, { confirmEliminatoryWarnings }).subscribe({
           next: (candidature) => {
             this.industrialisationForm = { ...this.industrialisationForm!, candidature };
             this.industrialisationMessage = 'Demande soumise a la CI.';
@@ -423,6 +501,9 @@ export class SujetDetail implements OnInit {
             this.loadSujet();
           },
           error: (err) => {
+            if (this.handleEliminatoryConfirmation(err, 'submit')) {
+              return;
+            }
             this.industrialisationError = err?.error?.detail ?? 'Soumission impossible.';
             this.industrialisationSaving = false;
           },
@@ -433,6 +514,34 @@ export class SujetDetail implements OnInit {
         this.industrialisationSaving = false;
       },
     });
+  }
+
+  confirmEliminatoryWarnings(): void {
+    const action = this.pendingIndustrialisationAction;
+    this.eliminatoryWarningConfirmation = null;
+    this.pendingIndustrialisationAction = null;
+    if (action === 'create') {
+      this.createIndustrialisation(true);
+    } else if (action === 'submit') {
+      this.submitIndustrialisationWithConfirmation(true);
+    }
+  }
+
+  cancelEliminatoryWarnings(): void {
+    this.eliminatoryWarningConfirmation = null;
+    this.pendingIndustrialisationAction = null;
+    this.industrialisationSaving = false;
+  }
+
+  private handleEliminatoryConfirmation(err: any, action: 'create' | 'submit'): boolean {
+    const payload = err?.error as EliminatoryWarningsConfirmation | undefined;
+    if (err?.status === 409 && payload?.requiresConfirmation) {
+      this.eliminatoryWarningConfirmation = payload;
+      this.pendingIndustrialisationAction = action;
+      this.industrialisationSaving = false;
+      return true;
+    }
+    return false;
   }
 
   private buildIndustrialisationAnswers(): ReponseIndustrialisationRequest[] {
@@ -497,7 +606,7 @@ export class SujetDetail implements OnInit {
       return 'Conforme';
     }
     if (result === ReponseEliminatoire.NOT_OK) {
-      return 'Bloquant';
+      return 'Alerte';
     }
     return 'En attente';
   }
@@ -522,8 +631,7 @@ export class SujetDetail implements OnInit {
   canSubmitIndustrialisation(): boolean {
     return !!this.industrialisationForm
       && !this.isIndustrialisationBusy()
-      && this.missingRequiredQuestions().length === 0
-      && !this.hasBlockingEliminatoryAnswer();
+      && this.missingRequiredQuestions().length === 0;
   }
 
   isIndustrialisationBusy(): boolean {
@@ -544,8 +652,7 @@ export class SujetDetail implements OnInit {
 
   questionnaireReadyForSubmission(): boolean {
     return !!this.industrialisationForm
-      && this.missingRequiredQuestions().length === 0
-      && !this.hasBlockingEliminatoryAnswer();
+      && this.missingRequiredQuestions().length === 0;
   }
 
   isIndustrialisationStepActive(step: 1 | 2 | 3): boolean {

@@ -28,9 +28,11 @@ describe('EvaluationChecklistComponent', () => {
     critereId: 12,
     critereLibelle: 'Qualite',
     typeCritere: 'NOTE',
-    noteObtenue: 14,
-    bareme: 20,
-    scorePondere: 7,
+    noteValue: 4,
+    noteLabel: 'Satisfait',
+    noteObtenue: 4,
+    scorePondere: 1.6,
+    poids: 2,
     ruleConfigured: true,
   };
 
@@ -58,15 +60,15 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.evaluationComplete).toBeTrue();
     expect(component.hasBlockingCriteria).toBeTrue();
     expect(component.scorePercent).toBe(76);
-    expect(component.statusLabel).toBe('GO - Eligible');
-    expect(component.statusClass).toBe('decision-badge--no');
-    expect(component.progressClass).toBe('checklist-progress__bar--danger');
+    expect(component.statusLabel).toBe('Eligible avec alertes');
+    expect(component.statusClass).toBe('decision-badge--warning');
+    expect(component.progressClass).toBe('checklist-progress__bar--warning');
     expect(component.blockingCriteriaNames).toEqual(['Git disponible']);
     expect(component.nonConfiguredCount).toBe(1);
     expect(component.isBlocking(eliminatoireKo)).toBeTrue();
     expect(component.isBlocking(note)).toBeFalse();
     expect(component.resultLabel(eliminatoireOk)).toBe('OK');
-    expect(component.resultLabel(note)).toBe('14 / 20');
+    expect(component.resultLabel(note)).toBe('4/5 - Satisfait');
   });
 
   it('should use explicit aggregate fields and explicit blocking criteria names', () => {
@@ -128,6 +130,6 @@ describe('EvaluationChecklistComponent', () => {
     };
 
     expect(component.resultLabel(emptyEliminatory)).toBe('Non renseigne');
-    expect(component.resultLabel(weightedNote)).toBe('0 / 8');
+    expect(component.resultLabel(weightedNote)).toBe('0/5');
   });
 });

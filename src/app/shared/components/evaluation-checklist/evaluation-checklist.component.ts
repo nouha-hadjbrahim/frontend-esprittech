@@ -43,24 +43,27 @@ export class EvaluationChecklistComponent {
     if (this.evaluation?.eligibleIndustrialisation && !this.evaluationComplete) {
       return 'Analyse necessaire';
     }
+    if (this.evaluation?.eligibleIndustrialisation && this.hasBlockingCriteria) {
+      return 'Eligible avec alertes';
+    }
     return this.evaluation?.eligibleIndustrialisation ? 'GO - Eligible' : 'NO GO - Non eligible';
   }
 
   get statusClass(): string {
-    if (!this.evaluation?.eligibleIndustrialisation || this.hasBlockingCriteria) {
+    if (!this.evaluation?.eligibleIndustrialisation) {
       return 'decision-badge--no';
     }
-    if (!this.evaluationComplete) {
+    if (!this.evaluationComplete || this.hasBlockingCriteria) {
       return 'decision-badge--warning';
     }
     return 'decision-badge--go';
   }
 
   get progressClass(): string {
-    if (!this.evaluation?.eligibleIndustrialisation || this.hasBlockingCriteria) {
+    if (!this.evaluation?.eligibleIndustrialisation) {
       return 'checklist-progress__bar--danger';
     }
-    if (!this.evaluationComplete) {
+    if (!this.evaluationComplete || this.hasBlockingCriteria) {
       return 'checklist-progress__bar--warning';
     }
     return this.scorePercent >= 70 ? 'checklist-progress__bar--success' : 'checklist-progress__bar--warning';
@@ -87,8 +90,7 @@ export class EvaluationChecklistComponent {
     if (resultat.typeCritere === 'ELIMINATOIRE') {
       return resultat.reponseEliminatoire ?? 'Non renseigne';
     }
-    const note = resultat.noteObtenue ?? 0;
-    const bareme = resultat.bareme ?? resultat.scorePondere ?? 0;
-    return `${note} / ${bareme}`;
+    const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;
+    return resultat.noteLabel ? `${note}/5 - ${resultat.noteLabel}` : `${note}/5`;
   }
 }

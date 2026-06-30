@@ -239,17 +239,16 @@ export class CiIndustrialisationComponent implements OnInit {
 
   scoreClass(candidature: CandidatureIndustrialisation): string {
     const backendScore = this.scoreFor(candidature);
-    if (backendScore?.estBloqueParEliminatoire || backendScore?.decisionRecommandee === 'NO_GO') {
+    if (backendScore?.decisionRecommandee === 'NO_GO') {
       return 'score-card--danger';
     }
-    if (backendScore?.decisionRecommandee === 'GO') {
+    if (backendScore?.decisionRecommandee === 'GO' && this.eliminatoryWarningCount(candidature) === 0) {
       return 'score-card--success';
     }
-    if (candidature.bloqueParEliminatoire || candidature.eligibleIndustrialisation === false) {
-      return 'score-card--danger';
-    }
     const numericScore = this.scoreValue(candidature) ?? 0;
-    return numericScore >= 70 ? 'score-card--success' : 'score-card--warning';
+    return numericScore >= 70 && this.eliminatoryWarningCount(candidature) === 0
+      ? 'score-card--success'
+      : 'score-card--warning';
   }
 
   requestReference(candidature: CandidatureIndustrialisation): string {
@@ -300,9 +299,16 @@ export class CiIndustrialisationComponent implements OnInit {
   }
 
   blockingCriteriaCount(candidature: CandidatureIndustrialisation): number {
+    return this.eliminatoryWarningCount(candidature);
+  }
+
+  eliminatoryWarningCount(candidature: CandidatureIndustrialisation): number {
     const score = this.scoreFor(candidature);
     if (score) {
-      return score.blocagesEliminatoires.length;
+      return score.eliminatoryWarningsCount ?? score.blocagesEliminatoires.length;
+    }
+    if (candidature.eliminatoryWarningsCount != null) {
+      return candidature.eliminatoryWarningsCount;
     }
     return candidature.latestEvaluation?.resultats
       ?.filter((resultat) => resultat.typeCritere === 'ELIMINATOIRE' && resultat.reponseEliminatoire === 'NOT_OK')
@@ -315,9 +321,6 @@ export class CiIndustrialisationComponent implements OnInit {
       return score.decisionRecommandee === 'A_INSTRUIRE'
         ? 'A instruire'
         : `${this.decisionLabel(score.decisionRecommandee)} recommande`;
-    }
-    if (this.blockingCriteriaCount(candidature) > 0 || candidature.eligibleIndustrialisation === false) {
-      return 'NO GO recommande';
     }
     if (candidature.latestEvaluation?.evaluationComplete === false) {
       return 'Analyse necessaire';
@@ -333,13 +336,13 @@ export class CiIndustrialisationComponent implements OnInit {
     if (score) {
       return score.message;
     }
-    if (this.blockingCriteriaCount(candidature) > 0 || candidature.eligibleIndustrialisation === false) {
-      return 'Le systeme recommande NO GO car un critere eliminatoire est NOT_OK.';
+    if (this.eliminatoryWarningCount(candidature) > 0) {
+      return 'Alerte eliminatoire non bloquante : la CI peut continuer vers GO ou NO GO apres analyse.';
     }
     if (candidature.latestEvaluation?.evaluationComplete === false) {
       return 'Analyse necessaire : certaines regles automatiques ne sont pas configurees.';
     }
-    return 'Le systeme recommande GO car les criteres bloquants sont satisfaits.';
+    return 'La decision GO / NO GO reste manuelle pour la CI.';
   }
 
   nonConfiguredCount(candidature: CandidatureIndustrialisation): number {

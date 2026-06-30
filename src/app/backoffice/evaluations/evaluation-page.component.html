@@ -91,9 +91,26 @@
             <td>-</td>
             <td class="actions-cell">
               <button class="btn btn-secondary" type="button" (click)="selectProject(p)">Voir detail</button>
-              <button class="btn btn-primary" type="button" [disabled]="savingProjectId() === p.id" (click)="calculate(p)">
-                {{ savingProjectId() === p.id ? 'Calcul...' : (p.scoreFinal == null ? 'Calculer score' : 'Recalculer') }}
-              </button>
+         <button
+  class="btn btn-primary"
+  type="button"
+  [disabled]="savingProjectId() === p.id || isProjectCoolingDown(p.id)"
+  (click)="calculate(p)"
+>
+  @if (savingProjectId() === p.id) {
+    Calcul...
+  } @else if (isProjectCoolingDown(p.id)) {
+    Recalcul dans {{ cooldownLabel(p.id) }}
+  } @else {
+    {{ p.scoreFinal == null ? 'Calculer score' : 'Recalculer' }}
+  }
+</button>
+
+@if (isProjectCoolingDown(p.id)) {
+  <small class="cooldown-message">
+    Le score vient d’être recalculé. Veuillez patienter avant un nouveau recalcul.
+  </small>
+}
             </td>
           </tr>
         </tbody>
