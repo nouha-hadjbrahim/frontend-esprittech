@@ -17,7 +17,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([csrfInterceptor, authInterceptor])),
+    provideHttpClient(
+      withInterceptors([authInterceptor, csrfInterceptor]),
+    ),
     provideAnimations(),
     // Au démarrage, tente de restaurer la session via le cookie HttpOnly (/auth/me).
     // Les gardes de route s'appuient ensuite sur l'utilisateur en mémoire.
