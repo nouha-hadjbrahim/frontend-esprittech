@@ -368,12 +368,15 @@ describe('DialogueModifierEquipeComponent', () => {
     expect(comp.membres.length).toBe(1);
   });
 
-  it('should submit with null memberIds when membres is empty', () => {
-    component.membres = [];
-    component.submit();
-    const updated = ref.close.calls.mostRecent().args[0] as Equipe;
-    expect(updated.memberIds).toBeNull();
-  });
+it('should submit with empty memberIds when membres is empty', () => {
+  component.membres = [];
+
+  component.submit();
+
+  const updated = ref.close.calls.mostRecent().args[0] as Equipe;
+
+  expect(updated.memberIds).toEqual([]);
+});
 
   it('should handle initiales with missing or empty name parts', () => {
     const noPrenom: User = { ...mockUsers[0], prenom: null as any };

@@ -22,9 +22,9 @@ export interface User {
   enabled: boolean;
   createdAt: string | null;
   /** Affiliation à une équipe de recherche (membre ou chef). */
-  isAffilieToEquipe: boolean;
-  equipeId: number | null;
-  equipeNom: string | null;
+  isAffilieToEquipe?: boolean;
+  equipeId?: number | null;
+  equipeNom?: string | null;
 }
 
 /** Corps de mise à jour d'un utilisateur par l'admin (UpdateUserRequest backend). */

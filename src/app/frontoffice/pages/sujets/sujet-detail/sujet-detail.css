@@ -364,7 +364,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .evaluation-grid {
@@ -1314,4 +1315,29 @@
 .membre-card__btn--danger:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.score-recalculate-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.score-cooldown-message {
+  color: #b45309;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.evaluation-panel__header > div:first-child {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.score-recalculate-actions .action-btn {
+  min-width: 175px;
+  white-space: nowrap;
+  justify-content: center;
 }

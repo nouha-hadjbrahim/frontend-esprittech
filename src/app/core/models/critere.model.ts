@@ -1,7 +1,6 @@
-/** Énumération des réponses possibles pour un critère éliminatoire. */
 export enum ReponseEliminatoire {
   OK = 'OK',
-  NOT_OK = 'NOT_OK'
+  NOT_OK = 'NOT_OK',
 }
 
 export type ModeEvaluation =
@@ -25,6 +24,50 @@ export const MODE_EVALUATION_OPTIONS: { value: ModeEvaluation; label: string }[]
   { value: 'MANUAL_ADMIN_VALUE', label: 'Valeur manuelle admin' },
 ];
 
+export type RuleOperator =
+  | 'EXISTS'
+  | 'NOT_EXISTS'
+  | 'EQUALS'
+  | 'NOT_EQUALS'
+  | 'CONTAINS'
+  | 'GTE'
+  | 'LTE'
+  | 'BETWEEN'
+  | 'COUNT_GTE'
+  | 'COUNT_LTE';
+
+export const RULE_OPERATOR_OPTIONS: { value: RuleOperator; label: string }[] = [
+  { value: 'EXISTS', label: 'Existe' },
+  { value: 'NOT_EXISTS', label: "N'existe pas" },
+  { value: 'EQUALS', label: 'Egal' },
+  { value: 'NOT_EQUALS', label: 'Different' },
+  { value: 'CONTAINS', label: 'Contient' },
+  { value: 'GTE', label: 'Superieur ou egal' },
+  { value: 'LTE', label: 'Inferieur ou egal' },
+  { value: 'BETWEEN', label: 'Entre' },
+  { value: 'COUNT_GTE', label: 'Nombre >=' },
+  { value: 'COUNT_LTE', label: 'Nombre <=' },
+];
+
+export interface NoteLevel {
+  id: number;
+  value: number;
+  label: string;
+  description: string | null;
+  active: boolean;
+  order: number;
+  dateCreation: string;
+  dateMiseAJour: string;
+}
+
+export interface NoteLevelRequest {
+  value: number;
+  label: string;
+  description?: string | null;
+  active?: boolean;
+  order: number;
+}
+
 export interface CritereEvaluationRuleFields {
   modeEvaluation?: ModeEvaluation | null;
   expectedLivrableTypes?: string | null;
@@ -35,7 +78,6 @@ export interface CritereEvaluationRuleFields {
   ruleDescription?: string | null;
 }
 
-/** Base de tous les critères d'évaluation. */
 export interface CritereEvaluation extends CritereEvaluationRuleFields {
   id: number;
   libelle: string;
@@ -47,19 +89,17 @@ export interface CritereEvaluation extends CritereEvaluationRuleFields {
   dateMiseAJour: string;
 }
 
-/** Critère éliminatoire (accepté/rejeté). */
 export interface CritereEliminatoire extends CritereEvaluation {
   reponseAttendue: ReponseEliminatoire;
 }
 
-/** Critère noté (avec barème, poids, seuil). */
 export interface CritereNote extends CritereEvaluation {
-  bareme: number;
+  bareme?: number;
   poids: number;
-  seuil: number;
+  seuil?: number;
+  defaultNoteValue?: number | null;
 }
 
-/** Corps de création/mise à jour d'un critère éliminatoire. */
 export interface CritereEliminatoireRequest extends CritereEvaluationRuleFields {
   libelle: string;
   description?: string;
@@ -69,19 +109,49 @@ export interface CritereEliminatoireRequest extends CritereEvaluationRuleFields 
   actif?: boolean;
 }
 
-/** Corps de création/mise à jour d'un critère noté. */
 export interface CritereNoteRequest extends CritereEvaluationRuleFields {
   libelle: string;
   description?: string;
   domaine: string;
   ordre: number;
-  bareme: number;
+  bareme?: number;
   poids: number;
-  seuil: number;
+  seuil?: number;
+  defaultNoteValue?: number | null;
   actif?: boolean;
 }
 
-/** Requête pour réorganiser les critères. */
+export interface CritereNoteRule {
+  id: number;
+  critereNoteId: number;
+  ruleName: string;
+  description: string | null;
+  metadataKey: string;
+  operator: RuleOperator;
+  expectedValue: string | null;
+  minValue: number | null;
+  maxValue: number | null;
+  noteValue: number;
+  noteLabel: string | null;
+  priority: number;
+  active: boolean;
+  dateCreation: string;
+  dateMiseAJour: string;
+}
+
+export interface CritereNoteRuleRequest {
+  ruleName: string;
+  description?: string | null;
+  metadataKey: string;
+  operator: RuleOperator;
+  expectedValue?: string | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  noteValue: number;
+  priority: number;
+  active?: boolean;
+}
+
 export interface OrdreCritereRequest {
   critereId: number;
   ordre: number;

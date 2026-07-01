@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CritereNote, CritereNoteRequest, OrdreCritereRequest } from '../models/critere.model';
+import { CritereNote, CritereNoteRequest, CritereNoteRule, CritereNoteRuleRequest, OrdreCritereRequest } from '../models/critere.model';
 
 /**
  * Service pour gérer les critères notés.
@@ -44,6 +44,10 @@ export class CritereNoteService {
     return this.http.put<CritereNote>(`${this.baseUrl}/${id}`, request);
   }
 
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
   /**
    * Désactive un critère noté (PATCH).
    */
@@ -63,5 +67,29 @@ export class CritereNoteService {
    */
   reorder(requests: OrdreCritereRequest[]): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/ordre`, requests);
+  }
+
+  findRules(critereId: number): Observable<CritereNoteRule[]> {
+    return this.http.get<CritereNoteRule[]>(`${this.baseUrl}/${critereId}/rules`);
+  }
+
+  createRule(critereId: number, request: CritereNoteRuleRequest): Observable<CritereNoteRule> {
+    return this.http.post<CritereNoteRule>(`${this.baseUrl}/${critereId}/rules`, request);
+  }
+
+  updateRule(ruleId: number, request: CritereNoteRuleRequest): Observable<CritereNoteRule> {
+    return this.http.put<CritereNoteRule>(`${this.baseUrl}/rules/${ruleId}`, request);
+  }
+
+  deleteRule(ruleId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/rules/${ruleId}`);
+  }
+
+  activateRule(ruleId: number): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/rules/${ruleId}/activer`, {});
+  }
+
+  deactivateRule(ruleId: number): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/rules/${ruleId}/desactiver`, {});
   }
 }

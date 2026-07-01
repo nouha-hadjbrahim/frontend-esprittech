@@ -113,76 +113,120 @@
     @if (activeTab === 'Informations') {
     <div class="sujet-detail__content">
       <div class="sujet-detail__main">
-        <article class="detail-panel evaluation-panel">
-          <section class="detail-panel__section">
-            <div class="evaluation-panel__header">
-              <div>
-                <h2 class="detail-panel__title">Évaluation du projet</h2>
-                <p class="detail-panel__text">
-                  @if (sujet.statut !== 'REALISATION_TERMINEE') {
-                    Le score sera calculé automatiquement après la terminaison du projet.
-                  } @else {
-                    Dernière évaluation disponible pour ce projet terminé.
-                  }
-                </p>
-              </div>
-              @if (canRecalculateScore) {
-                <button type="button" class="action-btn" [disabled]="recalculatingScore" (click)="recalculateScore()">
-                  {{ recalculatingScore ? 'Recalcul...' : 'Recalculer score' }}
-                </button>
-              }
-            </div>
-            @if (evaluationMessage) { <div class="tab-alert tab-alert--success">{{ evaluationMessage }}</div> }
-            @if (evaluationError) { <div class="tab-alert tab-alert--danger">{{ evaluationError }}</div> }
-            @if (evaluationLoading) {
-              <div class="sujet-detail__loading">Chargement de l'évaluation...</div>
-            } @else if (evaluation) {
-              <div class="evaluation-grid">
-                <div class="summary-card">
-                  <span class="summary-card__label">Score final</span>
-                  <span class="summary-card__value">{{ evaluation.scoreFinal }} / 100</span>
-                </div>
-                <div class="summary-card">
-                  <span class="summary-card__label">Éligibilité</span>
-                  <span class="summary-card__value">{{ evaluation.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</span>
-                </div>
-                <div class="summary-card">
-                  <span class="summary-card__label">Blocage éliminatoire</span>
-                  <span class="summary-card__value">{{ evaluation.bloqueParEliminatoire ? 'Oui' : 'Non' }}</span>
-                </div>
-                <div class="summary-card">
-                  <span class="summary-card__label">Calculé le</span>
-                  <span class="summary-card__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</span>
-                </div>
-              </div>
+       <article class="detail-panel evaluation-panel">
+  <section class="detail-panel__section">
+    <div class="evaluation-panel__header">
+      <div>
+        <h2 class="detail-panel__title">Évaluation du projet</h2>
+        <p class="detail-panel__text">
+          @if (sujet.statut !== 'REALISATION_TERMINEE') {
+            Le score sera calculé automatiquement après la terminaison du projet.
+          } @else {
+            Dernière évaluation disponible pour ce projet terminé.
+          }
+        </p>
+      </div>
 
-              <app-evaluation-checklist [evaluation]="evaluation" [projectTitle]="sujet.titre"></app-evaluation-checklist>
-
-              @if (evaluation.resultats?.length) {
-                <div class="evaluation-results">
-                  @for (resultat of evaluation.resultats; track resultat.id) {
-                    <div class="evaluation-result-row">
-                      <div>
-                        <strong>{{ resultat.critereLibelle }}</strong>
-                        @if (resultat.critereDomaine) { <span> · {{ resultat.critereDomaine }}</span> }
-                        @if (resultat.commentaire) { <p>{{ resultat.commentaire }}</p> }
-                      </div>
-                      <strong>
-                        @if (resultat.typeCritere === 'ELIMINATOIRE') {
-                          {{ resultat.reponseEliminatoire }}
-                        } @else {
-                          {{ resultat.noteObtenue }}
-                        }
-                      </strong>
-                    </div>
-                  }
-                </div>
-              }
-            } @else if (sujet.statut === 'REALISATION_TERMINEE') {
-              <p class="detail-panel__text">Aucune évaluation enregistrée pour ce projet.</p>
+      @if (canRecalculateScore) {
+        <div class="score-recalculate-actions">
+          <button
+            type="button"
+            class="action-btn"
+            [disabled]="recalculatingScore || scoreCooldownActive"
+            (click)="recalculateScore()"
+          >
+            @if (recalculatingScore) {
+              Recalcul...
+            } @else if (scoreCooldownActive) {
+              Recalcul dans {{ scoreCooldownLabel }}
+            } @else {
+              Recalculer score
             }
-          </section>
-        </article>
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (evaluationMessage) {
+      <div class="tab-alert tab-alert--success">{{ evaluationMessage }}</div>
+    }
+
+    @if (evaluationError) {
+      <div class="tab-alert tab-alert--danger">{{ evaluationError }}</div>
+    }
+
+    @if (scoreCooldownActive) {
+      <div class="tab-alert tab-alert--warning">
+        Le score vient d’être recalculé. Veuillez patienter {{ scoreCooldownLabel }} avant un nouveau recalcul.
+      </div>
+    }
+
+    @if (evaluationLoading) {
+      <div class="sujet-detail__loading">Chargement de l'évaluation...</div>
+    } @else if (evaluation) {
+      <div class="evaluation-grid">
+        <div class="summary-card">
+          <span class="summary-card__label">Score final</span>
+          <span class="summary-card__value">{{ evaluation.scoreFinal }} / 100</span>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-card__label">Éligibilité</span>
+          <span class="summary-card__value">
+            {{ evaluation.eligibleIndustrialisation ? (evaluation.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}
+          </span>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-card__label">Alertes eliminatoires</span>
+          <span class="summary-card__value">
+            {{ evaluation.eliminatoryWarningsCount ?? (evaluation.hasEliminatoryWarnings ? 1 : 0) }}
+          </span>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-card__label">Calculé le</span>
+          <span class="summary-card__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</span>
+        </div>
+      </div>
+
+      <app-evaluation-checklist
+        [evaluation]="evaluation"
+        [projectTitle]="sujet.titre"
+      ></app-evaluation-checklist>
+
+      @if (evaluation.resultats?.length) {
+        <div class="evaluation-results">
+          @for (resultat of evaluation.resultats; track resultat.id) {
+            <div class="evaluation-result-row">
+              <div>
+                <strong>{{ resultat.critereLibelle }}</strong>
+
+                @if (resultat.critereDomaine) {
+                  <span> · {{ resultat.critereDomaine }}</span>
+                }
+
+                @if (resultat.commentaire) {
+                  <p>{{ resultat.commentaire }}</p>
+                }
+              </div>
+
+              <strong>
+                @if (resultat.typeCritere === 'ELIMINATOIRE') {
+                  {{ resultat.reponseEliminatoire }}
+                } @else {
+                  {{ noteResultDisplay(resultat) }}
+                }
+              </strong>
+            </div>
+          }
+        </div>
+      }
+    } @else if (sujet.statut === 'REALISATION_TERMINEE') {
+      <p class="detail-panel__text">Aucune évaluation enregistrée pour ce projet.</p>
+    }
+  </section>
+</article>
 
         <article class="detail-panel">
           <section class="detail-panel__section">
@@ -468,7 +512,7 @@
               <h2 class="detail-panel__title">Demande d'industrialisation</h2>
               <p class="detail-panel__text">
                 Score: {{ sujet.scoreFinal ?? 'non calcule' }} / 100 -
-                {{ sujet.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}
+                {{ sujet.eligibleIndustrialisation ? (sujet.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}
               </p>
             </div>
             @if (canRequestIndustrialisation) {
@@ -477,7 +521,7 @@
           </div>
           @if (!canRequestIndustrialisation) {
             <p class="detail-panel__text">
-              La demande est disponible pour l'encadrant lorsque le projet est termine et eligible.
+              La demande est disponible pour l'encadrant lorsque le projet est termine.
             </p>
           }
         </section>
@@ -530,7 +574,10 @@
       @if (industrialisationError) { <div class="tab-alert tab-alert--danger">{{ industrialisationError }}</div> }
       @if (industrialisationMessage) { <div class="tab-alert tab-alert--success">{{ industrialisationMessage }}</div> }
       @if (hasBlockingEliminatoryAnswer()) {
-        <div class="tab-alert tab-alert--warning">Cette demande contient un critere eliminatoire non conforme.</div>
+        <div class="tab-alert tab-alert--warning">Cette demande contient une ou plusieurs alertes eliminatoires. Elles ne bloquent pas l'envoi, mais la CI les verra.</div>
+      }
+      @for (warning of submissionWarnings; track warning) {
+        <div class="tab-alert tab-alert--warning">{{ warning }}</div>
       }
 
       @if (!industrialisationForm) {
@@ -545,7 +592,7 @@
           </div>
           <div>
             <span>Eligibilite</span>
-            <strong>{{ sujet?.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</strong>
+            <strong>{{ sujet?.eligibleIndustrialisation ? (sujet?.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}</strong>
           </div>
           <div>
             <span>Livrables</span>
@@ -691,7 +738,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="action-btn action-btn--ghost" [disabled]="isIndustrialisationBusy()" (click)="saveIndustrialisationAnswers()">Enregistrer brouillon</button>
-          <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy() || hasBlockingEliminatoryAnswer()" (click)="submitIndustrialisation()">
+          <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy()" (click)="submitIndustrialisation()">
             {{ industrialisationSaving ? 'Soumission...' : 'Soumettre a la CI' }}
           </button>
         </div>
@@ -700,21 +747,39 @@
   </div>
 }
 
-<app-confirm-dialog
-  [isOpen]="terminaisonConfirmOpen"
-  title="Déclarer la terminaison"
-  [message]="terminaisonConfirmMessage"
-  confirmLabel="Terminer sujet"
-  cancelLabel="Annuler"
-  [loading]="terminaisonLoading"
-  (confirmed)="confirmerTerminaison()"
-  (cancelled)="annulerTerminaison()"
-/>
-
-<app-confirm-dialog
-  [isOpen]="!!terminaisonError"
-  title="Erreur"
-  [message]="terminaisonError"
-  [alertOnly]="true"
-  (cancelled)="terminaisonError = ''"
-/>
+@if (eliminatoryWarningConfirmation) {
+  <div class="modal-backdrop" (click)="cancelEliminatoryWarnings()">
+    <div class="industrialisation-modal confirmation-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h2>Alertes eliminatoires</h2>
+          <p class="modal-subtitle">{{ eliminatoryWarningConfirmation.message }}</p>
+        </div>
+        <button type="button" class="modal-close" (click)="cancelEliminatoryWarnings()">Fermer</button>
+      </header>
+      <div class="tab-alert tab-alert--warning">
+        Vous avez {{ eliminatoryWarningConfirmation.nbCriteresEliminatoires }} critere(s) eliminatoire(s) non satisfait(s).
+      </div>
+      <div class="question-list">
+        @for (detail of eliminatoryWarningConfirmation.details; track detail.source + detail.referenceId) {
+          <section class="question-card question-card--blocking">
+            <div class="question-card__header">
+              <div class="question-card__title">
+                <div class="question-card__meta">
+                  <span>{{ detail.source }}</span>
+                </div>
+                <h3>{{ detail.libelle }}</h3>
+              </div>
+              <span class="criterion-badge criterion-badge--elim">Alerte</span>
+            </div>
+            <p class="question-card__description">{{ detail.raison }}</p>
+          </section>
+        }
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="action-btn action-btn--ghost" (click)="cancelEliminatoryWarnings()">Annuler</button>
+        <button type="button" class="action-btn" (click)="confirmEliminatoryWarnings()">Continuer et envoyer</button>
+      </div>
+    </div>
+  </div>
+}
