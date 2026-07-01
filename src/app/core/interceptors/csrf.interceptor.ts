@@ -1,26 +1,25 @@
-import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse } from '@angular/common/http';
-import { tap } from 'rxjs';
+import { HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 
+const COOKIE_NAME = 'XSRF-TOKEN';
 const HEADER_NAME = 'X-XSRF-TOKEN';
-let csrfToken: string | null = null;
 
 export const csrfInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-  let outReq = req;
-  if (csrfToken && !isSafeMethod(req.method)) {
-    outReq = req.clone({ setHeaders: { [HEADER_NAME]: csrfToken } });
+  if (isSafeMethod(req.method)) {
+    return next(req);
   }
 
-  return next(outReq).pipe(
-    tap(event => {
-      if (event instanceof HttpResponse) {
-        const token = event.headers.get(HEADER_NAME);
-        if (token) {
-          csrfToken = token;
-        }
-      }
-    }),
-  );
+  const token = readCookie(COOKIE_NAME);
+  if (!token) {
+    return next(req);
+  }
+
+  return next(req.clone({ setHeaders: { [HEADER_NAME]: token } }));
 };
+
+function readCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[.$?*|{}()\[\]\\\/+^]/g, '\\$&') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 function isSafeMethod(method: string): boolean {
   return ['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method.toUpperCase());
