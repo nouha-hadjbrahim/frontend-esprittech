@@ -28,4 +28,8 @@ export class NoteLevelService {
   deactivate(id: number): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/${id}/desactiver`, {});
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReponseEliminatoire } from '../../../../core/models/critere.model';
-import { EvaluationResponse } from '../../../../core/models/evaluation.model';
+import { EvaluationResponse, ResultatCritereResponse } from '../../../../core/models/evaluation.model';
 import {
   CandidatureIndustrialisation,
   EliminatoryWarningsConfirmation,
@@ -367,6 +367,15 @@ ngOnDestroy(): void {
 
   downloadLivrable(livrable: Livrable): string {
     return this.livrableService.downloadUrl(livrable.id);
+  }
+
+  noteResultDisplay(resultat: ResultatCritereResponse): string {
+    const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;
+    const scale = resultat.bareme && resultat.bareme > 0 ? resultat.bareme : null;
+    if (scale) {
+      return resultat.noteLabel ? `${note}/${scale} - ${resultat.noteLabel}` : `${note}/${scale}`;
+    }
+    return resultat.noteLabel ? resultat.noteLabel : String(note);
   }
 
   openIndustrialisation(): void {

@@ -1,19 +1,20 @@
 <div class="criteres-container">
   <div class="page-header">
     <h1>Criteres d'evaluation des projets</h1>
-    <p class="subtitle">Gestion des criteres, niveaux de note 1..5 et regles metadata.</p>
+    <p class="subtitle">Gestion des criteres, niveaux de note configurables et regles metadata.</p>
   </div>
 
   <div *ngIf="successMessage()" class="alert alert-success">{{ successMessage() }}</div>
+  <div *ngIf="warningMessage()" class="alert alert-warning">{{ warningMessage() }}</div>
   <div *ngIf="errorMessage()" class="alert alert-error">{{ errorMessage() }}</div>
 
   <section class="criteres-section">
     <div class="section-header">
       <div>
-        <h2>Niveaux de note</h2>
+        <h2>Niveaux de note configurables</h2>
         <p class="section-meta">{{ noteLevels().length }} niveau(x) configuré(s)</p>
       </div>
-      <button class="btn btn-primary" type="button" (click)="openNoteLevelModal()" [disabled]="saving()">+ Ajouter</button>
+      <button class="btn btn-primary" type="button" (click)="openNoteLevelModal()" [disabled]="operationInProgress()">+ Ajouter</button>
     </div>
     <div class="table-responsive">
       <table class="criteria-table">
@@ -39,8 +40,9 @@
               </span>
             </td>
             <td class="actions">
-              <button class="icon-btn-action edit" type="button" title="Modifier" (click)="openNoteLevelModal(level)">✎</button>
-              <button class="icon-btn-action" type="button" [title]="level.active ? 'Desactiver' : 'Activer'" (click)="toggleNoteLevel(level)">⏻</button>
+              <button class="icon-btn-action delete" type="button" title="Supprimer" [disabled]="operationInProgress()" (click)="deleteNoteLevel(level)">x</button>
+              <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openNoteLevelModal(level)">✎</button>
+              <button class="icon-btn-action" type="button" [title]="level.active ? 'Desactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleNoteLevel(level)">⏻</button>
             </td>
           </tr>
         </tbody>
@@ -59,7 +61,7 @@
           <span class="search-icon" aria-hidden="true">⌕</span>
           <input id="search-eliminatoires" type="search" placeholder="Rechercher..." [value]="eliminatoiresSearch()" (input)="updateEliminatoiresSearch($any($event.target).value)" />
         </label>
-        <button class="btn btn-primary" type="button" (click)="openCreateModal('eliminatoire')" [disabled]="saving() || deleting()">+ Ajouter</button>
+        <button class="btn btn-primary" type="button" (click)="openCreateModal('eliminatoire')" [disabled]="operationInProgress()">+ Ajouter</button>
       </div>
     </div>
 
@@ -96,8 +98,8 @@
               <span [class]="'badge badge-' + (crit.actif ? 'success' : 'secondary')">{{ crit.actif ? 'Actif' : 'Inactif' }}</span>
             </td>
             <td class="actions">
-              <button class="icon-btn-action edit" type="button" title="Modifier" (click)="openEditModal('eliminatoire', crit)">✎</button>
-              <button class="icon-btn-action" type="button" [title]="crit.actif ? 'Desactiver' : 'Activer'" (click)="toggleActivation('eliminatoire', crit)">⏻</button>
+              <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openEditModal('eliminatoire', crit)">✎</button>
+              <button class="icon-btn-action" type="button" [title]="crit.actif ? 'Desactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleActivation('eliminatoire', crit)">⏻</button>
             </td>
           </tr>
         </tbody>
@@ -123,7 +125,7 @@
           <span class="search-icon" aria-hidden="true">⌕</span>
           <input id="search-notes" type="search" placeholder="Rechercher..." [value]="notesSearch()" (input)="updateNotesSearch($any($event.target).value)" />
         </label>
-        <button class="btn btn-primary" type="button" (click)="openCreateModal('note')" [disabled]="saving() || deleting()">+ Ajouter</button>
+        <button class="btn btn-primary" type="button" (click)="openCreateModal('note')" [disabled]="operationInProgress()">+ Ajouter</button>
       </div>
     </div>
 
@@ -154,9 +156,9 @@
               <div class="rule-list" *ngIf="rulesFor(crit.id).length">
                 <span *ngFor="let rule of rulesFor(crit.id)" class="rule-chip" [class.rule-chip--inactive]="!rule.active">
                   {{ rule.priority }}. {{ rule.ruleName }} → {{ noteLabel(rule.noteValue) }}
-                  <button type="button" (click)="openRuleModal(crit, rule)">Modifier</button>
-                  <button type="button" (click)="toggleRule(rule)">{{ rule.active ? 'Desactiver' : 'Activer' }}</button>
-                  <button type="button" (click)="deleteRule(rule)">Supprimer</button>
+                  <button type="button" [disabled]="operationInProgress()" (click)="openRuleModal(crit, rule)">Modifier</button>
+                  <button type="button" [disabled]="operationInProgress()" (click)="toggleRule(rule)">{{ rule.active ? 'Desactiver' : 'Activer' }}</button>
+                  <button type="button" [disabled]="operationInProgress()" (click)="deleteRule(rule)">Supprimer</button>
                 </span>
               </div>
             </td>
@@ -164,14 +166,15 @@
             <td class="text-center">{{ crit.poids }}</td>
             <td class="text-center">{{ noteLabel(crit.defaultNoteValue || 3) }}</td>
             <td class="text-center">
-              <button class="btn btn-sm btn-secondary" type="button" (click)="openRuleModal(crit)">+ Regle</button>
+              <button class="btn btn-sm btn-secondary" type="button" [disabled]="operationInProgress()" (click)="openRuleModal(crit)">+ Regle</button>
             </td>
             <td class="text-center">
               <span [class]="'badge badge-' + (crit.actif ? 'success' : 'secondary')">{{ crit.actif ? 'Actif' : 'Inactif' }}</span>
             </td>
             <td class="actions">
-              <button class="icon-btn-action edit" type="button" title="Modifier" (click)="openEditModal('note', crit)">✎</button>
-              <button class="icon-btn-action" type="button" [title]="crit.actif ? 'Desactiver' : 'Activer'" (click)="toggleActivation('note', crit)">⏻</button>
+              <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openEditModal('note', crit)">✎</button>
+              <button class="icon-btn-action" type="button" [title]="crit.actif ? 'Desactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleActivation('note', crit)">⏻</button>
+              <button class="icon-btn-action delete" type="button" title="Supprimer" [disabled]="operationInProgress()" (click)="deleteCritereNote(crit)">×</button>
             </td>
           </tr>
         </tbody>
@@ -253,7 +256,7 @@
             <div class="form-group">
               <label>Note par defaut</label>
               <select formControlName="defaultNoteValue" class="form-control">
-                <option *ngFor="let level of noteLevels()" [value]="level.value">{{ level.value }} - {{ level.label }}</option>
+                <option *ngFor="let level of activeNoteLevels()" [value]="level.value">{{ level.value }} - {{ level.label }}</option>
               </select>
             </div>
           </div>
@@ -264,7 +267,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" (click)="closeModal()" [disabled]="saving()">Annuler</button>
-        <button class="btn btn-primary" type="button" (click)="saveCritere()" [disabled]="saving()">{{ saving() ? 'Enregistrement...' : 'Enregistrer' }}</button>
+        <button class="btn btn-primary" type="button" (click)="saveCritere()" [disabled]="operationInProgress()">{{ saving() ? 'Enregistrement...' : 'Enregistrer' }}</button>
       </div>
     </div>
   </div>
@@ -304,7 +307,7 @@
           <div class="form-group">
             <label>Note attribuee</label>
             <select formControlName="noteValue" class="form-control">
-              <option *ngFor="let level of noteLevels()" [value]="level.value">{{ level.value }} - {{ level.label }}</option>
+              <option *ngFor="let level of activeNoteLevels()" [value]="level.value">{{ level.value }} - {{ level.label }}</option>
             </select>
           </div>
         </div>
@@ -330,7 +333,7 @@
       </form>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" (click)="closeRuleModal()" [disabled]="saving()">Annuler</button>
-        <button class="btn btn-primary" type="button" (click)="saveRule()" [disabled]="saving()">Enregistrer</button>
+        <button class="btn btn-primary" type="button" (click)="saveRule()" [disabled]="operationInProgress()">Enregistrer</button>
       </div>
     </div>
   </div>
@@ -345,11 +348,11 @@
         <div class="form-row">
           <div class="form-group">
             <label>Valeur *</label>
-            <input type="number" formControlName="value" class="form-control" min="1" max="5" />
+            <input type="number" formControlName="value" class="form-control" min="1" [readonly]="noteLevelModalMode === 'edit'" />
           </div>
           <div class="form-group">
             <label>Ordre *</label>
-            <input type="number" formControlName="order" class="form-control" min="1" />
+            <input type="number" formControlName="order" class="form-control" min="1" [readonly]="noteLevelModalMode === 'edit'" />
           </div>
         </div>
         <div class="form-group">
@@ -366,7 +369,7 @@
       </form>
       <div class="modal-footer">
         <button class="btn btn-secondary" type="button" (click)="closeNoteLevelModal()" [disabled]="saving()">Annuler</button>
-        <button class="btn btn-primary" type="button" (click)="saveNoteLevel()" [disabled]="saving()">Enregistrer</button>
+        <button class="btn btn-primary" type="button" (click)="saveNoteLevel()" [disabled]="operationInProgress()">Enregistrer</button>
       </div>
     </div>
   </div>

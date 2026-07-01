@@ -102,12 +102,18 @@ describe('EvaluationPageComponent', () => {
   });
 
   it('should filter projects with normalized text and eligibility labels', () => {
-    component.projects.set(projects.slice(0, 2));
+    component.projects.set(projects);
 
-    expect(component.filteredProjects().length).toBe(2);
+    expect(component.filteredProjects().length).toBe(3);
 
     component.updateProjectSearch('eligible');
     expect(component.filteredProjects().map((project) => project.id)).toEqual([2]);
+
+    component.updateProjectSearch('non eligible');
+    expect(component.filteredProjects().map((project) => project.id)).toEqual([3]);
+
+    component.updateProjectSearch('en attente');
+    expect(component.filteredProjects().map((project) => project.id)).toEqual([1]);
 
     component.updateProjectSearch('plateforme');
     expect(component.filteredProjects().map((project) => project.id)).toEqual([1]);

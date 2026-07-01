@@ -36,6 +36,12 @@
   border-color: #fecaca;
 }
 
+.alert-warning {
+  color: #9a3412;
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
 .criteres-section {
   overflow: hidden;
   background: #fff;
@@ -336,6 +342,11 @@
 
 .icon-btn-action.deactivate:hover {
   color: #ef4444;
+  background: #fef2f2;
+}
+
+.icon-btn-action.delete:hover {
+  color: #dc2626;
   background: #fef2f2;
 }
 
