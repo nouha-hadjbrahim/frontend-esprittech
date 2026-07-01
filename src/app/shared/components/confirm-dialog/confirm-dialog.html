@@ -35,9 +35,7 @@
         }
         <button
           type="button"
-          class="confirm-dialog__btn"
-          [class.confirm-dialog__btn--confirm]="!alertOnly"
-          [class.confirm-dialog__btn--close]="alertOnly"
+          class="confirm-dialog__btn confirm-dialog__btn--confirm"
           [disabled]="loading"
           (click)="alertOnly ? cancel() : confirm()"
         >

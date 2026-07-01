@@ -1,1 +1,200 @@
-<p>mes-candidatures works!</p>
+<div class="mes-candidatures">
+  <header class="mes-candidatures__header">
+    <div class="mes-candidatures__header-text">
+      <h1 class="mes-candidatures__title">Mes candidatures</h1>
+      <p class="mes-candidatures__subtitle">
+        Suivez l'état de vos candidatures et retirez celles encore en attente de traitement.
+      </p>
+    </div>
+    <a routerLink="/frontoffice/sujets/disponibles" class="mes-candidatures__cta">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Explorer les sujets
+    </a>
+  </header>
+
+  <div class="mes-candidatures__toolbar">
+    <div class="mes-candidatures__search-box">
+      <svg class="mes-candidatures__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="mes-candidatures__search-input"
+        placeholder="Rechercher par sujet, encadrant ou message..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="mes-candidatures__filters">
+      <app-filter-dropdown
+        class="mes-candidatures__filter mes-candidatures__filter--type"
+        label="Type"
+        [options]="categorieOptions"
+        [value]="selectedCategorie"
+        (valueChange)="onCategorieChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="mes-candidatures__filter mes-candidatures__filter--statut"
+        label="Statut"
+        [options]="statutOptions"
+        [value]="selectedStatut"
+        (valueChange)="onStatutChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="mes-candidatures__filter mes-candidatures__filter--sort"
+        label="Plus récentes"
+        [options]="sortOptions"
+        [value]="sortOrder"
+        defaultValue="recent"
+        [showSortIcon]="true"
+        (valueChange)="onSortChange($event)"
+      />
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="mes-candidatures__loading">
+      <span class="mes-candidatures__spinner" aria-hidden="true"></span>
+      Chargement de vos candidatures...
+    </div>
+  } @else if (loadError) {
+    <div class="mes-candidatures__error">{{ loadError }}</div>
+  } @else if (filteredCandidatures.length === 0) {
+    <div class="mes-candidatures__empty">
+      <div class="mes-candidatures__empty-icon" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="10" y="8" width="28" height="34" rx="4" stroke="#fecaca" stroke-width="2"/>
+          <path d="M18 18H30M18 24H26M18 30H22" stroke="#fecaca" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="34" cy="14" r="9" fill="#fef2f2" stroke="#E23E3E" stroke-width="1.5"/>
+          <path d="M34 10V18M30 14H38" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="mes-candidatures__empty-title">Aucune candidature trouvée</h2>
+      <p class="mes-candidatures__empty-text">
+        @if (candidatures.length === 0) {
+          Vous n'avez pas encore postulé à un sujet.
+        } @else {
+          Aucun résultat ne correspond à vos filtres.
+        }
+      </p>
+      <a routerLink="/frontoffice/sujets/disponibles" class="mes-candidatures__empty-btn">
+        Voir les sujets disponibles
+      </a>
+    </div>
+  } @else {
+    <div class="mes-candidatures__list" role="list">
+      @for (candidature of filteredCandidatures; track candidature.id) {
+        <article class="candidature-row" role="listitem">
+          <div class="candidature-row__accent" [class]="getStatutClass(candidature.statut)"></div>
+
+          <div class="candidature-row__main">
+            <div class="candidature-row__top">
+              <div class="candidature-row__title-block">
+                <a
+                  class="candidature-row__title"
+                  [routerLink]="['/frontoffice/sujets', candidature.sujetId]"
+                >
+                  {{ getSujetTitre(candidature) }}
+                </a>
+                <div class="candidature-row__badges">
+                  <span class="badge" [class]="getCategorieClass(candidature.sujetCategorie)">
+                    {{ getCategorieLabel(candidature.sujetCategorie) }}
+                  </span>
+                  <span class="badge" [class]="getStatutClass(candidature.statut)">
+                    {{ getStatutLabel(candidature.statut) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="candidature-row__actions">
+                @if (canRetirer(candidature)) {
+                  <button
+                    type="button"
+                    class="candidature-row__withdraw"
+                    (click)="openDeleteConfirm(candidature)"
+                    title="Retirer la candidature"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M3 6H5H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="1.5"/>
+                      <path d="M10 11V17M14 11V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M6 6L7 19.5C7 20.33 7.67 21 8.5 21H15.5C16.33 21 17 20.33 17 19.5L18 6" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                    Retirer
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="candidature-row__meta">
+              @if (candidature.encadrantNom) {
+                <span class="candidature-row__meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M5 20C5 16.134 8.134 13 12 13C15.866 13 19 16.134 19 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  {{ candidature.encadrantNom }}
+                </span>
+              }
+              <span class="candidature-row__meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="4" y="5" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M8 3V7M16 3V7M4 11H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                Déposée le {{ candidature.dateDepot | date:'dd MMM yyyy' }}
+              </span>
+              @if (candidature.dateDecision) {
+                <span class="candidature-row__meta-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  Traitée le {{ candidature.dateDecision | date:'dd MMM yyyy' }}
+                </span>
+              }
+            </div>
+
+            @if (candidature.messageEtudiant) {
+              <blockquote class="candidature-row__message">
+                <span class="candidature-row__message-label">Message de motivation</span>
+                {{ candidature.messageEtudiant }}
+              </blockquote>
+            }
+
+            @if (candidature.statut === 'REFUSEE' && candidature.motifRefus) {
+              <div class="candidature-row__refus">
+                <span class="candidature-row__refus-label">Motif du refus</span>
+                {{ candidature.motifRefus }}
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+<app-confirm-dialog
+  [isOpen]="deleteConfirmOpen"
+  title="Retirer la candidature"
+  [message]="deleteConfirmMessage"
+  confirmLabel="Retirer"
+  cancelLabel="Annuler"
+  [loading]="deleting"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>
+
+<app-confirm-dialog
+  [isOpen]="actionAlertOpen"
+  title="Erreur"
+  [message]="actionAlertMessage"
+  [alertOnly]="true"
+  (cancelled)="closeActionAlert()"
+/>

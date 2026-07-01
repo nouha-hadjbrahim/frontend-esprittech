@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { PostulerModal } from './postuler-modal';
 import { CandidatureService } from '../../../../core/services/candidature.service';
@@ -83,7 +83,7 @@ describe('PostulerModal', () => {
     expect(candidatureServiceSpy.deposerCandidature).toHaveBeenCalled();
   });
 
-  it('should set success=true and emit submitted after successful submission', fakeAsync(() => {
+  it('should set success=true after successful submission', () => {
     candidatureServiceSpy.deposerCandidature.and.returnValue(of(MOCK_CANDIDATURE));
     const submittedSpy = jasmine.createSpy('submitted');
     component.submitted.subscribe(submittedSpy);
@@ -91,10 +91,11 @@ describe('PostulerModal', () => {
     component.postuler();
     expect(component.success).toBeTrue();
     expect(component.loading).toBeFalse();
+    expect(submittedSpy).not.toHaveBeenCalled();
 
-    tick(1500);
+    component.closeAfterSuccess();
     expect(submittedSpy).toHaveBeenCalled();
-  }));
+  });
 
   it('should set error message on failure', () => {
     candidatureServiceSpy.deposerCandidature.and.returnValue(

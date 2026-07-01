@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, of, tap } from 'rxjs';
@@ -17,12 +17,10 @@ const LEGACY_STORAGE_KEYS = [
 ];
 
 /**
- * Service d'authentification basé sur des cookies HttpOnly.
- *
- * Les tokens (access + refresh) sont gérés exclusivement par le navigateur via des
- * cookies HttpOnly posés par le backend : le frontend n'y touche jamais et ne stocke
- * AUCUNE donnée sensible dans le localStorage. Seules les infos utilisateur non
- * sensibles sont conservées en mémoire (signal), restaurées au démarrage via /auth/me.
+ * Authentification hybride :
+ * - cookies HttpOnly (access + refresh) posés par le backend ;
+ * - access token en mémoire (signal), lu depuis l'en-tête Authorization des réponses login/refresh,
+ *   renvoyé en Bearer sur chaque requête (fiabilise les POST via le proxy Angular).
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -31,61 +29,57 @@ export class AuthService {
 
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
-  /** Utilisateur courant, en mémoire uniquement (perdu au refresh → restauré via /auth/me). */
   private readonly _currentUser = signal<User | null>(null);
+  private readonly _accessToken = signal<string | null>(null);
+
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
 
   constructor() {
-    // Migration : on efface tout résidu de l'ancien stockage localStorage.
     this.clearLegacyStorage();
   }
 
-  /** Inscription : le backend crée le compte et pose les cookies ; on récupère l'utilisateur. */
+  /** Access token en mémoire (complément au cookie HttpOnly). */
+  accessToken(): string | null {
+    return this._accessToken();
+  }
+
   register(request: RegisterRequest): Observable<User> {
-    return this.http
-      .post<User>(`${this.baseUrl}/register`, request)
-      .pipe(tap((user) => this._currentUser.set(user)));
+    return this.authPost<User>(`${this.baseUrl}/register`, request);
   }
 
-  /** Connexion : le backend pose les cookies HttpOnly ; on stocke l'utilisateur en mémoire. */
   login(request: LoginRequest): Observable<User> {
-    return this.http
-      .post<User>(`${this.baseUrl}/login`, request)
-      .pipe(tap((user) => this._currentUser.set(user)));
+    return this.authPost<User>(`${this.baseUrl}/login`, request);
   }
 
-  /** Rafraîchit l'access token : le cookie refresh_token est envoyé automatiquement. */
   refreshToken(): Observable<User> {
-    return this.http
-      .post<User>(`${this.baseUrl}/refresh`, {})
-      .pipe(tap((user) => this._currentUser.set(user)));
+    return this.authPost<User>(`${this.baseUrl}/refresh`, {});
   }
 
-  /** Récupère le profil courant depuis le backend (cookie d'accès) et met à jour l'état local. */
   getCurrentUser(): Observable<User> {
     return this.http
-      .get<User>(`${this.baseUrl}/me`)
-      .pipe(tap((user) => this._currentUser.set(user)));
+      .get<User>(`${this.baseUrl}/me`, { observe: 'response' })
+      .pipe(
+        tap((response) => this.captureAccessToken(response)),
+        map((response) => response.body as User),
+        tap((user) => this._currentUser.set(user)),
+      );
   }
 
-  /**
-   * Restaure la session au démarrage de l'app : si le cookie d'accès est encore valide,
-   * /auth/me renvoie l'utilisateur ; sinon on reste déconnecté (sans erreur).
-   * Utilisé par l'APP_INITIALIZER.
-   */
   restoreSession(): Observable<void> {
-    return this.http.get<User>(`${this.baseUrl}/me`).pipe(
-      tap((user) => this._currentUser.set(user)),
+    return this.http.get<User>(`${this.baseUrl}/me`, { observe: 'response' }).pipe(
+      tap((response) => {
+        this.captureAccessToken(response);
+        this._currentUser.set(response.body);
+      }),
       map(() => undefined),
       catchError(() => {
-        this._currentUser.set(null);
+        this.clearSession();
         return of(undefined);
       }),
     );
   }
 
-  /** Déconnexion : le backend efface les cookies, puis on vide l'état local et on redirige. */
   logout(): void {
     this.http.post<void>(`${this.baseUrl}/logout`, {}).subscribe({
       next: () => this.finalizeLogout(),
@@ -93,43 +87,39 @@ export class AuthService {
     });
   }
 
-  /** Vide l'état d'authentification en mémoire (sans appel réseau). */
   clearSession(): void {
     this._currentUser.set(null);
+    this._accessToken.set(null);
   }
 
-  /** true si un utilisateur est authentifié (présent en mémoire). */
   isLoggedIn(): boolean {
     return this._currentUser() !== null;
   }
 
-  /** Rôle de l'utilisateur courant (ou null). */
   getRole(): Role | null {
     return this._currentUser()?.role ?? null;
   }
 
-  /** true si l'utilisateur courant est affilié à une équipe de recherche (membre ou chef). */
   isAffilieToEquipe(): boolean {
     return this._currentUser()?.isAffilieToEquipe ?? false;
   }
 
-  /** Identifiant de l'équipe de recherche de l'utilisateur courant (ou null). */
   equipeId(): number | null {
     return this._currentUser()?.equipeId ?? null;
   }
 
-  /** Nom de l'équipe de recherche de l'utilisateur courant (ou null). */
   equipeNom(): string | null {
     return this._currentUser()?.equipeNom ?? null;
   }
 
-  /** Route d'atterrissage après connexion, selon le rôle de l'utilisateur. */
   landingRoute(): string {
     switch (this.getRole()) {
       case 'ROLE_ADMIN':
         return '/backoffice/users';
       case 'ROLE_ENSEIGNANT':
-        return '/frontoffice/sujets/mes-sujets';
+        return this.isAffilieToEquipe()
+          ? '/frontoffice/sujets/mes-sujets'
+          : '/frontoffice/catalogue';
       case 'ROLE_ETUDIANT':
         return '/frontoffice/sujets/disponibles';
       case 'ROLE_CI':
@@ -138,6 +128,21 @@ export class AuthService {
         return '/frontoffice/tableau-de-bord';
       default:
         return '/frontoffice/sujets/disponibles';
+    }
+  }
+
+  private authPost<T>(url: string, body: unknown): Observable<T> {
+    return this.http.post<T>(url, body, { observe: 'response' }).pipe(
+      tap((response) => this.captureAccessToken(response)),
+      map((response) => response.body as T),
+      tap((user) => this._currentUser.set(user as unknown as User)),
+    );
+  }
+
+  private captureAccessToken(response: HttpResponse<unknown>): void {
+    const authHeader = response.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      this._accessToken.set(authHeader.slice('Bearer '.length).trim());
     }
   }
 

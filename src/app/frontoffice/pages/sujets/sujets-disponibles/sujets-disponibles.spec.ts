@@ -17,17 +17,19 @@ describe('SujetsDisponibles', () => {
   const mockSujets: any[] = [
     {
       id: 1, titre: 'IA Project', categorie: 'STAGE_INGENIEUR',
+      description: 'Projet sur l intelligence artificielle',
       domaines: ['Intelligence Artificielle'], technologies: ['Python'],
       encadrantNom: 'Dr. Martin', capaciteAccueil: 2,
-      statut: 'CANDIDATURE_OUVERTE',
+      statut: 'CANDIDATURE_OUVERTE', catalogue: true,
       dateCreation: '2026-06-01T00:00:00Z',
       dateSoumission: '2026-06-01T00:00:00Z',
     },
     {
       id: 2, titre: 'Web App', categorie: 'PFE',
+      description: 'Application web full stack',
       domaines: ['Web'], technologies: ['Angular', 'Spring'],
       encadrantNom: 'Dr. Sami', capaciteAccueil: 1,
-      statut: 'CANDIDATURE_OUVERTE',
+      statut: 'CANDIDATURE_OUVERTE', catalogue: true,
       dateCreation: '2026-06-02T00:00:00Z',
       dateSoumission: '2026-06-02T00:00:00Z',
     },

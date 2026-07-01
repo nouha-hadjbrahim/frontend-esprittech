@@ -132,16 +132,19 @@ describe('GererCandidaturesModal', () => {
   });
 
   // ── fermerCandidatures ────────────────────────────────────────────
-  it('fermerCandidatures should call service and emit changed', () => {
+  it('fermerCandidatures should call service, emit changed and close modal', () => {
     candidatureServiceSpy.fermerCandidatures.and.returnValue(of(undefined));
     component.sujet = mockSujetOuvert;
     const changedSpy = jasmine.createSpy('changed');
+    const closedSpy = jasmine.createSpy('closed');
     component.changed.subscribe(changedSpy);
+    component.closed.subscribe(closedSpy);
 
     component.fermerCandidatures();
 
     expect(candidatureServiceSpy.fermerCandidatures).toHaveBeenCalledWith(2);
     expect(changedSpy).toHaveBeenCalled();
+    expect(closedSpy).toHaveBeenCalled();
   });
 
   // ── accepterCandidature ───────────────────────────────────────────
@@ -158,46 +161,42 @@ describe('GererCandidaturesModal', () => {
   });
 
   // ── motif refus ───────────────────────────────────────────────────
-  it('ouvrirMotifRefus should set motifTargetId and type', () => {
+  it('ouvrirMotifRefus should set motifTargetId', () => {
     component.ouvrirMotifRefus(mockCandidature);
     expect(component.motifTargetId).toBe(10);
-    expect(component.motifTargetType).toBe('refus');
   });
 
   it('annulerMotif should reset motif state', () => {
     component.motifTargetId = 10;
-    component.motifTargetType = 'refus';
     component.motifText = 'test';
     component.annulerMotif();
     expect(component.motifTargetId).toBeNull();
-    expect(component.motifTargetType).toBeNull();
     expect(component.motifText).toBe('');
   });
 
   it('confirmerMotif should not call service if motifText is empty', () => {
     component.motifTargetId = 10;
-    component.motifTargetType = 'refus';
     component.motifText = '';
     component.confirmerMotif();
     expect(candidatureServiceSpy.refuserCandidature).not.toHaveBeenCalled();
   });
 
-  it('confirmerMotif refus should call refuserCandidature', () => {
+  it('confirmerMotif should call refuserCandidature', () => {
     candidatureServiceSpy.refuserCandidature.and.returnValue(of(mockCandidature));
     component.motifTargetId = 10;
-    component.motifTargetType = 'refus';
     component.motifText = 'Profil insuffisant';
     component.confirmerMotif();
     expect(candidatureServiceSpy.refuserCandidature).toHaveBeenCalledWith(10, 'Profil insuffisant');
   });
 
-  it('confirmerMotif retrait should call retirerEtudiant', () => {
-    candidatureServiceSpy.retirerEtudiant.and.returnValue(of(mockAffectation));
-    component.motifTargetId = 20;
-    component.motifTargetType = 'retrait';
-    component.motifText = 'Abandon';
-    component.confirmerMotif();
-    expect(candidatureServiceSpy.retirerEtudiant).toHaveBeenCalledWith(20, 'Abandon');
+  it('demandesCandidatures should only include DEPOSEE candidatures', () => {
+    component.candidatures = [
+      mockCandidature,
+      { ...mockCandidature, id: 11, statut: 'ACCEPTEE' },
+      { ...mockCandidature, id: 12, statut: 'REFUSEE' },
+    ];
+    expect(component.demandesCandidatures.length).toBe(1);
+    expect(component.demandesCandidatures[0].statut).toBe('DEPOSEE');
   });
 
   // ── affectationsActives / Archivees ──────────────────────────────

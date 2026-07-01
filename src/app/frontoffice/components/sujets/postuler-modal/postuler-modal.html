@@ -1,80 +1,141 @@
-<div class="modal-overlay" (click)="close()">
-  <div class="modal-panel" (click)="$event.stopPropagation()">
+<div class="modal-overlay" role="presentation" (click)="close()">
+  <div
+    class="modal-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="success ? 'postuler-success-title' : 'postuler-modal-title'"
+    (click)="$event.stopPropagation()"
+  >
+  @if (success) {
+    <div class="success-view">
+      <button type="button" class="modal-close" aria-label="Fermer" (click)="closeAfterSuccess()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
 
-    <!-- Header -->
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <div class="modal-icon">📝</div>
+      <div class="success-view__icon" aria-hidden="true">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+          <path d="M10 16.5L14 20.5L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h2 id="postuler-success-title" class="success-view__title">Candidature soumise</h2>
+      <p class="success-view__text">Votre candidature a bien été enregistrée.</p>
+      <p class="success-view__sub">L'encadrant va examiner votre dossier et vous notifiera de sa décision.</p>
+
+      @if (sujet) {
+        <div class="success-view__sujet">
+          <span class="success-view__sujet-label">Sujet</span>
+          <span class="success-view__sujet-titre">{{ sujet.titre }}</span>
+        </div>
+      }
+
+      <button type="button" class="btn-primary btn-primary--full" (click)="closeAfterSuccess()">
+        Fermer
+      </button>
+    </div>
+  } @else {
+    <header class="modal-header">
+      <div class="modal-header__leading">
+        <div class="modal-header__icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6C5.45 2 5 2.45 5 3V21C5 21.55 5.45 22 6 22H18C18.55 22 19 21.55 19 21V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M14 2V8H19" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M8 13H16M8 17H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
         <div>
-          <h2 class="modal-title">Soumettre une candidature</h2>
-          <p class="modal-subtitle" *ngIf="sujet">{{ sujet.titre }}</p>
+          <h2 id="postuler-modal-title" class="modal-title">Soumettre une candidature</h2>
+          @if (sujet) {
+            <p class="modal-subtitle">{{ sujet.titre }}</p>
+          }
         </div>
       </div>
-      <button class="btn-close" (click)="close()">✕</button>
-    </div>
+      <button type="button" class="modal-close" aria-label="Fermer" (click)="close()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </header>
 
-    <!-- Success state -->
-    <div class="success-state" *ngIf="success">
-      <div class="success-icon">✅</div>
-      <p class="success-text">Candidature soumise avec succès !</p>
-      <p class="success-sub">L'encadrant va examiner votre candidature.</p>
-    </div>
-
-    <!-- Form -->
-    <div class="modal-body" *ngIf="!success">
-
-      <!-- Sujet info -->
-      <div class="sujet-info" *ngIf="sujet">
-        <div class="info-row">
-          <span class="info-label">Catégorie</span>
-          <span class="badge-categorie">{{ sujet.categorie }}</span>
-        </div>
-        <div class="info-row" *ngIf="sujet.encadrantNom">
-          <span class="info-label">Encadrant</span>
-          <span class="info-value">{{ sujet.encadrantNom }}</span>
-        </div>
-        <div class="info-row" *ngIf="sujet.domaines?.length">
-          <span class="info-label">Domaine</span>
-          <span class="info-value">{{ sujet.domaines.join(', ') }}</span>
-        </div>
-        <div class="info-row" *ngIf="sujet.technologies?.length">
-          <span class="info-label">Technologies</span>
-          <div class="tech-tags">
-            <span class="tech-tag" *ngFor="let t of sujet.technologies">{{ t }}</span>
+    <div class="modal-body">
+      @if (sujet) {
+        <dl class="sujet-meta">
+          <div class="sujet-meta__row">
+            <dt>Catégorie</dt>
+            <dd><span class="badge-categorie">{{ sujet.categorie }}</span></dd>
           </div>
-        </div>
-      </div>
+          @if (sujet.encadrantNom) {
+            <div class="sujet-meta__row">
+              <dt>Encadrant</dt>
+              <dd>{{ sujet.encadrantNom }}</dd>
+            </div>
+          }
+          @if (sujet.domaines?.length) {
+            <div class="sujet-meta__row">
+              <dt>Domaine</dt>
+              <dd>{{ sujet.domaines.join(', ') }}</dd>
+            </div>
+          }
+          @if (sujet.technologies?.length) {
+            <div class="sujet-meta__row sujet-meta__row--stack">
+              <dt>Technologies</dt>
+              <dd>
+                <div class="tech-tags">
+                  @for (t of sujet.technologies; track t) {
+                    <span class="tech-tag">{{ t }}</span>
+                  }
+                </div>
+              </dd>
+            </div>
+          }
+        </dl>
+      }
 
-      <!-- Message field -->
       <div class="field-group">
-        <label class="field-label">
+        <label class="field-label" for="motivation">
           Message de motivation <span class="optional">(optionnel)</span>
         </label>
         <textarea
+          id="motivation"
           class="field-textarea"
           [(ngModel)]="message"
           placeholder="Expliquez brièvement votre motivation et vos compétences en lien avec ce sujet..."
           rows="5"
-          [disabled]="loading">
-        </textarea>
+          [disabled]="loading"
+        ></textarea>
       </div>
 
-      <!-- Error -->
-      <div class="error-banner" *ngIf="error">
-        ⚠️ {{ error }}
-      </div>
+      @if (error) {
+        <div class="error-banner" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12 8V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="0.75" fill="currentColor"/>
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+      }
 
-      <!-- Actions -->
-      <div class="modal-actions">
-        <button class="btn-cancel" (click)="close()" [disabled]="loading">
+      <footer class="modal-actions">
+        <button type="button" class="btn-outline" (click)="close()" [disabled]="loading">
           Annuler
         </button>
-        <button class="btn-submit" (click)="postuler()" [disabled]="loading">
-          <span *ngIf="!loading">🎓 Soumettre ma candidature</span>
-          <span *ngIf="loading">Envoi en cours...</span>
+        <button type="button" class="btn-primary" (click)="postuler()" [disabled]="loading">
+          @if (loading) {
+            <span class="btn-spinner" aria-hidden="true"></span>
+            Envoi en cours...
+          } @else {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3L14.5 8.5L20.5 9.3L16 13.2L17.2 19.2L12 16.5L6.8 19.2L8 13.2L3.5 9.3L9.5 8.5L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+            Soumettre ma candidature
+          }
         </button>
-      </div>
-
+      </footer>
     </div>
+  }
   </div>
 </div>

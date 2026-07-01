@@ -21,8 +21,6 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor, csrfInterceptor]),
     ),
     provideAnimations(),
-    // Au démarrage, tente de restaurer la session via le cookie HttpOnly (/auth/me).
-    // Les gardes de route s'appuient ensuite sur l'utilisateur en mémoire.
     provideAppInitializer(() => inject(AuthService).restoreSession()),
   ],
 };

@@ -45,7 +45,7 @@
     }
   </header>
 
-  <form class="modal__body" [formGroup]="form" (keydown.enter)="onFormEnter($event)">
+  <form class="modal__body" [formGroup]="form" (ngSubmit)="submit()" (keydown.enter)="onFormEnter($event)">
     <div class="modal__categories">
       @for (cat of categories; track cat.value) {
         <button
@@ -182,7 +182,7 @@
 
     <footer class="modal__footer">
       <button type="button" class="btn btn--outline" (click)="close()">Annuler</button>
-      <button type="button" class="btn btn--primary" [disabled]="isSubmitting" (click)="submit()">
+      <button type="submit" class="btn btn--primary" [disabled]="isSubmitting">
         {{ submitLabel }}
       </button>
     </footer>

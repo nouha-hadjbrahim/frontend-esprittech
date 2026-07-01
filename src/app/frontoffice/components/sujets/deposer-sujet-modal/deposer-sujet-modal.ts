@@ -8,6 +8,8 @@ import {
   SimpleChanges,
   inject,
 } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -118,10 +120,12 @@ export class DeposerSujetModal implements OnInit, OnChanges {
     const editChanged = !!changes['editSujet'];
 
     if (closed) {
+      this.isSubmitting = false;
       return;
     }
 
     if (opened || (this.isVisible && editChanged)) {
+      this.isSubmitting = false;
       if (this.editSujet) {
         this.populateForm(this.editSujet);
       } else if (opened || this.isPageLayout) {
@@ -248,6 +252,7 @@ export class DeposerSujetModal implements OnInit, OnChanges {
     if (!this.isVisible) {
       return;
     }
+    this.isSubmitting = false;
     this.errorMessage = '';
     this.closed.emit();
   }
@@ -267,6 +272,7 @@ export class DeposerSujetModal implements OnInit, OnChanges {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
     }
 
@@ -303,19 +309,42 @@ export class DeposerSujetModal implements OnInit, OnChanges {
       operation = this.sujetProjetService.creerSujet(request);
     }
 
-    operation.subscribe({
+    operation.pipe(finalize(() => (this.isSubmitting = false))).subscribe({
       next: () => {
-        this.isSubmitting = false;
         this.resetForm();
         this.saved.emit();
       },
-      error: () => {
-        this.isSubmitting = false;
-        this.errorMessage = this.isEditMode
-          ? 'Erreur lors de la modification. Vérifiez que le backend est démarré.'
-          : 'Erreur lors de l\'envoi. Vérifiez que le backend est démarré.';
+      error: (err) => {
+        this.errorMessage = this.resolveSubmitError(err);
       },
     });
+  }
+
+  private resolveSubmitError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      const body = err.error as { message?: string; detail?: string } | string | null;
+      if (typeof body === 'string' && body.trim()) {
+        return body;
+      }
+      if (body && typeof body === 'object') {
+        if (body.message?.trim()) {
+          return body.message;
+        }
+        if (body.detail?.trim()) {
+          return body.detail;
+        }
+      }
+      if (err.status === 401) {
+        return 'Session expirée. Reconnectez-vous puis réessayez.';
+      }
+      if (err.status === 400) {
+        return 'Données invalides. Vérifiez le formulaire.';
+      }
+    }
+
+    return this.isEditMode
+      ? 'Erreur lors de la modification. Vérifiez que le backend est démarré.'
+      : 'Erreur lors de l\'envoi. Vérifiez que le backend est démarré.';
   }
 
   private populateForm(sujet: SujetProjet): void {
@@ -343,6 +372,7 @@ export class DeposerSujetModal implements OnInit, OnChanges {
   }
 
   private resetForm(): void {
+    this.isSubmitting = false;
     this.form.reset({
       titre: '',
       categorie: 'PFE',

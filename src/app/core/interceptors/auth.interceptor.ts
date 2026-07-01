@@ -7,35 +7,29 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject, catchError, switchMap, take, throwError } from 'rxjs';
+import { Observable, Subject, catchError, finalize, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 /** Endpoints publics qui ne doivent jamais déclencher un refresh automatique. */
 const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
 
-/** Verrou partagé : évite plusieurs refresh concurrents sur des requêtes parallèles. */
 let isRefreshing = false;
-/** Diffuse le résultat du refresh en cours aux requêtes en attente (true = réessayer). */
 const refreshResult$ = new Subject<boolean>();
 
 /**
- * Interceptor JWT basé sur les cookies HttpOnly :
- * 1. ajoute `withCredentials: true` pour que le navigateur envoie les cookies d'auth ;
- * 2. sur 401, tente un refresh (cookie refresh_token) puis rejoue la requête ;
- * 3. si le refresh échoue, déconnecte l'utilisateur et redirige vers /sign-in.
- *
- * Aucun token n'est lu ni écrit côté JavaScript : tout passe par les cookies.
+ * Ajoute credentials + Bearer token (mémoire) sur chaque requête API.
+ * Sur 401, tente un refresh puis rejoue la requête avec le nouveau token.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const authReq = req.clone({ withCredentials: true });
+  const authReq = withAuthHeaders(req, authService);
   const isAuthEndpoint = AUTH_PATHS.some((path) => req.url.includes(path));
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status !== 401 || isAuthEndpoint) {
+      if (error.status !== 401 || isAuthEndpoint || !authService.isLoggedIn()) {
         return throwError(() => error);
       }
       return handle401(authReq, next, authService, router, error);
@@ -43,7 +37,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-/** Gère un 401 : refresh (ou attente d'un refresh en cours) puis rejeu de la requête. */
+function withAuthHeaders(req: HttpRequest<unknown>, authService: AuthService): HttpRequest<unknown> {
+  let headers = req.headers;
+  const token = authService.accessToken();
+  if (token) {
+    headers = headers.set('Authorization', `Bearer ${token}`);
+  }
+  return req.clone({ headers, withCredentials: true });
+}
+
 function handle401(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
@@ -54,7 +56,9 @@ function handle401(
   if (isRefreshing) {
     return refreshResult$.pipe(
       take(1),
-      switchMap((ok) => (ok ? next(req) : throwError(() => originalError))),
+      switchMap((ok) =>
+        ok ? next(withAuthHeaders(req, authService)) : throwError(() => originalError),
+      ),
     );
   }
 
@@ -62,16 +66,17 @@ function handle401(
 
   return authService.refreshToken().pipe(
     switchMap(() => {
-      isRefreshing = false;
       refreshResult$.next(true);
-      return next(req);
+      return next(withAuthHeaders(req, authService));
     }),
     catchError((refreshError) => {
-      isRefreshing = false;
       refreshResult$.next(false);
       authService.clearSession();
       void router.navigate(['/sign-in']);
       return throwError(() => originalError ?? refreshError);
+    }),
+    finalize(() => {
+      isRefreshing = false;
     }),
   );
 }
