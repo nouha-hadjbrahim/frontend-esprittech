@@ -183,8 +183,8 @@
             <strong>{{ recommendation(selected()!) }}</strong>
           </div>
           <div>
-            <span>Blocages</span>
-            <strong>{{ blockingCriteriaCount(selected()!) }}</strong>
+            <span>Alertes eliminatoires</span>
+            <strong>{{ eliminatoryWarningCount(selected()!) }}</strong>
           </div>
           @if (canDecide(selected())) {
             <div class="decision-strip__actions">
@@ -193,6 +193,10 @@
             </div>
           }
         </section>
+
+        @for (warning of submissionWarnings(selected()); track warning) {
+          <div class="alert alert--warning">{{ warning }}</div>
+        }
 
         <div class="detail-grid">
           <section class="panel section-card identification-card">
@@ -283,8 +287,8 @@
                 </strong>
               </div>
               <div>
-                <span>Blocages eliminatoires</span>
-                <strong>{{ scoreData.blocagesEliminatoires.length }}</strong>
+                <span>Alertes eliminatoires</span>
+                <strong>{{ scoreData.eliminatoryWarningsCount ?? scoreData.blocagesEliminatoires.length }}</strong>
               </div>
               <div>
                 <span>Revue CI requise</span>
@@ -343,7 +347,7 @@
 
             @if (scoreData.blocagesEliminatoires.length) {
               <div class="blocker-list">
-                <strong>Blocages eliminatoires</strong>
+                <strong>Alertes eliminatoires</strong>
                 @for (blocage of scoreData.blocagesEliminatoires; track blocage.source + blocage.referenceId) {
                   <p>{{ blocage.libelle }} - {{ blocage.raison }}</p>
                 }

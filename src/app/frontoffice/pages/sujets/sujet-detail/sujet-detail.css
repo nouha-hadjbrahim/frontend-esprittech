@@ -967,4 +967,51 @@
   .modal-actions .action-btn {
     width: 100%;
   }
+
+
+  .score-recalculate-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.score-cooldown-message {
+  color: #b45309;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+.evaluation-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.evaluation-panel__header > div:first-child {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.score-recalculate-actions {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.score-recalculate-actions .action-btn {
+  min-width: 175px;
+  white-space: nowrap;
+  justify-content: center;
+}
+
+.tab-alert--warning {
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
 }

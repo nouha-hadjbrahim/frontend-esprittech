@@ -17,10 +17,10 @@
     </span>
     <span *ngIf="!evaluationComplete" class="coverage-warning">Evaluation incomplete</span>
     <span *ngIf="hasBlockingCriteria" class="blocking-message">
-      Le score note est eleve, mais le projet reste non eligible car au moins un critere eliminatoire est NOT_OK.
+      Alerte non bloquante : au moins un critere eliminatoire est NOT_OK.
     </span>
     <span *ngIf="blockingCriteriaNames.length" class="blocking-list">
-      Critere(s) bloquant(s) : {{ blockingCriteriaNames.join(', ') }}
+      Critere(s) avec alerte : {{ blockingCriteriaNames.join(', ') }}
     </span>
     <div class="checklist-progress" aria-hidden="true">
       <div class="checklist-progress__bar" [class]="progressClass" [style.width.%]="scorePercent"></div>

@@ -26,6 +26,12 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   readonly evalError = signal<string | null>(null);
   readonly projectSearch = signal('');
 
+
+private readonly COOLDOWN_SECONDS = 120;
+
+cooldowns = signal<Record<number, number>>({});
+private cooldownTimers = new Map<number, ReturnType<typeof setInterval>>();
+
   readonly filteredProjects = computed(() => {
     const query = this.normalize(this.projectSearch());
     if (!query) {
@@ -99,35 +105,52 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
       });
   }
 
-  calculate(project: ProjetEvaluable): void {
-    this.savingProjectId.set(project.id);
-    this.evalError.set(null);
-    this.evaluationService.calculateScore(project.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (evaluation) => {
-          this.evalResult.set(evaluation);
-          this.selectedProject = project;
-          this.projects.update((projects) =>
-            projects.map((item) =>
-              item.id === project.id
-                ? {
-                    ...item,
-                    scoreFinal: evaluation.scoreFinal,
-                    eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
-                    bloqueParEliminatoire: evaluation.bloqueParEliminatoire,
-                  }
-                : item
-            )
-          );
-          this.savingProjectId.set(null);
-        },
-        error: (err) => {
-          this.evalError.set(err?.error?.detail ?? 'Erreur lors du calcul du score.');
-          this.savingProjectId.set(null);
-        }
-      });
+ calculate(project: ProjetEvaluable): void {
+  if (this.isProjectCoolingDown(project.id)) {
+    this.evalError.set(
+      `Le score vient d’être recalculé. Veuillez patienter ${this.cooldownLabel(project.id)} avant un nouveau recalcul.`
+    );
+    return;
   }
+
+  this.evalError.set(null);
+  this.savingProjectId.set(project.id);
+
+  this.evaluationService.calculateScore(project.id).subscribe({
+    next: evaluation => {
+      this.evalResult.set(evaluation);
+      this.selectedProject = project;
+
+      project.scoreFinal = evaluation.scoreFinal;
+      project.eligibleIndustrialisation = evaluation.eligibleIndustrialisation;
+
+      this.startCooldown(project.id);
+      this.savingProjectId.set(null);
+    },
+    error: error => {
+      const retryAfterSeconds =
+        error?.error?.retryAfterSeconds ??
+        error?.headers?.get?.('Retry-After') ??
+        this.COOLDOWN_SECONDS;
+
+      if (error.status === 409 || error.status === 429) {
+        this.startCooldown(project.id, Number(retryAfterSeconds));
+
+        this.evalError.set(
+          `Le score vient d’être recalculé. Veuillez patienter ${this.cooldownLabel(project.id)} avant un nouveau recalcul.`
+        );
+      } else {
+        this.evalError.set(
+          error?.error?.detail ||
+          error?.error?.message ||
+          'Erreur lors du calcul du score.'
+        );
+      }
+
+      this.savingProjectId.set(null);
+    }
+  });
+}
 
   statusLabel(status: string): string {
     return status === 'REALISATION_TERMINEE' ? 'Realisation terminee' : status;
@@ -144,4 +167,68 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
       .replace(/[\u0300-\u036f]/g, '')
       .trim();
   }
+
+
+isProjectCoolingDown(projectId: number): boolean {
+  return (this.cooldowns()[projectId] ?? 0) > 0;
+}
+
+cooldownRemaining(projectId: number): number {
+  return this.cooldowns()[projectId] ?? 0;
+}
+
+cooldownLabel(projectId: number): string {
+  const seconds = this.cooldownRemaining(projectId);
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+
+  return `${minutes}:${rest.toString().padStart(2, '0')}`;
+}
+
+private startCooldown(projectId: number, seconds = this.COOLDOWN_SECONDS): void {
+  this.clearCooldown(projectId);
+
+  this.cooldowns.update(current => ({
+    ...current,
+    [projectId]: seconds
+  }));
+
+  const timer = setInterval(() => {
+    const remaining = this.cooldownRemaining(projectId);
+
+    if (remaining <= 1) {
+      this.clearCooldown(projectId);
+      return;
+    }
+
+    this.cooldowns.update(current => ({
+      ...current,
+      [projectId]: remaining - 1
+    }));
+  }, 1000);
+
+  this.cooldownTimers.set(projectId, timer);
+}
+
+private clearCooldown(projectId: number): void {
+  const timer = this.cooldownTimers.get(projectId);
+
+  if (timer) {
+    clearInterval(timer);
+    this.cooldownTimers.delete(projectId);
+  }
+
+  this.cooldowns.update(current => {
+    const copy = { ...current };
+    delete copy[projectId];
+    return copy;
+  });
+}
+
+
+
+
+
+
+
 }

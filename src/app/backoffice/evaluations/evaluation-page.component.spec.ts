@@ -126,25 +126,25 @@ describe('EvaluationPageComponent', () => {
     expect(component.evalResult()).toBeNull();
     expect(component.evalError()).toBeNull();
   });
+it('should calculate score, update the matching row and leave other rows untouched', () => {
+  component.projects.set(projects.slice(0, 2));
 
-  it('should calculate score, update the matching row and leave other rows untouched', () => {
-    component.projects.set(projects.slice(0, 2));
+  component.calculate(projects[0]);
 
-    component.calculate(projects[0]);
+  expect(evaluationService.calculateScore).toHaveBeenCalledWith(1);
+  expect(component.evalResult()).toBe(evaluation);
+  expect(component.selectedProject).toBe(projects[0]);
+  expect(component.savingProjectId()).toBeNull();
 
-    expect(evaluationService.calculateScore).toHaveBeenCalledWith(1);
-    expect(component.evalResult()).toBe(evaluation);
-    expect(component.selectedProject).toBe(projects[0]);
-    expect(component.savingProjectId()).toBeNull();
-    expect(component.projects()[0]).toEqual(jasmine.objectContaining({
-      id: 1,
-      scoreFinal: 67,
-      eligibleIndustrialisation: false,
-      bloqueParEliminatoire: true,
-    }));
-    expect(component.projects()[1]).toBe(projects[1]);
-  });
+  expect(component.projects()[0]).toEqual(jasmine.objectContaining({
+    id: 1,
+    scoreFinal: 67,
+    eligibleIndustrialisation: false,
+    bloqueParEliminatoire: false,
+  }));
 
+  expect(component.projects()[1]).toBe(projects[1]);
+});
   it('should expose calculation errors with backend detail and fallback text', () => {
     evaluationService.calculateScore.and.returnValue(throwError(() => ({ error: { detail: 'Score indisponible' } })));
 
