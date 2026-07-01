@@ -37,6 +37,15 @@ private cooldownTimers = new Map<number, ReturnType<typeof setInterval>>();
     if (!query) {
       return this.projects();
     }
+    if (query === 'eligible') {
+      return this.projects().filter((project) => project.eligibleIndustrialisation === true);
+    }
+    if (query === 'non eligible' || query === 'noneligible') {
+      return this.projects().filter((project) => project.eligibleIndustrialisation === false);
+    }
+    if (query === 'en attente' || query === 'attente') {
+      return this.projects().filter((project) => project.eligibleIndustrialisation == null);
+    }
     return this.projects().filter((project) =>
       this.normalize([
         project.id,

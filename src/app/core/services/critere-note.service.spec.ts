@@ -41,6 +41,11 @@ describe('CritereNoteService', () => {
     expect(updateReq.request.method).toBe('PUT');
     updateReq.flush({ id: 5 });
 
+    service.delete(5).subscribe();
+    const deleteReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/5`);
+    expect(deleteReq.request.method).toBe('DELETE');
+    deleteReq.flush(null);
+
     service.deactivate(5).subscribe();
     const deactivateReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/5/deactivate`);
     expect(deactivateReq.request.method).toBe('PATCH');

@@ -32,6 +32,7 @@ describe('EvaluationChecklistComponent', () => {
     noteLabel: 'Satisfait',
     noteObtenue: 4,
     scorePondere: 1.6,
+    bareme: 5,
     poids: 2,
     ruleConfigured: true,
   };
@@ -130,6 +131,18 @@ describe('EvaluationChecklistComponent', () => {
     };
 
     expect(component.resultLabel(emptyEliminatory)).toBe('Non renseigne');
-    expect(component.resultLabel(weightedNote)).toBe('0/5');
+    expect(component.resultLabel(weightedNote)).toBe('0');
+  });
+
+  it('should render dynamic note scale when bareme is available', () => {
+    const dynamicNote: ResultatCritereResponse = {
+      ...note,
+      noteValue: 7,
+      noteObtenue: 7,
+      bareme: 10,
+      noteLabel: 'Bon',
+    };
+
+    expect(component.resultLabel(dynamicNote)).toBe('7/10 - Bon');
   });
 });

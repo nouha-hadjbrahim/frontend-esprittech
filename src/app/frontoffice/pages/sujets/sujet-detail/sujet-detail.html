@@ -188,11 +188,7 @@
                 @if (resultat.typeCritere === 'ELIMINATOIRE') {
                   {{ resultat.reponseEliminatoire }}
                 } @else {
-                  {{ resultat.noteValue ?? resultat.noteObtenue }}/5
-
-                  @if (resultat.noteLabel) {
-                    <span> - {{ resultat.noteLabel }}</span>
-                  }
+                  {{ noteResultDisplay(resultat) }}
                 }
               </strong>
             </div>

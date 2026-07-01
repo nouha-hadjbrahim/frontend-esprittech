@@ -49,5 +49,10 @@ describe('NoteLevelService', () => {
     expect(deactivateReq.request.method).toBe('PATCH');
     expect(deactivateReq.request.body).toEqual({});
     deactivateReq.flush(null);
+
+    service.delete(4).subscribe();
+    const deleteReq = http.expectOne(`${environment.apiUrl}/admin/evaluation/note-levels/4`);
+    expect(deleteReq.request.method).toBe('DELETE');
+    deleteReq.flush(null);
   });
 });

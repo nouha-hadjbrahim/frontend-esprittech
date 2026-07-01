@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import {
   CritereEliminatoire,
@@ -94,12 +95,42 @@ describe('AdminCriteresPageComponent', () => {
       dateMiseAJour: '2026-01-02T00:00:00Z',
     },
     {
+      id: 2,
+      value: 2,
+      label: 'Insatisfait',
+      description: '',
+      active: true,
+      order: 2,
+      dateCreation: '2026-01-01T00:00:00Z',
+      dateMiseAJour: '2026-01-02T00:00:00Z',
+    },
+    {
+      id: 3,
+      value: 3,
+      label: 'Peu satisfait',
+      description: '',
+      active: true,
+      order: 3,
+      dateCreation: '2026-01-01T00:00:00Z',
+      dateMiseAJour: '2026-01-02T00:00:00Z',
+    },
+    {
       id: 4,
       value: 4,
       label: 'Satisfait',
       description: '',
       active: true,
       order: 4,
+      dateCreation: '2026-01-01T00:00:00Z',
+      dateMiseAJour: '2026-01-02T00:00:00Z',
+    },
+    {
+      id: 5,
+      value: 5,
+      label: 'Tres satisfait',
+      description: '',
+      active: true,
+      order: 5,
       dateCreation: '2026-01-01T00:00:00Z',
       dateMiseAJour: '2026-01-02T00:00:00Z',
     },
@@ -117,6 +148,7 @@ describe('AdminCriteresPageComponent', () => {
       'findAll',
       'create',
       'update',
+      'delete',
       'deactivate',
       'activate',
       'findRules',
@@ -132,6 +164,7 @@ describe('AdminCriteresPageComponent', () => {
       'update',
       'activate',
       'deactivate',
+      'delete',
     ]);
 
     eliminatoireService.findAll.and.returnValue(of(eliminatoires));
@@ -143,6 +176,7 @@ describe('AdminCriteresPageComponent', () => {
     noteService.findAll.and.returnValue(of(notes));
     noteService.create.and.returnValue(of(notes[0]));
     noteService.update.and.returnValue(of(notes[0]));
+    noteService.delete.and.returnValue(of(void 0));
     noteService.deactivate.and.returnValue(of(void 0));
     noteService.activate.and.returnValue(of(void 0));
     noteService.findRules.and.returnValue(of(rules));
@@ -157,6 +191,7 @@ describe('AdminCriteresPageComponent', () => {
     noteLevelService.update.and.returnValue(of(levels[0]));
     noteLevelService.activate.and.returnValue(of(void 0));
     noteLevelService.deactivate.and.returnValue(of(void 0));
+    noteLevelService.delete.and.returnValue(of(void 0));
 
     await TestBed.configureTestingModule({
       imports: [AdminCriteresPageComponent],
@@ -200,6 +235,7 @@ describe('AdminCriteresPageComponent', () => {
     component.eliminatoireForm.patchValue({ libelle: 'Nouvelle regle', domaine: 'Domaine', ordre: 1 });
     component.saveCritere();
     expect(eliminatoireService.create).toHaveBeenCalled();
+    expect(component.successMessage()).toBe('Critere eliminatoire cree.');
 
     component.openEditModal('note', notes[0]);
     component.noteForm.patchValue({ libelle: 'Nouvelle note', domaine: 'Domaine', ordre: 1, poids: 1, defaultNoteValue: 4 });
@@ -212,6 +248,44 @@ describe('AdminCriteresPageComponent', () => {
       bareme: 5,
       seuil: 3,
     }));
+    expect(component.successMessage()).toBe('Critere note mis a jour.');
+  });
+
+  it('should show backend validation and load messages for note criteria', () => {
+    noteService.findAll.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 500,
+      error: { detail: 'Chargement impossible cote backend' },
+    })));
+    component['loadNotes']();
+    expect(component.errorNotes()).toBe('Chargement impossible cote backend');
+
+    noteService.create.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 400,
+      error: { message: 'Le poids doit etre superieur a 0.' },
+    })));
+    component.openCreateModal('note');
+    component.noteForm.patchValue({ libelle: 'Nouvelle note', domaine: 'Domaine', ordre: 1, poids: 1, defaultNoteValue: 4 });
+    component.saveCritere();
+
+    expect(component.warningMessage()).toBe('Le poids doit etre superieur a 0.');
+    expect(component.errorMessage()).toBeNull();
+  });
+
+  it('should delete note criteria and show conflict warnings', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+
+    component.deleteCritereNote(notes[0]);
+    expect(noteService.delete).toHaveBeenCalledWith(1);
+    expect(component.successMessage()).toBe('Critere note supprime.');
+
+    noteService.delete.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: { detail: 'Ce critère est déjà utilisé dans des évaluations. Vous pouvez le désactiver au lieu de le supprimer.' },
+    })));
+    component.deleteCritereNote(notes[0]);
+
+    expect(component.warningMessage()).toBe('Ce critère est déjà utilisé dans des évaluations. Vous pouvez le désactiver au lieu de le supprimer.');
+    expect(component.errorMessage()).toBeNull();
   });
 
   it('should manage metadata rules for scored criteria', () => {
@@ -251,38 +325,133 @@ describe('AdminCriteresPageComponent', () => {
 
     component.toggleNoteLevel({ ...levels[0], active: false });
     expect(noteLevelService.activate).toHaveBeenCalledWith(1);
+
+    spyOn(window, 'confirm').and.returnValue(true);
+    component.deleteNoteLevel(levels[0]);
+    expect(noteLevelService.delete).toHaveBeenCalledWith(1);
+    expect(component.successMessage()).toBe('Niveau de note supprime.');
+  });
+
+  it('should add a note level from the admin form', () => {
+    const createdLevel: NoteLevel = {
+      id: 6,
+      value: 6,
+      label: 'Excellent',
+      description: 'Niveau dynamique',
+      active: true,
+      order: 6,
+      dateCreation: '2026-01-03T00:00:00Z',
+      dateMiseAJour: '2026-01-03T00:00:00Z',
+    };
+    noteLevelService.create.and.returnValue(of(createdLevel));
+
+    component.openNoteLevelModal();
+    expect(component.isNoteLevelModalOpen()).toBeTrue();
+    expect(component.noteLevelModalMode).toBe('create');
+    expect(component.selectedNoteLevelId).toBeNull();
+
+    component.noteLevelForm.patchValue({
+      value: 6,
+      label: 'Excellent',
+      description: 'Niveau dynamique',
+      active: true,
+      order: 6,
+    });
+    component.saveNoteLevel();
+
+    expect(noteLevelService.create).toHaveBeenCalledWith({
+      value: 6,
+      label: 'Excellent',
+      description: 'Niveau dynamique',
+      active: true,
+      order: 6,
+    });
+    expect(noteLevelService.findAll).toHaveBeenCalledTimes(2);
+    expect(component.successMessage()).toBe('Niveau de note enregistre.');
+    expect(component.isNoteLevelModalOpen()).toBeFalse();
+    expect(component.saving()).toBeFalse();
+  });
+
+  it('should keep add note level available after five levels and allow value six', () => {
+    component.noteLevels.set(levels);
+    fixture.detectChanges();
+
+    const addButtons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const noteLevelAddButton = addButtons.find((button) => button.textContent?.includes('+ Ajouter'));
+
+    expect(noteLevelAddButton?.disabled).toBeFalse();
+
+    component.openNoteLevelModal();
+    expect(component.noteLevelForm.value.value).toBe(6);
+    expect(component.noteLevelForm.value.order).toBe(6);
+
+    component.noteLevelForm.patchValue({ value: 6, order: 6, label: 'Excellent' });
+
+    expect(component.noteLevelForm.valid).toBeTrue();
+  });
+
+  it('should show backend validation messages when creating note levels', () => {
+    noteLevelService.create.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: { message: "Un niveau existe deja pour l'ordre 6." },
+    })));
+
+    component.openNoteLevelModal();
+    component.noteLevelForm.patchValue({ value: 6, order: 6, label: 'Excellent' });
+    component.saveNoteLevel();
+
+    expect(noteLevelService.create).toHaveBeenCalledWith(jasmine.objectContaining({ value: 6, order: 6 }));
+    expect(component.warningMessage()).toBe("Un niveau existe deja pour l'ordre 6.");
+    expect(component.errorMessage()).toBeNull();
+  });
+
+  it('should show conflict warning when deleting a used note level', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    noteLevelService.delete.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: { detail: 'Ce niveau de note est deja utilise. Vous pouvez le desactiver au lieu de le supprimer.' },
+    })));
+
+    component.deleteNoteLevel(levels[0]);
+
+    expect(noteLevelService.delete).toHaveBeenCalledWith(1);
+    expect(component.warningMessage()).toBe('Ce niveau de note est deja utilise. Vous pouvez le desactiver au lieu de le supprimer.');
+    expect(component.errorMessage()).toBeNull();
   });
 
   it('should validate forms and expose service errors', fakeAsync(() => {
     component.openCreateModal('note');
     component.noteForm.controls['libelle'].setValue('');
     component.saveCritere();
-    expect(component.errorMessage()).toBe('Formulaire invalide.');
+    expect(component.warningMessage()).toBe('Le libelle est obligatoire.');
+    expect(component.errorMessage()).toBeNull();
 
     component.openRuleModal(notes[0]);
     component.ruleForm.controls['ruleName'].setValue('');
     component.saveRule();
-    expect(component.errorMessage()).toBe('Regle invalide.');
+    expect(component.warningMessage()).toBe('Regle invalide.');
+    expect(component.errorMessage()).toBeNull();
 
     component.openNoteLevelModal();
     component.noteLevelForm.controls['label'].setValue('');
     component.saveNoteLevel();
-    expect(component.errorMessage()).toBe('Niveau de note invalide.');
+    expect(component.warningMessage()).toBe('Le libelle du niveau est obligatoire.');
+    expect(component.errorMessage()).toBeNull();
 
     eliminatoireService.findAll.and.returnValue(throwError(() => new Error('boom')));
     component['loadCriteres']();
-    expect(component.errorEliminatoires()).toBe('Impossible de charger les criteres eliminatoires');
+    expect(component.errorEliminatoires()).toBe('boom');
 
     noteService.findRules.and.returnValue(throwError(() => new Error('boom')));
     noteService.findAll.and.returnValue(of(notes));
     component['loadCriteres']();
-    expect(component.errorMessage()).toBe('Impossible de charger les regles de notation.');
+    expect(component.errorMessage()).toBe('boom');
 
     noteLevelService.create.and.returnValue(throwError(() => new Error('boom')));
     component.openNoteLevelModal();
-    component.noteLevelForm.patchValue({ value: 2, label: 'Insatisfait', order: 2 });
+    component.noteLevelForm.patchValue({ value: 6, label: 'Excellent', order: 6 });
     component.saveNoteLevel();
-    expect(component.errorMessage()).toBe('Enregistrement du niveau impossible.');
+    expect(component.errorMessage()).toBe('boom');
 
     tick(3000);
   }));
@@ -293,6 +462,15 @@ describe('AdminCriteresPageComponent', () => {
 
     component.toggleActivation('note', notes[0]);
     expect(noteService.deactivate).toHaveBeenCalledWith(1);
+
+    noteService.deactivate.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: { detail: 'Statut verrouille' },
+    })));
+    const previousState = notes[0].actif;
+    component.toggleActivation('note', notes[0]);
+    expect(notes[0].actif).toBe(previousState);
+    expect(component.warningMessage()).toBe('Statut verrouille');
 
     component.criteresEliminatoires.set(eliminatoires);
     component.criteresNotes.set(notes);

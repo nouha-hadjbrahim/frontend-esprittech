@@ -91,6 +91,10 @@ export class EvaluationChecklistComponent {
       return resultat.reponseEliminatoire ?? 'Non renseigne';
     }
     const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;
-    return resultat.noteLabel ? `${note}/5 - ${resultat.noteLabel}` : `${note}/5`;
+    const scale = resultat.bareme && resultat.bareme > 0 ? resultat.bareme : null;
+    if (scale) {
+      return resultat.noteLabel ? `${note}/${scale} - ${resultat.noteLabel}` : `${note}/${scale}`;
+    }
+    return resultat.noteLabel ? resultat.noteLabel : String(note);
   }
 }
