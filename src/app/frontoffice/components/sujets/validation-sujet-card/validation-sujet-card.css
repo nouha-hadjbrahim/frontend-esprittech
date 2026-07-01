@@ -75,6 +75,16 @@
   color: #d97706;
 }
 
+.validation-card__status.badge--success {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.validation-card__status.badge--info {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
 .validation-card__status.badge--danger {
   background: #fef2f2;
   color: #dc2626;

@@ -5,19 +5,6 @@ import { Affectation, Candidature } from '../../../../core/models/candidature.mo
 import { SujetProjet } from '../../../../core/models/sujet-projet.model';
 import { CandidatureService } from '../../../../core/services/candidature.service';
 
-/**
- * Modale "Gérer les candidatures" affichée depuis la liste des sujets (US-14, US-16 à US-20,
- * US-22, US-23, US-24).
- *
- * Donne la main à l'encadrant (propriétaire du sujet) et à l'admin pour :
- *  - ouvrir / fermer les candidatures (US-14, US-19, bascule auto US-20 côté backend)
- *  - accepter / refuser un étudiant candidat (US-17, US-18)
- *  - retirer un étudiant affecté pendant la réalisation, avec archivage (US-22)
- *  - déclarer la terminaison du projet (US-24)
- *
- * Le dépôt des livrables (US-23) n'est volontairement pas implémenté ici : seul un bouton
- * est exposé, la logique sera complétée séparément.
- */
 @Component({
   selector: 'app-gerer-candidatures-modal',
   imports: [FormsModule, DatePipe],
@@ -30,7 +17,6 @@ export class GererCandidaturesModal implements OnChanges {
   @Input({ required: true }) isOpen = false;
   @Input({ required: true }) sujet?: SujetProjet;
 
-  /** Émis quand une action a modifié l'état du sujet (statut, candidatures...) et que la liste parente doit être rechargée. */
   @Output() changed = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
@@ -40,12 +26,8 @@ export class GererCandidaturesModal implements OnChanges {
   errorMessage = '';
   actionLoading = false;
 
-  // Ligne en cours de saisie de motif (refus de candidature ou retrait d'affectation)
   motifTargetId: number | null = null;
-  motifTargetType: 'refus' | 'retrait' | null = null;
   motifText = '';
-
-
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen && this.sujet) {
@@ -56,14 +38,23 @@ export class GererCandidaturesModal implements OnChanges {
     }
   }
 
+  get demandesCandidatures(): Candidature[] {
+    return this.candidatures.filter((c) => c.statut === 'DEPOSEE');
+  }
+
+  get metaLabel(): string {
+    const count = this.demandesCandidatures.length;
+    const places = this.affectationsActives.length;
+    const capacite = this.sujet?.capaciteAccueil ?? 0;
+    return `${count} candidat${count > 1 ? 's' : ''} · ${places}/${capacite} place${capacite > 1 ? 's' : ''}`;
+  }
+
   private resetState(): void {
     this.candidatures = [];
     this.affectations = [];
     this.errorMessage = '';
     this.motifTargetId = null;
-    this.motifTargetType = null;
     this.motifText = '';
-
   }
 
   private loadData(): void {
@@ -71,8 +62,6 @@ export class GererCandidaturesModal implements OnChanges {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Les candidatures n'ont de sens qu'une fois le sujet ouvert (ou après) ;
-    // les affectations n'existent qu'à partir de la réalisation.
     const sujetId = this.sujet.id;
 
     this.candidatureService.getCandidaturesParSujet(sujetId).subscribe({
@@ -102,54 +91,58 @@ export class GererCandidaturesModal implements OnChanges {
     }
   }
 
-  // ── US-14 : Ouvrir les candidatures ───────────────────────────────
   get canOuvrir(): boolean {
     return this.sujet?.statut === 'VALIDE';
   }
 
   ouvrirCandidatures(): void {
     if (!this.sujet) return;
-    this.actionLoading = true;
-    this.errorMessage = '';
-    this.candidatureService.ouvrirCandidatures(this.sujet.id).subscribe({
-      next: () => {
-        this.actionLoading = false;
-        this.changed.emit();
-        this.loadData();
-      },
-      error: (err) => {
-        this.actionLoading = false;
-        this.errorMessage = err?.error?.message ?? "Impossible d'ouvrir les candidatures.";
-      },
-    });
+    this.runSujetAction(() => this.candidatureService.ouvrirCandidatures(this.sujet!.id), 'CANDIDATURE_OUVERTE');
   }
 
-  // ── US-19 + US-20 : Fermer les candidatures ──────────────────────
   get canFermer(): boolean {
     return this.sujet?.statut === 'CANDIDATURE_OUVERTE';
   }
 
   fermerCandidatures(): void {
     if (!this.sujet) return;
+    this.runSujetAction(
+      () => this.candidatureService.fermerCandidatures(this.sujet!.id),
+      'REALISATION_EN_COURS',
+      { closeOnSuccess: true },
+    );
+  }
+
+  private runSujetAction(
+    action: () => ReturnType<CandidatureService['fermerCandidatures']>,
+    nextStatut: SujetProjet['statut'],
+    options?: { closeOnSuccess?: boolean },
+  ): void {
     this.actionLoading = true;
     this.errorMessage = '';
-    this.candidatureService.fermerCandidatures(this.sujet.id).subscribe({
+    action().subscribe({
       next: () => {
         this.actionLoading = false;
+        if (this.sujet) {
+          this.sujet = { ...this.sujet, statut: nextStatut };
+        }
         this.changed.emit();
-        this.loadData();
+        if (options?.closeOnSuccess) {
+          this.close();
+        } else {
+          this.loadData();
+        }
       },
       error: (err) => {
         this.actionLoading = false;
-        this.errorMessage = err?.error?.message ?? 'Impossible de fermer les candidatures.';
+        this.errorMessage = this.extractError(err, 'Une erreur est survenue.');
       },
     });
   }
 
-  // ── US-17 / US-18 : Accepter / refuser une candidature ───────────
   get showCandidatures(): boolean {
     const statut = this.sujet?.statut;
-    return statut === 'CANDIDATURE_OUVERTE' || statut === 'CANDIDATURE_FERMEE'
+    return statut === 'CANDIDATURE_OUVERTE'
       || statut === 'REALISATION_EN_COURS' || statut === 'REALISATION_TERMINEE';
   }
 
@@ -164,25 +157,17 @@ export class GererCandidaturesModal implements OnChanges {
       },
       error: (err) => {
         this.actionLoading = false;
-        this.errorMessage = err?.error?.message ?? "Impossible d'accepter cette candidature.";
+        this.errorMessage = this.extractError(err, "Impossible d'accepter cette candidature.");
       },
     });
   }
 
   ouvrirMotifRefus(candidature: Candidature): void {
-    this.motifTargetType = 'refus';
     this.motifTargetId = candidature.id;
     this.motifText = '';
   }
 
-  ouvrirMotifRetrait(affectation: Affectation): void {
-    this.motifTargetType = 'retrait';
-    this.motifTargetId = affectation.id;
-    this.motifText = '';
-  }
-
   annulerMotif(): void {
-    this.motifTargetType = null;
     this.motifTargetId = null;
     this.motifText = '';
   }
@@ -192,28 +177,20 @@ export class GererCandidaturesModal implements OnChanges {
 
     this.actionLoading = true;
     this.errorMessage = '';
-
-    const onSuccess = () => {
-      this.actionLoading = false;
-      this.annulerMotif();
-      this.changed.emit();
-      this.loadData();
-    };
-    const onError = (err: unknown) => {
-      this.actionLoading = false;
-      this.errorMessage = (err as { error?: { message?: string } })?.error?.message ?? 'Une erreur est survenue.';
-    };
-
-    if (this.motifTargetType === 'refus') {
-      this.candidatureService.refuserCandidature(this.motifTargetId, this.motifText.trim())
-        .subscribe({ next: onSuccess, error: onError });
-    } else {
-      this.candidatureService.retirerEtudiant(this.motifTargetId, this.motifText.trim())
-        .subscribe({ next: onSuccess, error: onError });
-    }
+    this.candidatureService.refuserCandidature(this.motifTargetId, this.motifText.trim()).subscribe({
+      next: () => {
+        this.actionLoading = false;
+        this.annulerMotif();
+        this.changed.emit();
+        this.loadData();
+      },
+      error: (err) => {
+        this.actionLoading = false;
+        this.errorMessage = this.extractError(err, 'Impossible de refuser cette candidature.');
+      },
+    });
   }
 
-  // ── US-22 : Affectations actives / retrait archivé ───────────────
   get showAffectations(): boolean {
     const statut = this.sujet?.statut;
     return statut === 'REALISATION_EN_COURS' || statut === 'REALISATION_TERMINEE';
@@ -227,7 +204,6 @@ export class GererCandidaturesModal implements OnChanges {
     return this.affectations.filter((a) => a.statut === 'RETIREE_ARCHIVEE');
   }
 
-  // ── US-24 : Déclarer la terminaison ───────────────────────────────
   get canTerminer(): boolean {
     return this.sujet?.statut === 'REALISATION_EN_COURS';
   }
@@ -239,15 +215,51 @@ export class GererCandidaturesModal implements OnChanges {
     this.candidatureService.declarerTerminaison(this.sujet.id).subscribe({
       next: () => {
         this.actionLoading = false;
+        if (this.sujet) {
+          this.sujet = { ...this.sujet, statut: 'REALISATION_TERMINEE' };
+        }
         this.changed.emit();
         this.loadData();
       },
       error: (err) => {
         this.actionLoading = false;
-        this.errorMessage = err?.error?.message ?? 'Impossible de déclarer la terminaison.';
+        this.errorMessage = this.extractError(err, 'Impossible de déclarer la terminaison.');
       },
     });
   }
 
+  ouvrirMotifRetrait(affectation: Affectation): void {
+    this.motifTargetId = affectation.id;
+    this.motifText = '';
+  }
 
+  confirmerRetrait(): void {
+    if (!this.motifTargetId || !this.motifText.trim()) return;
+
+    this.actionLoading = true;
+    this.errorMessage = '';
+    this.candidatureService.retirerEtudiant(this.motifTargetId, this.motifText.trim()).subscribe({
+      next: () => {
+        this.actionLoading = false;
+        this.annulerMotif();
+        this.changed.emit();
+        this.loadData();
+      },
+      error: (err) => {
+        this.actionLoading = false;
+        this.errorMessage = this.extractError(err, 'Une erreur est survenue.');
+      },
+    });
+  }
+
+  getInitials(candidature: Candidature): string {
+    const prenom = candidature.etudiantPrenom?.trim().charAt(0) ?? '';
+    const nom = candidature.etudiantNom?.trim().charAt(0) ?? '';
+    return `${prenom}${nom}`.toUpperCase() || '?';
+  }
+
+  private extractError(err: unknown, fallback: string): string {
+    const body = (err as { error?: { message?: string; detail?: string } })?.error;
+    return body?.detail ?? body?.message ?? fallback;
+  }
 }

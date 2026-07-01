@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { mesSujetsGuard } from '../core/guards/mes-sujets.guard';
 import { roleGuard } from '../core/guards/role.guard';
 import { FrontofficeLayout } from './frontoffice-layout/frontoffice-layout';
 
@@ -44,7 +45,7 @@ export const frontofficeRoutes: Routes = [
                 children: [
                     {
                         path: 'mes-sujets',
-                        canActivate: [roleGuard(['ROLE_ENSEIGNANT'])],
+                        canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE']), mesSujetsGuard],
                         loadComponent: () => import('./pages/sujets/mes-sujets/mes-sujets').then(m => m.MesSujets)
                     },
                     {

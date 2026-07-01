@@ -49,4 +49,5 @@ export interface SujetProjet {
   dateDebutRealisation: string | null;
   dateTerminaison: string | null;
   motifInvalidation: string | null;
+  nombreMembresActifs?: number;
 }

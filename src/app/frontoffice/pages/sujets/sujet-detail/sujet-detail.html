@@ -39,9 +39,19 @@
         <span class="summary-card__label">Date soumission</span>
         <span class="summary-card__value">{{ sujet.dateSoumission ? (sujet.dateSoumission | date:'yyyy-MM-dd') : '—' }}</span>
       </div>
-      <div class="summary-card">
+      <div class="summary-card summary-card--capacity" [class.summary-card--full]="capaciteEstComplete">
         <span class="summary-card__label">Capacité</span>
-        <span class="summary-card__value">0/{{ sujet.capaciteAccueil }}</span>
+        <span class="summary-card__value">{{ nombreMembres }}/{{ sujet.capaciteAccueil }}</span>
+        <div class="capacity-meter" aria-hidden="true">
+          <div class="capacity-meter__fill" [style.width.%]="capacitePourcentage"></div>
+        </div>
+        <span class="summary-card__hint">
+          @if (capaciteEstComplete) {
+            Complet
+          } @else {
+            {{ placesRestantes }} place{{ placesRestantes > 1 ? 's' : '' }} restante{{ placesRestantes > 1 ? 's' : '' }}
+          }
+        </span>
       </div>
       <div class="summary-card">
         <span class="summary-card__label">Statut</span>
@@ -49,39 +59,56 @@
       </div>
     </div>
 
-    <nav class="sujet-detail__tabs" aria-label="Sections du sujet">
-      @for (tab of tabs; track tab.label) {
-        <button
-          type="button"
-          class="sujet-detail__tab"
-          [class.sujet-detail__tab--active]="activeTab === tab.label"
-          (click)="selectTab(tab.label)"
-        >
-          @switch (tab.icon) {
-            @case ('info') {
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
+    <div class="sujet-detail__tabs-bar">
+      <nav class="sujet-detail__tabs" aria-label="Sections du sujet">
+        @for (tab of tabs; track tab.label) {
+          <button
+            type="button"
+            class="sujet-detail__tab"
+            [class.sujet-detail__tab--active]="activeTab === tab.label"
+            (click)="selectTab(tab.label)"
+          >
+            @switch (tab.icon) {
+              @case ('info') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              }
+              @case ('membres') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="5.5" cy="5" r="2.25" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1.5 13.5C1.5 10.8 3.3 9.25 5.5 9.25" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <circle cx="11" cy="5.5" r="1.75" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M14.5 13.5C14.5 11.4 13.1 10.1 11 10.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <path d="M8.25 7.75C9.35 8.45 10 9.65 10 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              }
+              @case ('candidatures') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1.5 14C1.5 11 3.5 9.5 6 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <circle cx="11.5" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M14.5 14C14.5 12 13 10.5 11.5 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              }
+              @default {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                </svg>
+              }
             }
-            @case ('candidatures') {
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M1.5 14C1.5 11 3.5 9.5 6 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                <circle cx="11.5" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M14.5 14C14.5 12 13 10.5 11.5 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
-            }
-            @default {
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-              </svg>
-            }
-          }
-          {{ tab.label }}
+            {{ tab.label }}
+          </button>
+        }
+      </nav>
+
+      @if (canDeclarerTerminaison) {
+        <button type="button" class="sujet-detail__tabs-action" (click)="ouvrirTerminaisonConfirm()">
+          Terminer sujet
         </button>
       }
-    </nav>
+    </div>
 
     @if (activeTab === 'Informations') {
     <div class="sujet-detail__content">
@@ -215,6 +242,131 @@
         </div>
       </aside>
     </div>
+    } @else if (activeTab === 'Membres') {
+      <div class="tab-panel membres-panel">
+        @if (membresMessage) {
+          <div class="tab-alert tab-alert--success">{{ membresMessage }}</div>
+        }
+        @if (membresError) {
+          <div class="tab-alert tab-alert--danger">{{ membresError }}</div>
+        }
+
+        <div class="membres-frame">
+          @if (membresLoading) {
+            <div class="sujet-detail__loading">Chargement des membres...</div>
+          } @else if (membres.length === 0) {
+            <p class="membres-section__empty">Aucun membre affecté pour le moment.</p>
+          } @else {
+            <ul class="membres-list">
+              @for (membre of membres; track membre.id) {
+                <li class="membre-card">
+                  <div class="membre-card__avatar" aria-hidden="true">{{ memberInitials(membre) }}</div>
+
+                  <div class="membre-card__content">
+                    <div class="membre-card__top">
+                      <div class="membre-card__identity">
+                        <div class="membre-card__name-row">
+                          <span class="membre-card__name">{{ memberFullName(membre) }}</span>
+                          <span class="membre-card__status">Actif</span>
+                        </div>
+                        <p class="membre-card__meta">
+                          Étudiant · {{ membre.dateDebut | date:'yyyy-MM-dd' }}
+                        </p>
+                        @if (membre.etudiantEmail) {
+                          <p class="membre-card__email">{{ membre.etudiantEmail }}</p>
+                        }
+                      </div>
+
+                      <div class="membre-card__aside">
+                        @if (canRetirerMembre && retraitTargetId !== membre.id) {
+                          <button
+                            type="button"
+                            class="membre-card__remove"
+                            (click)="ouvrirRetraitMembre(membre)"
+                          >
+                            Retirer
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    @if (retraitTargetId === membre.id) {
+                      <div class="membre-card__retrait">
+                        <label class="membre-card__retrait-label" [for]="'motif-retrait-' + membre.id">Motif du retrait</label>
+                        <textarea
+                          [id]="'motif-retrait-' + membre.id"
+                          class="membre-card__retrait-input"
+                          rows="2"
+                          placeholder="Indiquez la raison du retrait..."
+                          [(ngModel)]="retraitMotif"
+                        ></textarea>
+                        <div class="membre-card__retrait-actions">
+                          <button type="button" class="membre-card__btn membre-card__btn--ghost" (click)="annulerRetraitMembre()">
+                            Annuler
+                          </button>
+                          <button
+                            type="button"
+                            class="membre-card__btn membre-card__btn--danger"
+                            [disabled]="!retraitMotif.trim() || retraitLoading"
+                            (click)="confirmerRetraitMembre()"
+                          >
+                            {{ retraitLoading ? 'Retrait...' : 'Confirmer' }}
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+    } @else if (activeTab === 'Candidatures') {
+      <div class="tab-panel candidatures-panel">
+        @if (candidaturesError) {
+          <div class="tab-alert tab-alert--danger">{{ candidaturesError }}</div>
+        }
+
+        <div class="membres-frame">
+          @if (candidaturesLoading) {
+            <div class="sujet-detail__loading">Chargement des candidatures...</div>
+          } @else if (candidatures.length === 0) {
+            <p class="membres-section__empty">Aucune demande en attente pour ce sujet.</p>
+          } @else {
+            <ul class="membres-list">
+              @for (candidature of candidatures; track candidature.id) {
+                <li class="candidature-card">
+                  <div class="membre-card__avatar" aria-hidden="true">{{ candidatureInitials(candidature) }}</div>
+
+                  <div class="membre-card__content">
+                    <div class="membre-card__top">
+                      <div class="membre-card__identity">
+                        <div class="membre-card__name-row">
+                          <span class="membre-card__name">{{ candidatureFullName(candidature) }}</span>
+                          <span class="candidature-card__status" [class]="candidatureStatutClass(candidature.statut)">
+                            {{ candidatureStatutLabel(candidature.statut) }}
+                          </span>
+                        </div>
+                        <p class="membre-card__meta">
+                          Étudiant · {{ candidature.dateDepot | date:'yyyy-MM-dd' }}
+                        </p>
+                        @if (candidature.etudiantEmail) {
+                          <p class="membre-card__email">{{ candidature.etudiantEmail }}</p>
+                        }
+                      </div>
+                    </div>
+
+                    @if (candidature.messageEtudiant) {
+                      <p class="candidature-card__message">{{ candidature.messageEtudiant }}</p>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
     } @else if (activeTab === 'Livrables') {
       <div class="tab-panel">
         @if (livrableMessage) { <div class="tab-alert tab-alert--success">{{ livrableMessage }}</div> }
@@ -547,3 +699,22 @@
     </div>
   </div>
 }
+
+<app-confirm-dialog
+  [isOpen]="terminaisonConfirmOpen"
+  title="Déclarer la terminaison"
+  [message]="terminaisonConfirmMessage"
+  confirmLabel="Terminer sujet"
+  cancelLabel="Annuler"
+  [loading]="terminaisonLoading"
+  (confirmed)="confirmerTerminaison()"
+  (cancelled)="annulerTerminaison()"
+/>
+
+<app-confirm-dialog
+  [isOpen]="!!terminaisonError"
+  title="Erreur"
+  [message]="terminaisonError"
+  [alertOnly]="true"
+  (cancelled)="terminaisonError = ''"
+/>

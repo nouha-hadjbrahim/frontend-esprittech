@@ -7,14 +7,15 @@ import { SujetProjetService } from '../../../../core/services/sujet-projet.servi
 import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-modal/deposer-sujet-modal';
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
 import { PostulerModal } from '../../../components/sujets/postuler-modal/postuler-modal';
-import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
+import { SujetDisponibleCard } from '../../../components/sujets/sujet-disponible-card/sujet-disponible-card';
+import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
-const CATALOGUE_STATUTS: StatutSujet[] = ['VALIDE', 'CANDIDATURE_OUVERTE', 'CANDIDATURE_FERMEE'];
+const CATALOGUE_STATUTS: StatutSujet[] = ['VALIDE', 'CANDIDATURE_OUVERTE'];
 
 @Component({
   selector: 'app-sujets-disponibles',
-  imports: [FormsModule, DeposerSujetModal, SujetCard, FilterDropdown, PostulerModal],
+  imports: [FormsModule, DeposerSujetModal, SujetDisponibleCard, FilterDropdown, PostulerModal, ConfirmDialog],
   templateUrl: './sujets-disponibles.html',
   styleUrl: './sujets-disponibles.css',
 })
@@ -35,6 +36,7 @@ export class SujetsDisponibles implements OnInit {
   sortOrder = 'recent';
 
   showPostulerModal = false;
+  showCandidatureFermeeAlert = false;
   selectedSujet: SujetProjet | null = null;
   mesCandidaturesSujetIds: Set<number> = new Set();
 
@@ -149,8 +151,19 @@ export class SujetsDisponibles implements OnInit {
   }
 
   ouvrirPostuler(sujet: SujetProjet): void {
+    if (sujet.statut === 'VALIDE') {
+      this.showCandidatureFermeeAlert = true;
+      return;
+    }
+    if (sujet.statut !== 'CANDIDATURE_OUVERTE') {
+      return;
+    }
     this.selectedSujet = sujet;
     this.showPostulerModal = true;
+  }
+
+  fermerAlerteCandidature(): void {
+    this.showCandidatureFermeeAlert = false;
   }
 
   fermerPostuler(): void {

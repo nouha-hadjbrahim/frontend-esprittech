@@ -25,7 +25,16 @@ describe('FrontofficeLayout', () => {
       imports: [FrontofficeLayout],
       providers: [
         provideRouter([]),
-        { provide: AuthService, useValue: { currentUser, logout, isAffilieToEquipe: () => false, equipeId: () => null, equipeNom: () => null } },
+        {
+          provide: AuthService,
+          useValue: {
+            currentUser,
+            logout,
+            isAffilieToEquipe: () => currentUser()?.isAffilieToEquipe ?? false,
+            equipeId: () => currentUser()?.equipeId ?? null,
+            equipeNom: () => currentUser()?.equipeNom ?? null,
+          },
+        },
       ],
     });
     component = TestBed.createComponent(FrontofficeLayout).componentInstance;
@@ -47,13 +56,24 @@ describe('FrontofficeLayout', () => {
     expect(component.roleLabel()).toBe('Comité industriel');
   });
 
-  it('should build the teacher navigation', () => {
+  it('should build the teacher navigation without mes sujets when not affiliated', () => {
     currentUser.set(userWith('ROLE_ENSEIGNANT'));
     const labels = component.navLinks().map((l) => l.label);
     expect(labels).toContain('Catalogue');
     expect(labels).toContain('Sujets');
     expect(labels).toContain('Demandes d\'industrialisation');
     expect(labels).toContain('Équipes de recherche');
+
+    const sujetsNode = component.navLinks().find((l) => l.label === 'Sujets');
+    expect(sujetsNode?.children?.map((c) => c.label)).toEqual(['Sujets disponibles']);
+    expect(sujetsNode?.path).toBe('/frontoffice/sujets/disponibles');
+  });
+
+  it('should show mes sujets in teacher navigation when affiliated', () => {
+    currentUser.set({ ...userWith('ROLE_ENSEIGNANT'), isAffilieToEquipe: true, equipeId: 1, equipeNom: 'REEE' });
+    const sujetsNode = component.navLinks().find((l) => l.label === 'Sujets');
+    expect(sujetsNode?.children?.map((c) => c.label)).toEqual(['Sujets disponibles', 'Mes sujets']);
+    expect(sujetsNode?.path).toBe('/frontoffice/sujets/mes-sujets');
   });
 
   it('should build the student navigation', () => {
@@ -64,7 +84,18 @@ describe('FrontofficeLayout', () => {
 
   it('should build the team-lead navigation', () => {
     currentUser.set(userWith('ROLE_CHEF_EQUIPE'));
-    expect(component.navLinks().length).toBe(6);
+    const labels = component.navLinks().map((l) => l.label);
+    expect(labels).toContain('Sujets');
+    expect(labels).not.toContain('Sujets disponibles');
+
+    const sujetsNode = component.navLinks().find((l) => l.label === 'Sujets');
+    expect(sujetsNode?.children?.map((c) => c.label)).toEqual([
+      'Sujets disponibles',
+      'Mes sujets',
+      'Validation des sujets',
+    ]);
+    expect(sujetsNode?.path).toBe('/frontoffice/validation-sujets');
+    expect(component.navLinks().length).toBe(5);
   });
 
   it('should build the CI navigation', () => {

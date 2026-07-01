@@ -10,11 +10,15 @@ export interface Candidature {
   etudiantId: number;
   etudiantNom: string;
   etudiantPrenom: string;
+  etudiantEmail?: string | null;
   statut: StatutCandidature;
   motifRefus: string | null;
   messageEtudiant: string | null;
   dateDepot: string;
   dateDecision: string | null;
+  sujetTitre?: string | null;
+  sujetCategorie?: string | null;
+  encadrantNom?: string | null;
 }
 
 export interface DecisionCandidatureRequest {
@@ -28,6 +32,7 @@ export interface Affectation {
   etudiantId: number;
   etudiantNom: string;
   etudiantPrenom: string;
+  etudiantEmail?: string | null;
   statut: StatutAffectation;
   dateDebut: string;
   dateRetrait: string | null;

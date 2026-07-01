@@ -74,4 +74,16 @@ export class SujetProjetService {
     if (statut) params = params.set('statut', statut);
     return this.http.get<SujetProjet[]>(`${this.baseUrl}/a-valider`, { params });
   }
+
+  /** Chef d'équipe : tous les sujets déposés par les membres de son équipe. */
+  getSujetsEquipe(categorie?: CategorieSujet, statut?: StatutSujet): Observable<SujetProjet[]> {
+    let params = new HttpParams();
+    if (categorie) params = params.set('categorie', categorie);
+    if (statut) params = params.set('statut', statut);
+    return this.http.get<SujetProjet[]>(`${this.baseUrl}/equipe`, { params });
+  }
+
+  declarerTerminaison(id: number): Observable<SujetProjet> {
+    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/terminer`, {});
+  }
 }
