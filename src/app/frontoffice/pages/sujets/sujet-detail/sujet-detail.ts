@@ -87,6 +87,7 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   readonly livrableLabels = TYPE_LIVRABLE_LABELS;
   readonly typeIndustrialisationLabels = TYPE_INDUSTRIALISATION_LABELS;
   readonly ReponseEliminatoire = ReponseEliminatoire;
+  readonly missingLivrablesWarning = 'Aucun livrable nest déposé pour ce projet. La CI verra cette alerte.';
 
   private readonly techColorClasses = [
     'tag--green',
@@ -628,6 +629,14 @@ ngOnDestroy(): void {
     ) ?? false;
   }
 
+  get submissionWarnings(): string[] {
+    const warnings = [...(this.industrialisationForm?.candidature.warnings ?? [])];
+    if (this.currentIndustrialisationLivrables().length === 0 && !warnings.includes(this.missingLivrablesWarning)) {
+      warnings.push(this.missingLivrablesWarning);
+    }
+    return warnings;
+  }
+
   canSubmitIndustrialisation(): boolean {
     return !!this.industrialisationForm
       && !this.isIndustrialisationBusy()
@@ -736,6 +745,10 @@ ngOnDestroy(): void {
       return this.automaticEliminatoryResult(question) !== null;
     }
     return true;
+  }
+
+  private currentIndustrialisationLivrables(): Livrable[] {
+    return this.industrialisationForm?.candidature.livrables ?? this.livrables;
   }
 
   hasUploadedProof(question: QuestionIndustrialisation): boolean {

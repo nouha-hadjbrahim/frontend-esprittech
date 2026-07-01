@@ -167,4 +167,29 @@ describe('SujetDetail industrialisation warnings', () => {
     expect(component.eliminatoryWarningConfirmation).toBeNull();
     expect(component.pendingIndustrialisationAction).toBeNull();
   });
+
+  it('should show missing livrables warning and keep submit enabled', () => {
+    component.industrialisationOpen = true;
+    component.livrables = [];
+    component.industrialisationForm = {
+      candidature: { ...candidature, warnings: [] },
+      questions: [question],
+      reponses: [],
+    } as IndustrialisationFormResponse;
+    component.answers[5] = {
+      questionId: 5,
+      valeurBoolean: false,
+      reponseEliminatoire: ReponseEliminatoire.NOT_OK,
+    };
+
+    fixture.detectChanges();
+
+    expect(component.submissionWarnings).toContain(component.missingLivrablesWarning);
+    expect(component.canSubmitIndustrialisation()).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain(component.missingLivrablesWarning);
+
+    const submitButton = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[])
+      .find((button) => button.textContent?.includes('Soumettre a la CI'));
+    expect(submitButton?.disabled).toBeFalse();
+  });
 });

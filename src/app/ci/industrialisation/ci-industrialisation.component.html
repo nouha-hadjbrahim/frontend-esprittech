@@ -194,6 +194,10 @@
           }
         </section>
 
+        @for (warning of submissionWarnings(selected()); track warning) {
+          <div class="alert alert--warning">{{ warning }}</div>
+        }
+
         <div class="detail-grid">
           <section class="panel section-card identification-card">
             <header class="section-header">

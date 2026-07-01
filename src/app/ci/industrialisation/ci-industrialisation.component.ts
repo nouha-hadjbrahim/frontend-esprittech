@@ -55,6 +55,7 @@ export class CiIndustrialisationComponent implements OnInit {
   readonly orientations = ORIENTATION_OPTIONS;
   readonly statuts: StatutIndustrialisation[] = ['SOUMISE', 'RECUE_PAR_CI', 'A_COMPLETER', 'RECEVABLE', 'GO', 'NO_GO', 'REFUSEE'];
   readonly types: TypeIndustrialisation[] = ['INTERNE', 'EXTERNE'];
+  readonly missingLivrablesWarning = 'Aucun livrable nest déposé pour ce projet. La CI verra cette alerte.';
 
   readonly domaines = computed(() => {
     const domaines = this.demandes()
@@ -300,6 +301,17 @@ export class CiIndustrialisationComponent implements OnInit {
 
   blockingCriteriaCount(candidature: CandidatureIndustrialisation): number {
     return this.eliminatoryWarningCount(candidature);
+  }
+
+  submissionWarnings(candidature: CandidatureIndustrialisation | null): string[] {
+    if (!candidature) {
+      return [];
+    }
+    const warnings = [...(candidature.warnings ?? [])];
+    if (candidature.livrables.length === 0 && !warnings.includes(this.missingLivrablesWarning)) {
+      warnings.push(this.missingLivrablesWarning);
+    }
+    return warnings;
   }
 
   eliminatoryWarningCount(candidature: CandidatureIndustrialisation): number {

@@ -144,6 +144,7 @@ export interface CandidatureIndustrialisation {
   livrables: Livrable[];
   historique: HistoriqueIndustrialisation[];
   latestEvaluation?: EvaluationResponse | null;
+  warnings?: string[];
 }
 
 export interface IndustrialisationFormResponse {

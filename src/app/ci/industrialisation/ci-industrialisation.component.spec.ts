@@ -108,6 +108,17 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.score()?.scoreFinal).toBe(82);
   });
 
+  it('should show missing livrables warning on CI detail', () => {
+    component.selected.set({ ...candidature, warnings: [] });
+    component.score.set(score);
+
+    fixture.detectChanges();
+
+    expect(component.submissionWarnings(component.selected())).toContain(component.missingLivrablesWarning);
+    expect(fixture.nativeElement.textContent).toContain(component.missingLivrablesWarning);
+    expect(fixture.nativeElement.querySelector('.alert--warning')?.textContent).toContain(component.missingLivrablesWarning);
+  });
+
   it('should filter, compute labels and utility values', () => {
     component.demandes.set([candidature]);
     component.searchTerm = 'plateforme';

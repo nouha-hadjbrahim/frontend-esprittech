@@ -428,6 +428,9 @@
       @if (hasBlockingEliminatoryAnswer()) {
         <div class="tab-alert tab-alert--warning">Cette demande contient une ou plusieurs alertes eliminatoires. Elles ne bloquent pas l'envoi, mais la CI les verra.</div>
       }
+      @for (warning of submissionWarnings; track warning) {
+        <div class="tab-alert tab-alert--warning">{{ warning }}</div>
+      }
 
       @if (!industrialisationForm) {
         <section class="industrialisation-summary">
