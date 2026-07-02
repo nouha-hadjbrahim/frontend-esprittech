@@ -28,6 +28,12 @@ describe('EvaluationChecklistComponent', () => {
     critereId: 12,
     critereLibelle: 'Qualite',
     typeCritere: 'NOTE',
+    mlScore: 4,
+    mlMaxScore: 5,
+    normalizedScore: 80,
+    confidence: 0.82,
+    evidenceSummary: 'Architecture modulaire documentee',
+    evidenceLivrableIds: [99],
     noteValue: 4,
     noteLabel: 'Satisfait',
     noteObtenue: 4,
@@ -65,11 +71,14 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.statusClass).toBe('decision-badge--warning');
     expect(component.progressClass).toBe('checklist-progress__bar--warning');
     expect(component.blockingCriteriaNames).toEqual(['Git disponible']);
-    expect(component.nonConfiguredCount).toBe(1);
+    expect(component.analysisIssueCount).toBe(1);
     expect(component.isBlocking(eliminatoireKo)).toBeTrue();
     expect(component.isBlocking(note)).toBeFalse();
     expect(component.resultLabel(eliminatoireOk)).toBe('OK');
-    expect(component.resultLabel(note)).toBe('4/5 - Satisfait');
+    expect(component.resultLabel(note)).toBe('4/5 - 80/100');
+    expect(component.confidencePercent(note.confidence)).toBe(82);
+    expect(component.evidenceLabel(note)).toContain('Livrables: #99');
+    expect(component.hasCriterionDetails(note)).toBeTrue();
   });
 
   it('should use explicit aggregate fields and explicit blocking criteria names', () => {
@@ -108,7 +117,7 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.scorePercent).toBe(100);
     expect(component.eliminatoires).toEqual([]);
     expect(component.notes).toEqual([]);
-    expect(component.nonConfiguredCount).toBe(0);
+    expect(component.analysisIssueCount).toBe(0);
 
     component.evaluation = evaluation({ scoreFinal: -5, eligibleIndustrialisation: false });
     expect(component.scorePercent).toBe(0);
@@ -137,6 +146,9 @@ describe('EvaluationChecklistComponent', () => {
   it('should render dynamic note scale when bareme is available', () => {
     const dynamicNote: ResultatCritereResponse = {
       ...note,
+      mlScore: null,
+      mlMaxScore: null,
+      normalizedScore: null,
       noteValue: 7,
       noteObtenue: 7,
       bareme: 10,

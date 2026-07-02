@@ -302,16 +302,16 @@
                 <strong>{{ selected()!.latestEvaluation?.scoreFinal ?? selected()!.scoreEvaluationProjet ?? '-' }}/100</strong>
               </div>
               <div>
-                <span>Evaluation</span>
-                <strong>{{ selected()!.latestEvaluation?.evaluationComplete === false ? 'Incomplete' : 'Complete' }}</strong>
+                <span>Analyse ML</span>
+                <strong>{{ selected()!.latestEvaluation?.mlStatus || (selected()!.latestEvaluation?.evaluationComplete === false ? 'Incomplete' : 'Complete') }}</strong>
               </div>
               <div>
-                <span>Regles non configurees</span>
-                <strong>{{ nonConfiguredCount(selected()!) }}</strong>
+                <span>Alertes analyse</span>
+                <strong>{{ analysisIssueCount(selected()!) }}</strong>
               </div>
               <div>
-                <span>Livrables</span>
-                <strong>{{ selected()!.livrables.length }}</strong>
+                <span>Modele</span>
+                <strong>{{ selected()!.latestEvaluation?.mlModelVersion || '-' }}</strong>
               </div>
             </div>
           }
@@ -331,17 +331,17 @@
               <article class="component-score">
                 <span>Questionnaire</span>
                 <strong>{{ scoreData.scoreQuestions }}/100</strong>
-                <small>Poids 40%</small>
+                <small>Trace seulement</small>
               </article>
               <article class="component-score">
                 <span>Livrables</span>
                 <strong>{{ scoreData.scoreLivrables }}/100</strong>
-                <small>Poids 30%</small>
+                <small>Analyse de contenu via criteres</small>
               </article>
               <article class="component-score">
                 <span>Criteres notes</span>
                 <strong>{{ scoreData.scoreCriteresNotes }}/100</strong>
-                <small>Poids 30%</small>
+                <small>Poids 100%</small>
               </article>
             </div>
 
