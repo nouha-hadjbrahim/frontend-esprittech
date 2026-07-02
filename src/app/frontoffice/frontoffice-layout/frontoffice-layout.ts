@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
+import { AffiliationService } from '../../core/services/affiliation.service';
+import { EquipeService } from '../../core/services/equipe.service';
 
 type NavIcon = 'layers' | 'document';
 
@@ -19,12 +21,37 @@ interface NavLink {
   templateUrl: './frontoffice-layout.html',
   styleUrl: './frontoffice-layout.css'
 })
-export class FrontofficeLayout {
+export class FrontofficeLayout implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly affiliationSvc = inject(AffiliationService);
+  private readonly equipeSvc = inject(EquipeService);
 
   /** Utilisateur authentifié (signal partagé depuis AuthService). */
   readonly user = this.authService.currentUser;
   isProfileDropdownOpen = signal<boolean>(false);
+
+  readonly pendingDemandesCount = signal(0);
+
+  ngOnInit(): void {
+    this.loadPendingCount();
+  }
+
+  private loadPendingCount(): void {
+    const role = this.authService.getRole();
+    if (role !== 'ROLE_CHEF_EQUIPE') return;
+
+    this.equipeSvc.getAll().subscribe({
+      next: (equipes) => {
+        const user = this.user();
+        if (!user) return;
+        const myTeam = equipes.find((e) => e.chef?.id === user.id);
+        if (!myTeam) return;
+        this.affiliationSvc.getByEquipe(myTeam.id).subscribe({
+          next: (affs) => this.pendingDemandesCount.set(affs.filter((r) => r.statut === 'EN_ATTENTE').length),
+        });
+      },
+    });
+  }
 
   private static readonly ROLE_LABELS: Record<Role, string> = {
     ROLE_ADMIN: 'Administrateur',

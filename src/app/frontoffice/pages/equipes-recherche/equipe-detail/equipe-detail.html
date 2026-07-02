@@ -124,7 +124,12 @@
     @if (isChefOfThisTeam()) {
       <section class="equipe-detail__section">
         <div class="equipe-detail__section-header">
-          <h3 class="equipe-detail__section-title">Demandes d'intégration ({{ teamAffiliations().length }})</h3>
+          <h3 class="equipe-detail__section-title">
+            Demandes d'intégration ({{ teamAffiliations().length }})
+            @if (pendingAffiliations().length > 0) {
+              <span class="detail-pending-badge">{{ pendingAffiliations().length }}</span>
+            }
+          </h3>
         </div>
         @if (teamAffiliations().length === 0) {
           <div class="equipe-detail__empty">Aucune demande pour cette équipe.</div>

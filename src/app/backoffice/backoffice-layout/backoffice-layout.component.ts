@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs';
 import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
+import { AffiliationService } from '../../core/services/affiliation.service';
 
 interface NavChild {
     label: string;
@@ -27,6 +28,9 @@ interface NavItem {
 export class BackofficeLayoutComponent {
     private readonly authService = inject(AuthService);
     private readonly router = inject(Router);
+    private readonly affiliationSvc = inject(AffiliationService);
+
+    readonly pendingDemandesCount = signal(0);
 
     readonly user = this.authService.currentUser;
 
@@ -102,10 +106,17 @@ export class BackofficeLayoutComponent {
 
     constructor() {
         this.expandActiveGroups();
+        this.loadPendingDemandes();
 
         this.router.events
             .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
             .subscribe(() => this.expandActiveGroups());
+    }
+
+    private loadPendingDemandes(): void {
+        this.affiliationSvc.getAll().subscribe({
+            next: (data) => this.pendingDemandesCount.set(data.filter((r) => r.statut === 'EN_ATTENTE').length),
+        });
     }
 
     toggleProfileMenu(): void {

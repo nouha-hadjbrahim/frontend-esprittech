@@ -31,12 +31,12 @@
             <p class="equipes-recherche__hero-desc">{{ team.description }}</p>
           </div>
           <button type="button" class="equipes-recherche__hero-edit" title="Modifier l'équipe" (click)="openEditModal()">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M11.5 1.5L14.5 4.5L5.5 13.5H2.5V10.5L11.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-              <path d="M9.5 3.5L12.5 6.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-            </svg>
-            Modifier
-          </button>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M11.5 1.5L14.5 4.5L5.5 13.5H2.5V10.5L11.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                <path d="M9.5 3.5L12.5 6.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              </svg>
+              Modifier
+            </button>
         </div>
       </div>
 
@@ -68,7 +68,7 @@
             <input
               type="text"
               class="equipes-recherche__members-input"
-              placeholder="Nom du membre..."
+              placeholder="Chercher un membre..."
               [(ngModel)]="newMemberName"
             />
             <button type="button" class="btn btn--add" (click)="openAddMemberModal()">
@@ -79,12 +79,11 @@
             </button>
           </div>
         </div>
-        @let teamMembres = membersAvecChef(team);
-        @if (teamMembres.length === 0) {
+        @if (membersAvecChef(team).length === 0) {
           <div class="equipes-recherche__empty">Aucun membre dans cette équipe.</div>
         } @else {
           <div class="equipes-recherche__member-grid">
-            @for (m of teamMembres; track m.id) {
+            @for (m of membersAvecChef(team); track m.id) {
               <div class="equipes-recherche__member-card">
                 <div class="equipes-recherche__member-avatar" [style.background]="couleurAvatar(m)">
                   {{ membreInitiales(m) }}
@@ -96,12 +95,9 @@
                     <span class="equipes-recherche__member-badge">
                       {{ m.id === team.chef?.id ? 'Chef d\'équipe' : 'Membre' }}
                     </span>
-                    <span class="equipes-recherche__member-badge">
-                      {{ m.typeUtilisateur === 'ENSEIGNANT' ? 'Enseignant' : 'Étudiant' }}
-                    </span>
-                    <span class="equipes-recherche__member-badge">
-                      {{ m.departement || 'TIC' }}
-                    </span>
+                    @if (m.departement) {
+                      <span class="equipes-recherche__member-badge">{{ m.departement }}</span>
+                    }
                   </div>
                 </div>
                 @if (m.id !== team.chef?.id) {
@@ -146,7 +142,12 @@
   @if (activeTab() === 1 && isChef()) {
     <section class="equipes-recherche__section">
       <div class="equipes-recherche__section-header">
-        <h3 class="equipes-recherche__section-title">Demandes d'affiliation pour votre équipe</h3>
+        <h3 class="equipes-recherche__section-title">
+          Demandes d'affiliation
+          @if (chefPendingCount() > 0) {
+            <span class="pending-section-badge">{{ chefPendingCount() }}</span>
+          }
+        </h3>
       </div>
       @if (myTeamAffiliations().length === 0) {
         <div class="equipes-recherche__empty">Aucune demande d'affiliation pour votre équipe.</div>
@@ -239,12 +240,13 @@
               <div class="equipes-recherche__card-banner">
                 <div class="equipes-recherche__card-bg"></div>
                 <div class="equipes-recherche__card-overlay"></div>
-                <div class="equipes-recherche__card-banner-body">
-                  <span class="equipes-recherche__card-domaine">{{ t.domaine }}</span>
-                  <h3 class="equipes-recherche__card-name">{{ t.nom }}</h3>
-                </div>
               </div>
               <div class="equipes-recherche__card-body">
+                <span class="equipes-recherche__card-domaine">{{ t.domaine }}</span>
+                <h3 class="equipes-recherche__card-name">{{ t.nom }}</h3>
+                @if (t.description) {
+                  <p class="equipes-recherche__card-desc">{{ t.description }}</p>
+                }
                 <div class="equipes-recherche__card-chef">
                   <div class="equipes-recherche__card-chef-avatar">{{ t.chef ? initiales(t.chef.prenom + ' ' + t.chef.nom) : '?' }}</div>
                   <div class="equipes-recherche__card-chef-info">
@@ -253,11 +255,11 @@
                   </div>
                 </div>
 
-                <div class="equipes-recherche__card-actions">
-                  <a [routerLink]="['/frontoffice/equipes-recherche', t.id]" class="btn btn--outline btn--sm">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.3"/>
-                      <path d="M6 4.5V7.5M4.5 6H7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <div class="equipes-recherche__card-actions">
+                  <a [routerLink]="['/frontoffice/equipes-recherche', t.id]" class="btn btn--outline btn--sm card__details-btn">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                      <path d="M7.5 3C4.5 3 2 7 2 7C2 7 4.5 11 7.5 11C10.5 11 13 7 13 7C13 7 10.5 3 7.5 3Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                      <circle cx="7.5" cy="7" r="2" stroke="currentColor" stroke-width="1.3"/>
                     </svg>
                     Détails
                   </a>

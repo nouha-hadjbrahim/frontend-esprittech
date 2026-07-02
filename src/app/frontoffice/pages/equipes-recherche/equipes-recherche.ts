@@ -37,7 +37,7 @@ export class EquipesRecherche implements OnInit {
   affiliations = signal<AffiliationEnseignantResponse[]>([]);
   loading = signal(true);
   activeTab = signal(0);
-  searchQuery = '';
+  searchQuery = signal('');
   newMemberName = '';
 
   editModalOpen = false;
@@ -74,7 +74,7 @@ export class EquipesRecherche implements OnInit {
 
   filteredTeams = computed(() => {
     const source = this.isChef() ? this.otherTeams() : this.equipes();
-    const q = this.searchQuery.toLowerCase().trim();
+    const q = this.searchQuery().toLowerCase().trim();
     if (!q) return source;
     return source.filter(
       (t) =>
@@ -87,7 +87,7 @@ export class EquipesRecherche implements OnInit {
   enseignantTeamsList = computed(() => {
     const all = this.equipes();
     const my = this.enseignantTeam();
-    const q = this.searchQuery.toLowerCase().trim();
+    const q = this.searchQuery().toLowerCase().trim();
     let list = my ? all.filter((e) => e.id !== my.id) : all;
     if (q) {
       list = list.filter(
@@ -109,7 +109,7 @@ export class EquipesRecherche implements OnInit {
   });
 
   private filtredByQuery(list: Equipe[]): Equipe[] {
-    const q = this.searchQuery.toLowerCase().trim();
+    const q = this.searchQuery().toLowerCase().trim();
     if (!q) return list;
     return list.filter(
       (t) =>
@@ -318,10 +318,18 @@ export class EquipesRecherche implements OnInit {
   }
 
   membersAvecChef(equipe: Equipe): User[] {
-    const members = equipe.members ?? [];
+    let members = equipe.members ?? [];
     if (!equipe.chef) return members;
     const hasChef = members.some((m) => m.id === equipe.chef!.id);
-    return hasChef ? members : [equipe.chef, ...members];
+    members = hasChef ? members : [equipe.chef, ...members];
+    const q = this.newMemberName.toLowerCase().trim();
+    if (!q) return members;
+    return members.filter(
+      (m) =>
+        `${m.prenom} ${m.nom}`.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q) ||
+        (m.departement ?? '').toLowerCase().includes(q),
+    );
   }
 
   chefName(equipe: Equipe): string {

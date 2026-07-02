@@ -36,6 +36,9 @@
                                     </svg>
                                 }
                                 <span>{{ child.label }}</span>
+                                @if (child.label === "Demandes d'affiliation" && pendingDemandesCount() > 0) {
+                                  <span class="nav-badge">{{ pendingDemandesCount() }}</span>
+                                }
                             </a>
                         </div>
                     </div>
