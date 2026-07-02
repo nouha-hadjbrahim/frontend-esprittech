@@ -137,7 +137,7 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.blockingCriteriaCount(candidature)).toBe(0);
     expect(component.recommendation(candidature)).toBe('GO recommande');
     expect(component.recommendationExplanation(candidature)).toContain('GO');
-    expect(component.nonConfiguredCount(candidature)).toBe(0);
+    expect(component.analysisIssueCount(candidature)).toBe(0);
     expect(component.decisionLabel('NO_GO')).toBe('NO GO');
     expect(component.decisionClass('A_INSTRUIRE')).toBe('status-pill--instruction');
     expect(component.manualReviewCount(score)).toBe(0);
@@ -297,7 +297,7 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.recommendation(lowScore)).toBe('Analyse necessaire');
     expect(component.recommendationExplanation(blocked)).toContain('Alerte eliminatoire');
     expect(component.recommendationExplanation({ ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, evaluationComplete: false } })).toContain('Analyse necessaire');
-    expect(component.nonConfiguredCount(blocked)).toBe(1);
+    expect(component.analysisIssueCount(blocked)).toBe(1);
 
     expect(component.statusLabel('REFUSEE')).toBe('NO GO');
     expect(component.statusLabel('RECUE_PAR_CI')).toBe('En instruction');

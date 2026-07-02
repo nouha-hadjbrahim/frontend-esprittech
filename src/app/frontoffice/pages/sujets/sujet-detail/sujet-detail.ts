@@ -370,6 +370,10 @@ ngOnDestroy(): void {
   }
 
   noteResultDisplay(resultat: ResultatCritereResponse): string {
+    if (resultat.mlScore != null && resultat.mlMaxScore != null) {
+      const normalized = resultat.normalizedScore != null ? ` - ${Math.round(resultat.normalizedScore)}/100` : '';
+      return `${resultat.mlScore}/${resultat.mlMaxScore}${normalized}`;
+    }
     const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;
     const scale = resultat.bareme && resultat.bareme > 0 ? resultat.bareme : null;
     if (scale) {

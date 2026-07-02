@@ -352,13 +352,18 @@ export class CiIndustrialisationComponent implements OnInit {
       return 'Alerte eliminatoire non bloquante : la CI peut continuer vers GO ou NO GO apres analyse.';
     }
     if (candidature.latestEvaluation?.evaluationComplete === false) {
-      return 'Analyse necessaire : certaines regles automatiques ne sont pas configurees.';
+      return 'Analyse necessaire : certains criteres ou livrables nont pas pu etre analyses par le moteur ML.';
     }
     return 'La decision GO / NO GO reste manuelle pour la CI.';
   }
 
-  nonConfiguredCount(candidature: CandidatureIndustrialisation): number {
-    return candidature.latestEvaluation?.resultats?.filter((resultat) => resultat.ruleConfigured === false).length ?? 0;
+  analysisIssueCount(candidature: CandidatureIndustrialisation): number {
+    const evaluation = candidature.latestEvaluation;
+    if (!evaluation) {
+      return 0;
+    }
+    const criterionIssues = evaluation.resultats?.filter((resultat) => resultat.ruleConfigured === false).length ?? 0;
+    return criterionIssues + (evaluation.mlWarnings?.length ?? 0) + (evaluation.errorMessage ? 1 : 0);
   }
 
   decisionLabel(decision: DecisionRecommandeeIndustrialisation): string {

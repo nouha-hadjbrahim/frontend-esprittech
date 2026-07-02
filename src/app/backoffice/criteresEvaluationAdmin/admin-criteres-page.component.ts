@@ -2,19 +2,15 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin, Observable, of, Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import {
   CritereEliminatoire,
   CritereEliminatoireRequest,
   CritereNote,
   CritereNoteRequest,
-  CritereNoteRule,
-  CritereNoteRuleRequest,
-  MODE_EVALUATION_OPTIONS,
   NoteLevel,
   NoteLevelRequest,
   ReponseEliminatoire,
-  RULE_OPERATOR_OPTIONS,
 } from '../../core/models/critere.model';
 import { CritereEliminatoireService } from '../../core/services/critere-eliminatoire.service';
 import { CritereNoteService } from '../../core/services/critere-note.service';
@@ -38,7 +34,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   criteresNotes = signal<CritereNote[]>([]);
   noteLevels = signal<NoteLevel[]>([]);
   activeNoteLevels = computed(() => this.noteLevels().filter((level) => level.active));
-  rulesByCritere = signal<Record<number, CritereNoteRule[]>>({});
 
   loadingEliminatoires = signal(false);
   loadingNotes = signal(false);
@@ -52,20 +47,15 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   notesPage = signal(1);
 
   isModalOpen = signal(false);
-  isRuleModalOpen = signal(false);
   isNoteLevelModalOpen = signal(false);
   modalMode: 'create' | 'edit' = 'create';
   modalType: 'eliminatoire' | 'note' = 'eliminatoire';
-  ruleModalMode: 'create' | 'edit' = 'create';
   noteLevelModalMode: 'create' | 'edit' = 'create';
   selectedCritereId: number | null = null;
-  selectedRuleCritere: CritereNote | null = null;
-  selectedRuleId: number | null = null;
   selectedNoteLevelId: number | null = null;
 
   eliminatoireForm!: FormGroup;
   noteForm!: FormGroup;
-  ruleForm!: FormGroup;
   noteLevelForm!: FormGroup;
 
   successMessage = signal<string | null>(null);
@@ -76,8 +66,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   toggling = signal(false);
 
   readonly ReponseEliminatoire = ReponseEliminatoire;
-  readonly modeEvaluationOptions = MODE_EVALUATION_OPTIONS;
-  readonly ruleOperatorOptions = RULE_OPERATOR_OPTIONS;
 
   filteredEliminatoires = computed(() => {
     const query = this.normalize(this.eliminatoiresSearch());
@@ -89,8 +77,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       crit.domaine,
       crit.reponseAttendue,
       crit.actif ? 'actif' : 'inactif',
-      crit.modeEvaluation,
-      crit.ruleDescription,
     ].join(' ')).includes(query));
   });
 
@@ -105,8 +91,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       crit.poids,
       crit.defaultNoteValue,
       crit.actif ? 'actif' : 'inactif',
-      crit.modeEvaluation,
-      crit.ruleDescription,
     ].join(' ')).includes(query));
   });
 
@@ -171,13 +155,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       ordre: [1, [Validators.required, Validators.min(1)]],
       reponseAttendue: [ReponseEliminatoire.OK, Validators.required],
       actif: [true],
-      ruleEnabled: [false],
-      modeEvaluation: [null],
-      expectedLivrableTypes: [''],
-      minLivrableCount: [1],
-      expectedKeyword: [''],
-      noteMaxAuto: [null],
-      ruleDescription: [''],
     });
 
     this.noteForm = this.fb.group({
@@ -188,26 +165,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       poids: [1, [Validators.required, Validators.min(0.1)]],
       defaultNoteValue: [3, [Validators.required, Validators.min(1)]],
       actif: [true],
-      ruleEnabled: [false],
-      modeEvaluation: [null],
-      expectedLivrableTypes: [''],
-      minLivrableCount: [1],
-      expectedKeyword: [''],
-      noteMaxAuto: [null],
-      ruleDescription: [''],
-    });
-
-    this.ruleForm = this.fb.group({
-      ruleName: ['', [Validators.required, Validators.minLength(3)]],
-      description: [''],
-      metadataKey: ['livrableCount', Validators.required],
-      operator: ['GTE', Validators.required],
-      expectedValue: [''],
-      minValue: [1],
-      maxValue: [null],
-      noteValue: [4, [Validators.required, Validators.min(1)]],
-      priority: [1, [Validators.required, Validators.min(1)]],
-      active: [true],
     });
 
     this.noteLevelForm = this.fb.group({
@@ -249,7 +206,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
         this.criteresNotes.set(sorted);
         this.notesPage.set(1);
         this.loadingNotes.set(false);
-        this.loadRulesForNotes(sorted);
       },
       error: (err) => {
         this.errorNotes.set(this.extractErrorMessage(err, 'Impossible de charger les criteres notes'));
@@ -265,38 +221,18 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadRulesForNotes(notes: CritereNote[]): void {
-    if (!notes.length) {
-      this.rulesByCritere.set({});
-      return;
-    }
-    forkJoin(notes.map((note) => this.critereNoteService.findRules(note.id)) || [of([] as CritereNoteRule[])])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (rulesLists) => {
-          const byCritere: Record<number, CritereNoteRule[]> = {};
-          notes.forEach((note, index) => byCritere[note.id] = rulesLists[index] ?? []);
-          this.rulesByCritere.set(byCritere);
-        },
-        error: (err) => this.showOperationError(err, 'Impossible de charger les regles de notation.'),
-      });
-  }
-
   openCreateModal(type: 'eliminatoire' | 'note'): void {
     this.modalType = type;
     this.modalMode = 'create';
     this.selectedCritereId = null;
     if (type === 'eliminatoire') {
-      this.eliminatoireForm.reset({ reponseAttendue: ReponseEliminatoire.OK, actif: true, ordre: 1, ruleEnabled: false, minLivrableCount: 1 });
+      this.eliminatoireForm.reset({ reponseAttendue: ReponseEliminatoire.OK, actif: true, ordre: 1 });
     } else {
       this.noteForm.reset({
         actif: true,
         ordre: 1,
         poids: 1,
         defaultNoteValue: this.defaultActiveNoteValue,
-        ruleEnabled: false,
-        minLivrableCount: 1,
-        noteMaxAuto: this.maxActiveNoteValue,
       });
     }
     this.isModalOpen.set(true);
@@ -309,14 +245,12 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     if (type === 'eliminatoire') {
       const crit = critere as CritereEliminatoire;
       this.eliminatoireForm.patchValue({
-        ...crit,
-        ruleEnabled: crit.ruleEnabled ?? false,
-        modeEvaluation: crit.modeEvaluation ?? null,
-        expectedLivrableTypes: crit.expectedLivrableTypes ?? '',
-        minLivrableCount: crit.minLivrableCount ?? 1,
-        expectedKeyword: crit.expectedKeyword ?? '',
-        noteMaxAuto: crit.noteMaxAuto ?? null,
-        ruleDescription: crit.ruleDescription ?? '',
+        libelle: crit.libelle,
+        description: crit.description,
+        domaine: crit.domaine,
+        ordre: crit.ordre,
+        reponseAttendue: crit.reponseAttendue,
+        actif: crit.actif,
       });
     } else {
       const crit = critere as CritereNote;
@@ -328,13 +262,6 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
         poids: crit.poids,
         defaultNoteValue: crit.defaultNoteValue ?? 3,
         actif: crit.actif,
-        ruleEnabled: crit.ruleEnabled ?? false,
-        modeEvaluation: crit.modeEvaluation ?? null,
-        expectedLivrableTypes: crit.expectedLivrableTypes ?? '',
-        minLivrableCount: crit.minLivrableCount ?? 1,
-        expectedKeyword: crit.expectedKeyword ?? '',
-        noteMaxAuto: crit.noteMaxAuto ?? this.maxActiveNoteValue,
-        ruleDescription: crit.ruleDescription ?? '',
       });
     }
     this.isModalOpen.set(true);
@@ -457,111 +384,9 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  rulesFor(critereId: number): CritereNoteRule[] {
-    return this.rulesByCritere()[critereId] ?? [];
-  }
-
   noteLabel(value: number | null | undefined): string {
     const level = this.noteLevels().find((item) => item.value === value);
     return level ? `${level.value} - ${level.label}` : `${value ?? 3}`;
-  }
-
-  openRuleModal(critere: CritereNote, rule?: CritereNoteRule): void {
-    this.selectedRuleCritere = critere;
-    this.selectedRuleId = rule?.id ?? null;
-    this.ruleModalMode = rule ? 'edit' : 'create';
-    this.ruleForm.reset({
-      ruleName: rule?.ruleName ?? '',
-      description: rule?.description ?? '',
-      metadataKey: rule?.metadataKey ?? 'livrableCount',
-      operator: rule?.operator ?? 'GTE',
-      expectedValue: rule?.expectedValue ?? '',
-      minValue: rule?.minValue ?? 1,
-      maxValue: rule?.maxValue ?? null,
-      noteValue: rule?.noteValue ?? this.maxActiveNoteValue,
-      priority: rule?.priority ?? 1,
-      active: rule?.active ?? true,
-    });
-    this.isRuleModalOpen.set(true);
-  }
-
-  closeRuleModal(): void {
-    this.isRuleModalOpen.set(false);
-    this.selectedRuleCritere = null;
-    this.selectedRuleId = null;
-  }
-
-  saveRule(): void {
-    if (this.saving()) {
-      return;
-    }
-    if (!this.selectedRuleCritere || this.ruleForm.invalid) {
-      this.ruleForm.markAllAsTouched();
-      this.showValidationWarning('Regle invalide.');
-      return;
-    }
-    const request: CritereNoteRuleRequest = this.ruleForm.value;
-    this.saving.set(true);
-    const operation = this.ruleModalMode === 'create'
-      ? this.critereNoteService.createRule(this.selectedRuleCritere.id, request)
-      : this.critereNoteService.updateRule(this.selectedRuleId!, request);
-    operation.pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.successMessage.set('Regle de notation enregistree.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
-        this.saving.set(false);
-        this.closeRuleModal();
-        this.loadRulesForNotes(this.criteresNotes());
-      },
-      error: (err) => {
-        this.showOperationError(err, 'Enregistrement de la regle impossible.');
-        this.saving.set(false);
-      },
-    });
-  }
-
-  deleteRule(rule: CritereNoteRule): void {
-    if (this.deleting()) {
-      return;
-    }
-    this.deleting.set(true);
-    this.critereNoteService.deleteRule(rule.id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.successMessage.set('Regle de notation supprimee.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
-        this.deleting.set(false);
-        this.loadRulesForNotes(this.criteresNotes());
-      },
-      error: (err) => {
-        this.showOperationError(err, 'Suppression de la regle impossible.');
-        this.deleting.set(false);
-      },
-    });
-  }
-
-  toggleRule(rule: CritereNoteRule): void {
-    if (this.toggling()) {
-      return;
-    }
-    this.toggling.set(true);
-    const operation = rule.active
-      ? this.critereNoteService.deactivateRule(rule.id)
-      : this.critereNoteService.activateRule(rule.id);
-    operation.pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.successMessage.set(rule.active ? 'Regle desactivee.' : 'Regle activee.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
-        this.toggling.set(false);
-        this.loadRulesForNotes(this.criteresNotes());
-      },
-      error: (err) => {
-        this.showOperationError(err, 'Changement de statut de la regle impossible.');
-        this.toggling.set(false);
-      },
-    });
   }
 
   openNoteLevelModal(level?: NoteLevel): void {
