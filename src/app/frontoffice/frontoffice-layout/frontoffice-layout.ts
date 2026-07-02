@@ -80,6 +80,39 @@ export class FrontofficeLayout {
     espaceCiIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/ci/industrialisation' },
   };
 
+  /** Nœud « Sujets » du chef d'équipe : catalogue, sujets équipe et validation. */
+  private sujetsChef(): NavLink {
+    return {
+      label: 'Sujets',
+      path: '/frontoffice/validation-sujets',
+      children: [
+        { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' as NavIcon },
+        { label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' as NavIcon },
+        { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
+      ],
+    };
+  }
+
+  /**
+   * Nœud « Sujets » de l'enseignant : « Mes sujets » n'apparaît que si
+   * l'enseignant est affilié à une équipe de recherche.
+   */
+  private sujetsEnseignant(): NavLink {
+    const children: NavLink[] = [
+      { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' as NavIcon },
+    ];
+    if (this.authService.isAffilieToEquipe()) {
+      children.push({ label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' as NavIcon });
+    }
+    return {
+      label: 'Sujets',
+      path: this.authService.isAffilieToEquipe()
+        ? '/frontoffice/sujets/mes-sujets'
+        : '/frontoffice/sujets/disponibles',
+      children,
+    };
+  }
+
   /**
    * Nœud « Catalogue » de l'enseignant : « Mes projets » n'apparaît que si
    * l'enseignant est affilié (affiliation acceptée à une équipe de recherche).
@@ -110,7 +143,7 @@ export class FrontofficeLayout {
       case 'ROLE_ENSEIGNANT':
         return [
           this.catalogueEnseignant(),
-          this.allLinks.sujets,
+          this.sujetsEnseignant(),
           this.allLinks.demandesIndustrialisation,
           this.allLinks.equipesRechercheEnseignant
         ];
@@ -123,10 +156,9 @@ export class FrontofficeLayout {
         return [
           this.allLinks.tableauDeBord,
           this.catalogueChef(),
-          this.allLinks.validationSujets,
+          this.sujetsChef(),
           this.allLinks.demandesIndustrialisation,
           this.allLinks.equipesRechercheChef,
-          this.allLinks.sujetsDisponibles
         ];
       case 'ROLE_CI':
         return [

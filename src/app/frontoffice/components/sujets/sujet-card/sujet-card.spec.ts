@@ -68,9 +68,9 @@ describe('SujetCard', () => {
     expect(component.showCandidaturesAction).toBeTrue();
   });
 
-  it('showCandidaturesAction should be true for REALISATION_EN_COURS', () => {
+  it('showCandidaturesAction should be false for REALISATION_EN_COURS', () => {
     component.sujet = { ...mockSujet, statut: 'REALISATION_EN_COURS' } as any;
-    expect(component.showCandidaturesAction).toBeTrue();
+    expect(component.showCandidaturesAction).toBeFalse();
   });
 
   it('showCandidaturesAction should be false for SOUMIS_EN_VALIDATION', () => {

@@ -15,6 +15,7 @@ export class SujetListRow {
   @Input() isOwner = false;
   @Output() edit = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
+  @Output() gererCandidatures = new EventEmitter<void>();
 
   get primaryDomaine(): string {
     return this.sujet.domaines[0] ?? '—';
@@ -43,14 +44,6 @@ export class SujetListRow {
     return text.length > 110 ? `${text.slice(0, 107)}...` : text;
   }
 
-  get initials(): string {
-    const name = this.sujet.encadrantNom || '';
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '?';
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-
   get timeAgo(): string {
     const dateStr = this.sujet.dateSoumission || this.sujet.dateCreation;
     if (!dateStr) return '—';
@@ -67,6 +60,18 @@ export class SujetListRow {
     return months <= 1 ? 'Il y a 1 mois' : `Il y a ${months} mois`;
   }
 
+  get initials(): string {
+    const name = this.sujet.encadrantNom || '';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  get showCandidaturesAction(): boolean {
+    return this.sujet.statut === 'VALIDE' || this.sujet.statut === 'CANDIDATURE_OUVERTE';
+  }
+
   onEdit(event: Event): void {
     event.stopPropagation();
     event.preventDefault();
@@ -77,5 +82,11 @@ export class SujetListRow {
     event.stopPropagation();
     event.preventDefault();
     this.delete.emit();
+  }
+
+  onGererCandidatures(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.gererCandidatures.emit();
   }
 }

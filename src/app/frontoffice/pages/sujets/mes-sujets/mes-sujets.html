@@ -1,17 +1,17 @@
 <div class="mes-sujets">
   <header class="mes-sujets__header">
     <div class="mes-sujets__header-text">
-      <h1 class="mes-sujets__title">Mes sujets</h1>
-      <p class="mes-sujets__subtitle">
-        Sujets déposés, leur statut de validation et leurs candidatures.
-      </p>
+      <h1 class="mes-sujets__title">{{ pageTitle }}</h1>
+      <p class="mes-sujets__subtitle">{{ pageSubtitle }}</p>
     </div>
-    <button type="button" class="mes-sujets__add-btn" (click)="openModal()">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      Déposer un sujet
-    </button>
+    @if (!isChefEquipe) {
+      <button type="button" class="mes-sujets__add-btn" (click)="openModal()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Déposer un sujet
+      </button>
+    }
   </header>
 
   <div class="mes-sujets__toolbar">
@@ -23,7 +23,7 @@
       <input
         type="text"
         class="mes-sujets__search-input"
-        placeholder="Rechercher dans mes sujets..."
+        [placeholder]="isChefEquipe ? 'Rechercher un sujet...' : 'Rechercher dans mes sujets...'"
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange()"
       />
@@ -96,6 +96,10 @@
     </div>
   </div>
 
+  @if (loadError) {
+    <div class="mes-sujets__alert">{{ loadError }}</div>
+  }
+
   @if (isLoading) {
     <div class="mes-sujets__loading">Chargement des sujets...</div>
   } @else if (filteredSujets.length === 0) {
@@ -110,11 +114,17 @@
       </div>
       <h2 class="mes-sujets__empty-title">Aucun sujet trouvé</h2>
       <p class="mes-sujets__empty-text">
-        Vous n'avez pas encore déposé de sujet ou aucun résultat ne correspond à vos filtres.
+        @if (isChefEquipe) {
+          Aucun sujet déposé par votre équipe ne correspond à vos filtres.
+        } @else {
+          Vous n'avez pas encore déposé de sujet ou aucun résultat ne correspond à vos filtres.
+        }
       </p>
-      <button type="button" class="mes-sujets__empty-btn" (click)="openModal()">
-        Déposer votre premier sujet
-      </button>
+      @if (!isChefEquipe) {
+        <button type="button" class="mes-sujets__empty-btn" (click)="openModal()">
+          Déposer votre premier sujet
+        </button>
+      }
     </div>
   } @else if (viewMode === 'list') {
     <div class="mes-sujets__list">
@@ -124,6 +134,7 @@
           [isOwner]="isOwner(sujet)"
           (edit)="openEditModal(sujet)"
           (delete)="deleteSujet(sujet)"
+          (gererCandidatures)="openCandidaturesModal(sujet)"
         />
       }
     </div>
@@ -142,35 +153,37 @@
   }
 </div>
 
-<app-deposer-sujet-modal
-  [editSujet]="editSujet"
-  [isOpen]="isModalOpen"
-  (closed)="closeModal()"
-  (saved)="onSujetSaved()"
-/>
+@if (!isChefEquipe) {
+  <app-deposer-sujet-modal
+    [editSujet]="editSujet"
+    [isOpen]="isModalOpen"
+    (closed)="closeModal()"
+    (saved)="onSujetSaved()"
+  />
 
-<app-confirm-dialog
-  [isOpen]="deleteConfirmOpen"
-  title="Supprimer le sujet"
-  [message]="deleteConfirmMessage"
-  confirmLabel="Supprimer"
-  cancelLabel="Annuler"
-  [loading]="deleting"
-  (confirmed)="confirmDelete()"
-  (cancelled)="cancelDelete()"
-/>
+  <app-confirm-dialog
+    [isOpen]="deleteConfirmOpen"
+    title="Supprimer le sujet"
+    [message]="deleteConfirmMessage"
+    confirmLabel="Supprimer"
+    cancelLabel="Annuler"
+    [loading]="deleting"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  />
 
-<app-confirm-dialog
-  [isOpen]="deleteAlertOpen"
-  title="Erreur"
-  [message]="deleteAlertMessage"
-  [alertOnly]="true"
-  (cancelled)="closeDeleteAlert()"
-/>
+  <app-confirm-dialog
+    [isOpen]="deleteAlertOpen"
+    title="Erreur"
+    [message]="deleteAlertMessage"
+    [alertOnly]="true"
+    (cancelled)="closeDeleteAlert()"
+  />
 
-<app-gerer-candidatures-modal
-  [isOpen]="candidaturesModalOpen"
-  [sujet]="sujetCandidatures"
-  (closed)="closeCandidaturesModal()"
-  (changed)="onCandidaturesChanged()"
-/>
+  <app-gerer-candidatures-modal
+    [isOpen]="candidaturesModalOpen"
+    [sujet]="sujetCandidatures"
+    (closed)="closeCandidaturesModal()"
+    (changed)="onCandidaturesChanged()"
+  />
+}

@@ -77,7 +77,7 @@ describe('CandidatureService', () => {
 
   it('declarerTerminaison should POST to correct URL', () => {
     service.declarerTerminaison(5).subscribe();
-    httpMock.expectOne(`${BASE}/projets/5/terminer`).flush(null);
+    httpMock.expectOne(`${BASE}/sujet-projets/5/terminer`).flush(null);
   });
 
   it('getCandidaturesParSujet should GET from correct URL', () => {

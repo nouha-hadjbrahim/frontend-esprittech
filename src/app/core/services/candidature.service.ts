@@ -44,7 +44,7 @@ export class CandidatureService {
 
   // ── US-24 : Déclaration de terminaison ─────────────────────────────
   declarerTerminaison(sujetId: number): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/projets/${sujetId}/terminer`, {});
+    return this.http.post<void>(`${this.baseUrl}/sujet-projets/${sujetId}/terminer`, {});
   }
 
   // ── US-16 : Dépôt de candidature par l'étudiant ────────────────────
@@ -59,6 +59,10 @@ export class CandidatureService {
   // ── US-15 : Mes candidatures (vue étudiant) ─────────────────────────
   getMesCandidatures(): Observable<Candidature[]> {
     return this.http.get<Candidature[]>(`${this.baseUrl}/candidatures/mes-candidatures`);
+  }
+
+  retirerMaCandidature(candidatureId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/candidatures/${candidatureId}`);
   }
 
   // ── Lectures ────────────────────────────────────────────────────────

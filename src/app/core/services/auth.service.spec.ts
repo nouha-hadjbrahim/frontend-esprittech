@@ -76,17 +76,17 @@ describe('AuthService', () => {
     expect(localStorage.getItem('auth_token')).toBeNull();
   });
 
-  it('should login and store the user in memory (no token in localStorage)', () => {
+  it('should login, store the user and capture the bearer token from the response header', () => {
     const user = userWith('ROLE_ADMIN');
     service.login({ email: 'j@esprit.tn', password: 'x' }).subscribe();
     const req = http.expectOne(`${API}/login`);
     expect(req.request.method).toBe('POST');
-    req.flush(user);
+    req.flush(user, { headers: { Authorization: 'Bearer login-token' } });
 
     expect(service.currentUser()?.role).toBe('ROLE_ADMIN');
+    expect(service.accessToken()).toBe('login-token');
     expect(service.isAuthenticated()).toBeTrue();
     expect(localStorage.getItem('esprittech.accessToken')).toBeNull();
-    expect(localStorage.getItem('esprittech.user')).toBeNull();
   });
 
   it('should register and store the user in memory', () => {
@@ -178,9 +178,15 @@ describe('AuthService', () => {
       expect(service.landingRoute()).toBe('/backoffice/users');
     });
 
-    it('should route ROLE_ENSEIGNANT to mes sujets', () => {
-      loginAs('ROLE_ENSEIGNANT');
+    it('should route affiliated ROLE_ENSEIGNANT to mes sujets', () => {
+      service.login({ email: 'a@esprit.tn', password: 'x' }).subscribe();
+      http.expectOne(`${API}/login`).flush({ ...userWith('ROLE_ENSEIGNANT'), isAffilieToEquipe: true, equipeId: 1, equipeNom: 'REEE' });
       expect(service.landingRoute()).toBe('/frontoffice/sujets/mes-sujets');
+    });
+
+    it('should route non-affiliated ROLE_ENSEIGNANT to catalogue', () => {
+      loginAs('ROLE_ENSEIGNANT');
+      expect(service.landingRoute()).toBe('/frontoffice/catalogue');
     });
 
     it('should route ROLE_ETUDIANT to available subjects', () => {
