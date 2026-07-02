@@ -276,7 +276,6 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
       },
       error: (err) => {
         this.terminaisonLoading = false;
-        this.terminaisonConfirmOpen = false;
         this.terminaisonError = err?.error?.detail ?? err?.error?.message ?? 'Impossible de déclarer la terminaison.';
       },
     });
@@ -514,7 +513,7 @@ ngOnDestroy(): void {
       const retryAfterSeconds =
         Number(err?.error?.retryAfterSeconds ?? err?.headers?.get?.('Retry-After') ?? this.SCORE_COOLDOWN_SECONDS);
 
-      if (err?.status === 409 || err?.status === 429 || err?.status === 401) {
+      if (err?.status === 409 || err?.status === 429) {
         this.startScoreCooldown(Number.isNaN(retryAfterSeconds) ? this.SCORE_COOLDOWN_SECONDS : retryAfterSeconds);
         this.evaluationError = `Le score vient d’être recalculé. Veuillez patienter ${this.scoreCooldownLabel} avant un nouveau recalcul.`;
       } else {
@@ -590,7 +589,7 @@ ngOnDestroy(): void {
 
   noteResultDisplay(resultat: ResultatCritereResponse): string {
     if (resultat.mlScore != null && resultat.mlMaxScore != null) {
-      const normalized = resultat.normalizedScore != null ? ` - ${Math.round(resultat.normalizedScore)}/100` : '';
+      const normalized = resultat.normalizedScore != null ? ` - ${Math.round(resultat.normalizedScore * 100)}/100` : '';
       return `${resultat.mlScore}/${resultat.mlMaxScore}${normalized}`;
     }
     const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;

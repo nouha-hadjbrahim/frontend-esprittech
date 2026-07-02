@@ -530,6 +530,18 @@
   }
 </div>
 
+<app-confirm-dialog
+  [isOpen]="terminaisonConfirmOpen"
+  title="Terminer le sujet"
+  [message]="terminaisonConfirmMessage"
+  confirmLabel="Terminer sujet"
+  cancelLabel="Annuler"
+  [loading]="terminaisonLoading"
+  [errorMessage]="terminaisonError"
+  (confirmed)="confirmerTerminaison()"
+  (cancelled)="annulerTerminaison()"
+></app-confirm-dialog>
+
 @if (industrialisationOpen) {
   <div class="modal-backdrop" (click)="closeIndustrialisation()">
     <div class="industrialisation-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
