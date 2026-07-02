@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Equipe } from '../../../../core/models/equipe.model';
 import { EquipeService } from '../../../../core/services/equipe.service';
 import { EquipeDomaine } from '../../../../core/models/equipe-domaine.model';
@@ -13,10 +14,11 @@ import { EquipeDomaineService } from '../../../../core/services/equipe-domaine.s
   templateUrl: './modifier-equipe-modal.html',
   styleUrl: './modifier-equipe-modal.css',
 })
-export class ModifierEquipeModal implements OnInit, OnChanges {
+export class ModifierEquipeModal implements OnChanges {
   private readonly fb = inject(FormBuilder);
   private readonly equipeSvc = inject(EquipeService);
   private readonly domaineSvc = inject(EquipeDomaineService);
+  private readonly snack = inject(MatSnackBar);
 
   @Input() isOpen = false;
   @Input() equipe!: Equipe;
@@ -26,6 +28,7 @@ export class ModifierEquipeModal implements OnInit, OnChanges {
   domaines: EquipeDomaine[] = [];
   isSubmitting = false;
   errorMessage = '';
+  private domainesLoaded = false;
 
   form = this.fb.nonNullable.group({
     nom: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(255)]],
@@ -37,12 +40,12 @@ export class ModifierEquipeModal implements OnInit, OnChanges {
     return `Modifier l'équipe « ${this.equipe?.nom ?? ''} »`;
   }
 
-  ngOnInit(): void {
-    this.loadDomaines();
-  }
-
   ngOnChanges(): void {
     if (this.isOpen && this.equipe) {
+      if (!this.domainesLoaded) {
+        this.loadDomaines();
+        this.domainesLoaded = true;
+      }
       this.form.patchValue({
         nom: this.equipe.nom,
         description: this.equipe.description ?? '',
@@ -55,7 +58,10 @@ export class ModifierEquipeModal implements OnInit, OnChanges {
   private loadDomaines(): void {
     this.domaineSvc.getAll().subscribe({
       next: (data) => (this.domaines = data),
-      error: () => (this.errorMessage = 'Erreur lors du chargement des domaines.'),
+      error: () => {
+        this.errorMessage = 'Erreur lors du chargement des domaines.';
+        this.snack.open('Erreur lors du chargement des domaines', '✕', { duration: 3500, panelClass: ['snack-error'] });
+      },
     });
   }
 
@@ -89,11 +95,13 @@ export class ModifierEquipeModal implements OnInit, OnChanges {
     this.equipeSvc.modifier(this.equipe.id, payload).subscribe({
       next: () => {
         this.isSubmitting = false;
+        this.snack.open('Équipe mise à jour', '✕', { duration: 3500, panelClass: ['snack-success'] });
         this.saved.emit();
       },
       error: () => {
         this.isSubmitting = false;
         this.errorMessage = 'Erreur lors de la modification. Vérifiez que le backend est démarré.';
+        this.snack.open('Erreur lors de la modification', '✕', { duration: 3500, panelClass: ['snack-error'] });
       },
     });
   }

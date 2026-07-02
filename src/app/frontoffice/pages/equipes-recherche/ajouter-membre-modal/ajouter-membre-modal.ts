@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 import { EquipeService } from '../../../../core/services/equipe.service';
 import { Equipe } from '../../../../core/models/equipe.model';
@@ -16,6 +17,7 @@ import { Page } from '../../../../core/models/page.model';
 })
 export class AjouterMembreModal implements OnChanges {
   private readonly equipeSvc = inject(EquipeService);
+  private readonly snack = inject(MatSnackBar);
 
   @Input() isOpen = false;
   @Input() equipe!: Equipe;
@@ -96,11 +98,13 @@ export class AjouterMembreModal implements OnChanges {
     this.equipeSvc.ajouterMembres(this.equipe.id, Array.from(this.selectedIds)).subscribe({
       next: () => {
         this.loading = false;
+        this.snack.open('Membre(s) ajouté(s) avec succès', '✕', { duration: 3500, panelClass: ['snack-success'] });
         this.saved.emit();
       },
       error: () => {
         this.loading = false;
         this.errorMessage = 'Erreur lors de l\'ajout des membres.';
+        this.snack.open('Erreur lors de l\'ajout des membres', '✕', { duration: 3500, panelClass: ['snack-error'] });
       },
     });
   }

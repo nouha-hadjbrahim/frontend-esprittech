@@ -378,6 +378,7 @@ export class DialogueAssignerChefComponent implements OnInit, OnDestroy {
     this.chargement = true;
     this.svc.assignerChef(this.eq.id, chef.id).pipe(finalize(() => (this.chargement = false))).subscribe({
       next: (updated) => {
+        this.snack.open('Chef assigné avec succès', '✕', { duration: 3500, panelClass: ['snack-success'] });
         this.ref.close(updated);
       },
       error: () => {

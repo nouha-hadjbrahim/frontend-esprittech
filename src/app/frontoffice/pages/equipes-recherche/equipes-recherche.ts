@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 
 import { Equipe } from '../../../core/models/equipe.model';
@@ -27,6 +28,8 @@ export class EquipesRecherche implements OnInit {
   private readonly affiliationSvc = inject(AffiliationService);
   private readonly authSvc = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+
+  private readonly snack = inject(MatSnackBar);
 
   readonly currentUser = this.authSvc.currentUser;
 
@@ -149,7 +152,10 @@ export class EquipesRecherche implements OnInit {
         this.equipes.set(data);
         this.loadAffiliationsForRole();
       },
-      error: () => this.equipes.set([]),
+      error: () => {
+        this.equipes.set([]);
+        this.toast('Erreur lors du chargement des équipes');
+      },
     });
   }
 
@@ -162,7 +168,10 @@ export class EquipesRecherche implements OnInit {
       if (team) {
         this.affiliationSvc.getByEquipe(team.id).subscribe({
           next: (data) => this.affiliations.set(data),
-          error: () => this.affiliations.set([]),
+          error: () => {
+            this.affiliations.set([]);
+            this.toast('Erreur lors du chargement des affiliations');
+          },
         });
       } else {
         this.affiliations.set([]);
@@ -170,7 +179,10 @@ export class EquipesRecherche implements OnInit {
     } else {
       this.affiliationSvc.getMesDemandes().subscribe({
         next: (data) => this.affiliations.set(data),
-        error: () => this.affiliations.set([]),
+        error: () => {
+          this.affiliations.set([]);
+          this.toast('Erreur lors du chargement de mes demandes');
+        },
       });
     }
   }
@@ -188,6 +200,7 @@ export class EquipesRecherche implements OnInit {
   onEditSaved(): void {
     this.editModalOpen = false;
     this.loadData();
+    this.toast('Équipe mise à jour', 'succes');
   }
 
   openAddMemberModal(): void {
@@ -197,12 +210,16 @@ export class EquipesRecherche implements OnInit {
   onMemberAdded(): void {
     this.addMemberModalOpen = false;
     this.loadData();
+    this.toast('Membre(s) ajouté(s) avec succès', 'succes');
   }
 
-  accepterDemande(id: number, equipeId: number): void {
+  accepterDemande(id: number, equipeId: number, nom?: string): void {
     this.affiliationSvc.traiter(id, equipeId, 'ACCEPTEE').subscribe({
-      next: () => this.loadData(),
-      error: () => {},
+      next: () => {
+        this.loadData();
+        this.toast(`Demande ${nom ? 'de ' + nom : ''} acceptée`, 'succes');
+      },
+      error: () => this.toast("Erreur lors de l'acceptation de la demande"),
     });
   }
 
@@ -221,8 +238,9 @@ export class EquipesRecherche implements OnInit {
         this.pendingRefuseId = null;
         this.pendingRefuseEquipeId = null;
         this.reloadAffiliations();
+        this.toast('Demande refusée', 'succes');
       },
-      error: () => {},
+      error: () => this.toast("Erreur lors du refus de la demande"),
     });
   }
 
@@ -245,10 +263,12 @@ export class EquipesRecherche implements OnInit {
         this.confirmDialogOpen = false;
         this.memberToRemove = null;
         this.loadData();
+        this.toast('Membre retiré de l\'équipe', 'succes');
       },
       error: () => {
         this.confirmDialogOpen = false;
         this.memberToRemove = null;
+        this.toast('Erreur lors du retrait du membre');
       },
     });
   }
@@ -280,8 +300,11 @@ export class EquipesRecherche implements OnInit {
 
   rejoindreEquipe(equipeId: number): void {
     this.affiliationSvc.create(equipeId).subscribe({
-      next: () => this.reloadAffiliations(),
-      error: () => {},
+      next: () => {
+        this.reloadAffiliations();
+        this.toast('Demande d\'affiliation envoyée', 'succes');
+      },
+      error: () => this.toast("Erreur lors de l'envoi de la demande"),
     });
   }
 
@@ -340,5 +363,12 @@ export class EquipesRecherche implements OnInit {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  private toast(msg: string, type: 'succes' | 'erreur' = 'erreur') {
+    this.snack.open(msg, '✕', {
+      duration: 3500,
+      panelClass: type === 'succes' ? ['snack-success'] : ['snack-error'],
+    });
   }
 }

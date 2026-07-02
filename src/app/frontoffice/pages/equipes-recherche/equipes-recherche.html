@@ -167,7 +167,7 @@
               </div>
               @if (r.statut === 'EN_ATTENTE') {
                 <div class="equipes-recherche__request-actions">
-                  <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id, r.equipeId)">
+                  <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id, r.equipeId, r.enseignant.prenom + ' ' + r.enseignant.nom)">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                       <path d="M2.5 6.5L5 9L9.5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -342,12 +342,14 @@
   />
 }
 
-<app-ajouter-membre-modal
-  [isOpen]="addMemberModalOpen"
-  [equipe]="myTeam()!"
-  (closed)="addMemberModalOpen = false"
-  (saved)="onMemberAdded()"
-/>
+@if (addMemberModalOpen) {
+  <app-ajouter-membre-modal
+    [isOpen]="addMemberModalOpen"
+    [equipe]="myTeam()!"
+    (closed)="addMemberModalOpen = false"
+    (saved)="onMemberAdded()"
+  />
+}
 
 <!-- Motif dialog for refusal -->
 @if (motifDialogOpen) {
