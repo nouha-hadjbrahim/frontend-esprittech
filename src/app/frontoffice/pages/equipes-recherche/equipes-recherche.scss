@@ -63,7 +63,7 @@
 .equipes-recherche__hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.1);
   z-index: 1;
 }
 
@@ -125,6 +125,22 @@
 
 .equipes-recherche__hero-edit:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+.pending-section-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #E23E3E;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-left: 8px;
+  vertical-align: middle;
 }
 
 /* ── Stat cards (chef Mon équipe tab) ── */
@@ -502,7 +518,7 @@
 .equipes-recherche__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 .equipes-recherche__card {
@@ -538,20 +554,11 @@
 .equipes-recherche__card-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.30);
+  background: rgba(0, 0, 0, 0.1);
   z-index: 1;
 }
 
-.equipes-recherche__card-banner-body {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 14px 16px;
-  z-index: 2;
-  color: #fff;
-}
+
 
 .equipes-recherche__card-badge {
   position: absolute;
@@ -564,14 +571,13 @@
   color: #fff;
   font-size: 10px;
   font-weight: 700;
-  backdrop-filter: blur(4px);
   letter-spacing: 0.04em;
 }
 
 .equipes-recherche__card-body {
   display: flex;
   flex-direction: column;
-  padding: 14px 16px 16px;
+  padding: 20px 20px 18px;
   flex: 1;
 }
 
@@ -580,30 +586,23 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  opacity: 0.85;
-}
-
-.equipes-recherche__card-banner-body .equipes-recherche__card-domaine {
-  color: #fff;
+  color: #9CA3AF;
+  margin-bottom: 4px;
 }
 
 .equipes-recherche__card-name {
-  margin: 4px 0 0;
-  font-size: 16px;
+  margin: 0 0 10px;
+  font-size: 17px;
   font-weight: 700;
-  line-height: 1.2;
-}
-
-.equipes-recherche__card-banner-body .equipes-recherche__card-name {
-  color: #fff;
+  color: #111827;
+  line-height: 1.25;
 }
 
 .equipes-recherche__card-desc {
-  margin: 0;
+  margin: 0 0 16px;
   font-size: 13px;
-  color: #757575;
+  color: #6B7280;
   line-height: 1.5;
-  min-height: 39px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -614,7 +613,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 0;
   padding-top: 14px;
   border-top: 1px solid #f0f0f0;
 }
@@ -652,44 +651,33 @@
   color: #9ca3af;
 }
 
-.equipes-recherche__card-members {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-top: 12px;
-}
-
-.equipes-recherche__card-member-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  border: 2px solid #fff;
-  margin-left: -4px;
-  flex-shrink: 0;
-}
-
-.equipes-recherche__card-member-avatar:first-child {
-  margin-left: 0;
-}
-
-.equipes-recherche__card-member-count {
-  margin-left: 8px;
-  font-size: 11px;
-  color: #9ca3af;
-}
-
 .equipes-recherche__card-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
+  gap: 8px;
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid #f0f0f0;
+}
+
+.card__details-btn {
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.card__details-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.card__details-btn svg {
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.card__details-btn:hover svg {
+  transform: scale(1.08);
 }
 
 /* ── Join button wrap (for refused motif popup) ── */
@@ -895,6 +883,12 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: motif-overlay-in 0.2s ease;
+}
+
+@keyframes motif-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .motif-dialog {
@@ -904,6 +898,12 @@
   width: 400px;
   max-width: 90vw;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: motif-dialog-in 0.2s ease;
+}
+
+@keyframes motif-dialog-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .motif-dialog__title {
