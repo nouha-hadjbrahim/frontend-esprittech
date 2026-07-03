@@ -8,10 +8,12 @@ import {
   SimpleChanges,
   inject,
 } from '@angular/core';
+import { Observable } from 'rxjs';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { CreateProjetRequest, ReferenceItem, TypeProjet } from '../../../../core/models/projet-catalogue.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ProjetCatalogueService } from '../../../../core/services/projet-catalogue.service';
+import { SujetReferenceService } from '../../../../core/services/sujet-reference.service';
 import { TYPE_PROJET_OPTIONS } from '../../../constants/projet-catalogue.constants';
 
 /** Validateur de groupe : la date de fin doit être strictement postérieure à la date de début. */
@@ -37,6 +39,7 @@ function dateFinAfterDateDebut(group: AbstractControl): ValidationErrors | null 
 export class AjouterProjetModal implements OnInit, OnChanges {
   private readonly fb = inject(FormBuilder);
   private readonly projetService = inject(ProjetCatalogueService);
+  private readonly referenceService = inject(SujetReferenceService);
   private readonly authService = inject(AuthService);
 
   @Input() isOpen = false;
@@ -57,6 +60,7 @@ export class AjouterProjetModal implements OnInit, OnChanges {
   technologiesTouched = false;
 
   isSubmitting = false;
+  addingReference = false;
   errorMessage = '';
   fieldErrors: Record<string, string> = {};
 
@@ -125,6 +129,52 @@ export class AjouterProjetModal implements OnInit, OnChanges {
     } else {
       set.add(id);
     }
+  }
+
+  /** Crée (ou retrouve) un domaine saisi, l'ajoute à la liste et le sélectionne. */
+  addDomaine(input: HTMLInputElement): void {
+    this.domainesTouched = true;
+    this.addReference(input, (nom) => this.referenceService.suggestDomaine(nom), this.domaines, this.selectedDomaines);
+  }
+
+  /** Crée (ou retrouve) une technologie saisie, l'ajoute à la liste et la sélectionne. */
+  addTechnologie(input: HTMLInputElement): void {
+    this.technologiesTouched = true;
+    this.addReference(input, (nom) => this.referenceService.suggestTechnologie(nom), this.technologies, this.selectedTechnologies);
+  }
+
+  /** Crée (ou retrouve) un prérequis saisi, l'ajoute à la liste et le sélectionne. */
+  addPrerequis(input: HTMLInputElement): void {
+    this.addReference(input, (nom) => this.referenceService.suggestPrerequis(nom), this.prerequis, this.selectedPrerequis);
+  }
+
+  /** Logique commune : persiste l'élément via le référentiel partagé puis l'ajoute/sélectionne. */
+  private addReference(
+    input: HTMLInputElement,
+    create: (nom: string) => Observable<ReferenceItem>,
+    list: ReferenceItem[],
+    selected: Set<number>,
+  ): void {
+    const nom = input.value.trim();
+    if (!nom || this.addingReference) {
+      return;
+    }
+    this.addingReference = true;
+    create(nom).subscribe({
+      next: (item) => {
+        this.addingReference = false;
+        input.value = '';
+        if (!list.some((existing) => existing.id === item.id)) {
+          list.push(item);
+          list.sort((a, b) => a.nom.localeCompare(b.nom));
+        }
+        selected.add(item.id);
+      },
+      error: () => {
+        this.addingReference = false;
+        this.errorMessage = "Impossible d'ajouter l'élément. Veuillez réessayer.";
+      },
+    });
   }
 
   isInvalid(field: keyof typeof this.form.controls): boolean {

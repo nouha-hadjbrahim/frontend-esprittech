@@ -1,57 +1,94 @@
-<div class="page-container">
-  <h1>Catalogue des projets</h1>
-  <p class="page-subtitle">Projets labellisés et industrialisés de la plateforme.</p>
+<div class="catalogue">
+  <header class="catalogue__header">
+    <div class="catalogue__header-text">
+      <h1 class="catalogue__title">Catalogue des projets</h1>
+      <p class="catalogue__subtitle">Projets labellisés et industrialisés de la plateforme.</p>
+    </div>
+  </header>
 
   @if (errorMessage) {
     <div class="alert alert--error">{{ errorMessage }}</div>
   }
 
-  <!-- Boutons de type -->
-  <div class="type-tabs">
+  <!-- Barre d'outils : recherche + filtres -->
+  <div class="catalogue__toolbar">
+    <div class="catalogue__search-box">
+      <svg class="catalogue__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="catalogue__search-input"
+        placeholder="Rechercher (titre, encadrant, technologie)..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="catalogue__filters">
+      <select class="catalogue__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
+        @for (opt of statutOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="selectedDomaine" (ngModelChange)="onFilterChange()">
+        <option value="">Tous les domaines</option>
+        @for (d of domaineOptions; track d) {
+          <option [value]="d">{{ d }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="selectedAnnee" (ngModelChange)="onFilterChange()">
+        <option value="">Toutes les années</option>
+        @for (a of anneeOptions; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
+        @for (opt of sortOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Pastilles de type -->
+  <div class="catalogue__type-pills">
     @for (t of typeButtons; track t.value) {
-      <button type="button" class="type-tab" [class.type-tab--active]="selectedType === t.value"
-              (click)="selectType(t.value)">{{ t.label }}</button>
+      <button
+        type="button"
+        class="catalogue__type-pill"
+        [class.catalogue__type-pill--active]="selectedType === t.value"
+        (click)="selectType(t.value)"
+      >
+        {{ t.label }}
+      </button>
     }
   </div>
 
-  <!-- Filtres -->
-  <div class="filters">
-    <input type="text" class="filters__search" placeholder="Rechercher (titre, encadrant, technologie)..."
-           [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" />
-
-    <select class="filters__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
-      @for (opt of statutOptions; track opt.value) {
-        <option [value]="opt.value">{{ opt.label }}</option>
-      }
-    </select>
-
-    <select class="filters__select" [(ngModel)]="selectedDomaine" (ngModelChange)="onFilterChange()">
-      <option value="">Tous les domaines</option>
-      @for (d of domaineOptions; track d) {
-        <option [value]="d">{{ d }}</option>
-      }
-    </select>
-
-    <select class="filters__select" [(ngModel)]="selectedAnnee" (ngModelChange)="onFilterChange()">
-      <option value="">Toutes les années</option>
-      @for (a of anneeOptions; track a) {
-        <option [value]="a">{{ a }}</option>
-      }
-    </select>
-
-    <select class="filters__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
-      @for (opt of sortOptions; track opt.value) {
-        <option [value]="opt.value">{{ opt.label }}</option>
-      }
-    </select>
-  </div>
+  @if (!isLoading) {
+    <p class="catalogue__count">{{ filtered.length }} projet(s)</p>
+  }
 
   @if (isLoading) {
-    <p class="hint">Chargement...</p>
+    <div class="catalogue__loading">Chargement...</div>
   } @else if (filtered.length === 0) {
-    <div class="empty-card">Aucun projet ne correspond à votre recherche.</div>
+    <div class="catalogue__empty">
+      <div class="catalogue__empty-icon" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="catalogue__empty-title">Aucun projet disponible</h2>
+      <p class="catalogue__empty-text">Aucun projet ne correspond à votre recherche.</p>
+    </div>
   } @else {
-    <div class="cards">
+    <div class="catalogue__grid">
       @for (projet of filtered; track projet.id) {
         <div class="projet-card">
           <div class="projet-card__top">

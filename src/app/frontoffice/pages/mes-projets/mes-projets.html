@@ -1,11 +1,16 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1>Mes projets</h1>
-      <p class="page-subtitle">Vos projets soumis au catalogue applicatif.</p>
+<div class="mes-projets">
+  <header class="mes-projets__header">
+    <div class="mes-projets__header-text">
+      <h1 class="mes-projets__title">Mes projets</h1>
+      <p class="mes-projets__subtitle">Vos projets soumis au catalogue applicatif.</p>
     </div>
-    <button type="button" class="btn btn--primary" (click)="openModal()">Ajouter +</button>
-  </div>
+    <button type="button" class="mes-projets__add-btn" (click)="openModal()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Ajouter un projet
+    </button>
+  </header>
 
   @if (successMessage) {
     <div class="alert alert--success">{{ successMessage }}</div>
@@ -14,43 +19,66 @@
     <div class="alert alert--error">{{ errorMessage }}</div>
   }
 
-  <div class="filters">
-    <input
-      type="text"
-      class="filters__search"
-      placeholder="Rechercher un projet..."
-      [(ngModel)]="searchQuery"
-      (ngModelChange)="onSearchChange()"
-    />
-    <select class="filters__select" [(ngModel)]="selectedType" (ngModelChange)="onFilterChange()">
-      @for (opt of typeOptions; track opt.value) {
-        <option [value]="opt.value">{{ opt.label }}</option>
-      }
-    </select>
-    <select class="filters__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
-      @for (opt of statutOptions; track opt.value) {
-        <option [value]="opt.value">{{ opt.label }}</option>
-      }
-    </select>
-    <select class="filters__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
-      @for (opt of sortOptions; track opt.value) {
-        <option [value]="opt.value">{{ opt.label }}</option>
-      }
-    </select>
+  <div class="mes-projets__toolbar">
+    <div class="mes-projets__search-box">
+      <svg class="mes-projets__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="mes-projets__search-input"
+        placeholder="Rechercher un projet..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="mes-projets__filters">
+      <select class="mes-projets__select" [(ngModel)]="selectedType" (ngModelChange)="onFilterChange()">
+        @for (opt of typeOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      <select class="mes-projets__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
+        @for (opt of statutOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      <select class="mes-projets__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
+        @for (opt of sortOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
   </div>
 
   @if (isLoading) {
-    <p class="hint">Chargement...</p>
+    <div class="mes-projets__loading">Chargement...</div>
   } @else if (filtered.length === 0) {
-    <div class="empty-card">
-      @if (projets.length === 0) {
-        Vous n'avez encore soumis aucun projet. Cliquez sur « Ajouter + » pour commencer.
-      } @else {
-        Aucun projet ne correspond à votre recherche.
-      }
+    <div class="mes-projets__empty">
+      <div class="mes-projets__empty-icon" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="8" y="12" width="32" height="28" rx="4" stroke="#e5e7eb" stroke-width="2"/>
+          <path d="M16 20H32M16 26H28M16 32H24" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="36" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
+          <path d="M33 14H39M36 11V17" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="mes-projets__empty-title">Aucun projet trouvé</h2>
+      <p class="mes-projets__empty-text">
+        @if (projets.length === 0) {
+          Vous n'avez encore soumis aucun projet.
+        } @else {
+          Aucun projet ne correspond à votre recherche.
+        }
+      </p>
+      <button type="button" class="mes-projets__empty-btn" (click)="openModal()">
+        Ajouter votre premier projet
+      </button>
     </div>
   } @else {
-    <div class="cards">
+    <div class="mes-projets__grid">
       @for (projet of filtered; track projet.id) {
         <div class="projet-card">
           <div class="projet-card__header">

@@ -1,154 +1,213 @@
 @if (isOpen) {
   <div class="modal-overlay" (click)="onOverlayClick($event)">
     <div class="modal" role="dialog" aria-modal="true">
-      <div class="modal__header">
+      <header class="modal__header">
         <div>
           <h2 class="modal__title">Ajouter un projet</h2>
           <p class="modal__subtitle">Encadrant : {{ encadrantName }} · Équipe : {{ equipeNom }}</p>
         </div>
-        <button type="button" class="modal__close" (click)="close()" aria-label="Fermer">&times;</button>
-      </div>
+        <button type="button" class="modal__close" (click)="close()" aria-label="Fermer">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
 
       <form class="modal__body" [formGroup]="form" (ngSubmit)="submit()">
 
-        @if (errorMessage) {
-          <div class="alert alert--error">{{ errorMessage }}</div>
+        <!-- Type de projet -->
+        <div class="modal__categories">
+          @for (opt of typeOptions; track opt.value) {
+            <button
+              type="button"
+              class="category-pill"
+              [class.category-pill--active]="isTypeActive(opt.value)"
+              (click)="selectType(opt.value)"
+            >{{ opt.label }}</button>
+          }
+        </div>
+        @if (fieldErrors['typeProjet']) {
+          <span class="form-error">{{ fieldErrors['typeProjet'] }}</span>
         }
 
-        <!-- Type de projet -->
-        <div class="field">
-          <label class="field__label">Type de projet *</label>
-          <div class="type-buttons">
-            @for (opt of typeOptions; track opt.value) {
-              <button
-                type="button"
-                class="type-btn"
-                [class.type-btn--active]="isTypeActive(opt.value)"
-                (click)="selectType(opt.value)"
-              >{{ opt.label }}</button>
-            }
+        <div class="modal__columns">
+          <div class="modal__column">
+            <!-- Titre -->
+            <div class="form-field">
+              <label class="form-label" for="titre">Titre</label>
+              <input
+                id="titre"
+                type="text"
+                class="form-input"
+                [class.form-input--error]="isInvalid('titre')"
+                formControlName="titre"
+                placeholder="Titre du projet"
+              />
+              @if (isInvalid('titre')) {
+                <span class="form-error">
+                  @if (form.controls.titre.errors?.['required']) { Le titre est obligatoire. }
+                  @else if (form.controls.titre.errors?.['minlength']) { Le titre doit contenir au moins 3 caractères. }
+                  @else if (form.controls.titre.errors?.['maxlength']) { Le titre ne doit pas dépasser 200 caractères. }
+                </span>
+              } @else if (fieldErrors['titre']) {
+                <span class="form-error">{{ fieldErrors['titre'] }}</span>
+              }
+            </div>
+
+            <!-- Description -->
+            <div class="form-field">
+              <label class="form-label" for="description">Description</label>
+              <textarea
+                id="description"
+                class="form-textarea"
+                [class.form-input--error]="isInvalid('description')"
+                rows="5"
+                formControlName="description"
+                placeholder="Décrivez le projet (10 caractères minimum)"
+              ></textarea>
+              @if (isInvalid('description')) {
+                <span class="form-error">
+                  @if (form.controls.description.errors?.['required']) { La description est obligatoire. }
+                  @else if (form.controls.description.errors?.['minlength']) { La description doit contenir au moins 10 caractères. }
+                </span>
+              } @else if (fieldErrors['description']) {
+                <span class="form-error">{{ fieldErrors['description'] }}</span>
+              }
+            </div>
+
+            <!-- Objectifs -->
+            <div class="form-field">
+              <label class="form-label" for="objectifs">Objectifs</label>
+              <textarea
+                id="objectifs"
+                class="form-textarea"
+                [class.form-input--error]="isInvalid('objectifs')"
+                rows="5"
+                formControlName="objectifs"
+                placeholder="Objectifs du projet"
+              ></textarea>
+              @if (isInvalid('objectifs')) {
+                <span class="form-error">Les objectifs sont obligatoires.</span>
+              } @else if (fieldErrors['objectifs']) {
+                <span class="form-error">{{ fieldErrors['objectifs'] }}</span>
+              }
+            </div>
           </div>
-          @if (fieldErrors['typeProjet']) {
-            <p class="field__error">{{ fieldErrors['typeProjet'] }}</p>
-          }
-        </div>
 
-        <!-- Titre -->
-        <div class="field">
-          <label class="field__label" for="titre">Titre *</label>
-          <input id="titre" type="text" class="input" formControlName="titre" placeholder="Titre du projet" />
-          @if (isInvalid('titre')) {
-            <p class="field__error">
-              @if (form.controls.titre.errors?.['required']) { Le titre est obligatoire. }
-              @else if (form.controls.titre.errors?.['minlength']) { Le titre doit contenir au moins 3 caractères. }
-              @else if (form.controls.titre.errors?.['maxlength']) { Le titre ne doit pas dépasser 200 caractères. }
-            </p>
-          } @else if (fieldErrors['titre']) {
-            <p class="field__error">{{ fieldErrors['titre'] }}</p>
-          }
-        </div>
+          <div class="modal__column">
+            <!-- Dates -->
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label" for="dateDebut">Date de début</label>
+                <input id="dateDebut" type="date" class="form-input" formControlName="dateDebut" />
+                @if (isInvalid('dateDebut')) {
+                  <span class="form-error">La date de début est obligatoire.</span>
+                }
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="dateFin">Date de fin</label>
+                <input id="dateFin" type="date" class="form-input" formControlName="dateFin" />
+                @if (isInvalid('dateFin')) {
+                  <span class="form-error">La date de fin est obligatoire.</span>
+                } @else if (isDateRangeInvalid) {
+                  <span class="form-error">La date de fin doit être postérieure à la date de début.</span>
+                }
+              </div>
+            </div>
 
-        <!-- Description -->
-        <div class="field">
-          <label class="field__label" for="description">Description *</label>
-          <textarea id="description" class="textarea" rows="3" formControlName="description"
-                    placeholder="Décrivez le projet (10 caractères minimum)"></textarea>
-          @if (isInvalid('description')) {
-            <p class="field__error">
-              @if (form.controls.description.errors?.['required']) { La description est obligatoire. }
-              @else if (form.controls.description.errors?.['minlength']) { La description doit contenir au moins 10 caractères. }
-            </p>
-          } @else if (fieldErrors['description']) {
-            <p class="field__error">{{ fieldErrors['description'] }}</p>
-          }
-        </div>
+            <!-- Domaines -->
+            <div class="form-field">
+              <label class="form-label">Domaines <span class="form-hint">(au moins 1)</span></label>
+              <div class="chip-add">
+                <input
+                  #domaineInput
+                  type="text"
+                  class="form-input"
+                  placeholder="Ajouter un domaine..."
+                  (keydown.enter)="$event.preventDefault(); addDomaine(domaineInput)"
+                />
+                <button type="button" class="chip-add__btn" (click)="addDomaine(domaineInput)"
+                        [disabled]="addingReference" aria-label="Ajouter un domaine">+</button>
+              </div>
+              @if (domaines.length === 0) {
+                <span class="form-hint">Aucun domaine disponible.</span>
+              }
+              <div class="chips">
+                @for (d of domaines; track d.id) {
+                  <button type="button" class="chip" [class.chip--active]="selectedDomaines.has(d.id)"
+                          (click)="toggleDomaine(d.id)">{{ d.nom }}</button>
+                }
+              </div>
+              @if (isDomainesInvalid) {
+                <span class="form-error">Sélectionnez au moins un domaine.</span>
+              }
+            </div>
 
-        <!-- Objectifs -->
-        <div class="field">
-          <label class="field__label" for="objectifs">Objectifs *</label>
-          <textarea id="objectifs" class="textarea" rows="3" formControlName="objectifs"
-                    placeholder="Objectifs du projet"></textarea>
-          @if (isInvalid('objectifs')) {
-            <p class="field__error">Les objectifs sont obligatoires.</p>
-          } @else if (fieldErrors['objectifs']) {
-            <p class="field__error">{{ fieldErrors['objectifs'] }}</p>
-          }
-        </div>
+            <!-- Technologies -->
+            <div class="form-field">
+              <label class="form-label">Technologies <span class="form-hint">(au moins 1)</span></label>
+              <div class="chip-add">
+                <input
+                  #technologieInput
+                  type="text"
+                  class="form-input"
+                  placeholder="Ajouter une technologie..."
+                  (keydown.enter)="$event.preventDefault(); addTechnologie(technologieInput)"
+                />
+                <button type="button" class="chip-add__btn" (click)="addTechnologie(technologieInput)"
+                        [disabled]="addingReference" aria-label="Ajouter une technologie">+</button>
+              </div>
+              @if (technologies.length === 0) {
+                <span class="form-hint">Aucune technologie disponible.</span>
+              }
+              <div class="chips">
+                @for (t of technologies; track t.id) {
+                  <button type="button" class="chip" [class.chip--active]="selectedTechnologies.has(t.id)"
+                          (click)="toggleTechnologie(t.id)">{{ t.nom }}</button>
+                }
+              </div>
+              @if (isTechnologiesInvalid) {
+                <span class="form-error">Sélectionnez au moins une technologie.</span>
+              }
+            </div>
 
-        <!-- Dates -->
-        <div class="field-row">
-          <div class="field">
-            <label class="field__label" for="dateDebut">Date de début *</label>
-            <input id="dateDebut" type="date" class="input" formControlName="dateDebut" />
-            @if (isInvalid('dateDebut')) {
-              <p class="field__error">La date de début est obligatoire.</p>
-            }
-          </div>
-          <div class="field">
-            <label class="field__label" for="dateFin">Date de fin *</label>
-            <input id="dateFin" type="date" class="input" formControlName="dateFin" />
-            @if (isInvalid('dateFin')) {
-              <p class="field__error">La date de fin est obligatoire.</p>
-            } @else if (isDateRangeInvalid) {
-              <p class="field__error">La date de fin doit être postérieure à la date de début.</p>
-            }
-          </div>
-        </div>
-
-        <!-- Domaines -->
-        <div class="field">
-          <label class="field__label">Domaines * <span class="field__hint">(au moins 1)</span></label>
-          @if (domaines.length === 0) {
-            <p class="field__hint">Aucun domaine disponible.</p>
-          }
-          <div class="chips">
-            @for (d of domaines; track d.id) {
-              <button type="button" class="chip" [class.chip--active]="selectedDomaines.has(d.id)"
-                      (click)="toggleDomaine(d.id)">{{ d.nom }}</button>
-            }
-          </div>
-          @if (isDomainesInvalid) {
-            <p class="field__error">Sélectionnez au moins un domaine.</p>
-          }
-        </div>
-
-        <!-- Technologies -->
-        <div class="field">
-          <label class="field__label">Technologies * <span class="field__hint">(au moins 1)</span></label>
-          @if (technologies.length === 0) {
-            <p class="field__hint">Aucune technologie disponible.</p>
-          }
-          <div class="chips">
-            @for (t of technologies; track t.id) {
-              <button type="button" class="chip" [class.chip--active]="selectedTechnologies.has(t.id)"
-                      (click)="toggleTechnologie(t.id)">{{ t.nom }}</button>
-            }
-          </div>
-          @if (isTechnologiesInvalid) {
-            <p class="field__error">Sélectionnez au moins une technologie.</p>
-          }
-        </div>
-
-        <!-- Prérequis -->
-        <div class="field">
-          <label class="field__label">Prérequis <span class="field__hint">(optionnel)</span></label>
-          @if (prerequis.length === 0) {
-            <p class="field__hint">Aucun prérequis disponible.</p>
-          }
-          <div class="chips">
-            @for (p of prerequis; track p.id) {
-              <button type="button" class="chip" [class.chip--active]="selectedPrerequis.has(p.id)"
-                      (click)="togglePrerequis(p.id)">{{ p.nom }}</button>
-            }
+            <!-- Prérequis -->
+            <div class="form-field">
+              <label class="form-label">Prérequis <span class="form-hint">(optionnel)</span></label>
+              <div class="chip-add">
+                <input
+                  #prerequisInput
+                  type="text"
+                  class="form-input"
+                  placeholder="Ajouter un prérequis..."
+                  (keydown.enter)="$event.preventDefault(); addPrerequis(prerequisInput)"
+                />
+                <button type="button" class="chip-add__btn" (click)="addPrerequis(prerequisInput)"
+                        [disabled]="addingReference" aria-label="Ajouter un prérequis">+</button>
+              </div>
+              @if (prerequis.length === 0) {
+                <span class="form-hint">Aucun prérequis disponible.</span>
+              }
+              <div class="chips">
+                @for (p of prerequis; track p.id) {
+                  <button type="button" class="chip" [class.chip--active]="selectedPrerequis.has(p.id)"
+                          (click)="togglePrerequis(p.id)">{{ p.nom }}</button>
+                }
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="modal__actions">
-          <button type="button" class="btn btn--ghost" (click)="close()">Annuler</button>
+        @if (errorMessage) {
+          <p class="modal__error">{{ errorMessage }}</p>
+        }
+
+        <footer class="modal__footer">
+          <button type="button" class="btn btn--outline" (click)="close()">Annuler</button>
           <button type="submit" class="btn btn--primary" [disabled]="isSubmitting">
-            {{ isSubmitting ? 'Envoi...' : 'Ajouter +' }}
+            {{ isSubmitting ? 'Envoi...' : 'Ajouter' }}
           </button>
-        </div>
+        </footer>
       </form>
     </div>
   </div>
