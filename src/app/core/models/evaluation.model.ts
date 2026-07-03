@@ -22,10 +22,22 @@ export interface ResultatCritereResponse {
   scorePondere?: number;
   bareme?: number | null;
   poids?: number | null;
+  noteValue?: number | null;
+  noteLabel?: string | null;
+  matchedRule?: string | null;
+  metadataUsed?: string | null;
+  explanation?: string | null;
   evidenceSummary?: string | null;
   evidenceLivrableIds?: number[];
   ruleConfigured?: boolean;
   commentaire?: string;
+  mlScore?: number | null;
+  mlMaxScore?: number | null;
+  normalizedScore?: number | null;
+  confidence?: number | null;
+  strengths?: string[];
+  weaknesses?: string[];
+  recommendations?: string[];
 }
 
 export interface EvaluationResponse {
@@ -34,6 +46,9 @@ export interface EvaluationResponse {
   scoreFinal: number;
   eligibleIndustrialisation: boolean;
   bloqueParEliminatoire: boolean;
+  hasEliminatoryWarnings?: boolean | null;
+  eliminatoryWarningsCount?: number | null;
+  eliminatoryWarningsDetails?: string[];
   dateCalcul: string;
   commentaire: string;
   calculatedBy?: string | null;
@@ -48,4 +63,27 @@ export interface EvaluationResponse {
   evaluationComplete?: boolean | null;
   scoreCalculationCoverageMessage?: string | null;
   blockingCriteriaNames?: string[];
+  mlStatus?: string | null;
+  mlModelVersion?: string | null;
+  mlGlobalConfidence?: number | null;
+  mlScore?: number | null;
+  finalValidatedScore?: number | null;
+  validationStatus?: string | null;
+  validatedBy?: string | null;
+  validatedAt?: string | null;
+  overrideReason?: string | null;
+  mlWarnings?: string[];
+  strengths?: string[];
+  weaknesses?: string[];
+  recommendations?: string[];
+  errorMessage?: string | null;
+}
+
+export interface EvaluationValidationRequest {
+  commentaire?: string | null;
+}
+
+export interface EvaluationOverrideRequest {
+  finalScore: number;
+  reason?: string | null;
 }

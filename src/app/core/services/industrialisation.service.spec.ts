@@ -58,6 +58,12 @@ describe('IndustrialisationService', () => {
     expect(submitReq.request.body).toEqual({});
     submitReq.flush({ id: 1 });
 
+    service.soumettre(1, { confirmEliminatoryWarnings: true }).subscribe();
+    const confirmedSubmitReq = http.expectOne(`${environment.apiUrl}/industrialisation/1/soumettre`);
+    expect(confirmedSubmitReq.request.method).toBe('POST');
+    expect(confirmedSubmitReq.request.body).toEqual({ confirmEliminatoryWarnings: true });
+    confirmedSubmitReq.flush({ id: 1 });
+
     service.mesDemandes().subscribe();
     const demandesReq = http.expectOne(`${environment.apiUrl}/industrialisation/mes-demandes`);
     expect(demandesReq.request.method).toBe('GET');

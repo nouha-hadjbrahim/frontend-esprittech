@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
+import { AffiliationService } from '../../core/services/affiliation.service';
+import { EquipeService } from '../../core/services/equipe.service';
 
 type NavIcon = 'layers' | 'document';
 
@@ -19,12 +21,37 @@ interface NavLink {
   templateUrl: './frontoffice-layout.html',
   styleUrl: './frontoffice-layout.css'
 })
-export class FrontofficeLayout {
+export class FrontofficeLayout implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly affiliationSvc = inject(AffiliationService);
+  private readonly equipeSvc = inject(EquipeService);
 
   /** Utilisateur authentifié (signal partagé depuis AuthService). */
   readonly user = this.authService.currentUser;
   isProfileDropdownOpen = signal<boolean>(false);
+
+  readonly pendingDemandesCount = signal(0);
+
+  ngOnInit(): void {
+    this.loadPendingCount();
+  }
+
+  private loadPendingCount(): void {
+    const role = this.authService.getRole();
+    if (role !== 'ROLE_CHEF_EQUIPE') return;
+
+    this.equipeSvc.getAll().subscribe({
+      next: (equipes) => {
+        const user = this.user();
+        if (!user) return;
+        const myTeam = equipes.find((e) => e.chef?.id === user.id);
+        if (!myTeam) return;
+        this.affiliationSvc.getByEquipe(myTeam.id).subscribe({
+          next: (affs) => this.pendingDemandesCount.set(affs.filter((r) => r.statut === 'EN_ATTENTE').length),
+        });
+      },
+    });
+  }
 
   private static readonly ROLE_LABELS: Record<Role, string> = {
     ROLE_ADMIN: 'Administrateur',
@@ -80,6 +107,39 @@ export class FrontofficeLayout {
     espaceCiIndustrialisation: { label: 'Demandes d\'industrialisation', path: '/ci/industrialisation' },
   };
 
+  /** Nœud « Sujets » du chef d'équipe : catalogue, sujets équipe et validation. */
+  private sujetsChef(): NavLink {
+    return {
+      label: 'Sujets',
+      path: '/frontoffice/validation-sujets',
+      children: [
+        { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' as NavIcon },
+        { label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' as NavIcon },
+        { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
+      ],
+    };
+  }
+
+  /**
+   * Nœud « Sujets » de l'enseignant : « Mes sujets » n'apparaît que si
+   * l'enseignant est affilié à une équipe de recherche.
+   */
+  private sujetsEnseignant(): NavLink {
+    const children: NavLink[] = [
+      { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' as NavIcon },
+    ];
+    if (this.authService.isAffilieToEquipe()) {
+      children.push({ label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' as NavIcon });
+    }
+    return {
+      label: 'Sujets',
+      path: this.authService.isAffilieToEquipe()
+        ? '/frontoffice/sujets/mes-sujets'
+        : '/frontoffice/sujets/disponibles',
+      children,
+    };
+  }
+
   /**
    * Nœud « Catalogue » de l'enseignant : « Mes projets » n'apparaît que si
    * l'enseignant est affilié (affiliation acceptée à une équipe de recherche).
@@ -110,7 +170,7 @@ export class FrontofficeLayout {
       case 'ROLE_ENSEIGNANT':
         return [
           this.catalogueEnseignant(),
-          this.allLinks.sujets,
+          this.sujetsEnseignant(),
           this.allLinks.demandesIndustrialisation,
           this.allLinks.equipesRechercheEnseignant
         ];
@@ -123,10 +183,9 @@ export class FrontofficeLayout {
         return [
           this.allLinks.tableauDeBord,
           this.catalogueChef(),
-          this.allLinks.validationSujets,
+          this.sujetsChef(),
           this.allLinks.demandesIndustrialisation,
           this.allLinks.equipesRechercheChef,
-          this.allLinks.sujetsDisponibles
         ];
       case 'ROLE_CI':
         return [

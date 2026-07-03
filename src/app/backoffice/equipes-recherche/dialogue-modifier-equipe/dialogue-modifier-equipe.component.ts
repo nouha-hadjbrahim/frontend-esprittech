@@ -777,7 +777,7 @@ export class DialogueModifierEquipeComponent implements OnInit, OnDestroy {
       domaine: this.domaines.find((d) => d.id === this.form.domaineId)?.nom ?? '',
       chef: chef ?? null,
       chefId: chef?.id ?? null,
-      memberIds: membreIds.length ? membreIds : null,
+      memberIds: membreIds.length ? membreIds : [],
       emailChef: chef ? chef.email : undefined,
     };
     this.ref.close(updated);

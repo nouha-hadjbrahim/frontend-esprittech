@@ -31,16 +31,17 @@ export class PostulerModal {
       next: () => {
         this.loading = false;
         this.success = true;
-        setTimeout(() => {
-          this.submitted.emit();
-          this.close();
-        }, 1500);
       },
       error: (err: any) => {
         this.loading = false;
         this.error = err?.error?.message || 'Une erreur est survenue. Veuillez réessayer.';
       }
     });
+  }
+
+  closeAfterSuccess(): void {
+    this.submitted.emit();
+    this.close();
   }
 
   close() {

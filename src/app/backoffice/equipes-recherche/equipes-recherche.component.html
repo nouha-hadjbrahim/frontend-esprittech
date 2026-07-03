@@ -45,11 +45,19 @@
 
       <div *ngIf="!chargement && vue === 'grille'" class="grid-cards">
         <app-card class="team-card" *ngFor="let e of filtered">
-          <div class="flex items-start justify-between gap-2">
+          <div class="card-head-row">
             <app-badge variant="outline" class="badge-xs">{{ e.domaine }}</app-badge>
-            <app-badge variant="outline" [class.badge-success]="e.statut === 'Actif'">
-              {{ e.statut }}
-            </app-badge>
+            <div class="card-head-right">
+              @if (pendingCountByEquipeId().get(e.id); as count) {
+                <span class="pending-badge" matTooltip="{{ count }} demande(s) en attente">
+                  <mat-icon class="pending-icon">notifications</mat-icon>
+                  <span class="pending-count">{{ count }}</span>
+                </span>
+              }
+              <app-badge variant="outline" [class.badge-success]="e.statut === 'Actif'">
+                {{ e.statut }}
+              </app-badge>
+            </div>
           </div>
           <h3 class="team-name">{{ e.nom }}</h3>
           <div class="leader-row">

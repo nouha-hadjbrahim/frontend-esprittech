@@ -33,3 +33,13 @@ export const FALLBACK_TECHNOLOGIES = [
 
 export const DEFAULT_PREREQUIS_OPTIONS = ['Soft skills', 'Hard skills'];
 export const DEFAULT_DOMAINE_OPTIONS = ['Intelligence Artificielle', 'Développement Web', 'Cybersécurité'];
+
+export const STATUT_CANDIDATURE_LABELS: Record<
+  import('../../core/models/candidature.model').StatutCandidature,
+  { label: string; cssClass: string }
+> = {
+  DEPOSEE: { label: 'En attente', cssClass: 'badge--warning' },
+  ACCEPTEE: { label: 'Acceptée', cssClass: 'badge--success' },
+  REFUSEE: { label: 'Refusée', cssClass: 'badge--danger' },
+  ARCHIVEE: { label: 'Archivée', cssClass: 'badge--neutral' },
+};

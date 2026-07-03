@@ -39,9 +39,19 @@
         <span class="summary-card__label">Date soumission</span>
         <span class="summary-card__value">{{ sujet.dateSoumission ? (sujet.dateSoumission | date:'yyyy-MM-dd') : '—' }}</span>
       </div>
-      <div class="summary-card">
+      <div class="summary-card summary-card--capacity" [class.summary-card--full]="capaciteEstComplete">
         <span class="summary-card__label">Capacité</span>
-        <span class="summary-card__value">0/{{ sujet.capaciteAccueil }}</span>
+        <span class="summary-card__value">{{ nombreMembres }}/{{ sujet.capaciteAccueil }}</span>
+        <div class="capacity-meter" aria-hidden="true">
+          <div class="capacity-meter__fill" [style.width.%]="capacitePourcentage"></div>
+        </div>
+        <span class="summary-card__hint">
+          @if (capaciteEstComplete) {
+            Complet
+          } @else {
+            {{ placesRestantes }} place{{ placesRestantes > 1 ? 's' : '' }} restante{{ placesRestantes > 1 ? 's' : '' }}
+          }
+        </span>
       </div>
       <div class="summary-card">
         <span class="summary-card__label">Statut</span>
@@ -49,113 +59,174 @@
       </div>
     </div>
 
-    <nav class="sujet-detail__tabs" aria-label="Sections du sujet">
-      @for (tab of tabs; track tab.label) {
-        <button
-          type="button"
-          class="sujet-detail__tab"
-          [class.sujet-detail__tab--active]="activeTab === tab.label"
-          (click)="selectTab(tab.label)"
-        >
-          @switch (tab.icon) {
-            @case ('info') {
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
+    <div class="sujet-detail__tabs-bar">
+      <nav class="sujet-detail__tabs" aria-label="Sections du sujet">
+        @for (tab of tabs; track tab.label) {
+          <button
+            type="button"
+            class="sujet-detail__tab"
+            [class.sujet-detail__tab--active]="activeTab === tab.label"
+            (click)="selectTab(tab.label)"
+          >
+            @switch (tab.icon) {
+              @case ('info') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              }
+              @case ('membres') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="5.5" cy="5" r="2.25" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1.5 13.5C1.5 10.8 3.3 9.25 5.5 9.25" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <circle cx="11" cy="5.5" r="1.75" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M14.5 13.5C14.5 11.4 13.1 10.1 11 10.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <path d="M8.25 7.75C9.35 8.45 10 9.65 10 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              }
+              @case ('candidatures') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1.5 14C1.5 11 3.5 9.5 6 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <circle cx="11.5" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M14.5 14C14.5 12 13 10.5 11.5 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              }
+              @default {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                </svg>
+              }
             }
-            @case ('candidatures') {
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M1.5 14C1.5 11 3.5 9.5 6 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                <circle cx="11.5" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M14.5 14C14.5 12 13 10.5 11.5 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
-            }
-            @default {
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-              </svg>
-            }
-          }
-          {{ tab.label }}
+            {{ tab.label }}
+          </button>
+        }
+      </nav>
+
+      @if (canDeclarerTerminaison) {
+        <button type="button" class="sujet-detail__tabs-action" (click)="ouvrirTerminaisonConfirm()">
+          Terminer sujet
         </button>
       }
-    </nav>
+    </div>
 
     @if (activeTab === 'Informations') {
     <div class="sujet-detail__content">
       <div class="sujet-detail__main">
-        <article class="detail-panel evaluation-panel">
-          <section class="detail-panel__section">
-            <div class="evaluation-panel__header">
-              <div>
-                <h2 class="detail-panel__title">Évaluation du projet</h2>
-                <p class="detail-panel__text">
-                  @if (sujet.statut !== 'REALISATION_TERMINEE') {
-                    Le score sera calculé automatiquement après la terminaison du projet.
-                  } @else {
-                    Dernière évaluation disponible pour ce projet terminé.
-                  }
-                </p>
-              </div>
-              @if (canRecalculateScore) {
-                <button type="button" class="action-btn" [disabled]="recalculatingScore" (click)="recalculateScore()">
-                  {{ recalculatingScore ? 'Recalcul...' : 'Recalculer score' }}
-                </button>
-              }
-            </div>
-            @if (evaluationMessage) { <div class="tab-alert tab-alert--success">{{ evaluationMessage }}</div> }
-            @if (evaluationError) { <div class="tab-alert tab-alert--danger">{{ evaluationError }}</div> }
-            @if (evaluationLoading) {
-              <div class="sujet-detail__loading">Chargement de l'évaluation...</div>
-            } @else if (evaluation) {
-              <div class="evaluation-grid">
-                <div class="summary-card">
-                  <span class="summary-card__label">Score final</span>
-                  <span class="summary-card__value">{{ evaluation.scoreFinal }} / 100</span>
-                </div>
-                <div class="summary-card">
-                  <span class="summary-card__label">Éligibilité</span>
-                  <span class="summary-card__value">{{ evaluation.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</span>
-                </div>
-                <div class="summary-card">
-                  <span class="summary-card__label">Blocage éliminatoire</span>
-                  <span class="summary-card__value">{{ evaluation.bloqueParEliminatoire ? 'Oui' : 'Non' }}</span>
-                </div>
-                <div class="summary-card">
-                  <span class="summary-card__label">Calculé le</span>
-                  <span class="summary-card__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</span>
-                </div>
-              </div>
+       <article class="detail-panel evaluation-panel">
+  <section class="detail-panel__section">
+    <div class="evaluation-panel__header">
+      <div>
+        <h2 class="detail-panel__title">Évaluation du projet</h2>
+        <p class="detail-panel__text">
+          @if (sujet.statut !== 'REALISATION_TERMINEE') {
+            Le score sera calculé automatiquement après la terminaison du projet.
+          } @else {
+            Dernière évaluation disponible pour ce projet terminé.
+          }
+        </p>
+      </div>
 
-              <app-evaluation-checklist [evaluation]="evaluation" [projectTitle]="sujet.titre"></app-evaluation-checklist>
-
-              @if (evaluation.resultats?.length) {
-                <div class="evaluation-results">
-                  @for (resultat of evaluation.resultats; track resultat.id) {
-                    <div class="evaluation-result-row">
-                      <div>
-                        <strong>{{ resultat.critereLibelle }}</strong>
-                        @if (resultat.critereDomaine) { <span> · {{ resultat.critereDomaine }}</span> }
-                        @if (resultat.commentaire) { <p>{{ resultat.commentaire }}</p> }
-                      </div>
-                      <strong>
-                        @if (resultat.typeCritere === 'ELIMINATOIRE') {
-                          {{ resultat.reponseEliminatoire }}
-                        } @else {
-                          {{ resultat.noteObtenue }}
-                        }
-                      </strong>
-                    </div>
-                  }
-                </div>
-              }
-            } @else if (sujet.statut === 'REALISATION_TERMINEE') {
-              <p class="detail-panel__text">Aucune évaluation enregistrée pour ce projet.</p>
+      @if (canRecalculateScore) {
+        <div class="score-recalculate-actions">
+          <button
+            type="button"
+            class="action-btn"
+            [disabled]="recalculatingScore || scoreCooldownActive"
+            (click)="recalculateScore()"
+          >
+            @if (recalculatingScore) {
+              Recalcul...
+            } @else if (scoreCooldownActive) {
+              Recalcul dans {{ scoreCooldownLabel }}
+            } @else {
+              Recalculer score
             }
-          </section>
-        </article>
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (evaluationMessage) {
+      <div class="tab-alert tab-alert--success">{{ evaluationMessage }}</div>
+    }
+
+    @if (evaluationError) {
+      <div class="tab-alert tab-alert--danger">{{ evaluationError }}</div>
+    }
+
+    @if (scoreCooldownActive) {
+      <div class="tab-alert tab-alert--warning">
+        Le score vient d’être recalculé. Veuillez patienter {{ scoreCooldownLabel }} avant un nouveau recalcul.
+      </div>
+    }
+
+    @if (evaluationLoading) {
+      <div class="sujet-detail__loading">Chargement de l'évaluation...</div>
+    } @else if (evaluation) {
+      <div class="evaluation-grid">
+        <div class="summary-card">
+          <span class="summary-card__label">Score final</span>
+          <span class="summary-card__value">{{ evaluation.scoreFinal }} / 100</span>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-card__label">Éligibilité</span>
+          <span class="summary-card__value">
+            {{ evaluation.eligibleIndustrialisation ? (evaluation.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}
+          </span>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-card__label">Alertes eliminatoires</span>
+          <span class="summary-card__value">
+            {{ evaluation.eliminatoryWarningsCount ?? (evaluation.hasEliminatoryWarnings ? 1 : 0) }}
+          </span>
+        </div>
+
+        <div class="summary-card">
+          <span class="summary-card__label">Calculé le</span>
+          <span class="summary-card__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</span>
+        </div>
+      </div>
+
+      <app-evaluation-checklist
+        [evaluation]="evaluation"
+        [projectTitle]="sujet.titre"
+      ></app-evaluation-checklist>
+
+      @if (evaluation.resultats?.length) {
+        <div class="evaluation-results">
+          @for (resultat of evaluation.resultats; track resultat.id) {
+            <div class="evaluation-result-row">
+              <div>
+                <strong>{{ resultat.critereLibelle }}</strong>
+
+                @if (resultat.critereDomaine) {
+                  <span> · {{ resultat.critereDomaine }}</span>
+                }
+
+                @if (resultat.commentaire) {
+                  <p>{{ resultat.commentaire }}</p>
+                }
+              </div>
+
+              <strong>
+                @if (resultat.typeCritere === 'ELIMINATOIRE') {
+                  {{ resultat.reponseEliminatoire }}
+                } @else {
+                  {{ noteResultDisplay(resultat) }}
+                }
+              </strong>
+            </div>
+          }
+        </div>
+      }
+    } @else if (sujet.statut === 'REALISATION_TERMINEE') {
+      <p class="detail-panel__text">Aucune évaluation enregistrée pour ce projet.</p>
+    }
+  </section>
+</article>
 
         <article class="detail-panel">
           <section class="detail-panel__section">
@@ -215,6 +286,131 @@
         </div>
       </aside>
     </div>
+    } @else if (activeTab === 'Membres') {
+      <div class="tab-panel membres-panel">
+        @if (membresMessage) {
+          <div class="tab-alert tab-alert--success">{{ membresMessage }}</div>
+        }
+        @if (membresError) {
+          <div class="tab-alert tab-alert--danger">{{ membresError }}</div>
+        }
+
+        <div class="membres-frame">
+          @if (membresLoading) {
+            <div class="sujet-detail__loading">Chargement des membres...</div>
+          } @else if (membres.length === 0) {
+            <p class="membres-section__empty">Aucun membre affecté pour le moment.</p>
+          } @else {
+            <ul class="membres-list">
+              @for (membre of membres; track membre.id) {
+                <li class="membre-card">
+                  <div class="membre-card__avatar" aria-hidden="true">{{ memberInitials(membre) }}</div>
+
+                  <div class="membre-card__content">
+                    <div class="membre-card__top">
+                      <div class="membre-card__identity">
+                        <div class="membre-card__name-row">
+                          <span class="membre-card__name">{{ memberFullName(membre) }}</span>
+                          <span class="membre-card__status">Actif</span>
+                        </div>
+                        <p class="membre-card__meta">
+                          Étudiant · {{ membre.dateDebut | date:'yyyy-MM-dd' }}
+                        </p>
+                        @if (membre.etudiantEmail) {
+                          <p class="membre-card__email">{{ membre.etudiantEmail }}</p>
+                        }
+                      </div>
+
+                      <div class="membre-card__aside">
+                        @if (canRetirerMembre && retraitTargetId !== membre.id) {
+                          <button
+                            type="button"
+                            class="membre-card__remove"
+                            (click)="ouvrirRetraitMembre(membre)"
+                          >
+                            Retirer
+                          </button>
+                        }
+                      </div>
+                    </div>
+
+                    @if (retraitTargetId === membre.id) {
+                      <div class="membre-card__retrait">
+                        <label class="membre-card__retrait-label" [for]="'motif-retrait-' + membre.id">Motif du retrait</label>
+                        <textarea
+                          [id]="'motif-retrait-' + membre.id"
+                          class="membre-card__retrait-input"
+                          rows="2"
+                          placeholder="Indiquez la raison du retrait..."
+                          [(ngModel)]="retraitMotif"
+                        ></textarea>
+                        <div class="membre-card__retrait-actions">
+                          <button type="button" class="membre-card__btn membre-card__btn--ghost" (click)="annulerRetraitMembre()">
+                            Annuler
+                          </button>
+                          <button
+                            type="button"
+                            class="membre-card__btn membre-card__btn--danger"
+                            [disabled]="!retraitMotif.trim() || retraitLoading"
+                            (click)="confirmerRetraitMembre()"
+                          >
+                            {{ retraitLoading ? 'Retrait...' : 'Confirmer' }}
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+    } @else if (activeTab === 'Candidatures') {
+      <div class="tab-panel candidatures-panel">
+        @if (candidaturesError) {
+          <div class="tab-alert tab-alert--danger">{{ candidaturesError }}</div>
+        }
+
+        <div class="membres-frame">
+          @if (candidaturesLoading) {
+            <div class="sujet-detail__loading">Chargement des candidatures...</div>
+          } @else if (candidatures.length === 0) {
+            <p class="membres-section__empty">Aucune demande en attente pour ce sujet.</p>
+          } @else {
+            <ul class="membres-list">
+              @for (candidature of candidatures; track candidature.id) {
+                <li class="candidature-card">
+                  <div class="membre-card__avatar" aria-hidden="true">{{ candidatureInitials(candidature) }}</div>
+
+                  <div class="membre-card__content">
+                    <div class="membre-card__top">
+                      <div class="membre-card__identity">
+                        <div class="membre-card__name-row">
+                          <span class="membre-card__name">{{ candidatureFullName(candidature) }}</span>
+                          <span class="candidature-card__status" [class]="candidatureStatutClass(candidature.statut)">
+                            {{ candidatureStatutLabel(candidature.statut) }}
+                          </span>
+                        </div>
+                        <p class="membre-card__meta">
+                          Étudiant · {{ candidature.dateDepot | date:'yyyy-MM-dd' }}
+                        </p>
+                        @if (candidature.etudiantEmail) {
+                          <p class="membre-card__email">{{ candidature.etudiantEmail }}</p>
+                        }
+                      </div>
+                    </div>
+
+                    @if (candidature.messageEtudiant) {
+                      <p class="candidature-card__message">{{ candidature.messageEtudiant }}</p>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
     } @else if (activeTab === 'Livrables') {
       <div class="tab-panel">
         @if (livrableMessage) { <div class="tab-alert tab-alert--success">{{ livrableMessage }}</div> }
@@ -316,7 +512,7 @@
               <h2 class="detail-panel__title">Demande d'industrialisation</h2>
               <p class="detail-panel__text">
                 Score: {{ sujet.scoreFinal ?? 'non calcule' }} / 100 -
-                {{ sujet.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}
+                {{ sujet.eligibleIndustrialisation ? (sujet.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}
               </p>
             </div>
             @if (canRequestIndustrialisation) {
@@ -325,7 +521,7 @@
           </div>
           @if (!canRequestIndustrialisation) {
             <p class="detail-panel__text">
-              La demande est disponible pour l'encadrant lorsque le projet est termine et eligible.
+              La demande est disponible pour l'encadrant lorsque le projet est termine.
             </p>
           }
         </section>
@@ -378,7 +574,10 @@
       @if (industrialisationError) { <div class="tab-alert tab-alert--danger">{{ industrialisationError }}</div> }
       @if (industrialisationMessage) { <div class="tab-alert tab-alert--success">{{ industrialisationMessage }}</div> }
       @if (hasBlockingEliminatoryAnswer()) {
-        <div class="tab-alert tab-alert--warning">Cette demande contient un critere eliminatoire non conforme.</div>
+        <div class="tab-alert tab-alert--warning">Cette demande contient une ou plusieurs alertes eliminatoires. Elles ne bloquent pas l'envoi, mais la CI les verra.</div>
+      }
+      @for (warning of submissionWarnings; track warning) {
+        <div class="tab-alert tab-alert--warning">{{ warning }}</div>
       }
 
       @if (!industrialisationForm) {
@@ -393,7 +592,7 @@
           </div>
           <div>
             <span>Eligibilite</span>
-            <strong>{{ sujet?.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</strong>
+            <strong>{{ sujet?.eligibleIndustrialisation ? (sujet?.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}</strong>
           </div>
           <div>
             <span>Livrables</span>
@@ -539,11 +738,48 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="action-btn action-btn--ghost" [disabled]="isIndustrialisationBusy()" (click)="saveIndustrialisationAnswers()">Enregistrer brouillon</button>
-          <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy() || hasBlockingEliminatoryAnswer()" (click)="submitIndustrialisation()">
+          <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy()" (click)="submitIndustrialisation()">
             {{ industrialisationSaving ? 'Soumission...' : 'Soumettre a la CI' }}
           </button>
         </div>
       }
+    </div>
+  </div>
+}
+
+@if (eliminatoryWarningConfirmation) {
+  <div class="modal-backdrop" (click)="cancelEliminatoryWarnings()">
+    <div class="industrialisation-modal confirmation-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h2>Alertes eliminatoires</h2>
+          <p class="modal-subtitle">{{ eliminatoryWarningConfirmation.message }}</p>
+        </div>
+        <button type="button" class="modal-close" (click)="cancelEliminatoryWarnings()">Fermer</button>
+      </header>
+      <div class="tab-alert tab-alert--warning">
+        Vous avez {{ eliminatoryWarningConfirmation.nbCriteresEliminatoires }} critere(s) eliminatoire(s) non satisfait(s).
+      </div>
+      <div class="question-list">
+        @for (detail of eliminatoryWarningConfirmation.details; track detail.source + detail.referenceId) {
+          <section class="question-card question-card--blocking">
+            <div class="question-card__header">
+              <div class="question-card__title">
+                <div class="question-card__meta">
+                  <span>{{ detail.source }}</span>
+                </div>
+                <h3>{{ detail.libelle }}</h3>
+              </div>
+              <span class="criterion-badge criterion-badge--elim">Alerte</span>
+            </div>
+            <p class="question-card__description">{{ detail.raison }}</p>
+          </section>
+        }
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="action-btn action-btn--ghost" (click)="cancelEliminatoryWarnings()">Annuler</button>
+        <button type="button" class="action-btn" (click)="confirmEliminatoryWarnings()">Continuer et envoyer</button>
+      </div>
     </div>
   </div>
 }

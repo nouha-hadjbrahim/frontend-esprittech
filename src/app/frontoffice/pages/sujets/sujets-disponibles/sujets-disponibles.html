@@ -3,7 +3,7 @@
     <div class="sujets-disponibles__header-text">
       <h1 class="sujets-disponibles__title">Sujets disponibles</h1>
       <p class="sujets-disponibles__subtitle">
-        Parcourez les sujets publiés par les encadrants et les équipes RDI.
+        Parcourez les sujets validés et publiés par les encadrants et les équipes RDI.
       </p>
     </div>
     @if (isEnseignant()) {
@@ -104,9 +104,9 @@
   } @else {
     <div class="sujets-disponibles__grid">
       @for (sujet of filteredSujets; track sujet.id) {
-        <app-sujet-card
+        <app-sujet-disponible-card
           [sujet]="sujet"
-          [detailsOnly]="true"
+          [showPostuler]="isEtudiant()"
           [dejaPostule]="dejaPostule(sujet)"
           (postuler)="ouvrirPostuler(sujet)"
         />
@@ -130,3 +130,12 @@
     (submitted)="onCandidatureSoumise()"
   />
 }
+
+<app-confirm-dialog
+  [isOpen]="showCandidatureFermeeAlert"
+  title="Candidatures non ouvertes"
+  message="Les candidatures ne sont pas encore ouvertes pour ce sujet. Revenez plus tard lorsque l'encadrant aura ouvert la réception des candidatures."
+  [alertOnly]="true"
+  [showIcon]="false"
+  (cancelled)="fermerAlerteCandidature()"
+/>

@@ -12,6 +12,7 @@ import {
   QuestionIndustrialisation,
   QuestionIndustrialisationRequest,
   ReponsesIndustrialisationRequest,
+  SubmitIndustrialisationRequest,
   StatutIndustrialisation,
   TypeIndustrialisation,
 } from '../models/industrialisation.model';
@@ -44,8 +45,8 @@ export class IndustrialisationService {
     return this.http.post<CandidatureIndustrialisation>(`${this.apiUrl}/industrialisation/${id}/preuves`, formData);
   }
 
-  soumettre(id: number): Observable<CandidatureIndustrialisation> {
-    return this.http.post<CandidatureIndustrialisation>(`${this.apiUrl}/industrialisation/${id}/soumettre`, {});
+  soumettre(id: number, request: SubmitIndustrialisationRequest = {}): Observable<CandidatureIndustrialisation> {
+    return this.http.post<CandidatureIndustrialisation>(`${this.apiUrl}/industrialisation/${id}/soumettre`, request);
   }
 
   mesDemandes(): Observable<CandidatureIndustrialisation[]> {

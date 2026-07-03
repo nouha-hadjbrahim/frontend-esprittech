@@ -29,7 +29,7 @@ describe('CritereNoteService', () => {
     expect(findActiveReq.request.method).toBe('GET');
     findActiveReq.flush([]);
 
-    const request = { libelle: 'Score', domaine: 'Projet', ordre: 1, bareme: 20, poids: 2, seuil: 10, actif: true };
+    const request = { libelle: 'Score', domaine: 'Projet', ordre: 1, poids: 2, defaultNoteValue: 3, actif: true };
     service.create(request as never).subscribe();
     const createReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes`);
     expect(createReq.request.method).toBe('POST');
@@ -40,6 +40,11 @@ describe('CritereNoteService', () => {
     const updateReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/5`);
     expect(updateReq.request.method).toBe('PUT');
     updateReq.flush({ id: 5 });
+
+    service.delete(5).subscribe();
+    const deleteReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/5`);
+    expect(deleteReq.request.method).toBe('DELETE');
+    deleteReq.flush(null);
 
     service.deactivate(5).subscribe();
     const deactivateReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/5/deactivate`);
@@ -59,4 +64,5 @@ describe('CritereNoteService', () => {
     expect(reorderReq.request.body).toEqual(reorderBody);
     reorderReq.flush(null);
   });
+
 });

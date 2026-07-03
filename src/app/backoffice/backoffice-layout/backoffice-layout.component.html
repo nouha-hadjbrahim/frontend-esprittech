@@ -58,6 +58,9 @@
                             [class.active]="isChildActive(child.route)"
                         >
                             {{ child.label }}
+                            @if (child.label === 'Demandes' && pendingDemandesCount() > 0) {
+                                <span class="sidebar-badge">{{ pendingDemandesCount() }}</span>
+                            }
                         </a>
                     </div>
                 </div>

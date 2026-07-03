@@ -74,4 +74,29 @@ describe('EvaluationService', () => {
     expect(req.request.method).toBe('GET');
     req.flush(mockRes);
   });
+
+  it('should call history and validation workflow endpoints', () => {
+    service.getEvaluationHistory(5).subscribe();
+    const historyReq = http.expectOne(`${environment.apiUrl}/projets/5/evaluations`);
+    expect(historyReq.request.method).toBe('GET');
+    historyReq.flush([]);
+
+    service.validateEvaluation(5, 'ok').subscribe();
+    const validateReq = http.expectOne(`${environment.apiUrl}/projets/5/evaluation/valider`);
+    expect(validateReq.request.method).toBe('POST');
+    expect(validateReq.request.body).toEqual({ commentaire: 'ok' });
+    validateReq.flush({});
+
+    service.rejectEvaluation(5, 'no').subscribe();
+    const rejectReq = http.expectOne(`${environment.apiUrl}/projets/5/evaluation/rejeter`);
+    expect(rejectReq.request.method).toBe('POST');
+    expect(rejectReq.request.body).toEqual({ commentaire: 'no' });
+    rejectReq.flush({});
+
+    service.overrideEvaluation(5, 77, 'admin').subscribe();
+    const overrideReq = http.expectOne(`${environment.apiUrl}/projets/5/evaluation/override`);
+    expect(overrideReq.request.method).toBe('POST');
+    expect(overrideReq.request.body).toEqual({ finalScore: 77, reason: 'admin' });
+    overrideReq.flush({});
+  });
 });

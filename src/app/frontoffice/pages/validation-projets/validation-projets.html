@@ -73,6 +73,7 @@
   title="Valider le projet"
   [message]="validerTarget ? 'Confirmez-vous la validation de « ' + validerTarget.titre + ' » ? Il sera publié au catalogue.' : ''"
   confirmLabel="Valider"
+  [showIcon]="false"
   [loading]="actionLoadingId !== null"
   (confirmed)="confirmerValidation()"
   (cancelled)="annulerValidation()"

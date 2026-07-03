@@ -53,6 +53,11 @@ export interface QuestionIndustrialisationRequest {
 export interface CandidatureIndustrialisationRequest {
   typeIndustrialisation: TypeIndustrialisation;
   commentaire?: string;
+  confirmEliminatoryWarnings?: boolean;
+}
+
+export interface SubmitIndustrialisationRequest {
+  confirmEliminatoryWarnings?: boolean;
 }
 
 export interface ReponseIndustrialisationRequest {
@@ -118,6 +123,9 @@ export interface CandidatureIndustrialisation {
   scoreEvaluationProjet: number | null;
   eligibleIndustrialisation: boolean | null;
   bloqueParEliminatoire: boolean | null;
+  hasEliminatoryWarnings?: boolean | null;
+  eliminatoryWarningsCount?: number | null;
+  eliminatoryWarningsDetails?: string[];
   typeIndustrialisation: TypeIndustrialisation;
   statut: StatutIndustrialisation;
   demandeurId: number;
@@ -136,6 +144,7 @@ export interface CandidatureIndustrialisation {
   livrables: Livrable[];
   historique: HistoriqueIndustrialisation[];
   latestEvaluation?: EvaluationResponse | null;
+  warnings?: string[];
 }
 
 export interface IndustrialisationFormResponse {
@@ -169,6 +178,9 @@ export interface IndustrialisationScore {
   decisionRecommandee: DecisionRecommandeeIndustrialisation;
   estBloqueParEliminatoire: boolean;
   blocagesEliminatoires: BlocageEliminatoire[];
+  hasEliminatoryWarnings?: boolean;
+  eliminatoryWarningsCount?: number;
+  eliminatoryWarningsDetails?: BlocageEliminatoire[];
   scoreQuestions: number;
   scoreLivrables: number;
   scoreCriteresNotes: number;
@@ -184,6 +196,13 @@ export interface DecisionGoRequest {
 
 export interface DecisionNoGoRequest {
   motif: string;
+}
+
+export interface EliminatoryWarningsConfirmation {
+  requiresConfirmation: boolean;
+  nbCriteresEliminatoires: number;
+  message: string;
+  details: BlocageEliminatoire[];
 }
 
 export const TYPE_INDUSTRIALISATION_LABELS: Record<TypeIndustrialisation, string> = {

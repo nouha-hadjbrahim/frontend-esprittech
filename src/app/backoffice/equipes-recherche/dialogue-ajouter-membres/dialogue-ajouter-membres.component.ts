@@ -378,6 +378,7 @@ export class DialogueAjouterMembresComponent implements OnInit, OnDestroy {
     this.chargement = true;
     this.svc.ajouterMembres(this.eq.id, ids).pipe(finalize(() => (this.chargement = false))).subscribe({
       next: () => {
+        this.snack.open('Membre(s) ajouté(s) avec succès', '✕', { duration: 3500, panelClass: ['snack-success'] });
         this.ref.close('updated');
       },
       error: () => {

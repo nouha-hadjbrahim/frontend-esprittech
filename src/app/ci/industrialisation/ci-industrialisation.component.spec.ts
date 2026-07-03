@@ -108,6 +108,17 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.score()?.scoreFinal).toBe(82);
   });
 
+  it('should show missing livrables warning on CI detail', () => {
+    component.selected.set({ ...candidature, warnings: [] });
+    component.score.set(score);
+
+    fixture.detectChanges();
+
+    expect(component.submissionWarnings(component.selected())).toContain(component.missingLivrablesWarning);
+    expect(fixture.nativeElement.textContent).toContain(component.missingLivrablesWarning);
+    expect(fixture.nativeElement.querySelector('.alert--warning')?.textContent).toContain(component.missingLivrablesWarning);
+  });
+
   it('should filter, compute labels and utility values', () => {
     component.demandes.set([candidature]);
     component.searchTerm = 'plateforme';
@@ -126,7 +137,7 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.blockingCriteriaCount(candidature)).toBe(0);
     expect(component.recommendation(candidature)).toBe('GO recommande');
     expect(component.recommendationExplanation(candidature)).toContain('GO');
-    expect(component.nonConfiguredCount(candidature)).toBe(0);
+    expect(component.analysisIssueCount(candidature)).toBe(0);
     expect(component.decisionLabel('NO_GO')).toBe('NO GO');
     expect(component.decisionClass('A_INSTRUIRE')).toBe('status-pill--instruction');
     expect(component.manualReviewCount(score)).toBe(0);
@@ -276,17 +287,17 @@ describe('CiIndustrialisationComponent', () => {
 
     component.score.set(null);
     expect(component.scoreValue(blocked)).toBe(50);
-    expect(component.scoreClass(blocked)).toBe('score-card--danger');
+    expect(component.scoreClass(blocked)).toBe('score-card--warning');
     expect(component.scoreClass(lowScore)).toBe('score-card--warning');
     expect(component.blockingCriteriaCount(blocked)).toBe(1);
     expect(component.blockingCriteriaCount({ ...blocked, latestEvaluation: null })).toBe(1);
-    expect(component.recommendation(blocked)).toBe('NO GO recommande');
+    expect(component.recommendation(blocked)).toBe('Analyse necessaire');
     expect(component.recommendation({ ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, evaluationComplete: false } })).toBe('Analyse necessaire');
     expect(component.recommendation({ ...candidature, latestEvaluation: null })).toBe('GO recommande');
     expect(component.recommendation(lowScore)).toBe('Analyse necessaire');
-    expect(component.recommendationExplanation(blocked)).toContain('NO GO');
+    expect(component.recommendationExplanation(blocked)).toContain('Alerte eliminatoire');
     expect(component.recommendationExplanation({ ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, evaluationComplete: false } })).toContain('Analyse necessaire');
-    expect(component.nonConfiguredCount(blocked)).toBe(1);
+    expect(component.analysisIssueCount(blocked)).toBe(1);
 
     expect(component.statusLabel('REFUSEE')).toBe('NO GO');
     expect(component.statusLabel('RECUE_PAR_CI')).toBe('En instruction');

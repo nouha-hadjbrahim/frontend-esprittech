@@ -28,9 +28,18 @@ describe('EvaluationChecklistComponent', () => {
     critereId: 12,
     critereLibelle: 'Qualite',
     typeCritere: 'NOTE',
-    noteObtenue: 14,
-    bareme: 20,
-    scorePondere: 7,
+    mlScore: 4,
+    mlMaxScore: 5,
+    normalizedScore: 80,
+    confidence: 0.82,
+    evidenceSummary: 'Architecture modulaire documentee',
+    evidenceLivrableIds: [99],
+    noteValue: 4,
+    noteLabel: 'Satisfait',
+    noteObtenue: 4,
+    scorePondere: 1.6,
+    bareme: 5,
+    poids: 2,
     ruleConfigured: true,
   };
 
@@ -58,15 +67,18 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.evaluationComplete).toBeTrue();
     expect(component.hasBlockingCriteria).toBeTrue();
     expect(component.scorePercent).toBe(76);
-    expect(component.statusLabel).toBe('GO - Eligible');
-    expect(component.statusClass).toBe('decision-badge--no');
-    expect(component.progressClass).toBe('checklist-progress__bar--danger');
+    expect(component.statusLabel).toBe('Eligible avec alertes');
+    expect(component.statusClass).toBe('decision-badge--warning');
+    expect(component.progressClass).toBe('checklist-progress__bar--warning');
     expect(component.blockingCriteriaNames).toEqual(['Git disponible']);
-    expect(component.nonConfiguredCount).toBe(1);
+    expect(component.analysisIssueCount).toBe(1);
     expect(component.isBlocking(eliminatoireKo)).toBeTrue();
     expect(component.isBlocking(note)).toBeFalse();
     expect(component.resultLabel(eliminatoireOk)).toBe('OK');
-    expect(component.resultLabel(note)).toBe('14 / 20');
+    expect(component.resultLabel(note)).toBe('4/5 - 80/100');
+    expect(component.confidencePercent(note.confidence)).toBe(82);
+    expect(component.evidenceLabel(note)).toContain('Livrables: #99');
+    expect(component.hasCriterionDetails(note)).toBeTrue();
   });
 
   it('should use explicit aggregate fields and explicit blocking criteria names', () => {
@@ -105,7 +117,7 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.scorePercent).toBe(100);
     expect(component.eliminatoires).toEqual([]);
     expect(component.notes).toEqual([]);
-    expect(component.nonConfiguredCount).toBe(0);
+    expect(component.analysisIssueCount).toBe(0);
 
     component.evaluation = evaluation({ scoreFinal: -5, eligibleIndustrialisation: false });
     expect(component.scorePercent).toBe(0);
@@ -128,6 +140,21 @@ describe('EvaluationChecklistComponent', () => {
     };
 
     expect(component.resultLabel(emptyEliminatory)).toBe('Non renseigne');
-    expect(component.resultLabel(weightedNote)).toBe('0 / 8');
+    expect(component.resultLabel(weightedNote)).toBe('0');
+  });
+
+  it('should render dynamic note scale when bareme is available', () => {
+    const dynamicNote: ResultatCritereResponse = {
+      ...note,
+      mlScore: null,
+      mlMaxScore: null,
+      normalizedScore: null,
+      noteValue: 7,
+      noteObtenue: 7,
+      bareme: 10,
+      noteLabel: 'Bon',
+    };
+
+    expect(component.resultLabel(dynamicNote)).toBe('7/10 - Bon');
   });
 });

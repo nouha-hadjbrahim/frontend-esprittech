@@ -44,6 +44,10 @@ export class CritereNoteService {
     return this.http.put<CritereNote>(`${this.baseUrl}/${id}`, request);
   }
 
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
   /**
    * Désactive un critère noté (PATCH).
    */

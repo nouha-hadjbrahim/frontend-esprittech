@@ -26,6 +26,7 @@ export class MesSujets implements OnInit {
   sujets: SujetProjet[] = [];
   filteredSujets: SujetProjet[] = [];
   isLoading = true;
+  loadError = '';
   isModalOpen = false;
   editSujet?: SujetProjet;
   searchQuery = '';
@@ -36,7 +37,6 @@ export class MesSujets implements OnInit {
 
   candidaturesModalOpen = false;
   sujetCandidatures?: SujetProjet;
-
 
   deleteConfirmOpen = false;
   deleteAlertOpen = false;
@@ -57,16 +57,35 @@ export class MesSujets implements OnInit {
     { value: 'ancien', label: 'Plus anciens' },
   ];
 
+  get isChefEquipe(): boolean {
+    return this.authService.getRole() === 'ROLE_CHEF_EQUIPE';
+  }
+
+  get pageTitle(): string {
+    return 'Mes sujets';
+  }
+
+  get pageSubtitle(): string {
+    return this.isChefEquipe
+      ? 'Sujets déposés par les enseignants de votre équipe.'
+      : 'Sujets déposés, leur statut de validation et leurs candidatures.';
+  }
+
   ngOnInit(): void {
     this.loadSujets();
   }
 
   loadSujets(): void {
     this.isLoading = true;
+    this.loadError = '';
     const categorie = (this.selectedCategorie || undefined) as CategorieSujet | undefined;
     const statut = (this.selectedStatut || undefined) as StatutSujet | undefined;
 
-    this.sujetProjetService.getMesSujets(categorie, statut).subscribe({
+    const request$ = this.isChefEquipe
+      ? this.sujetProjetService.getSujetsEquipe(categorie, statut)
+      : this.sujetProjetService.getMesSujets(categorie, statut);
+
+    request$.subscribe({
       next: (sujets) => {
         this.sujets = sujets;
         this.applyFilters();
@@ -79,6 +98,9 @@ export class MesSujets implements OnInit {
         this.sujets = [];
         this.filteredSujets = [];
         this.isLoading = false;
+        this.loadError = this.isChefEquipe
+          ? 'Impossible de charger les sujets de l\'équipe. Vérifiez que le backend est démarré.'
+          : '';
       },
     });
   }
@@ -181,6 +203,9 @@ export class MesSujets implements OnInit {
   }
 
   isOwner(sujet: SujetProjet): boolean {
+    if (this.isChefEquipe) {
+      return false;
+    }
     const userId = this.authService.currentUser()?.id;
     return userId != null && sujet.encadrantId === userId;
   }
@@ -208,7 +233,9 @@ export class MesSujets implements OnInit {
         (s) =>
           s.titre.toLowerCase().includes(query) ||
           s.domaines.some((d) => d.toLowerCase().includes(query)) ||
-          s.technologies.some((t) => t.toLowerCase().includes(query)),
+          s.technologies.some((t) => t.toLowerCase().includes(query)) ||
+          (s.encadrantNom?.toLowerCase().includes(query) ?? false) ||
+          (s.encadrantEmail?.toLowerCase().includes(query) ?? false),
       );
     }
 

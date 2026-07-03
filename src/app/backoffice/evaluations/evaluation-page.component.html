@@ -2,7 +2,7 @@
   <header class="page-header">
     <div>
       <h1>Evaluations</h1>
-      <p class="subtitle">Calcul automatique et recalcul des scores pour les projets termines.</p>
+      <p class="subtitle">Analyse ML du contenu des livrables, validation et historique des scores projet.</p>
     </div>
   </header>
 
@@ -29,7 +29,7 @@
     <div class="section-header">
       <div>
         <h2>Projets termines</h2>
-        <p>Selectionnez un projet pour consulter son evaluation detaillee.</p>
+        <p>Selectionnez un projet pour consulter ou relancer son evaluation ML.</p>
       </div>
       <label class="search-field" for="evaluation-project-search">
         <span class="search-icon" aria-hidden="true">
@@ -54,7 +54,6 @@
     <div *ngIf="!loadingProjects() && !projectsError() && projects().length === 0" class="empty-state">
       Aucun projet termine a evaluer.
     </div>
-
     <div *ngIf="!loadingProjects() && projects().length > 0 && filteredProjects().length === 0" class="empty-state">
       Aucun projet ne correspond a la recherche.
     </div>
@@ -68,7 +67,6 @@
             <th>Statut</th>
             <th>Score</th>
             <th>Eligibilite</th>
-            <th>Dernier calcul</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -88,12 +86,25 @@
                 {{ p.eligibleIndustrialisation == null ? 'En attente' : (p.eligibleIndustrialisation ? 'Eligible' : 'Non eligible') }}
               </span>
             </td>
-            <td>-</td>
             <td class="actions-cell">
               <button class="btn btn-secondary" type="button" (click)="selectProject(p)">Voir detail</button>
-              <button class="btn btn-primary" type="button" [disabled]="savingProjectId() === p.id" (click)="calculate(p)">
-                {{ savingProjectId() === p.id ? 'Calcul...' : (p.scoreFinal == null ? 'Calculer score' : 'Recalculer') }}
+              <button
+                class="btn btn-primary"
+                type="button"
+                [disabled]="savingProjectId() === p.id || isProjectCoolingDown(p.id)"
+                (click)="calculate(p)"
+              >
+                @if (savingProjectId() === p.id) {
+                  Analyse...
+                } @else if (isProjectCoolingDown(p.id)) {
+                  Recalcul dans {{ cooldownLabel(p.id) }}
+                } @else {
+                  {{ p.scoreFinal == null ? 'Analyser contenu' : 'Reanalyser' }}
+                }
               </button>
+              @if (isProjectCoolingDown(p.id)) {
+                <small class="cooldown-message">Veuillez patienter avant un nouveau recalcul.</small>
+              }
             </td>
           </tr>
         </tbody>
@@ -107,6 +118,7 @@
         <h2>Evaluation du projet</h2>
         <p>{{ selectedProject.titre }}</p>
       </div>
+      <button class="btn btn-secondary" type="button" (click)="loadEvaluationHistory(selectedProject.id)" [disabled]="loadingHistory()">Rafraichir historique</button>
     </div>
 
     <div *ngIf="evalError()" class="alert alert-error">{{ evalError() }}</div>
@@ -114,16 +126,28 @@
     <ng-container *ngIf="evalResult(); else noEvaluation">
       <div class="summary-grid">
         <article class="metric">
-          <span>Score final</span>
-          <strong>{{ evalResult()!.scoreFinal }} / 100</strong>
+          <span>Score ML</span>
+          <strong>{{ evalResult()!.mlScore ?? evalResult()!.scoreFinal }} / 100</strong>
         </article>
         <article class="metric">
-          <span>Eligibilite</span>
-          <strong>{{ evalResult()!.eligibleIndustrialisation ? 'Eligible' : 'Non eligible' }}</strong>
+          <span>Score final valide</span>
+          <strong>{{ scoreFor(evalResult()) }} / 100</strong>
         </article>
         <article class="metric">
-          <span>Blocage eliminatoire</span>
-          <strong>{{ evalResult()!.bloqueParEliminatoire ? 'Oui' : 'Non' }}</strong>
+          <span>Etat ML</span>
+          <strong>{{ evalResult()!.mlStatus || 'COMPLETED' }}</strong>
+        </article>
+        <article class="metric">
+          <span>Validation</span>
+          <strong>{{ validationStatusLabel(evalResult()!.validationStatus) }}</strong>
+        </article>
+        <article class="metric">
+          <span>Confiance</span>
+          <strong>{{ confidencePercent(evalResult()!.mlGlobalConfidence) }}</strong>
+        </article>
+        <article class="metric">
+          <span>Modele</span>
+          <strong>{{ evalResult()!.mlModelVersion || '-' }}</strong>
         </article>
         <article class="metric">
           <span>Calcule le</span>
@@ -139,11 +163,53 @@
         </article>
       </div>
 
+      <section *ngIf="canValidateEvaluation() || canOverrideEvaluation()" class="evaluation-actions">
+        <label>
+          Commentaire validation
+          <textarea rows="3" [ngModel]="validationComment()" (ngModelChange)="updateValidationComment($event)"></textarea>
+        </label>
+        <div class="action-buttons" *ngIf="canValidateEvaluation()">
+          <button class="btn btn-primary" type="button" [disabled]="actionInProgress()" (click)="validateSelectedEvaluation()">Valider</button>
+          <button class="btn btn-secondary" type="button" [disabled]="actionInProgress()" (click)="rejectSelectedEvaluation()">Rejeter</button>
+        </div>
+        <div class="override-controls" *ngIf="canOverrideEvaluation()">
+          <label>
+            Score override
+            <input type="number" min="0" max="100" [ngModel]="overrideScore()" (ngModelChange)="updateOverrideScore($event)" />
+          </label>
+          <label>
+            Motif override
+            <input type="text" [ngModel]="overrideReason()" (ngModelChange)="updateOverrideReason($event)" />
+          </label>
+          <button class="btn btn-primary" type="button" [disabled]="actionInProgress()" (click)="overrideSelectedEvaluation()">Appliquer override</button>
+        </div>
+      </section>
+
       <app-evaluation-checklist [evaluation]="evalResult()!" [projectTitle]="selectedProject.titre"></app-evaluation-checklist>
     </ng-container>
 
     <ng-template #noEvaluation>
       <p class="empty-state">Aucune evaluation enregistree pour ce projet.</p>
     </ng-template>
+
+    <section class="history-section">
+      <div class="section-header section-header--compact">
+        <div>
+          <h2>Historique des evaluations</h2>
+          <p>{{ evalHistory().length }} evaluation(s)</p>
+        </div>
+      </div>
+      <div *ngIf="loadingHistory()" class="loading">Chargement de l'historique...</div>
+      <div *ngIf="!loadingHistory() && evalHistory().length === 0" class="empty-state">Aucun historique disponible.</div>
+      <div *ngIf="!loadingHistory() && evalHistory().length > 0" class="history-list">
+        <article *ngFor="let item of evalHistory()" class="history-row">
+          <div>
+            <strong>{{ scoreFor(item) }} / 100</strong>
+            <span>{{ item.dateCalcul | date:'yyyy-MM-dd HH:mm' }} - {{ validationStatusLabel(item.validationStatus) }}</span>
+          </div>
+          <span>{{ item.mlModelVersion || 'Modele non renseigne' }}</span>
+        </article>
+      </div>
+    </section>
   </section>
 </div>

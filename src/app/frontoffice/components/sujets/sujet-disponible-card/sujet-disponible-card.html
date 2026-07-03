@@ -1,71 +1,119 @@
 <article class="dispo-card">
-  <div class="dispo-card__top">
-    <span class="dispo-card__categorie" [class]="categorieClass">{{ categorieBadge.label }}</span>
-    <span
-      class="dispo-card__statut"
-      [class.dispo-card__statut--open]="isOpen"
-      [class.dispo-card__statut--muted]="!isOpen"
-    >
-      {{ statusLabel }}
-    </span>
-  </div>
-
-  <h3 class="dispo-card__title">{{ sujet.titre }}</h3>
-  <p class="dispo-card__description">{{ shortDescription }}</p>
-
-  @if (sujet.technologies.length > 0) {
-    <div class="dispo-card__techs">
-      @for (tech of visibleTechs; track tech) {
-        <span class="dispo-card__tech">{{ tech }}</span>
-      }
-      @if (extraTechCount > 0) {
-        <span class="dispo-card__tech">+{{ extraTechCount }}</span>
-      }
-    </div>
-  }
-
-  <div class="dispo-card__divider"></div>
-
-  <div class="dispo-card__mentor">
-    <span class="dispo-card__avatar" [class]="avatarClass">{{ initials }}</span>
-    <div class="dispo-card__mentor-info">
-      <p class="dispo-card__mentor-name">{{ sujet.encadrantNom || 'Encadrant' }}</p>
-      <p class="dispo-card__mentor-domaine">{{ primaryDomaine }}</p>
-    </div>
-  </div>
-
-  <div class="dispo-card__meta">
-    <span class="dispo-card__meta-item">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2"/>
-        <path d="M1 12.5C1 10 2.8 8.5 5 8.5C7.2 8.5 9 10 9 12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <circle cx="10.5" cy="4.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
-        <path d="M13 12.5C13 10.8 11.8 9.5 10.5 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>
-      {{ placesMeta }}
-    </span>
-    <span class="dispo-card__meta-item">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-        <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
-        <path d="M4.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <path d="M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>
-      {{ sujet.dateSoumission ? (sujet.dateSoumission | date:'dd/MM/yyyy') : '—' }}
-    </span>
-  </div>
-
-  <footer class="dispo-card__footer" [class.dispo-card__footer--single]="!showPostuler">
-    <a [routerLink]="['/frontoffice/sujets', sujet.id]" class="dispo-card__btn dispo-card__btn--outline">
-      Voir détails
-    </a>
-    @if (showPostuler) {
-      <button type="button" class="dispo-card__btn dispo-card__btn--primary" [disabled]="isComplet">
-        Postuler
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <div class="dispo-card__header">
+    <div class="dispo-card__header-badges">
+      <span class="dispo-card__header-pill">{{ categorieShortLabel }}</span>
+      <span class="dispo-card__header-pill dispo-card__header-pill--team">
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 12V4.5L7 2L12 4.5V12" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          <path d="M5.5 12V8H8.5V12" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
         </svg>
-      </button>
+        {{ equipeLabel }}
+      </span>
+    </div>
+  </div>
+
+  <div class="dispo-card__body">
+    <div class="dispo-card__tags">
+      <span class="dispo-card__domain-tag">{{ primaryDomaine }}</span>
+      <span class="dispo-card__status-tag" [class]="statusTagClass">
+        <span class="dispo-card__status-dot" [class]="statusDotClass"></span>
+        {{ statusLabel }}
+      </span>
+    </div>
+
+    <h3 class="dispo-card__title">{{ sujet.titre }}</h3>
+    <p class="dispo-card__description">{{ shortDescription }}</p>
+
+    @if (sujet.technologies.length > 0) {
+      <div class="dispo-card__techs">
+        @for (tech of visibleTechs; track tech) {
+          <span class="dispo-card__tech">{{ tech }}</span>
+        }
+        @if (extraTechCount > 0) {
+          <span class="dispo-card__tech">+{{ extraTechCount }}</span>
+        }
+      </div>
     }
-  </footer>
+
+    <div class="dispo-card__mentor">
+      <span class="dispo-card__avatar" [class]="avatarClass">{{ initials }}</span>
+      <div class="dispo-card__mentor-info">
+        <p class="dispo-card__mentor-name">{{ sujet.encadrantNom || 'Encadrant' }}</p>
+        <p class="dispo-card__mentor-role">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="7" cy="5" r="2.5" stroke="currentColor" stroke-width="1.1"/>
+            <path d="M2.5 12.5C2.5 10 4.5 8.5 7 8.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+          Encadrant · {{ primaryDomaine }}
+        </p>
+      </div>
+    </div>
+
+    <div class="dispo-card__capacity">
+      <div class="dispo-card__capacity-head">
+        <span class="dispo-card__capacity-label">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M1 12.5C1 10 2.8 8.5 5 8.5C7.2 8.5 9 10 9 12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="10.5" cy="4.5" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M13 12.5C13 10.8 11.8 9.5 10.5 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Places
+        </span>
+        <span class="dispo-card__capacity-value">{{ placesTaken }}/{{ sujet.capaciteAccueil }}</span>
+      </div>
+      <div class="dispo-card__capacity-bar" aria-hidden="true">
+        <div class="dispo-card__capacity-fill" [style.width.%]="capacityPercent"></div>
+      </div>
+    </div>
+
+    <div class="dispo-card__meta">
+      <span class="dispo-card__meta-item">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M4.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        {{ formattedDate }}
+      </span>
+      <span class="dispo-card__meta-item">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M12 2L6.5 7.5L3.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11 2H12V3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1.5 7V11.5C1.5 12.05 1.95 12.5 2.5 12.5H11.5C12.05 12.5 12.5 12.05 12.5 11.5V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        {{ candidaturesLabel }}
+      </span>
+    </div>
+
+    <footer class="dispo-card__footer" [class.dispo-card__footer--single]="!showPostuler">
+      <a [routerLink]="['/frontoffice/sujets', sujet.id]" class="dispo-card__btn dispo-card__btn--outline">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        Détails
+      </a>
+      @if (showPostuler) {
+        @if (dejaPostule) {
+          <button type="button" class="dispo-card__btn dispo-card__btn--deja-postule" disabled>
+            Candidature déposée
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="dispo-card__btn dispo-card__btn--primary"
+            [disabled]="isComplet"
+            (click)="onPostulerClick()"
+          >
+            Postuler
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        }
+      }
+    </footer>
+  </div>
 </article>

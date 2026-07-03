@@ -55,6 +55,7 @@ export class CiIndustrialisationComponent implements OnInit {
   readonly orientations = ORIENTATION_OPTIONS;
   readonly statuts: StatutIndustrialisation[] = ['SOUMISE', 'RECUE_PAR_CI', 'A_COMPLETER', 'RECEVABLE', 'GO', 'NO_GO', 'REFUSEE'];
   readonly types: TypeIndustrialisation[] = ['INTERNE', 'EXTERNE'];
+  readonly missingLivrablesWarning = 'Aucun livrable nest déposé pour ce projet. La CI verra cette alerte.';
 
   readonly domaines = computed(() => {
     const domaines = this.demandes()
@@ -239,17 +240,16 @@ export class CiIndustrialisationComponent implements OnInit {
 
   scoreClass(candidature: CandidatureIndustrialisation): string {
     const backendScore = this.scoreFor(candidature);
-    if (backendScore?.estBloqueParEliminatoire || backendScore?.decisionRecommandee === 'NO_GO') {
+    if (backendScore?.decisionRecommandee === 'NO_GO') {
       return 'score-card--danger';
     }
-    if (backendScore?.decisionRecommandee === 'GO') {
+    if (backendScore?.decisionRecommandee === 'GO' && this.eliminatoryWarningCount(candidature) === 0) {
       return 'score-card--success';
     }
-    if (candidature.bloqueParEliminatoire || candidature.eligibleIndustrialisation === false) {
-      return 'score-card--danger';
-    }
     const numericScore = this.scoreValue(candidature) ?? 0;
-    return numericScore >= 70 ? 'score-card--success' : 'score-card--warning';
+    return numericScore >= 70 && this.eliminatoryWarningCount(candidature) === 0
+      ? 'score-card--success'
+      : 'score-card--warning';
   }
 
   requestReference(candidature: CandidatureIndustrialisation): string {
@@ -300,9 +300,27 @@ export class CiIndustrialisationComponent implements OnInit {
   }
 
   blockingCriteriaCount(candidature: CandidatureIndustrialisation): number {
+    return this.eliminatoryWarningCount(candidature);
+  }
+
+  submissionWarnings(candidature: CandidatureIndustrialisation | null): string[] {
+    if (!candidature) {
+      return [];
+    }
+    const warnings = [...(candidature.warnings ?? [])];
+    if (candidature.livrables.length === 0 && !warnings.includes(this.missingLivrablesWarning)) {
+      warnings.push(this.missingLivrablesWarning);
+    }
+    return warnings;
+  }
+
+  eliminatoryWarningCount(candidature: CandidatureIndustrialisation): number {
     const score = this.scoreFor(candidature);
     if (score) {
-      return score.blocagesEliminatoires.length;
+      return score.eliminatoryWarningsCount ?? score.blocagesEliminatoires.length;
+    }
+    if (candidature.eliminatoryWarningsCount != null) {
+      return candidature.eliminatoryWarningsCount;
     }
     return candidature.latestEvaluation?.resultats
       ?.filter((resultat) => resultat.typeCritere === 'ELIMINATOIRE' && resultat.reponseEliminatoire === 'NOT_OK')
@@ -315,9 +333,6 @@ export class CiIndustrialisationComponent implements OnInit {
       return score.decisionRecommandee === 'A_INSTRUIRE'
         ? 'A instruire'
         : `${this.decisionLabel(score.decisionRecommandee)} recommande`;
-    }
-    if (this.blockingCriteriaCount(candidature) > 0 || candidature.eligibleIndustrialisation === false) {
-      return 'NO GO recommande';
     }
     if (candidature.latestEvaluation?.evaluationComplete === false) {
       return 'Analyse necessaire';
@@ -333,17 +348,22 @@ export class CiIndustrialisationComponent implements OnInit {
     if (score) {
       return score.message;
     }
-    if (this.blockingCriteriaCount(candidature) > 0 || candidature.eligibleIndustrialisation === false) {
-      return 'Le systeme recommande NO GO car un critere eliminatoire est NOT_OK.';
+    if (this.eliminatoryWarningCount(candidature) > 0) {
+      return 'Alerte eliminatoire non bloquante : la CI peut continuer vers GO ou NO GO apres analyse.';
     }
     if (candidature.latestEvaluation?.evaluationComplete === false) {
-      return 'Analyse necessaire : certaines regles automatiques ne sont pas configurees.';
+      return 'Analyse necessaire : certains criteres ou livrables nont pas pu etre analyses par le moteur ML.';
     }
-    return 'Le systeme recommande GO car les criteres bloquants sont satisfaits.';
+    return 'La decision GO / NO GO reste manuelle pour la CI.';
   }
 
-  nonConfiguredCount(candidature: CandidatureIndustrialisation): number {
-    return candidature.latestEvaluation?.resultats?.filter((resultat) => resultat.ruleConfigured === false).length ?? 0;
+  analysisIssueCount(candidature: CandidatureIndustrialisation): number {
+    const evaluation = candidature.latestEvaluation;
+    if (!evaluation) {
+      return 0;
+    }
+    const criterionIssues = evaluation.resultats?.filter((resultat) => resultat.ruleConfigured === false).length ?? 0;
+    return criterionIssues + (evaluation.mlWarnings?.length ?? 0) + (evaluation.errorMessage ? 1 : 0);
   }
 
   decisionLabel(decision: DecisionRecommandeeIndustrialisation): string {

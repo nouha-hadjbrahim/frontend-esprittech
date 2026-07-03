@@ -14,6 +14,9 @@ const mockEnseignant = (id: number, prenom: string, nom: string, email: string) 
   departement: 'Info',
   enabled: true,
   createdAt: '2025-01-01',
+  isAffilieToEquipe: false,
+  equipeId: null,
+  equipeNom: null,
 });
 
 const mockDemandes: AffiliationEnseignantResponse[] = [

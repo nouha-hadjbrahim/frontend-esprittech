@@ -183,8 +183,8 @@
             <strong>{{ recommendation(selected()!) }}</strong>
           </div>
           <div>
-            <span>Blocages</span>
-            <strong>{{ blockingCriteriaCount(selected()!) }}</strong>
+            <span>Alertes eliminatoires</span>
+            <strong>{{ eliminatoryWarningCount(selected()!) }}</strong>
           </div>
           @if (canDecide(selected())) {
             <div class="decision-strip__actions">
@@ -193,6 +193,10 @@
             </div>
           }
         </section>
+
+        @for (warning of submissionWarnings(selected()); track warning) {
+          <div class="alert alert--warning">{{ warning }}</div>
+        }
 
         <div class="detail-grid">
           <section class="panel section-card identification-card">
@@ -283,8 +287,8 @@
                 </strong>
               </div>
               <div>
-                <span>Blocages eliminatoires</span>
-                <strong>{{ scoreData.blocagesEliminatoires.length }}</strong>
+                <span>Alertes eliminatoires</span>
+                <strong>{{ scoreData.eliminatoryWarningsCount ?? scoreData.blocagesEliminatoires.length }}</strong>
               </div>
               <div>
                 <span>Revue CI requise</span>
@@ -298,16 +302,16 @@
                 <strong>{{ selected()!.latestEvaluation?.scoreFinal ?? selected()!.scoreEvaluationProjet ?? '-' }}/100</strong>
               </div>
               <div>
-                <span>Evaluation</span>
-                <strong>{{ selected()!.latestEvaluation?.evaluationComplete === false ? 'Incomplete' : 'Complete' }}</strong>
+                <span>Analyse ML</span>
+                <strong>{{ selected()!.latestEvaluation?.mlStatus || (selected()!.latestEvaluation?.evaluationComplete === false ? 'Incomplete' : 'Complete') }}</strong>
               </div>
               <div>
-                <span>Regles non configurees</span>
-                <strong>{{ nonConfiguredCount(selected()!) }}</strong>
+                <span>Alertes analyse</span>
+                <strong>{{ analysisIssueCount(selected()!) }}</strong>
               </div>
               <div>
-                <span>Livrables</span>
-                <strong>{{ selected()!.livrables.length }}</strong>
+                <span>Modele</span>
+                <strong>{{ selected()!.latestEvaluation?.mlModelVersion || '-' }}</strong>
               </div>
             </div>
           }
@@ -327,23 +331,23 @@
               <article class="component-score">
                 <span>Questionnaire</span>
                 <strong>{{ scoreData.scoreQuestions }}/100</strong>
-                <small>Poids 40%</small>
+                <small>Trace seulement</small>
               </article>
               <article class="component-score">
                 <span>Livrables</span>
                 <strong>{{ scoreData.scoreLivrables }}/100</strong>
-                <small>Poids 30%</small>
+                <small>Analyse de contenu via criteres</small>
               </article>
               <article class="component-score">
                 <span>Criteres notes</span>
                 <strong>{{ scoreData.scoreCriteresNotes }}/100</strong>
-                <small>Poids 30%</small>
+                <small>Poids 100%</small>
               </article>
             </div>
 
             @if (scoreData.blocagesEliminatoires.length) {
               <div class="blocker-list">
-                <strong>Blocages eliminatoires</strong>
+                <strong>Alertes eliminatoires</strong>
                 @for (blocage of scoreData.blocagesEliminatoires; track blocage.source + blocage.referenceId) {
                   <p>{{ blocage.libelle }} - {{ blocage.raison }}</p>
                 }

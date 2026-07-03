@@ -124,7 +124,12 @@
     @if (isChefOfThisTeam()) {
       <section class="equipe-detail__section">
         <div class="equipe-detail__section-header">
-          <h3 class="equipe-detail__section-title">Demandes d'intégration ({{ teamAffiliations().length }})</h3>
+          <h3 class="equipe-detail__section-title">
+            Demandes d'intégration ({{ teamAffiliations().length }})
+            @if (pendingAffiliations().length > 0) {
+              <span class="detail-pending-badge">{{ pendingAffiliations().length }}</span>
+            }
+          </h3>
         </div>
         @if (teamAffiliations().length === 0) {
           <div class="equipe-detail__empty">Aucune demande pour cette équipe.</div>
@@ -142,7 +147,7 @@
                 </div>
                 @if (r.statut === 'EN_ATTENTE') {
                   <div class="equipe-detail__request-actions">
-                    <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id)">
+                    <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id, r.enseignant.prenom + ' ' + r.enseignant.nom)">
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                         <path d="M2.5 6.5L5 9L9.5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
@@ -170,19 +175,23 @@
 </div>
 
 <!-- Modals -->
-<app-modifier-equipe-modal
-  [isOpen]="editModalOpen"
-  [equipe]="equipe()!"
-  (closed)="editModalOpen = false"
-  (saved)="onEditSaved()"
-/>
+@if (editModalOpen) {
+  <app-modifier-equipe-modal
+    [isOpen]="editModalOpen"
+    [equipe]="equipe()!"
+    (closed)="editModalOpen = false"
+    (saved)="onEditSaved()"
+  />
+}
 
-<app-ajouter-membre-modal
-  [isOpen]="addMemberModalOpen"
-  [equipe]="equipe()!"
-  (closed)="addMemberModalOpen = false"
-  (saved)="onMemberAdded()"
-/>
+@if (addMemberModalOpen) {
+  <app-ajouter-membre-modal
+    [isOpen]="addMemberModalOpen"
+    [equipe]="equipe()!"
+    (closed)="addMemberModalOpen = false"
+    (saved)="onMemberAdded()"
+  />
+}
 
 <!-- Motif dialog for refusal -->
 @if (motifDialogOpen) {

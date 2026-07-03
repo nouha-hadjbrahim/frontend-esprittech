@@ -16,7 +16,14 @@ describe('authInterceptor', () => {
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(() => {
-    authService = jasmine.createSpyObj<AuthService>('AuthService', ['refreshToken', 'clearSession']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', [
+      'refreshToken',
+      'clearSession',
+      'isLoggedIn',
+      'accessToken',
+    ]);
+    authService.isLoggedIn.and.returnValue(true);
+    authService.accessToken.and.returnValue('test-token');
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     TestBed.configureTestingModule({
       providers: [
@@ -32,11 +39,11 @@ describe('authInterceptor', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('should send requests with credentials so the auth cookies are attached', () => {
+  it('should send requests with credentials and bearer token when available', () => {
     http.get(`${API}/equipes`).subscribe();
     const req = httpMock.expectOne(`${API}/equipes`);
     expect(req.request.withCredentials).toBeTrue();
-    expect(req.request.headers.has('Authorization')).toBeFalse();
+    expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
     req.flush([]);
   });
 

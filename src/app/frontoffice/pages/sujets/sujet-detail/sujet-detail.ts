@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReponseEliminatoire } from '../../../../core/models/critere.model';
-import { EvaluationResponse } from '../../../../core/models/evaluation.model';
+import { EvaluationResponse, ResultatCritereResponse } from '../../../../core/models/evaluation.model';
 import {
   CandidatureIndustrialisation,
+  EliminatoryWarningsConfirmation,
   IndustrialisationFormResponse,
   QuestionIndustrialisation,
   ReponseIndustrialisationRequest,
@@ -13,28 +14,32 @@ import {
   TypeIndustrialisation,
 } from '../../../../core/models/industrialisation.model';
 import { Livrable, TYPE_LIVRABLE_LABELS, TYPE_LIVRABLE_OPTIONS, TypeLivrable } from '../../../../core/models/livrable.model';
+import { Affectation, Candidature, StatutCandidature } from '../../../../core/models/candidature.model';
 import { SujetProjet } from '../../../../core/models/sujet-projet.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CandidatureService } from '../../../../core/services/candidature.service';
 import { EvaluationService } from '../../../../core/services/evaluation.service';
 import { IndustrialisationService } from '../../../../core/services/industrialisation.service';
 import { LivrableService } from '../../../../core/services/livrable.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
 import { EvaluationChecklistComponent } from '../../../../shared/components/evaluation-checklist/evaluation-checklist.component';
+import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { CATEGORIE_LABELS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-sujet-detail',
-  imports: [RouterLink, DatePipe, FormsModule, EvaluationChecklistComponent],
+  imports: [RouterLink, DatePipe, FormsModule, EvaluationChecklistComponent, ConfirmDialog],
   templateUrl: './sujet-detail.html',
   styleUrl: './sujet-detail.css',
 })
-export class SujetDetail implements OnInit {
+export class SujetDetail implements OnInit,OnDestroy  {
   private readonly route = inject(ActivatedRoute);
   private readonly sujetProjetService = inject(SujetProjetService);
   private readonly authService = inject(AuthService);
   private readonly evaluationService = inject(EvaluationService);
   private readonly livrableService = inject(LivrableService);
   private readonly industrialisationService = inject(IndustrialisationService);
+  private readonly candidatureService = inject(CandidatureService);
 
   sujet: SujetProjet | null = null;
   isLoading = true;
@@ -44,7 +49,20 @@ export class SujetDetail implements OnInit {
   evaluationError = '';
   evaluationMessage = '';
   recalculatingScore = false;
+  private readonly SCORE_COOLDOWN_SECONDS = 120;
+scoreCooldownRemaining = 0;
+private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   activeTab = 'Informations';
+  membres: Affectation[] = [];
+  membresLoading = false;
+  membresError = '';
+  membresMessage = '';
+  retraitTargetId: number | null = null;
+  retraitMotif = '';
+  retraitLoading = false;
+  candidatures: Candidature[] = [];
+  candidaturesLoading = false;
+  candidaturesError = '';
   livrables: Livrable[] = [];
   livrablesLoading = false;
   livrableError = '';
@@ -68,19 +86,46 @@ export class SujetDetail implements OnInit {
   industrialisationSaving = false;
   industrialisationUploadingQuestionId: number | null = null;
   industrialisationError = '';
+  terminaisonConfirmOpen = false;
+  terminaisonLoading = false;
+  terminaisonError = '';
   industrialisationMessage = '';
   industrialisationSubmitAttempted = false;
+  eliminatoryWarningConfirmation: EliminatoryWarningsConfirmation | null = null;
+  pendingIndustrialisationAction: 'create' | 'submit' | null = null;
   answers: Record<number, ReponseIndustrialisationRequest> = {};
 
-  readonly tabs = [
-    { label: 'Informations', icon: 'info' },
-    { label: 'Livrables', icon: 'livrables' },
-    { label: 'Industrialisation', icon: 'progression' },
-  ];
   readonly typeLivrableOptions = TYPE_LIVRABLE_OPTIONS;
   readonly livrableLabels = TYPE_LIVRABLE_LABELS;
   readonly typeIndustrialisationLabels = TYPE_INDUSTRIALISATION_LABELS;
   readonly ReponseEliminatoire = ReponseEliminatoire;
+  readonly missingLivrablesWarning = 'Aucun livrable nest déposé pour ce projet. La CI verra cette alerte.';
+
+  get isEtudiant(): boolean {
+    return this.authService.getRole() === 'ROLE_ETUDIANT';
+  }
+
+  get tabs(): { label: string; icon: string }[] {
+    if (this.isEtudiant) {
+      return [
+        { label: 'Informations', icon: 'info' },
+        { label: 'Membres', icon: 'membres' },
+      ];
+    }
+
+    const items = [
+      { label: 'Informations', icon: 'info' },
+      { label: 'Membres', icon: 'membres' },
+    ];
+    if (this.isOwner) {
+      items.push({ label: 'Candidatures', icon: 'candidatures' });
+    }
+    items.push(
+      { label: 'Livrables', icon: 'livrables' },
+      { label: 'Industrialisation', icon: 'progression' },
+    );
+    return items;
+  }
 
   private readonly techColorClasses = [
     'tag--green',
@@ -103,6 +148,10 @@ export class SujetDetail implements OnInit {
       next: (sujet) => {
         this.sujet = sujet;
         this.isLoading = false;
+        if (this.isEtudiant && !['Informations', 'Membres'].includes(this.activeTab)) {
+          this.activeTab = 'Informations';
+        }
+        this.loadMembres();
         this.loadLivrables();
         this.loadEvaluation();
       },
@@ -125,6 +174,25 @@ export class SujetDetail implements OnInit {
     if (role === 'ROLE_ENSEIGNANT') return 'Retour à mes sujets';
     if (role === 'ROLE_CHEF_EQUIPE') return 'Retour à la validation';
     return 'Retour aux sujets disponibles';
+  }
+
+  get nombreMembres(): number {
+    return this.sujet?.nombreMembresActifs ?? this.membres.length;
+  }
+
+  get capacitePourcentage(): number {
+    if (!this.sujet?.capaciteAccueil) return 0;
+    return Math.min(100, Math.round((this.nombreMembres / this.sujet.capaciteAccueil) * 100));
+  }
+
+  get placesRestantes(): number {
+    if (!this.sujet) return 0;
+    return Math.max(0, this.sujet.capaciteAccueil - this.nombreMembres);
+  }
+
+  get capaciteEstComplete(): boolean {
+    if (!this.sujet) return false;
+    return this.nombreMembres >= this.sujet.capaciteAccueil;
   }
 
   get categorieLabel(): string {
@@ -158,7 +226,8 @@ export class SujetDetail implements OnInit {
 
   get isOwner(): boolean {
     const userId = this.authService.currentUser()?.id;
-    return !!this.sujet && userId != null && this.sujet.encadrantId === userId;
+    if (!this.sujet || userId == null) return false;
+    return Number(this.sujet.encadrantId) === Number(userId);
   }
 
   get canManageLivrables(): boolean {
@@ -173,8 +242,165 @@ export class SujetDetail implements OnInit {
     return this.isOwner && !!this.sujet && this.sujet.statut === 'REALISATION_TERMINEE';
   }
 
+  get canRetirerMembre(): boolean {
+    if (!this.sujet || this.sujet.statut !== 'REALISATION_EN_COURS') return false;
+    const role = this.authService.getRole();
+    return this.isOwner || role === 'ROLE_ADMIN' || role === 'ROLE_CHEF_EQUIPE';
+  }
+
+  get canDeclarerTerminaison(): boolean {
+    if (!this.sujet || !this.isOwner) return false;
+    return this.sujet.statut === 'REALISATION_EN_COURS';
+  }
+
+  ouvrirTerminaisonConfirm(): void {
+    this.terminaisonError = '';
+    this.terminaisonConfirmOpen = true;
+  }
+
+  annulerTerminaison(): void {
+    this.terminaisonConfirmOpen = false;
+    this.terminaisonLoading = false;
+  }
+
+  confirmerTerminaison(): void {
+    if (!this.sujet) return;
+    this.terminaisonLoading = true;
+    this.terminaisonError = '';
+    this.sujetProjetService.declarerTerminaison(this.sujet.id).subscribe({
+      next: (updated) => {
+        this.terminaisonLoading = false;
+        this.terminaisonConfirmOpen = false;
+        this.sujet = updated;
+        this.loadEvaluation();
+      },
+      error: (err) => {
+        this.terminaisonLoading = false;
+        this.terminaisonConfirmOpen = false;
+        this.terminaisonError = err?.error?.detail ?? err?.error?.message ?? 'Impossible de déclarer la terminaison.';
+      },
+    });
+  }
+
+  get terminaisonConfirmMessage(): string {
+    return this.sujet
+      ? `Voulez-vous déclarer le sujet « ${this.sujet.titre} » comme terminé ?`
+      : '';
+  }
+
   selectTab(label: string): void {
     this.activeTab = label;
+    if (label === 'Candidatures') {
+      this.loadCandidatures();
+    }
+  }
+
+  loadCandidatures(): void {
+    if (!this.sujet || !this.isOwner) return;
+    this.candidaturesLoading = true;
+    this.candidaturesError = '';
+    this.candidatureService.getCandidaturesParSujet(this.sujet.id).subscribe({
+      next: (candidatures) => {
+        this.candidatures = [...candidatures]
+          .filter((c) => c.statut === 'DEPOSEE')
+          .sort((a, b) => new Date(b.dateDepot).getTime() - new Date(a.dateDepot).getTime());
+        this.candidaturesLoading = false;
+      },
+      error: () => {
+        this.candidatures = [];
+        this.candidaturesError = 'Impossible de charger les candidatures.';
+        this.candidaturesLoading = false;
+      },
+    });
+  }
+
+  candidatureFullName(candidature: Candidature): string {
+    return `${candidature.etudiantPrenom} ${candidature.etudiantNom}`.trim();
+  }
+
+  candidatureInitials(candidature: Candidature): string {
+    const prenom = candidature.etudiantPrenom?.trim().charAt(0) ?? '';
+    const nom = candidature.etudiantNom?.trim().charAt(0) ?? '';
+    return `${prenom}${nom}`.toUpperCase() || '?';
+  }
+
+  candidatureStatutLabel(statut: StatutCandidature): string {
+    const labels: Record<StatutCandidature, string> = {
+      DEPOSEE: 'En attente',
+      ACCEPTEE: 'Acceptée',
+      REFUSEE: 'Refusée',
+      ARCHIVEE: 'Archivée',
+    };
+    return labels[statut] ?? statut;
+  }
+
+  candidatureStatutClass(statut: StatutCandidature): string {
+    const classes: Record<StatutCandidature, string> = {
+      DEPOSEE: 'candidature-card__status--pending',
+      ACCEPTEE: 'candidature-card__status--accepted',
+      REFUSEE: 'candidature-card__status--refused',
+      ARCHIVEE: 'candidature-card__status--archived',
+    };
+    return classes[statut] ?? '';
+  }
+
+  loadMembres(): void {
+    if (!this.sujet) return;
+    this.membresLoading = true;
+    this.membresError = '';
+    this.candidatureService.getAffectationsParSujet(this.sujet.id).subscribe({
+      next: (membres) => {
+        this.membres = membres.filter((m) => m.statut === 'ACTIVE');
+        this.membresLoading = false;
+      },
+      error: () => {
+        this.membres = [];
+        this.membresError = 'Impossible de charger les membres du sujet.';
+        this.membresLoading = false;
+      },
+    });
+  }
+
+  memberFullName(membre: Affectation): string {
+    return `${membre.etudiantPrenom} ${membre.etudiantNom}`.trim();
+  }
+
+  memberInitials(membre: Affectation): string {
+    const prenom = membre.etudiantPrenom?.trim().charAt(0) ?? '';
+    const nom = membre.etudiantNom?.trim().charAt(0) ?? '';
+    return `${prenom}${nom}`.toUpperCase() || '?';
+  }
+
+  ouvrirRetraitMembre(membre: Affectation): void {
+    this.retraitTargetId = membre.id;
+    this.retraitMotif = '';
+    this.membresError = '';
+    this.membresMessage = '';
+  }
+
+  annulerRetraitMembre(): void {
+    this.retraitTargetId = null;
+    this.retraitMotif = '';
+  }
+
+  confirmerRetraitMembre(): void {
+    if (!this.retraitTargetId || !this.retraitMotif.trim()) return;
+    this.retraitLoading = true;
+    this.membresError = '';
+    this.candidatureService.retirerEtudiant(this.retraitTargetId, this.retraitMotif.trim()).subscribe({
+      next: () => {
+        this.retraitLoading = false;
+        this.annulerRetraitMembre();
+        this.membresMessage = 'Membre retiré du sujet.';
+        this.loadMembres();
+        this.loadSujet();
+        setTimeout(() => this.membresMessage = '', 2500);
+      },
+      error: (err) => {
+        this.retraitLoading = false;
+        this.membresError = err?.error?.detail ?? 'Impossible de retirer ce membre.';
+      },
+    });
   }
 
   loadLivrables(): void {
@@ -213,25 +439,93 @@ export class SujetDetail implements OnInit {
     });
   }
 
-  recalculateScore(): void {
-    if (!this.sujet || !this.canRecalculateScore) {
+
+  get scoreCooldownActive(): boolean {
+  return this.scoreCooldownRemaining > 0;
+}
+
+get scoreCooldownLabel(): string {
+  const minutes = Math.floor(this.scoreCooldownRemaining / 60);
+  const seconds = this.scoreCooldownRemaining % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+private startScoreCooldown(seconds = this.SCORE_COOLDOWN_SECONDS): void {
+  this.clearScoreCooldown();
+
+  this.scoreCooldownRemaining = seconds;
+
+  this.scoreCooldownTimer = setInterval(() => {
+    if (this.scoreCooldownRemaining <= 1) {
+      this.clearScoreCooldown();
       return;
     }
-    this.recalculatingScore = true;
-    this.evaluationError = '';
-    this.evaluationService.calculateScore(this.sujet.id).subscribe({
-      next: (evaluation) => {
-        this.evaluation = evaluation;
-        this.evaluationMessage = 'Score recalculé avec succès.';
-        this.recalculatingScore = false;
-        this.loadSujet();
-      },
-      error: (err) => {
-        this.evaluationError = err?.error?.detail ?? 'Recalcul impossible.';
-        this.recalculatingScore = false;
-      },
-    });
+
+    this.scoreCooldownRemaining -= 1;
+  }, 1000);
+}
+
+private clearScoreCooldown(): void {
+  if (this.scoreCooldownTimer) {
+    clearInterval(this.scoreCooldownTimer);
+    this.scoreCooldownTimer = null;
   }
+
+  this.scoreCooldownRemaining = 0;
+}
+
+ngOnDestroy(): void {
+  this.clearScoreCooldown();
+}
+
+  recalculateScore(): void {
+  if (!this.sujet || !this.canRecalculateScore) {
+    return;
+  }
+
+  if (this.scoreCooldownActive) {
+    this.evaluationMessage = '';
+    this.evaluationError = `Le score vient d’être recalculé. Veuillez patienter ${this.scoreCooldownLabel} avant un nouveau recalcul.`;
+    return;
+  }
+
+  this.recalculatingScore = true;
+  this.evaluationError = '';
+  this.evaluationMessage = '';
+
+  this.evaluationService.calculateScore(this.sujet.id).subscribe({
+    next: (evaluation) => {
+      this.evaluation = evaluation;
+      this.evaluationMessage = 'Score recalculé avec succès.';
+      this.recalculatingScore = false;
+
+      this.startScoreCooldown();
+
+      this.sujet = {
+        ...this.sujet!,
+        scoreFinal: evaluation.scoreFinal,
+        eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
+        hasEliminatoryWarnings: evaluation.hasEliminatoryWarnings,
+      };
+
+      this.loadEvaluation();
+    },
+    error: (err) => {
+      const retryAfterSeconds =
+        Number(err?.error?.retryAfterSeconds ?? err?.headers?.get?.('Retry-After') ?? this.SCORE_COOLDOWN_SECONDS);
+
+      if (err?.status === 409 || err?.status === 429 || err?.status === 401) {
+        this.startScoreCooldown(Number.isNaN(retryAfterSeconds) ? this.SCORE_COOLDOWN_SECONDS : retryAfterSeconds);
+        this.evaluationError = `Le score vient d’être recalculé. Veuillez patienter ${this.scoreCooldownLabel} avant un nouveau recalcul.`;
+      } else {
+        this.evaluationError = err?.error?.detail ?? err?.error?.message ?? 'Recalcul impossible.';
+      }
+
+      this.evaluationMessage = '';
+      this.recalculatingScore = false;
+    },
+  });
+}
 
   onUploadFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -294,6 +588,19 @@ export class SujetDetail implements OnInit {
     return this.livrableService.downloadUrl(livrable.id);
   }
 
+  noteResultDisplay(resultat: ResultatCritereResponse): string {
+    if (resultat.mlScore != null && resultat.mlMaxScore != null) {
+      const normalized = resultat.normalizedScore != null ? ` - ${Math.round(resultat.normalizedScore)}/100` : '';
+      return `${resultat.mlScore}/${resultat.mlMaxScore}${normalized}`;
+    }
+    const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;
+    const scale = resultat.bareme && resultat.bareme > 0 ? resultat.bareme : null;
+    if (scale) {
+      return resultat.noteLabel ? `${note}/${scale} - ${resultat.noteLabel}` : `${note}/${scale}`;
+    }
+    return resultat.noteLabel ? resultat.noteLabel : String(note);
+  }
+
   openIndustrialisation(): void {
     this.industrialisationOpen = true;
     this.industrialisationForm = null;
@@ -310,15 +617,19 @@ export class SujetDetail implements OnInit {
     this.industrialisationUploadingQuestionId = null;
   }
 
-  createIndustrialisation(): void {
+  createIndustrialisation(confirmEliminatoryWarnings = false): void {
     if (!this.sujet) return;
     this.industrialisationSaving = true;
     this.industrialisationService.create(this.sujet.id, {
       typeIndustrialisation: this.industrialisationType,
       commentaire: this.industrialisationCommentaire.trim(),
+      confirmEliminatoryWarnings,
     }).subscribe({
       next: (candidature) => this.loadIndustrialisationForm(candidature.id),
       error: (err) => {
+        if (this.handleEliminatoryConfirmation(err, 'create')) {
+          return;
+        }
         this.industrialisationError = err?.error?.detail ?? 'Creation de la demande impossible.';
         this.industrialisationSaving = false;
       },
@@ -394,15 +705,15 @@ export class SujetDetail implements OnInit {
   }
 
   submitIndustrialisation(): void {
+    this.submitIndustrialisationWithConfirmation(false);
+  }
+
+  submitIndustrialisationWithConfirmation(confirmEliminatoryWarnings: boolean): void {
     if (!this.industrialisationForm) return;
     this.industrialisationSubmitAttempted = true;
     const missingQuestions = this.missingRequiredQuestions();
     if (missingQuestions.length > 0) {
       this.industrialisationError = `Reponse obligatoire manquante : ${missingQuestions.join(', ')}.`;
-      return;
-    }
-    if (this.hasBlockingEliminatoryAnswer()) {
-      this.industrialisationError = 'Cette demande contient un critere eliminatoire non conforme.';
       return;
     }
     this.industrialisationSaving = true;
@@ -413,7 +724,7 @@ export class SujetDetail implements OnInit {
     }).subscribe({
       next: (savedCandidature) => {
         this.industrialisationForm = { ...this.industrialisationForm!, candidature: savedCandidature };
-        this.industrialisationService.soumettre(candidatureId).subscribe({
+        this.industrialisationService.soumettre(candidatureId, { confirmEliminatoryWarnings }).subscribe({
           next: (candidature) => {
             this.industrialisationForm = { ...this.industrialisationForm!, candidature };
             this.industrialisationMessage = 'Demande soumise a la CI.';
@@ -423,6 +734,9 @@ export class SujetDetail implements OnInit {
             this.loadSujet();
           },
           error: (err) => {
+            if (this.handleEliminatoryConfirmation(err, 'submit')) {
+              return;
+            }
             this.industrialisationError = err?.error?.detail ?? 'Soumission impossible.';
             this.industrialisationSaving = false;
           },
@@ -433,6 +747,34 @@ export class SujetDetail implements OnInit {
         this.industrialisationSaving = false;
       },
     });
+  }
+
+  confirmEliminatoryWarnings(): void {
+    const action = this.pendingIndustrialisationAction;
+    this.eliminatoryWarningConfirmation = null;
+    this.pendingIndustrialisationAction = null;
+    if (action === 'create') {
+      this.createIndustrialisation(true);
+    } else if (action === 'submit') {
+      this.submitIndustrialisationWithConfirmation(true);
+    }
+  }
+
+  cancelEliminatoryWarnings(): void {
+    this.eliminatoryWarningConfirmation = null;
+    this.pendingIndustrialisationAction = null;
+    this.industrialisationSaving = false;
+  }
+
+  private handleEliminatoryConfirmation(err: any, action: 'create' | 'submit'): boolean {
+    const payload = err?.error as EliminatoryWarningsConfirmation | undefined;
+    if (err?.status === 409 && payload?.requiresConfirmation) {
+      this.eliminatoryWarningConfirmation = payload;
+      this.pendingIndustrialisationAction = action;
+      this.industrialisationSaving = false;
+      return true;
+    }
+    return false;
   }
 
   private buildIndustrialisationAnswers(): ReponseIndustrialisationRequest[] {
@@ -497,7 +839,7 @@ export class SujetDetail implements OnInit {
       return 'Conforme';
     }
     if (result === ReponseEliminatoire.NOT_OK) {
-      return 'Bloquant';
+      return 'Alerte';
     }
     return 'En attente';
   }
@@ -519,11 +861,18 @@ export class SujetDetail implements OnInit {
     ) ?? false;
   }
 
+  get submissionWarnings(): string[] {
+    const warnings = [...(this.industrialisationForm?.candidature.warnings ?? [])];
+    if (this.currentIndustrialisationLivrables().length === 0 && !warnings.includes(this.missingLivrablesWarning)) {
+      warnings.push(this.missingLivrablesWarning);
+    }
+    return warnings;
+  }
+
   canSubmitIndustrialisation(): boolean {
     return !!this.industrialisationForm
       && !this.isIndustrialisationBusy()
-      && this.missingRequiredQuestions().length === 0
-      && !this.hasBlockingEliminatoryAnswer();
+      && this.missingRequiredQuestions().length === 0;
   }
 
   isIndustrialisationBusy(): boolean {
@@ -544,8 +893,7 @@ export class SujetDetail implements OnInit {
 
   questionnaireReadyForSubmission(): boolean {
     return !!this.industrialisationForm
-      && this.missingRequiredQuestions().length === 0
-      && !this.hasBlockingEliminatoryAnswer();
+      && this.missingRequiredQuestions().length === 0;
   }
 
   isIndustrialisationStepActive(step: 1 | 2 | 3): boolean {
@@ -629,6 +977,10 @@ export class SujetDetail implements OnInit {
       return this.automaticEliminatoryResult(question) !== null;
     }
     return true;
+  }
+
+  private currentIndustrialisationLivrables(): Livrable[] {
+    return this.industrialisationForm?.candidature.livrables ?? this.livrables;
   }
 
   hasUploadedProof(question: QuestionIndustrialisation): boolean {
