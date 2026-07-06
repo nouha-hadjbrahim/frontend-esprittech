@@ -35,9 +35,27 @@ export interface ResultatCritereResponse {
   mlMaxScore?: number | null;
   normalizedScore?: number | null;
   confidence?: number | null;
+  criterionStatus?: string | null;
+  evidenceQuality?: number | null;
+  extractionQuality?: number | null;
+  sourceCoverage?: number | null;
+  eliminatoryState?: string | null;
+  analysisMethods?: string[];
+  evidenceJson?: string | null;
   strengths?: string[];
   weaknesses?: string[];
   recommendations?: string[];
+}
+
+export interface EvidenceReference {
+  deliverableId?: number | null;
+  sourceType?: string | null;
+  source?: string | null;
+  page?: number | null;
+  path?: string | null;
+  contentHash?: string | null;
+  relevance?: number | null;
+  excerpt?: string | null;
 }
 
 export interface EvaluationResponse {
@@ -77,6 +95,17 @@ export interface EvaluationResponse {
   weaknesses?: string[];
   recommendations?: string[];
   errorMessage?: string | null;
+  trigger?: string | null;
+  correlationId?: string | null;
+  engineType?: string | null;
+  modelName?: string | null;
+  pipelineVersion?: string | null;
+  criteriaVersion?: string | null;
+  projectSnapshotHash?: string | null;
+  deliverableSnapshotHash?: string | null;
+  inputSnapshotHash?: string | null;
+  processingStatus?: string | null;
+  eligibilityStatus?: string | null;
 }
 
 export interface EvaluationValidationRequest {

@@ -30,8 +30,12 @@ describe('EvaluationChecklistComponent', () => {
     typeCritere: 'NOTE',
     mlScore: 4,
     mlMaxScore: 5,
-    normalizedScore: 80,
+    normalizedScore: 0.8,
     confidence: 0.82,
+    criterionStatus: 'SCORED',
+    evidenceQuality: 0.9,
+    analysisMethods: ['SEMANTIC_RETRIEVAL', 'DOCUMENT_STRUCTURE'],
+    evidenceJson: '[{"deliverableId":99,"sourceType":"PDF","source":"rapport.pdf","page":7,"relevance":0.91,"excerpt":"Architecture"}]',
     evidenceSummary: 'Architecture modulaire documentee',
     evidenceLivrableIds: [99],
     noteValue: 4,
@@ -78,6 +82,8 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.resultLabel(note)).toBe('4/5 - 80/100');
     expect(component.confidencePercent(note.confidence)).toBe(82);
     expect(component.evidenceLabel(note)).toContain('Livrables: #99');
+    expect(component.evidenceLabel(note)).toContain('PDF - page 7');
+    expect(component.criterionStatusLabel(note)).toBe('Score calcule');
     expect(component.hasCriterionDetails(note)).toBeTrue();
   });
 
@@ -92,6 +98,10 @@ describe('EvaluationChecklistComponent', () => {
   });
 
   it('should expose warning and success states for eligible incomplete and complete evaluations', () => {
+    component.evaluation = evaluation({ eligibilityStatus: 'REVIEW_REQUIRED' });
+    expect(component.statusLabel).toBe('Revue requise');
+    expect(component.statusClass).toBe('decision-badge--warning');
+
     component.evaluation = evaluation({
       resultats: [eliminatoireOk, note],
       evaluationComplete: false,
@@ -156,5 +166,32 @@ describe('EvaluationChecklistComponent', () => {
     };
 
     expect(component.resultLabel(dynamicNote)).toBe('7/10 - Bon');
+  });
+
+  it('should display insufficient evidence without a fabricated score', () => {
+    const insufficient: ResultatCritereResponse = {
+      id: 6,
+      critereId: 15,
+      critereLibelle: 'Securite',
+      typeCritere: 'NOTE',
+      criterionStatus: 'INSUFFICIENT_EVIDENCE',
+      normalizedScore: null,
+      confidence: 0.12,
+      ruleConfigured: false,
+    };
+
+    expect(component.resultLabel(insufficient)).toBe('Preuves insuffisantes');
+    expect(component.criterionStatusLabel(insufficient)).toBe('Preuves insuffisantes');
+    expect(component.evidenceReferences(insufficient)).toEqual([]);
+  });
+
+  it('should expose git repository path evidence without raw json', () => {
+    const gitResult: ResultatCritereResponse = {
+      ...note,
+      evidenceJson: '[{"sourceType":"GIT","source":"repository","path":"src/main/java/App.java","relevance":0.88,"excerpt":"class App"}]',
+    };
+
+    expect(component.evidenceReferences(gitResult)[0].path).toBe('src/main/java/App.java');
+    expect(component.evidenceLabel(gitResult)).toContain('GIT - src/main/java/App.java');
   });
 });

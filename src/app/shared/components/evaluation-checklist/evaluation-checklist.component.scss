@@ -164,6 +164,25 @@
   font-weight: 700;
 }
 
+.technical-details {
+  margin-top: 12px;
+  color: #4b5563;
+  font-size: 0.78rem;
+}
+
+.technical-details summary {
+  width: fit-content;
+  cursor: pointer;
+  color: #374151;
+  font-weight: 800;
+}
+
+.technical-details span {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
 .checklist-progress {
   height: 9px;
   margin-top: 12px;

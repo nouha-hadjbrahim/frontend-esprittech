@@ -146,8 +146,8 @@
           <strong>{{ confidencePercent(evalResult()!.mlGlobalConfidence) }}</strong>
         </article>
         <article class="metric">
-          <span>Modele</span>
-          <strong>{{ evalResult()!.mlModelVersion || '-' }}</strong>
+          <span>Traitement</span>
+          <strong>{{ evalResult()!.processingStatus || evalResult()!.mlStatus || '-' }}</strong>
         </article>
         <article class="metric">
           <span>Calcule le</span>
@@ -207,7 +207,7 @@
             <strong>{{ scoreFor(item) }} / 100</strong>
             <span>{{ item.dateCalcul | date:'yyyy-MM-dd HH:mm' }} - {{ validationStatusLabel(item.validationStatus) }}</span>
           </div>
-          <span>{{ item.mlModelVersion || 'Modele non renseigne' }}</span>
+          <span>{{ item.processingStatus || item.mlStatus || 'Statut non renseigne' }}</span>
         </article>
       </div>
     </section>

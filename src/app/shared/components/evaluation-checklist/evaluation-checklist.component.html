@@ -29,8 +29,9 @@
   </div>
 
   <div class="checklist-score">
-    <span *ngIf="evaluation.mlModelVersion">Modele : {{ evaluation.mlModelVersion }}</span>
     <span *ngIf="evaluation.mlStatus">Etat ML : {{ evaluation.mlStatus }}</span>
+    <span *ngIf="evaluation.processingStatus">Traitement : {{ evaluation.processingStatus }}</span>
+    <span *ngIf="evaluation.eligibilityStatus">Eligibilite : {{ statusLabel }}</span>
     <span *ngIf="evaluation.scoreCalculationCoverageMessage" class="coverage-message">
       {{ evaluation.scoreCalculationCoverageMessage }}
     </span>
@@ -44,6 +45,15 @@
     <div class="checklist-progress" aria-hidden="true">
       <div class="checklist-progress__bar" [class]="progressClass" [style.width.%]="scorePercent"></div>
     </div>
+    <details class="technical-details">
+      <summary>Details techniques</summary>
+      <span *ngIf="evaluation.engineType">Moteur : {{ evaluation.engineType }}</span>
+      <span *ngIf="evaluation.modelName">Modele : {{ evaluation.modelName }}</span>
+      <span *ngIf="evaluation.mlModelVersion">Version modele : {{ evaluation.mlModelVersion }}</span>
+      <span *ngIf="evaluation.pipelineVersion">Pipeline : {{ evaluation.pipelineVersion }}</span>
+      <span *ngIf="evaluation.criteriaVersion">Criteres : {{ evaluation.criteriaVersion }}</span>
+      <span *ngIf="evaluation.correlationId">Correlation : {{ evaluation.correlationId }}</span>
+    </details>
   </div>
 
   <div *ngIf="evaluation.errorMessage || evaluation.mlWarnings?.length" class="analysis-alerts">
@@ -90,9 +100,12 @@
         </div>
 
         <div *ngIf="hasCriterionDetails(resultat)" class="criterion-details">
+          <p *ngIf="criterionStatusLabel(resultat)">Etat : {{ criterionStatusLabel(resultat) }}</p>
           <p *ngIf="resultat.explanation">{{ resultat.explanation }}</p>
           <p *ngIf="evidenceLabel(resultat)" [class.checklist-evidence--danger]="isBlocking(resultat)">Preuve : {{ evidenceLabel(resultat) }}</p>
           <p *ngIf="confidencePercent(resultat.confidence) !== null">Confiance : {{ confidencePercent(resultat.confidence) }}%</p>
+          <p *ngIf="confidencePercent(resultat.evidenceQuality) !== null">Qualite preuve : {{ confidencePercent(resultat.evidenceQuality) }}%</p>
+          <p *ngIf="resultat.analysisMethods?.length">Methodes : {{ resultat.analysisMethods?.join(', ') }}</p>
           <p *ngIf="resultat.strengths?.length">Forces : {{ resultat.strengths?.join('; ') }}</p>
           <p *ngIf="resultat.weaknesses?.length">Faiblesses : {{ resultat.weaknesses?.join('; ') }}</p>
           <p *ngIf="resultat.recommendations?.length">Recommandations : {{ resultat.recommendations?.join('; ') }}</p>
@@ -124,9 +137,12 @@
         </div>
 
         <div *ngIf="hasCriterionDetails(resultat)" class="criterion-details">
+          <p *ngIf="criterionStatusLabel(resultat)">Etat : {{ criterionStatusLabel(resultat) }}</p>
           <p *ngIf="resultat.explanation">{{ resultat.explanation }}</p>
           <p *ngIf="evidenceLabel(resultat)">Preuve : {{ evidenceLabel(resultat) }}</p>
           <p *ngIf="confidencePercent(resultat.confidence) !== null">Confiance : {{ confidencePercent(resultat.confidence) }}%</p>
+          <p *ngIf="confidencePercent(resultat.evidenceQuality) !== null">Qualite preuve : {{ confidencePercent(resultat.evidenceQuality) }}%</p>
+          <p *ngIf="resultat.analysisMethods?.length">Methodes : {{ resultat.analysisMethods?.join(', ') }}</p>
           <p *ngIf="resultat.strengths?.length">Forces : {{ resultat.strengths?.join('; ') }}</p>
           <p *ngIf="resultat.weaknesses?.length">Faiblesses : {{ resultat.weaknesses?.join('; ') }}</p>
           <p *ngIf="resultat.recommendations?.length">Recommandations : {{ resultat.recommendations?.join('; ') }}</p>

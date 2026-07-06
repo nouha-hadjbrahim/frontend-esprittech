@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-import { EvaluationResponse, ResultatCritereResponse } from '../../../core/models/evaluation.model';
+import { EvaluationResponse, EvidenceReference, ResultatCritereResponse } from '../../../core/models/evaluation.model';
 
 @Component({
   selector: 'app-evaluation-checklist',
@@ -62,6 +62,16 @@ export class EvaluationChecklistComponent {
   }
 
   get statusLabel(): string {
+    switch (this.evaluation?.eligibilityStatus) {
+      case 'ELIGIBLE':
+        return 'GO - Eligible';
+      case 'REVIEW_REQUIRED':
+        return 'Revue requise';
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'Non eligible en l etat';
+      case 'NOT_EVALUABLE':
+        return 'Non evaluable';
+    }
     if (this.evaluation?.eligibleIndustrialisation && !this.evaluationComplete) {
       return 'Analyse necessaire';
     }
@@ -72,6 +82,12 @@ export class EvaluationChecklistComponent {
   }
 
   get statusClass(): string {
+    if (this.evaluation?.eligibilityStatus === 'NON_ELIGIBLE_EN_L_ETAT' || this.evaluation?.eligibilityStatus === 'NOT_EVALUABLE') {
+      return 'decision-badge--no';
+    }
+    if (this.evaluation?.eligibilityStatus === 'REVIEW_REQUIRED') {
+      return 'decision-badge--warning';
+    }
     if (!this.evaluation?.eligibleIndustrialisation) {
       return 'decision-badge--no';
     }
@@ -109,13 +125,22 @@ export class EvaluationChecklistComponent {
   }
 
   resultLabel(resultat: ResultatCritereResponse): string {
+    if (resultat.criterionStatus === 'INSUFFICIENT_EVIDENCE') {
+      return 'Preuves insuffisantes';
+    }
+    if (resultat.criterionStatus === 'INDETERMINATE' || resultat.eliminatoryState === 'INDETERMINATE') {
+      return 'Indetermine';
+    }
     if (resultat.typeCritere === 'ELIMINATOIRE') {
       return resultat.reponseEliminatoire ?? 'Non renseigne';
     }
     if (resultat.mlScore != null && resultat.mlMaxScore != null) {
       const score = this.formatNumber(resultat.mlScore);
       const max = this.formatNumber(resultat.mlMaxScore);
-      const normalized = resultat.normalizedScore != null ? ` - ${this.formatNumber(resultat.normalizedScore)}/100` : '';
+      const normalizedValue = resultat.normalizedScore != null
+        ? (resultat.normalizedScore <= 1 ? resultat.normalizedScore * 100 : resultat.normalizedScore)
+        : null;
+      const normalized = normalizedValue != null ? ` - ${this.formatNumber(normalizedValue)}/100` : '';
       return `${score}/${max}${normalized}`;
     }
     const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;
@@ -135,10 +160,14 @@ export class EvaluationChecklistComponent {
   }
 
   evidenceLabel(resultat: ResultatCritereResponse): string {
+    const references = this.evidenceReferences(resultat)
+      .map((reference) => this.evidenceReferenceLabel(reference))
+      .filter(Boolean);
     const ids = resultat.evidenceLivrableIds?.length
       ? ` Livrables: ${resultat.evidenceLivrableIds.map((id) => `#${id}`).join(', ')}.`
       : '';
-    return `${resultat.evidenceSummary ?? ''}${ids}`.trim();
+    const locations = references.length ? ` Sources: ${references.join('; ')}.` : '';
+    return `${resultat.evidenceSummary ?? ''}${ids}${locations}`.trim();
   }
 
   hasCriterionDetails(resultat: ResultatCritereResponse): boolean {
@@ -146,6 +175,9 @@ export class EvaluationChecklistComponent {
       resultat.explanation
       || resultat.evidenceSummary
       || resultat.evidenceLivrableIds?.length
+      || this.evidenceReferences(resultat).length
+      || resultat.criterionStatus
+      || resultat.analysisMethods?.length
       || resultat.strengths?.length
       || resultat.weaknesses?.length
       || resultat.recommendations?.length
@@ -154,5 +186,56 @@ export class EvaluationChecklistComponent {
 
   private formatNumber(value: number): string {
     return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  }
+
+  evidenceReferences(resultat: ResultatCritereResponse): EvidenceReference[] {
+    if (!resultat.evidenceJson) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(resultat.evidenceJson);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed
+        .filter((item) => item && typeof item === 'object')
+        .map((item) => ({
+          deliverableId: typeof item.deliverableId === 'number' ? item.deliverableId : null,
+          sourceType: typeof item.sourceType === 'string' ? item.sourceType : null,
+          source: typeof item.source === 'string' ? item.source : null,
+          page: typeof item.page === 'number' ? item.page : null,
+          path: typeof item.path === 'string' ? item.path : null,
+          contentHash: typeof item.contentHash === 'string' ? item.contentHash : null,
+          relevance: typeof item.relevance === 'number' ? item.relevance : null,
+          excerpt: typeof item.excerpt === 'string' ? item.excerpt : null,
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  evidenceReferenceLabel(reference: EvidenceReference): string {
+    const sourceType = reference.sourceType || 'Source';
+    const location = reference.path
+      ? reference.path
+      : (reference.page ? `page ${reference.page}` : (reference.deliverableId ? `livrable #${reference.deliverableId}` : ''));
+    return `${sourceType}${location ? ` - ${location}` : ''}`;
+  }
+
+  criterionStatusLabel(resultat: ResultatCritereResponse): string | null {
+    switch (resultat.criterionStatus) {
+      case 'SCORED':
+        return 'Score calcule';
+      case 'INSUFFICIENT_EVIDENCE':
+        return 'Preuves insuffisantes';
+      case 'INDETERMINATE':
+        return 'Indetermine';
+      case 'OK':
+        return 'OK';
+      case 'NOT_OK':
+        return 'NOT_OK';
+      default:
+        return resultat.criterionStatus ?? null;
+    }
   }
 }
