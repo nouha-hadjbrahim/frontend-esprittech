@@ -192,4 +192,21 @@ describe('SujetDetail industrialisation warnings', () => {
       .find((button) => button.textContent?.includes('Soumettre a la CI'));
     expect(submitButton?.disabled).toBeFalse();
   });
+
+  it('should not show a success banner when recalculation returns a non-evaluable evaluation', () => {
+    evaluationService.calculateScore.and.returnValue(of({
+      scoreFinal: null,
+      eligibleIndustrialisation: false,
+      hasEliminatoryWarnings: false,
+      processingStatus: 'FAILED_PERMANENT',
+      eligibilityStatus: 'NOT_EVALUABLE',
+      commentaire: 'Evaluation impossible avec les informations disponibles.',
+    } as never));
+
+    component.sujet = sujet;
+    component.recalculateScore();
+
+    expect(component.evaluationMessage).toBe('');
+    expect(component.evaluationError).toContain('Evaluation impossible');
+  });
 });

@@ -1,7 +1,7 @@
 <section class="evaluation-checklist">
   <header class="evaluation-checklist__header">
     <div>
-      <h3>Evaluation ML - contenu des livrables</h3>
+      <h3>Évaluation ML - contenu des livrables</h3>
       <p *ngIf="projectTitle">{{ projectTitle }}</p>
     </div>
     <span class="decision-badge" [ngClass]="statusClass">
@@ -11,12 +11,16 @@
 
   <div class="score-overview">
     <article>
-      <span>Score ML</span>
-      <strong>{{ mlScore }} / 100</strong>
+      <span>Score ML proposé</span>
+      <strong>{{ mlScoreLabel }}</strong>
     </article>
     <article>
-      <span>Score valide</span>
-      <strong>{{ displayScore }} / 100</strong>
+      <span>Score officiel provisoire</span>
+      <strong>{{ officialScoreLabel }}</strong>
+    </article>
+    <article>
+      <span>Score validé</span>
+      <strong>{{ validatedScoreLabel }}</strong>
     </article>
     <article>
       <span>Validation</span>
@@ -29,86 +33,105 @@
   </div>
 
   <div class="checklist-score">
-    <span *ngIf="evaluation.mlStatus">Etat ML : {{ evaluation.mlStatus }}</span>
+    <span *ngIf="evaluation.mlStatus">État ML : {{ evaluation.mlStatus }}</span>
     <span *ngIf="evaluation.processingStatus">Traitement : {{ evaluation.processingStatus }}</span>
-    <span *ngIf="evaluation.eligibilityStatus">Eligibilite : {{ statusLabel }}</span>
+    <span *ngIf="evaluation.eligibilityStatus">Éligibilité : {{ statusLabel }}</span>
     <span *ngIf="evaluation.scoreCalculationCoverageMessage" class="coverage-message">
       {{ evaluation.scoreCalculationCoverageMessage }}
     </span>
-    <span *ngIf="!evaluationComplete" class="coverage-warning">Analyse incomplete</span>
+    <span *ngIf="!evaluationComplete" class="coverage-warning">Analyse incomplète</span>
     <span *ngIf="hasBlockingCriteria" class="blocking-message">
-      Alerte : au moins un critere eliminatoire est NOT_OK.
+      Alerte : au moins un critère éliminatoire est NOT_OK.
     </span>
     <span *ngIf="blockingCriteriaNames.length" class="blocking-list">
-      Critere(s) avec alerte : {{ blockingCriteriaNames.join(', ') }}
+      Critère(s) avec alerte : {{ blockingCriteriaNames.join(', ') }}
     </span>
     <div class="checklist-progress" aria-hidden="true">
       <div class="checklist-progress__bar" [class]="progressClass" [style.width.%]="scorePercent"></div>
     </div>
     <details class="technical-details">
-      <summary>Details techniques</summary>
+      <summary>Détails techniques</summary>
       <span *ngIf="evaluation.engineType">Moteur : {{ evaluation.engineType }}</span>
-      <span *ngIf="evaluation.modelName">Modele : {{ evaluation.modelName }}</span>
-      <span *ngIf="evaluation.mlModelVersion">Version modele : {{ evaluation.mlModelVersion }}</span>
+      <span *ngIf="modelDisplayName">Modèle : {{ modelDisplayName }}</span>
+      <span *ngIf="evaluation.mlModelVersion">Version modèle : {{ evaluation.mlModelVersion }}</span>
       <span *ngIf="evaluation.pipelineVersion">Pipeline : {{ evaluation.pipelineVersion }}</span>
-      <span *ngIf="evaluation.criteriaVersion">Criteres : {{ evaluation.criteriaVersion }}</span>
-      <span *ngIf="evaluation.correlationId">Correlation : {{ evaluation.correlationId }}</span>
+      <span *ngIf="evaluation.criteriaVersion">Critères : {{ evaluation.criteriaVersion }}</span>
+      <span *ngIf="evaluation.correlationId">Corrélation : {{ evaluation.correlationId }}</span>
     </details>
   </div>
 
+  <section *ngIf="incompleteCriteria.length" class="analysis-alerts">
+    <h4>Configuration incomplète</h4>
+    <article *ngFor="let issue of incompleteCriteria">
+      <strong>{{ issue.criterionName }}</strong>
+      <p>Type : {{ issue.criterionType }} · Version : {{ issue.configurationVersion || '-' }}</p>
+      <p>Champs obligatoires manquants : {{ issue.blockingMissingFields.join(', ') || '-' }}</p>
+      <p>Conséquence : {{ issue.consequence || 'Non évalué' }}</p>
+    </article>
+  </section>
+
   <div *ngIf="evaluation.errorMessage || evaluation.mlWarnings?.length" class="analysis-alerts">
-    <p *ngIf="evaluation.errorMessage">{{ evaluation.errorMessage }}</p>
-    <p *ngFor="let warning of evaluation.mlWarnings">{{ warning }}</p>
+    <p *ngIf="evaluation.errorMessage">{{ localizedMessage(evaluation.errorMessage) }}</p>
+    <p *ngFor="let warning of evaluation.mlWarnings">{{ localizedMessage(warning) }}</p>
   </div>
 
-  <div *ngIf="evaluation.strengths?.length || evaluation.weaknesses?.length || evaluation.recommendations?.length" class="checklist-insights">
-    <section *ngIf="evaluation.strengths?.length">
+  <div *ngIf="uniqueStrengths.length || uniqueWeaknesses.length || uniqueRecommendations.length" class="checklist-insights">
+    <section *ngIf="uniqueStrengths.length">
       <h4>Forces</h4>
-      <p *ngFor="let item of evaluation.strengths">{{ item }}</p>
+      <p *ngFor="let item of uniqueStrengths">{{ item }}</p>
     </section>
-    <section *ngIf="evaluation.weaknesses?.length">
+    <section *ngIf="uniqueWeaknesses.length">
       <h4>Faiblesses</h4>
-      <p *ngFor="let item of evaluation.weaknesses">{{ item }}</p>
+      <p *ngFor="let item of uniqueWeaknesses">{{ item }}</p>
     </section>
-    <section *ngIf="evaluation.recommendations?.length">
+    <section *ngIf="uniqueRecommendations.length">
       <h4>Recommandations</h4>
-      <p *ngFor="let item of evaluation.recommendations">{{ item }}</p>
+      <p *ngFor="let item of uniqueRecommendations">{{ item }}</p>
     </section>
   </div>
 
   <div class="checklist-columns">
     <section class="checklist-column">
       <div class="checklist-column__title">
-        <h4>Criteres eliminatoires</h4>
-        <span>{{ eliminatoiresOk }}/{{ eliminatoires.length }} satisfaits</span>
+        <h4>Critères éliminatoires</h4>
+        <span>{{ eliminatoiresOk }} satisfaits · {{ eliminatoiresNotOk }} non satisfaits · {{ eliminatoiresIndetermines }} à vérifier</span>
       </div>
 
-      <div *ngIf="eliminatoires.length === 0" class="checklist-empty">Aucun critere eliminatoire.</div>
+      <div *ngIf="eliminatoires.length === 0" class="checklist-empty">Aucun critère éliminatoire.</div>
 
       <article *ngFor="let resultat of eliminatoires" class="checklist-row">
         <div class="checklist-row__main">
           <div>
-            <strong>{{ resultat.critereLibelle || 'Critere sans libelle' }}</strong>
-            <span>{{ resultat.critereDomaine || resultat.critereDescription || 'Domaine non renseigne' }}</span>
+            <strong>{{ resultat.critereLibelle || 'Critère sans libellé' }}</strong>
+            <span>{{ resultat.critereDomaine || resultat.critereDescription || 'Domaine non renseigné' }}</span>
           </div>
           <span class="result-badge"
             [class.result-badge--ok]="resultat.reponseEliminatoire === 'OK'"
             [class.result-badge--ko]="resultat.reponseEliminatoire === 'NOT_OK'"
             [class.result-badge--warning]="resultat.ruleConfigured === false">
-            {{ resultat.ruleConfigured === false ? 'Analyse incomplete' : resultLabel(resultat) }}
+            {{ resultat.ruleConfigured === false ? 'Analyse incomplète' : resultLabel(resultat) }}
           </span>
         </div>
 
         <div *ngIf="hasCriterionDetails(resultat)" class="criterion-details">
-          <p *ngIf="criterionStatusLabel(resultat)">Etat : {{ criterionStatusLabel(resultat) }}</p>
-          <p *ngIf="resultat.explanation">{{ resultat.explanation }}</p>
+          <p *ngIf="criterionStatusLabel(resultat)">État : {{ criterionStatusLabel(resultat) }}</p>
+          <p *ngIf="criterionExplanation(resultat)">{{ criterionExplanation(resultat) }}</p>
           <p *ngIf="evidenceLabel(resultat)" [class.checklist-evidence--danger]="isBlocking(resultat)">Preuve : {{ evidenceLabel(resultat) }}</p>
+          <div *ngIf="evidenceReferences(resultat).length" class="evidence-list">
+            <article *ngFor="let reference of evidenceReferences(resultat)" class="evidence-item">
+              <span class="evidence-badge" [ngClass]="stanceClass(reference)">{{ stanceLabel(reference) }}</span>
+              <strong>{{ evidenceReferenceLabel(reference) }}</strong>
+              <span>Pertinence projet : {{ projectRelevanceLabel(reference) }}</span>
+              <span *ngIf="relevancePercent(reference) !== null">Pertinence calibrée : {{ relevancePercent(reference) }}%</span>
+              <p *ngIf="reference.excerpt">"{{ reference.excerpt }}"</p>
+            </article>
+          </div>
           <p *ngIf="confidencePercent(resultat.confidence) !== null">Confiance : {{ confidencePercent(resultat.confidence) }}%</p>
-          <p *ngIf="confidencePercent(resultat.evidenceQuality) !== null">Qualite preuve : {{ confidencePercent(resultat.evidenceQuality) }}%</p>
-          <p *ngIf="resultat.analysisMethods?.length">Methodes : {{ resultat.analysisMethods?.join(', ') }}</p>
-          <p *ngIf="resultat.strengths?.length">Forces : {{ resultat.strengths?.join('; ') }}</p>
-          <p *ngIf="resultat.weaknesses?.length">Faiblesses : {{ resultat.weaknesses?.join('; ') }}</p>
-          <p *ngIf="resultat.recommendations?.length">Recommandations : {{ resultat.recommendations?.join('; ') }}</p>
+          <p *ngIf="confidencePercent(resultat.evidenceQuality) !== null">Qualité preuve : {{ confidencePercent(resultat.evidenceQuality) }}%</p>
+          <p *ngIf="resultat.analysisMethods?.length">Méthodes : {{ resultat.analysisMethods?.join(', ') }}</p>
+          <p *ngIf="resultat.strengths?.length">Forces : {{ localizedMessages(resultat.strengths) }}</p>
+          <p *ngIf="resultat.weaknesses?.length">Faiblesses : {{ localizedMessages(resultat.weaknesses) }}</p>
+          <p *ngIf="resultat.recommendations?.length">Recommandations : {{ localizedMessages(resultat.recommendations) }}</p>
         </div>
         <p *ngIf="resultat.commentaire" class="checklist-comment" [class.checklist-comment--danger]="isBlocking(resultat)">{{ resultat.commentaire }}</p>
       </article>
@@ -116,36 +139,45 @@
 
     <section class="checklist-column">
       <div class="checklist-column__title">
-        <h4>Criteres notes</h4>
-        <span>{{ notes.length }} critere(s)</span>
+        <h4>Critères notés</h4>
+        <span>{{ notes.length }} critère(s)</span>
       </div>
 
-      <div *ngIf="notes.length === 0" class="checklist-empty">Aucun critere note.</div>
+      <div *ngIf="notes.length === 0" class="checklist-empty">Aucun critère noté.</div>
 
       <article *ngFor="let resultat of notes" class="checklist-row">
         <div class="checklist-row__main">
           <div>
-            <strong>{{ resultat.critereLibelle || 'Critere sans libelle' }}</strong>
+            <strong>{{ resultat.critereLibelle || 'Critère sans libellé' }}</strong>
             <span>
-              {{ resultat.critereDomaine || resultat.critereDescription || 'Domaine non renseigne' }}
+              {{ resultat.critereDomaine || resultat.critereDescription || 'Domaine non renseigné' }}
               <ng-container *ngIf="resultat.poids"> - Poids {{ resultat.poids }}</ng-container>
             </span>
           </div>
           <span class="result-badge result-badge--note" [class.result-badge--warning]="resultat.ruleConfigured === false">
-            {{ resultat.ruleConfigured === false ? 'Analyse incomplete' : resultLabel(resultat) }}
+            {{ resultat.ruleConfigured === false ? 'Analyse incomplète' : resultLabel(resultat) }}
           </span>
         </div>
 
         <div *ngIf="hasCriterionDetails(resultat)" class="criterion-details">
-          <p *ngIf="criterionStatusLabel(resultat)">Etat : {{ criterionStatusLabel(resultat) }}</p>
-          <p *ngIf="resultat.explanation">{{ resultat.explanation }}</p>
+          <p *ngIf="criterionStatusLabel(resultat)">État : {{ criterionStatusLabel(resultat) }}</p>
+          <p *ngIf="criterionExplanation(resultat)">{{ criterionExplanation(resultat) }}</p>
           <p *ngIf="evidenceLabel(resultat)">Preuve : {{ evidenceLabel(resultat) }}</p>
+          <div *ngIf="evidenceReferences(resultat).length" class="evidence-list">
+            <article *ngFor="let reference of evidenceReferences(resultat)" class="evidence-item">
+              <span class="evidence-badge" [ngClass]="stanceClass(reference)">{{ stanceLabel(reference) }}</span>
+              <strong>{{ evidenceReferenceLabel(reference) }}</strong>
+              <span>Pertinence projet : {{ projectRelevanceLabel(reference) }}</span>
+              <span *ngIf="relevancePercent(reference) !== null">Pertinence calibrée : {{ relevancePercent(reference) }}%</span>
+              <p *ngIf="reference.excerpt">"{{ reference.excerpt }}"</p>
+            </article>
+          </div>
           <p *ngIf="confidencePercent(resultat.confidence) !== null">Confiance : {{ confidencePercent(resultat.confidence) }}%</p>
-          <p *ngIf="confidencePercent(resultat.evidenceQuality) !== null">Qualite preuve : {{ confidencePercent(resultat.evidenceQuality) }}%</p>
-          <p *ngIf="resultat.analysisMethods?.length">Methodes : {{ resultat.analysisMethods?.join(', ') }}</p>
-          <p *ngIf="resultat.strengths?.length">Forces : {{ resultat.strengths?.join('; ') }}</p>
-          <p *ngIf="resultat.weaknesses?.length">Faiblesses : {{ resultat.weaknesses?.join('; ') }}</p>
-          <p *ngIf="resultat.recommendations?.length">Recommandations : {{ resultat.recommendations?.join('; ') }}</p>
+          <p *ngIf="confidencePercent(resultat.evidenceQuality) !== null">Qualité preuve : {{ confidencePercent(resultat.evidenceQuality) }}%</p>
+          <p *ngIf="resultat.analysisMethods?.length">Méthodes : {{ resultat.analysisMethods?.join(', ') }}</p>
+          <p *ngIf="resultat.strengths?.length">Forces : {{ localizedMessages(resultat.strengths) }}</p>
+          <p *ngIf="resultat.weaknesses?.length">Faiblesses : {{ localizedMessages(resultat.weaknesses) }}</p>
+          <p *ngIf="resultat.recommendations?.length">Recommandations : {{ localizedMessages(resultat.recommendations) }}</p>
         </div>
         <p *ngIf="resultat.commentaire" class="checklist-comment">{{ resultat.commentaire }}</p>
       </article>

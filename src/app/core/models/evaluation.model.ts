@@ -7,6 +7,7 @@ export interface ProjetEvaluable {
   scoreFinal?: number | null;
   eligibleIndustrialisation?: boolean;
   bloqueParEliminatoire?: boolean;
+  latestEvaluation?: EvaluationResponse | null;
 }
 
 export interface ResultatCritereResponse {
@@ -47,7 +48,18 @@ export interface ResultatCritereResponse {
   recommendations?: string[];
 }
 
+export interface CriterionConfigurationIssueResponse {
+  criterionId: number;
+  criterionName: string;
+  criterionType: 'ELIMINATOIRE' | 'NOTE' | string;
+  blockingMissingFields: string[];
+  nonBlockingMissingFields: string[];
+  configurationVersion?: string | null;
+  consequence?: string | null;
+}
+
 export interface EvidenceReference {
+  evidenceId?: string | null;
   deliverableId?: number | null;
   sourceType?: string | null;
   source?: string | null;
@@ -55,13 +67,28 @@ export interface EvidenceReference {
   path?: string | null;
   contentHash?: string | null;
   relevance?: number | null;
+  rawSemanticSimilarity?: number | null;
+  calibratedRelevance?: number | null;
+  projectRelevanceScore?: number | null;
+  rankingMargin?: number | null;
+  stance?: 'SUPPORTS' | 'CONTRADICTS' | 'NEUTRAL' | 'INSUFFICIENT' | string | null;
+  projectRelevanceType?: string | null;
+  stanceConfidence?: number | null;
+  sourceAuthority?: number | null;
+  contradictionStrength?: number | null;
+  evidenceQuality?: number | null;
+  extractionQuality?: number | null;
+  documentCategory?: string | null;
+  documentCategoryConfidence?: number | null;
+  documentCategoryReasonCodes?: string[];
+  evidenceNature?: 'SEMANTIC' | 'DETERMINISTIC' | 'STRUCTURED_REPORT' | string | null;
   excerpt?: string | null;
 }
 
 export interface EvaluationResponse {
   id: number;
   sujetProjetId: number;
-  scoreFinal: number;
+  scoreFinal: number | null;
   eligibleIndustrialisation: boolean;
   bloqueParEliminatoire: boolean;
   hasEliminatoryWarnings?: boolean | null;
@@ -78,6 +105,11 @@ export interface EvaluationResponse {
   totalCriteresEliminatoires?: number | null;
   criteresEliminatoiresSatisfaits?: number | null;
   criteresEliminatoiresNonConfigures?: number | null;
+  criteresEliminatoiresNonSatisfaits?: number | null;
+  criteresEliminatoiresIndetermines?: number | null;
+  criteresEliminatoiresConfigurationIncomplete?: number | null;
+  incompleteCriteriaCount?: number | null;
+  incompleteCriteria?: CriterionConfigurationIssueResponse[];
   evaluationComplete?: boolean | null;
   scoreCalculationCoverageMessage?: string | null;
   blockingCriteriaNames?: string[];

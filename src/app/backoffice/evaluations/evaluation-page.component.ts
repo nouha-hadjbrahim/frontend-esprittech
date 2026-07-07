@@ -146,7 +146,11 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
           this.selectedProject = project;
           this.setCurrentEvaluation(evaluation);
           this.loadEvaluationHistory(project.id);
-          this.startCooldown(project.id);
+          if (this.isBusinessSuccess(evaluation)) {
+            this.startCooldown(project.id);
+          } else {
+            this.evalError.set(this.businessStatusMessage(evaluation));
+          }
           this.savingProjectId.set(null);
         },
         error: (error) => {
@@ -248,15 +252,62 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
     if (!evaluation) {
       return null;
     }
-    return evaluation.finalValidatedScore ?? evaluation.scoreFinal ?? null;
+    if (evaluation.finalValidatedScore != null) {
+      return evaluation.finalValidatedScore;
+    }
+    if (this.isEvaluationUncalculated(evaluation)) {
+      return null;
+    }
+    return evaluation.scoreFinal ?? null;
+  }
+
+  scoreLabelFor(evaluation: EvaluationResponse | null): string {
+    const score = this.scoreFor(evaluation);
+    return score == null ? 'Non calculé' : `${score} / 100`;
+  }
+
+  scoreTitleFor(evaluation: EvaluationResponse | null): string {
+    if (!evaluation || this.isEvaluationUncalculated(evaluation)) {
+      return 'Score non calculé';
+    }
+    if (['VALIDATED', 'OVERRIDDEN'].includes(evaluation.validationStatus ?? '') && evaluation.finalValidatedScore != null) {
+      return 'Score final validé';
+    }
+    if (evaluation.mlStatus === 'PARTIAL_ANALYSIS' || evaluation.processingStatus === 'PARTIAL_ANALYSIS') {
+      return 'Score provisoire';
+    }
+    return 'Score officiel provisoire';
+  }
+
+  mlScoreLabelFor(evaluation: EvaluationResponse | null): string {
+    if (!evaluation || this.isEvaluationUncalculated(evaluation)) {
+      return 'Non calculé';
+    }
+    const score = evaluation.mlScore ?? evaluation.scoreFinal ?? null;
+    return score == null ? 'Non calculé' : `${score} / 100`;
+  }
+
+  eligibilityLabelFor(evaluation: EvaluationResponse | null): string {
+    switch (evaluation?.eligibilityStatus) {
+      case 'ELIGIBLE':
+        return 'Éligible';
+      case 'REVIEW_REQUIRED':
+        return 'Revue requise';
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'Non éligible en l’état';
+      case 'NOT_EVALUABLE':
+        return 'Non évaluable';
+      default:
+        return evaluation?.eligibleIndustrialisation ? 'Éligible' : 'Non éligible';
+    }
   }
 
   validationStatusLabel(status: string | null | undefined): string {
     switch (status) {
       case 'VALIDATED':
-        return 'Validee';
+        return 'Validée';
       case 'REJECTED':
-        return 'Rejetee';
+        return 'Rejetée';
       case 'OVERRIDDEN':
         return 'Override admin';
       case 'PENDING':
@@ -316,6 +367,7 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
               scoreFinal: this.scoreFor(evaluation),
               eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
               bloqueParEliminatoire: evaluation.bloqueParEliminatoire,
+              latestEvaluation: evaluation,
             }
           : project
       )
@@ -326,8 +378,43 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
         scoreFinal: this.scoreFor(evaluation),
         eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
         bloqueParEliminatoire: evaluation.bloqueParEliminatoire,
+        latestEvaluation: evaluation,
       };
     }
+  }
+
+  projectScoreLabel(project: ProjetEvaluable): string {
+    if (project.latestEvaluation) {
+      return this.scoreLabelFor(project.latestEvaluation);
+    }
+    return project.scoreFinal == null ? 'Non calculé' : `${project.scoreFinal} / 100`;
+  }
+
+  projectEligibilityLabel(project: ProjetEvaluable): string {
+    if (project.latestEvaluation) {
+      return this.eligibilityLabelFor(project.latestEvaluation);
+    }
+    if (project.eligibleIndustrialisation == null) {
+      return 'En attente';
+    }
+    return project.eligibleIndustrialisation ? 'Éligible' : 'Non éligible';
+  }
+
+  projectEligibilityClass(project: ProjetEvaluable): string {
+    const status = project.latestEvaluation?.eligibilityStatus;
+    if (status === 'ELIGIBLE') {
+      return 'badge-success';
+    }
+    if (status === 'REVIEW_REQUIRED') {
+      return 'badge-secondary';
+    }
+    if (status === 'NON_ELIGIBLE_EN_L_ETAT' || status === 'NOT_EVALUABLE') {
+      return 'badge-danger';
+    }
+    if (project.eligibleIndustrialisation == null) {
+      return 'badge-secondary';
+    }
+    return project.eligibleIndustrialisation ? 'badge-success' : 'badge-danger';
   }
 
   private normalize(value: unknown): string {
@@ -336,6 +423,30 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .trim();
+  }
+
+  private isEvaluationUncalculated(evaluation: EvaluationResponse): boolean {
+    return ['FAILED_RETRYABLE', 'FAILED_PERMANENT', 'MODEL_UNAVAILABLE', 'NOT_EVALUABLE_NO_DELIVERABLE']
+      .includes(evaluation.mlStatus ?? evaluation.processingStatus ?? '');
+  }
+
+  private isBusinessSuccess(evaluation: EvaluationResponse): boolean {
+    return ['COMPLETED', 'COMPLETED_WITH_WARNINGS', 'PARTIAL_ANALYSIS']
+      .includes(evaluation.mlStatus ?? evaluation.processingStatus ?? '');
+  }
+
+  private businessStatusMessage(evaluation: EvaluationResponse): string {
+    const status = evaluation.mlStatus ?? evaluation.processingStatus;
+    if (status === 'FAILED_PERMANENT' && (evaluation.incompleteCriteriaCount ?? 0) > 0) {
+      return 'L’évaluation n’a pas pu être effectuée car la configuration des critères est incomplète.';
+    }
+    if (status === 'MODEL_UNAVAILABLE') {
+      return 'Le modèle ML n’est pas disponible.';
+    }
+    if (status === 'FAILED_RETRYABLE') {
+      return 'L’évaluation est temporairement indisponible. Veuillez réessayer.';
+    }
+    return 'L’évaluation n’a pas pu être effectuée.';
   }
 
   private extractError(error: any, fallback: string): string {
