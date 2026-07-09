@@ -8,7 +8,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize } from 'rxjs';
 
 import { EquipeService } from '../../core/services/equipe.service';
+import { AffiliationService } from '../../core/services/affiliation.service';
 import { CreateEquipePayload, Equipe } from '../../core/models/equipe.model';
+import { AffiliationEnseignantResponse } from '../../core/models/affiliation-request.model';
 
 import { ButtonComponent } from '../../ui/button/button.component';
 import { BadgeComponent } from '../../ui/badge/badge.component';
@@ -35,15 +37,27 @@ import { DialogueConfirmationComponent } from '../../ui/dialogue-confirmation/di
   styleUrls: ['./equipes-recherche.component.css'],
 })
 export class EquipesRechercheComponent implements OnInit {
-  private readonly svc    = inject(EquipeService);
-  private readonly dialog = inject(MatDialog);
-  private readonly snack  = inject(MatSnackBar);
+  private readonly svc        = inject(EquipeService);
+  private readonly affSvc    = inject(AffiliationService);
+  private readonly dialog    = inject(MatDialog);
+  private readonly snack     = inject(MatSnackBar);
 
-  readonly equipes    = signal<Equipe[]>([]);
-  filtered: Equipe[]  = [];
+  readonly equipes           = signal<Equipe[]>([]);
+  readonly affiliations      = signal<AffiliationEnseignantResponse[]>([]);
+  filtered: Equipe[]         = [];
   query   = '';
   vue: 'grille' | 'liste' = 'grille';
   chargement = true;
+
+  readonly pendingCountByEquipeId = computed(() => {
+    const map = new Map<number, number>();
+    for (const r of this.affiliations()) {
+      if (r.statut === 'EN_ATTENTE') {
+        map.set(r.equipeId, (map.get(r.equipeId) ?? 0) + 1);
+      }
+    }
+    return map;
+  });
 
   readonly nbActives  = computed(() => this.equipes().filter((e) => e.statut === 'Actif').length);
   readonly totalMembres = computed(() => this.equipes().reduce((a, b) => a + b.nbMembres, 0));
@@ -66,7 +80,13 @@ export class EquipesRechercheComponent implements OnInit {
   charger() {
     this.chargement = true;
     this.svc.getAll().pipe(finalize(() => (this.chargement = false))).subscribe({
-      next: (data) => { this.equipes.set(data); this.appliquerFiltre(); },
+      next: (data) => {
+        this.equipes.set(data);
+        this.appliquerFiltre();
+        this.affSvc.getAll().subscribe({
+          next: (affs) => this.affiliations.set(affs),
+        });
+      },
       error: () => this.toast('Erreur lors du chargement des équipes'),
     });
   }

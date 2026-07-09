@@ -104,6 +104,22 @@
     width: 100%;
 }
 
+.nav-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #E23E3E;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .dropdown-item__icon {
     flex-shrink: 0;
     color: #E23E3E;

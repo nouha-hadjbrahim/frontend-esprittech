@@ -167,13 +167,46 @@
       <div class="evaluation-grid">
         <div class="summary-card">
           <span class="summary-card__label">Score final</span>
-          <span class="summary-card__value">{{ evaluation.scoreFinal }} / 100</span>
+          <span class="summary-card__value">
+            @if (evaluation.scoreFinal != null) {
+              {{ evaluation.scoreFinal }} / 100
+            } @else {
+              Non calculé
+            }
+          </span>
         </div>
 
         <div class="summary-card">
           <span class="summary-card__label">Éligibilité</span>
           <span class="summary-card__value">
-            {{ evaluation.eligibleIndustrialisation ? (evaluation.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}
+            @switch (evaluation.eligibilityStatus) {
+              @case ('ELIGIBLE') {
+                Éligible
+              }
+              @case ('REVIEW_REQUIRED') {
+                Revue requise
+              }
+              @case ('NON_ELIGIBLE') {
+                Non éligible
+              }
+              @case ('NON_ELIGIBLE_EN_L_ETAT') {
+                Non éligible en l’état
+              }
+              @case ('NOT_EVALUABLE') {
+                Non évaluable
+              }
+              @default {
+                @if (evaluation.eligibleIndustrialisation === true) {
+                  Éligible
+                } @else if (evaluation.scoreFinal != null && !evaluation.hasEliminatoryWarnings) {
+                  Revue requise
+                } @else if (evaluation.eligibleIndustrialisation === false) {
+                  Non éligible
+                } @else {
+                  Non calculé
+                }
+              }
+            }
           </span>
         </div>
 
@@ -511,8 +544,31 @@
             <div>
               <h2 class="detail-panel__title">Demande d'industrialisation</h2>
               <p class="detail-panel__text">
-                Score: {{ sujet.scoreFinal ?? 'non calcule' }} / 100 -
-                {{ sujet.eligibleIndustrialisation ? (sujet.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}
+                Score :
+                @if ((evaluation?.scoreFinal ?? sujet.scoreFinal) != null) {
+                  {{ evaluation?.scoreFinal ?? sujet.scoreFinal }} / 100
+                } @else {
+                  non calculé
+                }
+                -
+                @switch (evaluation?.eligibilityStatus) {
+                  @case ('ELIGIBLE') { Éligible }
+                  @case ('REVIEW_REQUIRED') { Revue requise }
+                  @case ('NON_ELIGIBLE') { Non éligible }
+                  @case ('NON_ELIGIBLE_EN_L_ETAT') { Non éligible en l’état }
+                  @case ('NOT_EVALUABLE') { Non évaluable }
+                  @default {
+                    @if (sujet.eligibleIndustrialisation === true) {
+                      Éligible
+                    } @else if ((evaluation?.scoreFinal ?? sujet.scoreFinal) != null && !sujet.hasEliminatoryWarnings) {
+                      Revue requise
+                    } @else if (sujet.eligibleIndustrialisation === false) {
+                      Non éligible
+                    } @else {
+                      Non calculé
+                    }
+                  }
+                }
               </p>
             </div>
             @if (canRequestIndustrialisation) {
@@ -529,6 +585,18 @@
     }
   }
 </div>
+
+<app-confirm-dialog
+  [isOpen]="terminaisonConfirmOpen"
+  title="Terminer le sujet"
+  [message]="terminaisonConfirmMessage"
+  confirmLabel="Terminer sujet"
+  cancelLabel="Annuler"
+  [loading]="terminaisonLoading"
+  [errorMessage]="terminaisonError"
+  (confirmed)="confirmerTerminaison()"
+  (cancelled)="annulerTerminaison()"
+></app-confirm-dialog>
 
 @if (industrialisationOpen) {
   <div class="modal-backdrop" (click)="closeIndustrialisation()">
@@ -588,11 +656,36 @@
           </div>
           <div>
             <span>Score</span>
-            <strong>{{ sujet?.scoreFinal ?? evaluation?.scoreFinal ?? 'non calcule' }} / 100</strong>
+            <strong>
+              @if ((evaluation?.scoreFinal ?? sujet?.scoreFinal) != null) {
+                {{ evaluation?.scoreFinal ?? sujet?.scoreFinal }} / 100
+              } @else {
+                non calculé
+              }
+            </strong>
           </div>
           <div>
-            <span>Eligibilite</span>
-            <strong>{{ sujet?.eligibleIndustrialisation ? (sujet?.hasEliminatoryWarnings ? 'Eligible avec alertes' : 'Eligible') : 'Non eligible' }}</strong>
+            <span>Éligibilité</span>
+            <strong>
+              @switch (evaluation?.eligibilityStatus) {
+                @case ('ELIGIBLE') { Éligible }
+                @case ('REVIEW_REQUIRED') { Revue requise }
+                @case ('NON_ELIGIBLE') { Non éligible }
+                @case ('NON_ELIGIBLE_EN_L_ETAT') { Non éligible en l’état }
+                @case ('NOT_EVALUABLE') { Non évaluable }
+                @default {
+                  @if (sujet?.eligibleIndustrialisation === true) {
+                    Éligible
+                  } @else if ((evaluation?.scoreFinal ?? sujet?.scoreFinal) != null && !sujet?.hasEliminatoryWarnings) {
+                    Revue requise
+                  } @else if (sujet?.eligibleIndustrialisation === false) {
+                    Non éligible
+                  } @else {
+                    Non calculé
+                  }
+                }
+              }
+            </strong>
           </div>
           <div>
             <span>Livrables</span>

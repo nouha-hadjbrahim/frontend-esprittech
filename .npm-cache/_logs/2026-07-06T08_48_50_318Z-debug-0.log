@@ -1,0 +1,17 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.8.2
+2 info using node@v20.20.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:D:\ESPRIT\4eme\Stage_Ingénieur_ete\Projet1_CatalaogueIndustrialisation\DEV\FrontendAngular\industrialisationprojet_frontend\.npmrc
+5 silly config load:file:D:\ESPRIT\4eme\Stage_Ingénieur_ete\Projet1_CatalaogueIndustrialisation\DEV\FrontendAngular\industrialisationprojet_frontend\.appdata\npm\etc\npmrc
+6 verbose title npm run test:ci
+7 verbose argv "run" "test:ci"
+8 verbose logfile logs-max:10 dir:D:\ESPRIT\4eme\Stage_Ingénieur_ete\Projet1_CatalaogueIndustrialisation\DEV\FrontendAngular\industrialisationprojet_frontend\.npm-cache\_logs\2026-07-06T08_48_50_318Z-
+9 verbose logfile D:\ESPRIT\4eme\Stage_Ingénieur_ete\Projet1_CatalaogueIndustrialisation\DEV\FrontendAngular\industrialisationprojet_frontend\.npm-cache\_logs\2026-07-06T08_48_50_318Z-debug-0.log
+10 silly logfile done cleaning log files
+11 verbose cwd D:\ESPRIT\4eme\Stage_Ingénieur_ete\Projet1_CatalaogueIndustrialisation\DEV\FrontendAngular\industrialisationprojet_frontend
+12 verbose os Windows_NT 10.0.19045
+13 verbose node v20.20.0
+14 verbose npm  v10.8.2
+15 verbose exit 1
+16 verbose code 1

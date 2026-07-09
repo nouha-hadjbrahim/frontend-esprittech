@@ -4,6 +4,7 @@ export enum ReponseEliminatoire {
 }
 
 export type ModeEvaluation =
+  | 'CONTENT_ANALYSIS'
   | 'LIVRABLE_TYPE_PRESENT'
   | 'LIVRABLE_LINK_PRESENT'
   | 'LIVRABLE_FILE_PRESENT'
@@ -14,39 +15,8 @@ export type ModeEvaluation =
   | 'MANUAL_ADMIN_VALUE';
 
 export const MODE_EVALUATION_OPTIONS: { value: ModeEvaluation; label: string }[] = [
-  { value: 'DOCUMENTATION_PRESENT', label: 'Documentation presente' },
-  { value: 'GIT_LINK_PRESENT', label: 'Lien Git disponible' },
-  { value: 'LIVRABLE_TYPE_PRESENT', label: 'Type de livrable present' },
-  { value: 'LIVRABLE_LINK_PRESENT', label: 'Lien externe present' },
-  { value: 'LIVRABLE_FILE_PRESENT', label: 'Fichier present' },
-  { value: 'LIVRABLE_COUNT_MIN', label: 'Nombre minimum de livrables' },
-  { value: 'KEYWORD_IN_LIVRABLE_NAME_OR_DESCRIPTION', label: 'Mot-cle dans livrable' },
+  { value: 'CONTENT_ANALYSIS', label: 'Analyse du contenu des livrables' },
   { value: 'MANUAL_ADMIN_VALUE', label: 'Valeur manuelle admin' },
-];
-
-export type RuleOperator =
-  | 'EXISTS'
-  | 'NOT_EXISTS'
-  | 'EQUALS'
-  | 'NOT_EQUALS'
-  | 'CONTAINS'
-  | 'GTE'
-  | 'LTE'
-  | 'BETWEEN'
-  | 'COUNT_GTE'
-  | 'COUNT_LTE';
-
-export const RULE_OPERATOR_OPTIONS: { value: RuleOperator; label: string }[] = [
-  { value: 'EXISTS', label: 'Existe' },
-  { value: 'NOT_EXISTS', label: "N'existe pas" },
-  { value: 'EQUALS', label: 'Egal' },
-  { value: 'NOT_EQUALS', label: 'Different' },
-  { value: 'CONTAINS', label: 'Contient' },
-  { value: 'GTE', label: 'Superieur ou egal' },
-  { value: 'LTE', label: 'Inferieur ou egal' },
-  { value: 'BETWEEN', label: 'Entre' },
-  { value: 'COUNT_GTE', label: 'Nombre >=' },
-  { value: 'COUNT_LTE', label: 'Nombre <=' },
 ];
 
 export interface NoteLevel {
@@ -119,37 +89,6 @@ export interface CritereNoteRequest extends CritereEvaluationRuleFields {
   seuil?: number;
   defaultNoteValue?: number | null;
   actif?: boolean;
-}
-
-export interface CritereNoteRule {
-  id: number;
-  critereNoteId: number;
-  ruleName: string;
-  description: string | null;
-  metadataKey: string;
-  operator: RuleOperator;
-  expectedValue: string | null;
-  minValue: number | null;
-  maxValue: number | null;
-  noteValue: number;
-  noteLabel: string | null;
-  priority: number;
-  active: boolean;
-  dateCreation: string;
-  dateMiseAJour: string;
-}
-
-export interface CritereNoteRuleRequest {
-  ruleName: string;
-  description?: string | null;
-  metadataKey: string;
-  operator: RuleOperator;
-  expectedValue?: string | null;
-  minValue?: number | null;
-  maxValue?: number | null;
-  noteValue: number;
-  priority: number;
-  active?: boolean;
 }
 
 export interface OrdreCritereRequest {

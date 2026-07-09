@@ -65,49 +65,4 @@ describe('CritereNoteService', () => {
     reorderReq.flush(null);
   });
 
-  it('should call the expected endpoints for scored criterion metadata rules', () => {
-    service.findRules(7).subscribe();
-    const listReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/7/rules`);
-    expect(listReq.request.method).toBe('GET');
-    listReq.flush([]);
-
-    const ruleRequest = {
-      ruleName: 'Git present',
-      metadataKey: 'hasGitLink',
-      operator: 'EQUALS',
-      expectedValue: 'true',
-      minValue: null,
-      maxValue: null,
-      noteValue: 5,
-      priority: 1,
-      active: true,
-    };
-
-    service.createRule(7, ruleRequest as never).subscribe();
-    const createReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/7/rules`);
-    expect(createReq.request.method).toBe('POST');
-    expect(createReq.request.body).toEqual(ruleRequest);
-    createReq.flush({ id: 3 });
-
-    service.updateRule(3, ruleRequest as never).subscribe();
-    const updateReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/rules/3`);
-    expect(updateReq.request.method).toBe('PUT');
-    expect(updateReq.request.body).toEqual(ruleRequest);
-    updateReq.flush({ id: 3 });
-
-    service.deleteRule(3).subscribe();
-    const deleteReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/rules/3`);
-    expect(deleteReq.request.method).toBe('DELETE');
-    deleteReq.flush(null);
-
-    service.activateRule(3).subscribe();
-    const activateReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/rules/3/activer`);
-    expect(activateReq.request.method).toBe('PATCH');
-    activateReq.flush(null);
-
-    service.deactivateRule(3).subscribe();
-    const deactivateReq = http.expectOne(`${environment.apiUrl}/admin/criteres/notes/rules/3/desactiver`);
-    expect(deactivateReq.request.method).toBe('PATCH');
-    deactivateReq.flush(null);
-  });
 });

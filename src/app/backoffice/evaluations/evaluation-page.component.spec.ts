@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { EvaluationResponse, ProjetEvaluable } from '../../core/models/evaluation.model';
+import { AuthService } from '../../core/services/auth.service';
 import { EvaluationService } from '../../core/services/evaluation.service';
 import { ProjetEvaluableService } from '../../core/services/projet-evaluable.service';
 import { EvaluationPageComponent } from './evaluation-page.component';
@@ -10,6 +11,7 @@ describe('EvaluationPageComponent', () => {
   let component: EvaluationPageComponent;
   let projetService: jasmine.SpyObj<ProjetEvaluableService>;
   let evaluationService: jasmine.SpyObj<EvaluationService>;
+  let authService: jasmine.SpyObj<AuthService>;
 
   const projects: ProjetEvaluable[] = [
     {
@@ -49,15 +51,35 @@ describe('EvaluationPageComponent', () => {
     calculatedBy: 'ROLE_ADMIN Admin Root',
     recalculationReason: 'Recalcul manuel',
     resultats: [],
+    mlStatus: 'COMPLETED',
+    mlModelVersion: '2.0.0',
+    pipelineVersion: 'multimodal-semantic-v2',
+    mlGlobalConfidence: 0.8,
+    mlScore: 67,
+    finalValidatedScore: null,
+    validationStatus: 'PENDING',
   };
 
   beforeEach(() => {
     projetService = jasmine.createSpyObj<ProjetEvaluableService>('ProjetEvaluableService', ['getEvaluables']);
-    evaluationService = jasmine.createSpyObj<EvaluationService>('EvaluationService', ['calculateScore', 'getLatestEvaluation']);
+    evaluationService = jasmine.createSpyObj<EvaluationService>('EvaluationService', [
+      'calculateScore',
+      'getLatestEvaluation',
+      'getEvaluationHistory',
+      'validateEvaluation',
+      'rejectEvaluation',
+      'overrideEvaluation',
+    ]);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['getRole']);
 
     projetService.getEvaluables.and.returnValue(of(projects));
     evaluationService.calculateScore.and.returnValue(of(evaluation));
     evaluationService.getLatestEvaluation.and.returnValue(of(evaluation));
+    evaluationService.getEvaluationHistory.and.returnValue(of([evaluation]));
+    evaluationService.validateEvaluation.and.returnValue(of({ ...evaluation, validationStatus: 'VALIDATED', finalValidatedScore: 67 }));
+    evaluationService.rejectEvaluation.and.returnValue(of({ ...evaluation, validationStatus: 'REJECTED' }));
+    evaluationService.overrideEvaluation.and.returnValue(of({ ...evaluation, validationStatus: 'OVERRIDDEN', finalValidatedScore: 91 }));
+    authService.getRole.and.returnValue('ROLE_ADMIN');
 
     TestBed.configureTestingModule({
       imports: [EvaluationPageComponent],
@@ -65,6 +87,7 @@ describe('EvaluationPageComponent', () => {
         provideRouter([]),
         { provide: ProjetEvaluableService, useValue: projetService },
         { provide: EvaluationService, useValue: evaluationService },
+        { provide: AuthService, useValue: authService },
       ],
     });
 
@@ -122,8 +145,15 @@ describe('EvaluationPageComponent', () => {
   it('should select a project and clear the evaluation when latest retrieval fails', () => {
     component.selectProject(projects[0]);
     expect(evaluationService.getLatestEvaluation).toHaveBeenCalledWith(1);
-    expect(component.selectedProject).toBe(projects[0]);
+    expect(evaluationService.getEvaluationHistory).toHaveBeenCalledWith(1);
+    expect(component.selectedProject).toEqual(jasmine.objectContaining({
+      id: 1,
+      scoreFinal: 67,
+      eligibleIndustrialisation: false,
+      bloqueParEliminatoire: true,
+    }));
     expect(component.evalResult()).toBe(evaluation);
+    expect(component.evalHistory()).toEqual([evaluation]);
 
     component.evalResult.set(evaluation);
     evaluationService.getLatestEvaluation.and.returnValue(throwError(() => new Error('boom')));
@@ -138,19 +168,56 @@ it('should calculate score, update the matching row and leave other rows untouch
   component.calculate(projects[0]);
 
   expect(evaluationService.calculateScore).toHaveBeenCalledWith(1);
+  expect(evaluationService.getEvaluationHistory).toHaveBeenCalledWith(1);
   expect(component.evalResult()).toBe(evaluation);
-  expect(component.selectedProject).toBe(projects[0]);
+  expect(component.selectedProject).toEqual(jasmine.objectContaining({
+    id: 1,
+    scoreFinal: 67,
+    eligibleIndustrialisation: false,
+    bloqueParEliminatoire: true,
+  }));
   expect(component.savingProjectId()).toBeNull();
 
   expect(component.projects()[0]).toEqual(jasmine.objectContaining({
     id: 1,
     scoreFinal: 67,
     eligibleIndustrialisation: false,
-    bloqueParEliminatoire: false,
+    bloqueParEliminatoire: true,
   }));
 
-  expect(component.projects()[1]).toBe(projects[1]);
+    expect(component.projects()[1]).toBe(projects[1]);
 });
+  it('should label failed evaluations as non calculated and expose current eligibility', () => {
+    const failed = {
+      ...evaluation,
+      scoreFinal: 0,
+      mlScore: null,
+      mlStatus: 'FAILED_RETRYABLE',
+      eligibilityStatus: 'REVIEW_REQUIRED',
+      finalValidatedScore: null,
+    } as EvaluationResponse;
+
+    expect(component.scoreFor(failed)).toBeNull();
+    expect(component.scoreLabelFor(failed)).toBe('Non calculé');
+    expect(component.scoreTitleFor(failed)).toBe('Score non calculé');
+    expect(component.mlScoreLabelFor(failed)).toBe('Non calculé');
+    expect(component.eligibilityLabelFor(failed)).toBe('Revue requise');
+  });
+
+  it('should label partial pending analysis as provisional', () => {
+    const partial = {
+      ...evaluation,
+      mlStatus: 'PARTIAL_ANALYSIS',
+      eligibilityStatus: 'REVIEW_REQUIRED',
+      validationStatus: 'PENDING',
+      finalValidatedScore: null,
+    } as EvaluationResponse;
+
+    expect(component.scoreTitleFor(partial)).toBe('Score provisoire');
+    expect(component.scoreLabelFor(partial)).toBe('67 / 100');
+    expect(component.eligibilityLabelFor(partial)).toBe('Revue requise');
+  });
+
   it('should expose calculation errors with backend detail and fallback text', () => {
     evaluationService.calculateScore.and.returnValue(throwError(() => ({ error: { detail: 'Score indisponible' } })));
 
@@ -163,6 +230,32 @@ it('should calculate score, update the matching row and leave other rows untouch
     component.calculate(projects[0]);
 
     expect(component.evalError()).toBe('Erreur lors du calcul du score.');
+  });
+
+  it('should validate, reject and override the selected evaluation according to role', () => {
+    component.selectedProject = projects[0];
+    component.evalResult.set(evaluation);
+    component.updateValidationComment('reviewed');
+
+    component.validateSelectedEvaluation();
+    expect(evaluationService.validateEvaluation).toHaveBeenCalledWith(1, 'reviewed');
+    expect(component.evalResult()?.validationStatus).toBe('VALIDATED');
+
+    component.rejectSelectedEvaluation();
+    expect(evaluationService.rejectEvaluation).toHaveBeenCalledWith(1, '');
+    expect(component.evalResult()?.validationStatus).toBe('REJECTED');
+
+    component.updateOverrideScore('91');
+    component.updateOverrideReason('admin correction');
+    component.overrideSelectedEvaluation();
+    expect(evaluationService.overrideEvaluation).toHaveBeenCalledWith(1, 91, 'admin correction');
+    expect(component.evalResult()?.finalValidatedScore).toBe(91);
+    expect(component.canValidateEvaluation()).toBeTrue();
+    expect(component.canOverrideEvaluation()).toBeTrue();
+
+    authService.getRole.and.returnValue('ROLE_ENSEIGNANT');
+    expect(component.canValidateEvaluation()).toBeFalse();
+    expect(component.canOverrideEvaluation()).toBeFalse();
   });
 
   it('should format status labels and complete destroy lifecycle', () => {

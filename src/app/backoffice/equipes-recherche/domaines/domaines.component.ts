@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { EquipeDomaineService } from '../../../core/services/equipe-domaine.service';
 import { EquipeDomaine } from '../../../core/models/equipe-domaine.model';
@@ -16,6 +17,7 @@ import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm
 })
 export class DomainesComponent implements OnInit {
   private readonly domaineSvc = inject(EquipeDomaineService);
+  private readonly snack = inject(MatSnackBar);
   private readonly destroy$   = new Subject<void>();
 
   domainItems: EquipeDomaine[] = [];
@@ -100,10 +102,12 @@ export class DomainesComponent implements OnInit {
         this.closeDomainModal();
         this.loadDomainesCount();
         this.loadDomaines();
+        this.toast(this.editingDomaine ? 'Domaine mis à jour' : 'Domaine créé', 'succes');
       },
       error: (err) => {
         this.domainSaving = false;
         this.domainModalError = err?.error?.detail ?? err?.error?.message ?? 'Erreur lors de l\'enregistrement.';
+        this.toast('Erreur lors de l\'enregistrement du domaine');
       },
     });
   }
@@ -133,6 +137,7 @@ export class DomainesComponent implements OnInit {
           this.domainsPage--;
         }
         this.loadDomaines();
+        this.toast('Domaine supprimé', 'succes');
       },
       error: () => {
         this.domainDeleting = false;
@@ -140,6 +145,7 @@ export class DomainesComponent implements OnInit {
         this.deleteDomaineAlertMessage = 'Impossible de supprimer ce domaine.';
         this.deleteDomaineAlertOpen = true;
         this.domaineToDelete = null;
+        this.toast('Erreur lors de la suppression du domaine');
       },
     });
   }
@@ -188,7 +194,15 @@ export class DomainesComponent implements OnInit {
       error: () => {
         this.domainsLoading = false;
         this.domainsLoadError = 'Impossible de charger les données. Vérifiez que le backend est démarré.';
+        this.toast('Erreur lors du chargement des domaines');
       },
+    });
+  }
+
+  private toast(msg: string, type: 'succes' | 'erreur' = 'erreur') {
+    this.snack.open(msg, '✕', {
+      duration: 3500,
+      panelClass: type === 'succes' ? ['snack-success'] : ['snack-error'],
     });
   }
 }

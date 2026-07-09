@@ -4,7 +4,6 @@ import { of, throwError } from 'rxjs';
 import {
   CritereEliminatoire,
   CritereNote,
-  CritereNoteRule,
   NoteLevel,
   ReponseEliminatoire,
 } from '../../core/models/critere.model';
@@ -60,26 +59,6 @@ describe('AdminCriteresPageComponent', () => {
       expectedKeyword: null,
       noteMaxAuto: null,
       ruleDescription: null,
-    },
-  ];
-
-  const rules: CritereNoteRule[] = [
-    {
-      id: 8,
-      critereNoteId: 1,
-      ruleName: 'PDF present',
-      description: 'PDF detecte',
-      metadataKey: 'fileExtensions',
-      operator: 'CONTAINS',
-      expectedValue: 'pdf',
-      minValue: null,
-      maxValue: null,
-      noteValue: 4,
-      noteLabel: 'Satisfait',
-      priority: 1,
-      active: true,
-      dateCreation: '2026-01-01T00:00:00Z',
-      dateMiseAJour: '2026-01-02T00:00:00Z',
     },
   ];
 
@@ -151,12 +130,6 @@ describe('AdminCriteresPageComponent', () => {
       'delete',
       'deactivate',
       'activate',
-      'findRules',
-      'createRule',
-      'updateRule',
-      'deleteRule',
-      'activateRule',
-      'deactivateRule',
     ]);
     noteLevelService = jasmine.createSpyObj<NoteLevelService>('NoteLevelService', [
       'findAll',
@@ -179,13 +152,6 @@ describe('AdminCriteresPageComponent', () => {
     noteService.delete.and.returnValue(of(void 0));
     noteService.deactivate.and.returnValue(of(void 0));
     noteService.activate.and.returnValue(of(void 0));
-    noteService.findRules.and.returnValue(of(rules));
-    noteService.createRule.and.returnValue(of(rules[0]));
-    noteService.updateRule.and.returnValue(of(rules[0]));
-    noteService.deleteRule.and.returnValue(of(void 0));
-    noteService.activateRule.and.returnValue(of(void 0));
-    noteService.deactivateRule.and.returnValue(of(void 0));
-
     noteLevelService.findAll.and.returnValue(of(levels));
     noteLevelService.create.and.returnValue(of(levels[0]));
     noteLevelService.update.and.returnValue(of(levels[0]));
@@ -207,14 +173,12 @@ describe('AdminCriteresPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should load criteria, note levels and rules on init', () => {
+  it('should load criteria and note levels on init', () => {
     expect(eliminatoireService.findAll).toHaveBeenCalled();
     expect(noteService.findAll).toHaveBeenCalled();
-    expect(noteService.findRules).toHaveBeenCalledWith(1);
     expect(noteLevelService.findAll).toHaveBeenCalled();
     expect(component.visibleEliminatoires[0].id).toBe(2);
     expect(component.visibleNotes[0].id).toBe(1);
-    expect(component.rulesFor(1)).toEqual(rules);
     expect(component.noteLabel(4)).toBe('4 - Satisfait');
   });
 
@@ -286,27 +250,6 @@ describe('AdminCriteresPageComponent', () => {
 
     expect(component.warningMessage()).toBe('Ce critère est déjà utilisé dans des évaluations. Vous pouvez le désactiver au lieu de le supprimer.');
     expect(component.errorMessage()).toBeNull();
-  });
-
-  it('should manage metadata rules for scored criteria', () => {
-    component.openRuleModal(notes[0]);
-    component.ruleForm.patchValue({ ruleName: 'Git present', metadataKey: 'hasGitLink', operator: 'EQUALS', expectedValue: 'true', noteValue: 5 });
-    component.saveRule();
-    expect(noteService.createRule).toHaveBeenCalledWith(1, jasmine.objectContaining({ noteValue: 5 }));
-
-    component.openRuleModal(notes[0], rules[0]);
-    component.ruleForm.patchValue({ ruleName: 'PDF modifie', noteValue: 3 });
-    component.saveRule();
-    expect(noteService.updateRule).toHaveBeenCalledWith(8, jasmine.objectContaining({ ruleName: 'PDF modifie', noteValue: 3 }));
-
-    component.deleteRule(rules[0]);
-    expect(noteService.deleteRule).toHaveBeenCalledWith(8);
-
-    component.toggleRule(rules[0]);
-    expect(noteService.deactivateRule).toHaveBeenCalledWith(8);
-
-    component.toggleRule({ ...rules[0], active: false });
-    expect(noteService.activateRule).toHaveBeenCalledWith(8);
   });
 
   it('should manage note levels', () => {
@@ -426,12 +369,6 @@ describe('AdminCriteresPageComponent', () => {
     expect(component.warningMessage()).toBe('Le libelle est obligatoire.');
     expect(component.errorMessage()).toBeNull();
 
-    component.openRuleModal(notes[0]);
-    component.ruleForm.controls['ruleName'].setValue('');
-    component.saveRule();
-    expect(component.warningMessage()).toBe('Regle invalide.');
-    expect(component.errorMessage()).toBeNull();
-
     component.openNoteLevelModal();
     component.noteLevelForm.controls['label'].setValue('');
     component.saveNoteLevel();
@@ -441,11 +378,6 @@ describe('AdminCriteresPageComponent', () => {
     eliminatoireService.findAll.and.returnValue(throwError(() => new Error('boom')));
     component['loadCriteres']();
     expect(component.errorEliminatoires()).toBe('boom');
-
-    noteService.findRules.and.returnValue(throwError(() => new Error('boom')));
-    noteService.findAll.and.returnValue(of(notes));
-    component['loadCriteres']();
-    expect(component.errorMessage()).toBe('boom');
 
     noteLevelService.create.and.returnValue(throwError(() => new Error('boom')));
     component.openNoteLevelModal();

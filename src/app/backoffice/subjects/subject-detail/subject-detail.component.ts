@@ -32,6 +32,20 @@ export class SubjectDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+
+    if (!Number.isFinite(id) || id <= 0) {
+      this.loadError = 'Identifiant du sujet invalide.';
+      this.isLoading = false;
+      return;
+    }
+
+    this.loadSujet(id);
+  }
+
+  private loadSujet(id: number): void {
+    this.isLoading = true;
+    this.loadError = '';
+
     this.adminService.getSujetById(id).subscribe({
       next: (sujet) => {
         this.sujet = sujet;
@@ -56,13 +70,46 @@ export class SubjectDetailComponent implements OnInit {
     return this.sujet ? (STATUT_LABELS[this.sujet.statut]?.label ?? this.sujet.statut) : '';
   }
 
+  get scoreFinalLabel(): string {
+    return this.formatScore(this.currentScoreFinal());
+  }
+
+  get eligibilityLabel(): string {
+    return this.displayEligibilityStatus();
+  }
+
+  get eligibilityClass(): string {
+    const status = this.currentEligibilityStatus();
+
+    if (status === 'ELIGIBLE') {
+      return 'eligibility-pill--eligible';
+    }
+
+    if (status === 'REVIEW_REQUIRED') {
+      return 'eligibility-pill--review';
+    }
+
+    if (status === 'NON_ELIGIBLE' || status === 'NON_ELIGIBLE_EN_L_ETAT' || status === 'NOT_EVALUABLE') {
+      return 'eligibility-pill--not-eligible';
+    }
+
+    return 'eligibility-pill--unknown';
+  }
+
   getStatutClass(statut: SujetProjet['statut']): string {
     return MES_SUJETS_STATUT_STYLES[statut]?.listClass ?? 'badge--neutral';
   }
 
   getObjectifLines(): string[] {
-    if (!this.sujet) return [];
-    const lines = this.sujet.objectifs.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (!this.sujet?.objectifs) {
+      return [];
+    }
+
+    const lines = this.sujet.objectifs
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+
     return lines.length > 0 ? lines : [this.sujet.objectifs];
   }
 
@@ -70,9 +117,96 @@ export class SubjectDetailComponent implements OnInit {
     return this.techColorClasses[index % this.techColorClasses.length];
   }
 
-  formatDate(iso: string | null): string {
-    if (!iso) return '—';
+  formatDate(iso: string | null | undefined): string {
+    if (!iso) {
+      return '—';
+    }
     return iso.substring(0, 10);
+  }
+
+  formatScore(score: number | null | undefined): string {
+    if (score === null || score === undefined || Number.isNaN(Number(score))) {
+      return 'Non calculé';
+    }
+
+    return `${Number(score).toFixed(2)} / 100`;
+  }
+
+  displayEligibilityStatus(): string {
+    const status = this.currentEligibilityStatus();
+
+    switch (status) {
+      case 'ELIGIBLE':
+        return 'Éligible';
+
+      case 'REVIEW_REQUIRED':
+        return 'Revue requise';
+
+      case 'NON_ELIGIBLE':
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'Non éligible';
+
+      case 'NOT_EVALUABLE':
+        return 'Non évaluable';
+
+      default:
+        return 'Non calculé';
+    }
+  }
+
+  private currentEvaluationSource(): Record<string, unknown> | null {
+    if (!this.sujet) {
+      return null;
+    }
+
+    const sujetAny = this.sujet as unknown as Record<string, unknown>;
+
+    return (
+      (sujetAny['latestEvaluation'] as Record<string, unknown> | undefined) ??
+      (sujetAny['evaluation'] as Record<string, unknown> | undefined) ??
+      (sujetAny['lastEvaluation'] as Record<string, unknown> | undefined) ??
+      sujetAny
+    );
+  }
+
+  private currentScoreFinal(): number | null {
+    const source = this.currentEvaluationSource();
+    const score = source?.['scoreFinal'] ?? source?.['mlScore'] ?? source?.['scoreFinalEvaluation'];
+
+    return typeof score === 'number' ? score : score != null && !Number.isNaN(Number(score)) ? Number(score) : null;
+  }
+
+  private currentEligibilityStatus(): string {
+    const source = this.currentEvaluationSource();
+    const rawStatus = String(source?.['eligibilityStatus'] ?? '').trim().toUpperCase();
+
+    if (rawStatus) {
+      return rawStatus;
+    }
+
+    const eligibleIndustrialisation = source?.['eligibleIndustrialisation'];
+    const scoreFinal = this.currentScoreFinal();
+
+    const hasBlockingEliminatory =
+      source?.['bloqueParEliminatoire'] === true ||
+      source?.['hasEliminatoryWarnings'] === true ||
+      Number(source?.['eliminatoryWarningsCount'] ?? 0) > 0;
+
+    if (hasBlockingEliminatory) {
+      return 'NON_ELIGIBLE';
+    }
+
+    if (eligibleIndustrialisation === true) {
+      return 'ELIGIBLE';
+    }
+
+    // Important: in the ML workflow, eligibleIndustrialisation=false can simply mean
+    // REVIEW_REQUIRED when the score is calculated but execution/security evidence is missing.
+    if (scoreFinal !== null) {
+      return 'REVIEW_REQUIRED';
+    }
+
+    return '';
   }
 
   openEditModal(): void {
@@ -85,10 +219,11 @@ export class SubjectDetailComponent implements OnInit {
 
   onEditSaved(): void {
     this.closeEditModal();
-    if (!this.sujet) return;
-    this.adminService.getSujetById(this.sujet.id).subscribe({
-      next: (sujet) => (this.sujet = sujet),
-    });
+    if (!this.sujet) {
+      return;
+    }
+
+    this.loadSujet(this.sujet.id);
   }
 
   openDeleteConfirm(): void {
@@ -101,7 +236,9 @@ export class SubjectDetailComponent implements OnInit {
   }
 
   confirmDelete(): void {
-    if (!this.sujet) return;
+    if (!this.sujet) {
+      return;
+    }
 
     this.deleting = true;
     this.adminService.deleteSujet(this.sujet.id).subscribe({
