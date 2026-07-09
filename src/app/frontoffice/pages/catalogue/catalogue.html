@@ -91,24 +91,16 @@
     <div class="catalogue__grid">
       @for (projet of filtered; track projet.id) {
         <div class="projet-card">
-          @if (projet.coverImage) {
-            <div class="projet-card__cover">
+          <div class="projet-card__cover">
+            @if (projet.coverImage) {
               <img [src]="projet.coverImage" [alt]="'Couverture de ' + projet.titre" loading="lazy" />
+            }
+            <span class="badge projet-card__cover-type" [class]="typeLabels[projet.typeProjet].cssClass">
+              {{ typeLabels[projet.typeProjet].label }}
+            </span>
+            <div class="score-note" [title]="'Score : ' + projet.score">
+              <span class="score-note__value">{{ projet.score }}</span><span class="score-note__max">/100</span>
             </div>
-          }
-          <div class="projet-card__top">
-            <div class="projet-card__badges">
-              <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">
-                {{ typeLabels[projet.typeProjet].label }}
-              </span>
-              <span class="badge" [class]="statutLabels[projet.statut].cssClass">
-                {{ statutLabels[projet.statut].label }}
-              </span>
-              @if (estLabellise(projet.statut)) {
-                <span class="badge badge--label">Labellisé</span>
-              }
-            </div>
-            <div class="score-circle" [title]="'Score : ' + projet.score">{{ projet.score }}</div>
           </div>
 
           <h3 class="projet-card__title">{{ projet.titre }}</h3>

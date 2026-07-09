@@ -44,17 +44,11 @@ describe('ProjetDetailCatalogue', () => {
 
   afterEach(() => httpTesting.verify());
 
-  /** Après le chargement du projet, le composant charge aussi ses livrables. */
-  function flushLivrables(id: string = '1'): void {
-    httpTesting.expectOne(`${API}/projets-catalogue/${id}/livrables`).flush([]);
-  }
-
   it('should create and load project', () => {
     createComponent();
     fixture.detectChanges();
     const req = httpTesting.expectOne(`${API}/catalogue/1`);
     req.flush(mockDetails);
-    flushLivrables();
     expect(component.projet).toBeTruthy();
     expect(component.projet!.score).toBe(85);
     expect(component.isLoading).toBe(false);
@@ -76,42 +70,10 @@ describe('ProjetDetailCatalogue', () => {
     expect(component.isLoading).toBe(false);
   });
 
-  it('has 4 tabs without candidatures or commentaires', () => {
+  it('derives the porteur initial from encadrantNom', () => {
     createComponent();
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/catalogue/1`).flush(mockDetails);
-    flushLivrables();
-    expect(component.tabs.length).toBe(4);
-    expect(component.tabs[0].id).toBe('infos');
-    const tabIds: string[] = component.tabs.map((t) => t.id);
-    expect(tabIds).not.toContain('candidatures');
-    expect(tabIds).not.toContain('commentaires');
-  });
-
-  it('activeTabLabel returns correct label', () => {
-    createComponent();
-    fixture.detectChanges();
-    httpTesting.expectOne(`${API}/catalogue/1`).flush(mockDetails);
-    flushLivrables();
-    expect(component.activeTabLabel).toBe('Informations');
-    component.setTab('livrables');
-    expect(component.activeTabLabel).toBe('Livrables');
-  });
-
-  it('setTab changes active tab', () => {
-    createComponent();
-    fixture.detectChanges();
-    httpTesting.expectOne(`${API}/catalogue/1`).flush(mockDetails);
-    flushLivrables();
-    component.setTab('livrables');
-    expect(component.activeTab).toBe('livrables');
-  });
-
-  it('default active tab is infos', () => {
-    createComponent();
-    fixture.detectChanges();
-    httpTesting.expectOne(`${API}/catalogue/1`).flush(mockDetails);
-    flushLivrables();
-    expect(component.activeTab).toBe('infos');
+    expect(component.encadrantInitiale).toBe('J');
   });
 });
