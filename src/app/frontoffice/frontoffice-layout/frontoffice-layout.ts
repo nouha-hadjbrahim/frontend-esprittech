@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 
-type NavIcon = 'layers' | 'document';
+type NavIcon = 'layers' | 'document' | 'validation';
 
 interface NavLink {
   label: string;
@@ -88,7 +88,7 @@ export class FrontofficeLayout {
       children: [
         { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' as NavIcon },
         { label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' as NavIcon },
-        { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
+        { label: 'Validation des sujets', path: '/frontoffice/validation-sujets', icon: 'validation' as NavIcon },
       ],
     };
   }

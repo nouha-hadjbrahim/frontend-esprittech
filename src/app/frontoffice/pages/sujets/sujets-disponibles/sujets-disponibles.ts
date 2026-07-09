@@ -40,7 +40,9 @@ export class SujetsDisponibles implements OnInit {
   selectedSujet: SujetProjet | null = null;
   mesCandidaturesSujetIds: Set<number> = new Set();
 
-  readonly isEnseignant = computed(() => this.authService.getRole() === 'ROLE_ENSEIGNANT');
+  readonly canDeposerSujet = computed(
+    () => this.authService.getRole() === 'ROLE_ENSEIGNANT' || this.authService.getRole() === 'ROLE_CHEF_EQUIPE',
+  );
   readonly isEtudiant = computed(() => this.authService.getRole() === 'ROLE_ETUDIANT');
 
   readonly categoriePills = [{ value: '', label: 'Tous' }, ...CATEGORIE_OPTIONS];

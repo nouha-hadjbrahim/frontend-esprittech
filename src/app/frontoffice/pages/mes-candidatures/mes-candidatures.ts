@@ -65,7 +65,7 @@ export class MesCandidatures implements OnInit {
 
     this.candidatureService.getMesCandidatures().subscribe({
       next: (candidatures) => {
-        this.candidatures = candidatures;
+        this.candidatures = candidatures.filter((c) => c.statut !== 'ARCHIVEE');
         this.applyFilters();
         this.isLoading = false;
       },
@@ -141,11 +141,17 @@ export class MesCandidatures implements OnInit {
   }
 
   getStatutLabel(statut: StatutCandidature): string {
-    return STATUT_CANDIDATURE_LABELS[statut]?.label ?? statut;
+    if (statut === 'ARCHIVEE') {
+      return '';
+    }
+    return STATUT_CANDIDATURE_LABELS[statut as keyof typeof STATUT_CANDIDATURE_LABELS]?.label ?? statut;
   }
 
   getStatutClass(statut: StatutCandidature): string {
-    return STATUT_CANDIDATURE_LABELS[statut]?.cssClass ?? 'badge--neutral';
+    if (statut === 'ARCHIVEE') {
+      return 'badge--neutral';
+    }
+    return STATUT_CANDIDATURE_LABELS[statut as keyof typeof STATUT_CANDIDATURE_LABELS]?.cssClass ?? 'badge--neutral';
   }
 
   getCategorieLabel(categorie?: string | null): string {

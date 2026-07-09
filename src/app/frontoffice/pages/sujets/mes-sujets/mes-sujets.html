@@ -4,7 +4,7 @@
       <h1 class="mes-sujets__title">{{ pageTitle }}</h1>
       <p class="mes-sujets__subtitle">{{ pageSubtitle }}</p>
     </div>
-    @if (!isChefEquipe) {
+    @if (canDeposerSujet && (!isChefEquipe || sujetScope === 'mes')) {
       <button type="button" class="mes-sujets__add-btn" (click)="openModal()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -13,6 +13,31 @@
       </button>
     }
   </header>
+
+  @if (isChefEquipe) {
+    <div class="mes-sujets__scope-pills" role="tablist" aria-label="Portée des sujets">
+      <button
+        type="button"
+        class="mes-sujets__scope-pill"
+        role="tab"
+        [class.mes-sujets__scope-pill--active]="sujetScope === 'mes'"
+        [attr.aria-selected]="sujetScope === 'mes'"
+        (click)="setSujetScope('mes')"
+      >
+        Mes sujets
+      </button>
+      <button
+        type="button"
+        class="mes-sujets__scope-pill"
+        role="tab"
+        [class.mes-sujets__scope-pill--active]="sujetScope === 'equipe'"
+        [attr.aria-selected]="sujetScope === 'equipe'"
+        (click)="setSujetScope('equipe')"
+      >
+        Sujets d'équipe
+      </button>
+    </div>
+  }
 
   <div class="mes-sujets__toolbar">
     <div class="mes-sujets__search-box">
@@ -23,7 +48,7 @@
       <input
         type="text"
         class="mes-sujets__search-input"
-        [placeholder]="isChefEquipe ? 'Rechercher un sujet...' : 'Rechercher dans mes sujets...'"
+        [placeholder]="isChefEquipe && sujetScope === 'equipe' ? 'Rechercher un sujet de l\'équipe...' : 'Rechercher dans mes sujets...'"
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange()"
       />
@@ -114,13 +139,15 @@
       </div>
       <h2 class="mes-sujets__empty-title">Aucun sujet trouvé</h2>
       <p class="mes-sujets__empty-text">
-        @if (isChefEquipe) {
-          Aucun sujet déposé par votre équipe ne correspond à vos filtres.
-        } @else {
+        @if (isChefEquipe && sujetScope === 'equipe') {
+          Aucun sujet déposé par les membres de votre équipe ne correspond à vos filtres.
+        } @else if (canDeposerSujet) {
           Vous n'avez pas encore déposé de sujet ou aucun résultat ne correspond à vos filtres.
+        } @else {
+          Aucun résultat ne correspond à vos filtres.
         }
       </p>
-      @if (!isChefEquipe) {
+      @if (canDeposerSujet && (!isChefEquipe || sujetScope === 'mes')) {
         <button type="button" class="mes-sujets__empty-btn" (click)="openModal()">
           Déposer votre premier sujet
         </button>
@@ -153,7 +180,7 @@
   }
 </div>
 
-@if (!isChefEquipe) {
+@if (canDeposerSujet) {
   <app-deposer-sujet-modal
     [editSujet]="editSujet"
     [isOpen]="isModalOpen"

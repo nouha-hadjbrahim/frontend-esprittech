@@ -4,6 +4,13 @@
       <h1>Sujets</h1>
       <p>Gérez les sujets déposés, traitez les demandes en attente et consultez le catalogue publié.</p>
     </div>
+    <button class="add-btn" type="button" (click)="openCreateModal()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Ajouter
+    </button>
   </div>
 
   <div class="tabs">
@@ -78,7 +85,6 @@
           <th>Encadrant</th>
           <th>Type</th>
           <th>Statut</th>
-          <th>Déposé le</th>
           @if (showEquipeColumn) {
             <th>Équipe</th>
           }
@@ -88,15 +94,15 @@
       <tbody>
         @if (loading()) {
           <tr>
-            <td colspan="7" class="empty-row">Chargement…</td>
+            <td colspan="6" class="empty-row">Chargement…</td>
           </tr>
         } @else if (loadError()) {
           <tr>
-            <td colspan="7" class="empty-row error">{{ loadError() }}</td>
+            <td colspan="6" class="empty-row error">{{ loadError() }}</td>
           </tr>
         } @else if (sujets.length === 0) {
           <tr>
-            <td colspan="7" class="empty-row">{{ emptyMessage }}</td>
+            <td colspan="6" class="empty-row">{{ emptyMessage }}</td>
           </tr>
         } @else {
           @for (sujet of sujets; track sujet.id) {
@@ -117,15 +123,12 @@
                 }
               </td>
               <td>
-                <span class="type-badge">{{ getCategorieLabel(sujet.categorie) }}</span>
+                <span class="type-badge" [ngClass]="getCategorieClass(sujet.categorie)">{{ getCategorieLabel(sujet.categorie) }}</span>
               </td>
               <td>
                 <span class="status-badge" [ngClass]="getStatutClass(sujet.statut)">
                   {{ getStatutLabel(sujet.statut) }}
                 </span>
-              </td>
-              <td>
-                <span class="date-text">{{ formatDate(sujet.dateSoumission || sujet.dateCreation) }}</span>
               </td>
               @if (showEquipeColumn) {
                 <td><span class="equipe-text">{{ sujet.equipeNom || '—' }}</span></td>
@@ -249,6 +252,14 @@
   [loading]="deleting"
   (confirmed)="confirmDelete()"
   (cancelled)="cancelDelete()"
+/>
+
+<app-deposer-sujet-modal
+  [isOpen]="createModalOpen"
+  [adminMode]="true"
+  [adminCreateMode]="true"
+  (closed)="closeCreateModal()"
+  (saved)="onCreateSaved()"
 />
 
 <app-deposer-sujet-modal

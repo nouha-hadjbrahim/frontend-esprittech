@@ -32,8 +32,11 @@
   <header class="modal__header">
     <div>
       <h2 id="modal-title" class="modal__title">{{ modalTitle }}</h2>
-      @if (encadrantName) {
+      @if (encadrantName && !showEncadrantPicker) {
         <p class="modal__subtitle">Encadrant : {{ encadrantName }}</p>
+      }
+      @if (showEncadrantPicker) {
+        <p class="modal__subtitle">Le sujet sera publié directement avec le statut Validé.</p>
       }
     </div>
     @if (!isPageLayout) {
@@ -46,6 +49,80 @@
   </header>
 
   <form class="modal__body" [formGroup]="form" (ngSubmit)="submit()" (keydown.enter)="onFormEnter($event)">
+    @if (showEncadrantPicker) {
+      <div class="form-field encadrant-field" [class.form-field--error]="isEncadrantInvalid()">
+        <label class="form-label" for="encadrant-search">Encadrant</label>
+        <div class="chip-input-wrap" #encadrantPickerWrap>
+          <div class="chip-input" (click)="focusEncadrantInput()">
+            @if (selectedEncadrant) {
+              <div class="chip">
+                <span class="chip-avatar" [style.background]="encadrantAvatarColor(selectedEncadrant)">
+                  {{ encadrantInitials(selectedEncadrant) }}
+                </span>
+                <span class="chip-name">{{ selectedEncadrant.prenom }} {{ selectedEncadrant.nom }}</span>
+                @if (selectedEncadrant.equipeNom) {
+                  <span class="chip-equipe">{{ selectedEncadrant.equipeNom }}</span>
+                }
+                <button type="button" class="chip-remove" (click)="clearEncadrant($event)" aria-label="Retirer l'encadrant">
+                  ×
+                </button>
+              </div>
+            } @else {
+              <input
+                #encadrantInput
+                id="encadrant-search"
+                class="chip-inp"
+                type="text"
+                [(ngModel)]="encadrantQuery"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="onEncadrantQueryChange($event)"
+                (focus)="showEncadrantDropdown = true; onEncadrantQueryChange(encadrantQuery)"
+                (keydown)="onEncadrantKeydown($event)"
+                placeholder="Rechercher un enseignant par nom ou email…"
+                autocomplete="off"
+              />
+            }
+          </div>
+
+          @if (showEncadrantDropdown && (encadrantLoading || encadrantCandidates.length > 0)) {
+            <div class="picker-dropdown">
+              @if (encadrantLoading) {
+                <p class="picker-dropdown__loading">Recherche en cours…</p>
+              } @else {
+                <ul>
+                  @for (user of encadrantCandidates; track user.id; let i = $index) {
+                    <li
+                      [class.hi]="i === encadrantHighlightIndex"
+                      (mouseenter)="encadrantHighlightIndex = i"
+                      (mousedown)="selectEncadrant(user)"
+                    >
+                      <span class="res-avatar" [style.background]="encadrantAvatarColor(user)">
+                        {{ encadrantInitials(user) }}
+                      </span>
+                      <span class="res-info">
+                        <span class="res-name">{{ user.prenom }} {{ user.nom }}</span>
+                        <span class="res-email">{{ user.email }}</span>
+                      </span>
+                      @if (user.equipeNom) {
+                        <span class="res-badge">{{ user.equipeNom }}</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+
+          @if (!encadrantLoading && encadrantQuery.length >= 2 && encadrantCandidates.length === 0 && showEncadrantDropdown) {
+            <p class="picker-no-result">Aucun enseignant affilié trouvé pour « {{ encadrantQuery }} »</p>
+          }
+        </div>
+        @if (isEncadrantInvalid()) {
+          <span class="form-error">Sélectionnez un enseignant affilié à une équipe.</span>
+        }
+      </div>
+    }
+
     <div class="modal__categories">
       @for (cat of categories; track cat.value) {
         <button

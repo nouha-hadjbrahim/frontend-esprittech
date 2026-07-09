@@ -783,3 +783,16 @@
     </div>
   </div>
 }
+
+<app-confirm-dialog
+  [isOpen]="terminaisonConfirmOpen"
+  title="Terminer le sujet"
+  [message]="terminaisonConfirmMessage"
+  confirmLabel="Terminer"
+  cancelLabel="Annuler"
+  [showIcon]="false"
+  [loading]="terminaisonLoading"
+  [errorMessage]="terminaisonError"
+  (confirmed)="confirmerTerminaison()"
+  (cancelled)="annulerTerminaison()"
+/>

@@ -38,6 +38,23 @@
         </div>
       }
 
+      @if (canTerminer) {
+        <div class="gcm-banner gcm-banner--pending">
+          <p class="gcm-banner__text">
+            <strong>Réalisation en cours</strong>
+            <span> · déclarez le sujet comme terminé lorsque le projet est achevé.</span>
+          </p>
+          <button
+            type="button"
+            class="gcm-banner__btn"
+            [disabled]="actionLoading"
+            (click)="declarerTerminaison()"
+          >
+            Terminer sujet
+          </button>
+        </div>
+      }
+
       @if (canOuvrir) {
         <div class="gcm-banner gcm-banner--pending">
           <p class="gcm-banner__text">

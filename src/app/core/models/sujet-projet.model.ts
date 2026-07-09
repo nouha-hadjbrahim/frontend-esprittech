@@ -25,6 +25,11 @@ export interface SujetProjetRequest {
   capaciteAccueil: number;
 }
 
+export interface AdminCreateSujetProjetRequest {
+  encadrantId: number;
+  sujet: SujetProjetRequest;
+}
+
 export interface SujetProjet {
   id: number;
   titre: string;

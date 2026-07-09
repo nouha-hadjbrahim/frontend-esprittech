@@ -1,7 +1,37 @@
+@import './subject-badges.shared.css';
+
 .subjects-page {
   display: flex;
   flex-direction: column;
   gap: 28px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.add-btn {
+  background-color: #E23E3E;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(226, 62, 62, 0.2);
+  flex-shrink: 0;
+}
+
+.add-btn:hover {
+  background-color: #c93535;
 }
 
 .page-header .header-text h1 {
@@ -182,49 +212,22 @@
   margin-top: 2px;
 }
 
-.type-badge {
-  background-color: #f9fafb;
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 1px solid #f3f4f6;
-  font-size: 0.85rem;
-  color: #4b5563;
-}
-
+.type-badge,
 .status-badge {
+  display: inline-flex;
+  align-items: center;
   padding: 4px 12px;
-  border-radius: 99px;
+  border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
+  line-height: 1.3;
 }
 
-.status-success {
-  background-color: #ecfdf5;
-  color: #059669;
+.status-badge {
+  /* hérite des couleurs via subject-badges.shared.css */
 }
 
-.status-danger {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.status-warning {
-  background-color: #fffbeb;
-  color: #d97706;
-}
-
-.status-info {
-  background-color: #eff6ff;
-  color: #2563eb;
-}
-
-.status-neutral {
-  background-color: #f3f4f6;
-  color: #6b7280;
-}
-
-.date-text,
 .equipe-text {
   font-size: 0.9rem;
   color: #4b5563;

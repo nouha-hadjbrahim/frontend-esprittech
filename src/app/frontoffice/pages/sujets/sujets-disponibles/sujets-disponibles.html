@@ -6,7 +6,7 @@
         Parcourez les sujets validés et publiés par les encadrants et les équipes RDI.
       </p>
     </div>
-    @if (isEnseignant()) {
+    @if (canDeposerSujet()) {
       <button type="button" class="sujets-disponibles__add-btn" (click)="openModal()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -115,7 +115,7 @@
   }
 </div>
 
-@if (isEnseignant()) {
+@if (canDeposerSujet()) {
   <app-deposer-sujet-modal
     [isOpen]="isModalOpen"
     (closed)="closeModal()"
