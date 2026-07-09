@@ -33,7 +33,7 @@ describe('ProjetCatalogueService', () => {
     prerequis: [],
   };
 
-  const mockDetails: ProjetDetails = { ...mockCatalogue, encadrantEmail: 'jean@esprit.tn' };
+  const mockDetails: ProjetDetails = { ...mockCatalogue, encadrantEmail: 'jean@esprit.tn', chefEquipeNom: 'Alice Martin' };
 
   // ── Enseignant ────────────────────────────────────────────────────
 

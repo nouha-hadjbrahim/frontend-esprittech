@@ -1,28 +1,59 @@
-.page-container {
-  padding: 24px 32px;
+:host {
+  display: block;
+  background: #ffffff;
+  min-height: calc(100vh - 80px);
+  margin: -2rem;
+  padding: 2rem;
 }
 
-.page-header {
+.mes-projets {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.mes-projets__header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.page-container h1 {
-  font-size: 1.75rem;
+.mes-projets__title {
+  margin: 0 0 6px;
+  font-size: 28px;
   font-weight: 700;
-  color: #111827;
-  margin: 0 0 4px;
+  color: #1a1a1a;
+  line-height: 1.2;
 }
 
-.page-subtitle {
-  color: #6b7280;
+.mes-projets__subtitle {
   margin: 0;
+  font-size: 14px;
+  color: #757575;
+  line-height: 1.5;
 }
 
-.hint {
-  color: #9ca3af;
+.mes-projets__add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #E23E3E;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.mes-projets__add-btn:hover {
+  background: #c93434;
 }
 
 .alert {
@@ -44,46 +75,160 @@
   color: #065f46;
 }
 
-.filters {
+.mes-projets__toolbar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.filters__search {
-  flex: 1;
-  min-width: 220px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 9px 12px;
-  font-size: 13.5px;
-}
-
-.filters__select {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 9px 12px;
-  font-size: 13px;
-  background: #fff;
-  cursor: pointer;
-}
-
-.empty-card {
-  background: #fff;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 24px;
+  padding: 10px 12px;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 48px;
-  text-align: center;
-  color: #6b7280;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
 }
 
-.cards {
+.mes-projets__search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 42px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mes-projets__search-box:focus-within {
+  border-color: #d1d5db;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.03);
+}
+
+.mes-projets__search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.mes-projets__search-input {
+  width: 100%;
+  height: 100%;
+  padding: 0 14px 0 40px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1a1a1a;
+  box-sizing: border-box;
+}
+
+.mes-projets__search-input:focus {
+  outline: none;
+}
+
+.mes-projets__search-input::placeholder {
+  color: #9ca3af;
+}
+
+.mes-projets__filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.mes-projets__select {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mes-projets__select:hover {
+  border-color: #d1d5db;
+}
+
+.mes-projets__select:focus {
+  outline: none;
+  border-color: #d1d5db;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.03);
+}
+
+.mes-projets__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
+.mes-projets__loading {
+  padding: 64px 24px;
+  text-align: center;
+  color: #757575;
+  font-size: 15px;
+}
+
+.mes-projets__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 72px 24px;
+  text-align: center;
+}
+
+.mes-projets__empty-icon {
+  margin-bottom: 4px;
+}
+
+.mes-projets__empty-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.mes-projets__empty-text {
+  margin: 0;
+  max-width: 420px;
+  font-size: 14px;
+  color: #757575;
+  line-height: 1.5;
+}
+
+.mes-projets__empty-btn {
+  margin-top: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #E23E3E;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.mes-projets__empty-btn:hover {
+  background: #c93434;
+}
+
+/* ---- Carte projet ---- */
 .projet-card {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -96,6 +241,7 @@
 
 .projet-card__header {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -151,12 +297,10 @@
   white-space: nowrap;
 }
 
-/* Badges de type */
 .badge--stage { background: #e0f2fe; color: #075985; }
 .badge--pfe { background: #fae8ff; color: #86198f; }
 .badge--rdi { background: #fef9c3; color: #854d0e; }
 
-/* Badges de statut (palette imposée) */
 .badge--soumis { background: #fef3c7; color: #92400e; }
 .badge--invalide { background: #fee2e2; color: #991b1b; }
 .badge--valide { background: #d1fae5; color: #065f46; }
@@ -181,13 +325,59 @@
   cursor: not-allowed;
 }
 
-.btn--primary {
-  background: #c8102e;
-  color: #fff;
-}
-
 .btn--ghost {
   background: #f9fafb;
   color: #374151;
   border-color: #e5e7eb;
+}
+
+@media (max-width: 1100px) {
+  .mes-projets__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  :host {
+    margin: -2rem -1rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .mes-projets__header {
+    flex-direction: column;
+  }
+
+  .mes-projets__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mes-projets__filters {
+    flex-wrap: wrap;
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .mes-projets__select {
+    flex: 1;
+  }
+
+  .mes-projets__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.projet-card__cover {
+  margin: -20px -20px 4px;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  background: #f3f4f6;
+}
+
+.projet-card__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
