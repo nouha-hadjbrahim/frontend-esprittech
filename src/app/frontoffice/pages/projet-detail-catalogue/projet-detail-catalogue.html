@@ -6,8 +6,11 @@
   } @else if (errorMessage) {
     <div class="alert alert--error">{{ errorMessage }}</div>
   } @else if (projet) {
-    <!-- Bandeau rouge -->
-    <div class="banner">
+    <!-- Bandeau rouge (avec image de couverture si présente) -->
+    <div class="banner" [class.banner--has-cover]="projet.coverImage">
+      @if (projet.coverImage) {
+        <img class="banner__bg" [src]="projet.coverImage" alt="" aria-hidden="true" />
+      }
       <div class="banner__badges">
         <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">{{ typeLabels[projet.typeProjet].label }}</span>
         <span class="badge" [class]="statutLabels[projet.statut].cssClass">{{ statutLabels[projet.statut].label }}</span>
@@ -60,21 +63,112 @@
         </div>
 
         <div class="tab-content">
-          @if (activeTab === 'infos') {
-            <section class="section">
-              <h3 class="section__title">Description</h3>
-              <p class="section__text">{{ projet.description }}</p>
-            </section>
-            <section class="section">
-              <h3 class="section__title">Objectifs</h3>
-              <p class="section__text">{{ projet.objectifs }}</p>
-            </section>
-            <section class="section">
-              <h3 class="section__title">Livrables attendus</h3>
-              <p class="section__text section__text--muted">Les livrables seront publiés ultérieurement.</p>
-            </section>
-          } @else {
-            <div class="placeholder">Section « {{ activeTabLabel }} » à venir.</div>
+          @switch (activeTab) {
+            @case ('infos') {
+              <section class="section">
+                <h3 class="section__title">Description</h3>
+                <p class="section__text">{{ projet.description }}</p>
+              </section>
+              <section class="section">
+                <h3 class="section__title">Objectifs</h3>
+                <p class="section__text">{{ projet.objectifs }}</p>
+              </section>
+            }
+            @case ('livrables') {
+              @if (livrableMessage) { <div class="alert alert--success">{{ livrableMessage }}</div> }
+              @if (livrableError) { <div class="alert alert--error">{{ livrableError }}</div> }
+
+              @if (canManageLivrables) {
+                <div class="livrable-forms">
+                  <section class="livrable-form">
+                    <h3 class="section__title">Depot fichier</h3>
+                    <div class="form-grid">
+                      <label>
+                        Type
+                        <select [(ngModel)]="uploadForm.typeLivrable">
+                          @for (type of typeLivrableOptions; track type.value) {
+                            <option [value]="type.value">{{ type.label }}</option>
+                          }
+                        </select>
+                      </label>
+                      <label>
+                        Nom
+                        <input type="text" [(ngModel)]="uploadForm.nom" />
+                      </label>
+                      <label>
+                        Fichier
+                        <input type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt" (change)="onUploadFileSelected($event)" />
+                      </label>
+                      <label class="form-grid__wide">
+                        Description
+                        <textarea rows="3" [(ngModel)]="uploadForm.description"></textarea>
+                      </label>
+                    </div>
+                    <button type="button" class="action-btn" (click)="uploadLivrable()">Deposer</button>
+                  </section>
+
+                  <section class="livrable-form">
+                    <h3 class="section__title">Lien externe</h3>
+                    <div class="form-grid">
+                      <label>
+                        Type
+                        <select [(ngModel)]="linkForm.typeLivrable">
+                          @for (type of typeLivrableOptions; track type.value) {
+                            <option [value]="type.value">{{ type.label }}</option>
+                          }
+                        </select>
+                      </label>
+                      <label>
+                        Nom
+                        <input type="text" [(ngModel)]="linkForm.nom" />
+                      </label>
+                      <label>
+                        URL
+                        <input type="url" [(ngModel)]="linkForm.lienExterne" />
+                      </label>
+                      <label class="form-grid__wide">
+                        Description
+                        <textarea rows="3" [(ngModel)]="linkForm.description"></textarea>
+                      </label>
+                    </div>
+                    <button type="button" class="action-btn" (click)="addLivrableLink()">Ajouter le lien</button>
+                  </section>
+                </div>
+              }
+
+              <section class="livrables-list">
+                <h3 class="section__title">Livrables du projet</h3>
+                @if (livrablesLoading) {
+                  <p class="hint">Chargement...</p>
+                } @else if (livrables.length === 0) {
+                  <p class="section__text section__text--muted">Aucun livrable depose.</p>
+                } @else {
+                  <div class="livrable-table">
+                    @for (livrable of livrables; track livrable.id) {
+                      <div class="livrable-row">
+                        <div class="livrable-row__info">
+                          <strong>{{ livrable.nom }}</strong>
+                          <span>{{ livrableLabels[livrable.typeLivrable] }} - {{ livrable.deposantNom }}</span>
+                        </div>
+                        <div class="livrable-actions">
+                          @if (livrable.objectName) {
+                            <a [href]="downloadLivrable(livrable)" target="_blank" rel="noreferrer">Telecharger</a>
+                          } @else if (livrable.lienExterne) {
+                            <a [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
+                          }
+                          @if (canManageLivrables) {
+                            <button type="button" (click)="deleteLivrable(livrable)">Supprimer</button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </section>
+            }
+            @default {
+              <div class="placeholder">Section « {{ activeTabLabel }} » à venir.</div>
+            }
           }
         </div>
       </div>

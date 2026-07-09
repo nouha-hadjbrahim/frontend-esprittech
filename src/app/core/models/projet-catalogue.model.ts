@@ -30,6 +30,10 @@ export interface CreateProjetRequest {
   domainesIds: number[];
   technologiesIds: number[];
   prerequisIds: number[];
+  /** Image de couverture encodée en base64 (data URI ou base64 brut), optionnelle. */
+  coverImageBase64?: string | null;
+  /** Type MIME de l'image de couverture (image/png ou image/jpeg). */
+  coverImageContentType?: string | null;
 }
 
 /** Représentation allégée d'un projet en carte (ProjetCardResponse backend). */
@@ -49,6 +53,8 @@ export interface ProjetCard {
   dateCreation: string;
   domaines: string[];
   technologies: string[];
+  /** Image de couverture en data URI base64, ou null si absente. */
+  coverImage?: string | null;
 }
 
 /** Représentation canonique complète (ProjetCatalogueResponse backend). */
@@ -79,4 +85,8 @@ export interface ProjetCatalogue {
 /** Détails complets d'un projet pour les pages de détail (ProjetDetailsResponse backend). */
 export interface ProjetDetails extends ProjetCatalogue {
   encadrantEmail: string | null;
+  /** Chef de l'équipe de recherche à laquelle le projet est rattaché. */
+  chefEquipeNom: string | null;
+  /** Image de couverture en data URI base64, ou null si absente. */
+  coverImage?: string | null;
 }

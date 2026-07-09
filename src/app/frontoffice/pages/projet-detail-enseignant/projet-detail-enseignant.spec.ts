@@ -18,8 +18,8 @@ describe('ProjetDetailEnseignant', () => {
     objectifs: 'Objectifs', dateDebut: '2026-01-01', dateFin: '2026-12-31',
     statut: 'SOUMIS_EN_VALIDATION', score: 0, encadrantId: 1,
     encadrantNom: 'Jean Dupont', encadrantEmail: 'jean@esprit.tn',
-    equipeId: 100, equipeNom: 'Equipe IA', chefValidateurId: null,
-    chefValidateurNom: null, motifRefus: null,
+    equipeId: 100, equipeNom: 'Equipe IA', chefEquipeNom: 'Alice Martin',
+    chefValidateurId: null, chefValidateurNom: null, motifRefus: null,
     dateCreation: '2026-01-10T10:00:00', dateValidation: null,
     domaines: ['IA'], technologies: ['Python'], prerequis: ['Math'],
   };
@@ -44,11 +44,17 @@ describe('ProjetDetailEnseignant', () => {
 
   afterEach(() => httpTesting.verify());
 
+  /** Après le chargement du projet, le composant charge aussi ses livrables. */
+  function flushLivrables(id: string = '1'): void {
+    httpTesting.expectOne(`${API}/projets-catalogue/${id}/livrables`).flush([]);
+  }
+
   it('should create and load project', () => {
     createComponent();
     fixture.detectChanges();
     const req = httpTesting.expectOne(`${API}/projets/1`);
     req.flush(mockDetails);
+    flushLivrables();
     expect(component.projet).toBeTruthy();
     expect(component.projet!.titre).toBe('Projet IA');
     expect(component.isLoading).toBe(false);
@@ -83,6 +89,7 @@ describe('ProjetDetailEnseignant', () => {
     createComponent();
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/projets/1`).flush(mockDetails);
+    flushLivrables();
     expect(component.backLink).toBe('/frontoffice/mes-projets');
     expect(component.backLabel).toBe('Mes projets');
   });
@@ -91,6 +98,7 @@ describe('ProjetDetailEnseignant', () => {
     createComponent();
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/projets/1`).flush(mockDetails);
+    flushLivrables();
     expect(component.activeTab).toBe('infos');
     component.setTab('livrables');
     expect(component.activeTab).toBe('livrables');

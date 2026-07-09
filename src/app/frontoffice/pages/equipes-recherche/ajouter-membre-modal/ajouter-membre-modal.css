@@ -11,7 +11,12 @@
   justify-content: center;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
+  animation: overlay-in 0.2s ease;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .modal {
@@ -82,6 +87,17 @@
   overflow: hidden;
 }
 
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 200px;
+  scrollbar-gutter: stable;
+  transition: opacity 0.15s ease;
+}
+
 /* Search */
 .search-wrap {
   position: relative;
@@ -117,15 +133,7 @@
   box-shadow: 0 0 0 3px rgba(226, 62, 62, 0.1);
 }
 
-/* User list */
-.user-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-}
+/* User list - moved above */
 
 .user-row {
   display: flex;

@@ -144,7 +144,9 @@
 }
 
 .nav-subitem {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 8px 12px;
     border-radius: 999px;
     text-decoration: none;
@@ -152,6 +154,22 @@
     font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.2s ease;
+}
+
+.sidebar-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #E23E3E;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .nav-subitem:hover {
