@@ -40,8 +40,22 @@ export class EvaluationChecklistComponent {
     return this.evaluation?.incompleteCriteria ?? [];
   }
 
+  get showIncompleteConfiguration(): boolean {
+    return this.incompleteCriteria.length > 0 && this.currentScoreOrNull() == null;
+  }
+
   get evaluationComplete(): boolean {
+    if (this.currentScoreOrNull() != null && !this.showIncompleteConfiguration) {
+      return true;
+    }
     return this.evaluation?.evaluationComplete !== false;
+  }
+
+  get showAnalysisIncomplete(): boolean {
+    if (this.currentScoreOrNull() != null) {
+      return false;
+    }
+    return !this.evaluationComplete;
   }
 
   get hasBlockingCriteria(): boolean {
@@ -50,11 +64,15 @@ export class EvaluationChecklistComponent {
   }
 
   get scorePercent(): number {
-    return Math.max(0, Math.min(100, this.displayScore ?? 0));
+    const score = this.currentScoreOrNull() ?? this.mlScore ?? 0;
+    return Math.max(0, Math.min(100, score));
   }
 
-  get displayScore(): number | null {
-    return this.evaluation?.finalValidatedScore ?? this.currentScoreOrNull();
+  displayScore(score: number | null | undefined): string {
+    if (score === null || score === undefined) {
+      return 'Non calculé';
+    }
+    return `${this.formatScore(score)} / 100`;
   }
 
   get mlScore(): number | null {
@@ -65,18 +83,16 @@ export class EvaluationChecklistComponent {
   }
 
   get mlScoreLabel(): string {
-    const score = this.mlScore;
-    return score == null ? 'Non calculé' : `${this.formatNumber(score)} / 100`;
+    return this.displayScore(this.mlScore);
   }
 
   get officialScoreLabel(): string {
-    const score = this.currentScoreOrNull();
-    return score == null ? 'Non calculé' : `${this.formatNumber(score)} / 100`;
+    return this.displayScore(this.currentScoreOrNull());
   }
 
   get validatedScoreLabel(): string {
     if (['VALIDATED', 'OVERRIDDEN'].includes(this.evaluation?.validationStatus ?? '') && this.evaluation?.finalValidatedScore != null) {
-      return `${this.formatNumber(this.evaluation.finalValidatedScore)} / 100`;
+      return this.displayScore(this.evaluation.finalValidatedScore);
     }
     return '-';
   }
@@ -116,57 +132,62 @@ export class EvaluationChecklistComponent {
   }
 
   get statusLabel(): string {
-    switch (this.evaluation?.eligibilityStatus) {
+    switch ((this.evaluation?.eligibilityStatus ?? '').toUpperCase()) {
       case 'ELIGIBLE':
         return 'Éligible';
       case 'REVIEW_REQUIRED':
         return 'Revue requise';
+      case 'NON_ELIGIBLE':
       case 'NON_ELIGIBLE_EN_L_ETAT':
-        return 'Non éligible en l’état';
+        return 'Non éligible';
       case 'NOT_EVALUABLE':
         return 'Non évaluable';
     }
-    if (this.evaluation?.eligibleIndustrialisation && !this.evaluationComplete) {
-      return 'Analyse nécessaire';
+
+    if (this.currentScoreOrNull() == null && this.mlScore == null) {
+      return 'Non calculé';
     }
-    if (this.evaluation?.eligibleIndustrialisation && this.hasBlockingCriteria) {
-      return 'Éligible avec alertes';
+
+    if (this.hasBlockingCriteria) {
+      return 'Non éligible';
     }
-    return this.evaluation?.eligibleIndustrialisation ? 'GO - Éligible' : 'NO GO - Non éligible';
+
+    if (this.eliminatoiresIndetermines > 0) {
+      return 'Revue requise';
+    }
+
+    return this.evaluation?.eligibleIndustrialisation ? 'Éligible' : 'Non calculé';
   }
 
   get statusClass(): string {
-    if (this.evaluation?.eligibilityStatus === 'NON_ELIGIBLE_EN_L_ETAT' || this.evaluation?.eligibilityStatus === 'NOT_EVALUABLE') {
+    const status = (this.evaluation?.eligibilityStatus ?? '').toUpperCase();
+
+    if (status === 'NON_ELIGIBLE' || status === 'NON_ELIGIBLE_EN_L_ETAT' || status === 'NOT_EVALUABLE' || this.hasBlockingCriteria) {
       return 'decision-badge--no';
     }
-    if (this.evaluation?.eligibilityStatus === 'REVIEW_REQUIRED') {
+
+    if (status === 'REVIEW_REQUIRED' || this.eliminatoiresIndetermines > 0 || this.showAnalysisIncomplete) {
       return 'decision-badge--warning';
     }
-    if (this.evaluation?.eligibilityStatus === 'ELIGIBLE') {
+
+    if (status === 'ELIGIBLE') {
       return 'decision-badge--go';
     }
-    if (!this.evaluation?.eligibleIndustrialisation) {
-      return 'decision-badge--no';
-    }
-    if (!this.evaluationComplete || this.hasBlockingCriteria) {
-      return 'decision-badge--warning';
-    }
-    return 'decision-badge--go';
+
+    return this.currentScoreOrNull() != null ? 'decision-badge--warning' : 'decision-badge--no';
   }
 
   get progressClass(): string {
-    if (this.evaluation?.eligibilityStatus === 'NON_ELIGIBLE_EN_L_ETAT' || this.evaluation?.eligibilityStatus === 'NOT_EVALUABLE') {
+    const status = (this.evaluation?.eligibilityStatus ?? '').toUpperCase();
+
+    if (status === 'NON_ELIGIBLE' || status === 'NON_ELIGIBLE_EN_L_ETAT' || status === 'NOT_EVALUABLE' || this.hasBlockingCriteria) {
       return 'checklist-progress__bar--danger';
     }
-    if (this.evaluation?.eligibilityStatus === 'REVIEW_REQUIRED') {
+
+    if (status === 'REVIEW_REQUIRED' || this.eliminatoiresIndetermines > 0 || this.showAnalysisIncomplete) {
       return 'checklist-progress__bar--warning';
     }
-    if (!this.evaluation?.eligibleIndustrialisation) {
-      return 'checklist-progress__bar--danger';
-    }
-    if (!this.evaluationComplete || this.hasBlockingCriteria) {
-      return 'checklist-progress__bar--warning';
-    }
+
     return this.scorePercent >= 70 ? 'checklist-progress__bar--success' : 'checklist-progress__bar--warning';
   }
 
@@ -198,12 +219,12 @@ export class EvaluationChecklistComponent {
       return resultat.reponseEliminatoire ?? 'Non renseigné';
     }
     if (resultat.mlScore != null && resultat.mlMaxScore != null) {
-      const score = this.formatNumber(resultat.mlScore);
-      const max = this.formatNumber(resultat.mlMaxScore);
+      const score = this.formatCriterionNumber(resultat.mlScore);
+      const max = this.formatCriterionNumber(resultat.mlMaxScore);
       const normalizedValue = resultat.normalizedScore != null
         ? (resultat.normalizedScore <= 1 ? resultat.normalizedScore * 100 : resultat.normalizedScore)
         : null;
-      const normalized = normalizedValue != null ? ` - ${this.formatNumber(normalizedValue)}/100` : '';
+      const normalized = normalizedValue != null ? ` - ${this.formatCriterionNumber(normalizedValue)}/100` : '';
       return `${score}/${max}${normalized}`;
     }
     const hasExplicitNoteValue = resultat.noteValue != null || resultat.noteObtenue != null;
@@ -249,10 +270,6 @@ export class EvaluationChecklistComponent {
       || resultat.weaknesses?.length
       || resultat.recommendations?.length
     );
-  }
-
-  private formatNumber(value: number): string {
-    return Number.isInteger(value) ? String(value) : value.toFixed(1);
   }
 
   criterionExplanation(resultat: ResultatCritereResponse): string | null {
@@ -414,12 +431,20 @@ export class EvaluationChecklistComponent {
   }
 
   private isCurrentEvaluationUncalculated(): boolean {
-    return ['FAILED_RETRYABLE', 'FAILED_PERMANENT', 'MODEL_UNAVAILABLE', 'NOT_EVALUABLE_NO_DELIVERABLE']
-      .includes(this.evaluation?.mlStatus ?? this.evaluation?.processingStatus ?? '');
+    const status = (this.evaluation?.processingStatus ?? this.evaluation?.mlStatus ?? '').toUpperCase();
+    return ['FAILED_RETRYABLE', 'FAILED_PERMANENT', 'MODEL_UNAVAILABLE', 'NOT_EVALUABLE_NO_DELIVERABLE'].includes(status);
   }
 
   private uniqueStrings(values: string[] | null | undefined): string[] {
     return Array.from(new Set((values ?? []).filter(Boolean).map((value) => value.trim()).filter(Boolean)));
+  }
+
+  private formatScore(value: number): string {
+    return value.toFixed(2);
+  }
+
+  private formatCriterionNumber(value: number): string {
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
   }
 
   private localizedReason(reason: string): string {
@@ -440,6 +465,16 @@ export class EvaluationChecklistComponent {
       MODEL_UNAVAILABLE: 'Modèle ML indisponible.',
       FAILED_PERMANENT: 'Évaluation impossible.',
       FAILED_RETRYABLE: 'Évaluation temporairement indisponible.',
+
+      TRACEABLE_MULTISOURCE_EVIDENCE: 'Preuves traçables provenant de plusieurs sources.',
+      CONTRADICTORY_EVIDENCE_FOUND: 'Des preuves contradictoires ont été détectées.',
+      LOW_EVIDENCE_COUNT: 'Nombre de preuves encore limité.',
+      MISSING_REQUIRED_SOURCE_TYPE: 'Certaines sources attendues ne sont pas encore disponibles.',
+      WEAK_EVIDENCE_RELEVANCE: 'Pertinence des preuves encore perfectible.',
+      ADD_DOCUMENT_EVIDENCE: 'Ajoutez une preuve documentaire dédiée.',
+      ADD_IMAGE_EVIDENCE: 'Ajoutez une capture, un schéma ou une preuve visuelle.',
+      ADD_MORE_SPECIFIC_EVIDENCE: 'Ajoutez des preuves plus spécifiques au projet.',
+
       MISSING_CRITERION_NAME: 'Nom du critère manquant.',
       MISSING_CRITERION_DESCRIPTION: 'Description du critère manquante.',
       MISSING_MAXIMUM_SCORE: 'Score maximal manquant.',
@@ -454,6 +489,7 @@ export class EvaluationChecklistComponent {
       MISSING_SCORING_POLICY: 'Politique de scoring manquante.',
       MISSING_ELIMINATORY_DECISION_RULE: 'Règle de décision éliminatoire manquante.',
     };
+
     if (labels[normalized]) {
       return labels[normalized];
     }

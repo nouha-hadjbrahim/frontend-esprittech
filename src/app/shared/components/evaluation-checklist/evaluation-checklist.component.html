@@ -39,7 +39,7 @@
     <span *ngIf="evaluation.scoreCalculationCoverageMessage" class="coverage-message">
       {{ evaluation.scoreCalculationCoverageMessage }}
     </span>
-    <span *ngIf="!evaluationComplete" class="coverage-warning">Analyse incomplète</span>
+    <span *ngIf="showAnalysisIncomplete" class="coverage-warning">Analyse incomplète</span>
     <span *ngIf="hasBlockingCriteria" class="blocking-message">
       Alerte : au moins un critère éliminatoire est NOT_OK.
     </span>
@@ -60,7 +60,7 @@
     </details>
   </div>
 
-  <section *ngIf="incompleteCriteria.length" class="analysis-alerts">
+  <section *ngIf="showIncompleteConfiguration" class="analysis-alerts">
     <h4>Configuration incomplète</h4>
     <article *ngFor="let issue of incompleteCriteria">
       <strong>{{ issue.criterionName }}</strong>

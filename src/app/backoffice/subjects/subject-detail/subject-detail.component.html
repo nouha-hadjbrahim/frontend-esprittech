@@ -1,7 +1,7 @@
 <div class="subject-detail-page">
   <a routerLink="/backoffice/subjects" class="back-link">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
     </svg>
     Retour aux sujets
   </a>
@@ -58,6 +58,14 @@
         <span class="summary-card__label">Date soumission</span>
         <span class="summary-card__value">{{ formatDate(sujet.dateSoumission) }}</span>
       </div>
+      <div class="summary-card summary-card--score">
+        <span class="summary-card__label">Score final</span>
+        <span class="summary-card__value">{{ scoreFinalLabel }}</span>
+      </div>
+      <div class="summary-card summary-card--eligibility">
+        <span class="summary-card__label">Éligibilité</span>
+        <span class="eligibility-pill" [ngClass]="eligibilityClass">{{ eligibilityLabel }}</span>
+      </div>
     </div>
 
     @if (sujet.motifInvalidation) {
@@ -88,7 +96,7 @@
               <li>
                 <span class="objectifs-list__check" aria-hidden="true">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2 5L4 7L8 3" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 5L4 7L8 3" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </span>
                 {{ line }}
@@ -139,11 +147,11 @@
             </div>
             <div class="meta-list__row">
               <dt>Score final</dt>
-              <dd>{{ sujet.scoreFinal ?? '—' }}</dd>
+              <dd>{{ scoreFinalLabel }}</dd>
             </div>
             <div class="meta-list__row">
-              <dt>Éligible indust.</dt>
-              <dd>{{ sujet.eligibleIndustrialisation ? 'Oui' : 'Non' }}</dd>
+              <dt>Éligibilité</dt>
+              <dd><span class="eligibility-pill eligibility-pill--compact" [ngClass]="eligibilityClass">{{ eligibilityLabel }}</span></dd>
             </div>
           </dl>
         </div>

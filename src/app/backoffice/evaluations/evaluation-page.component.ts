@@ -73,11 +73,13 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   }
 
   get eligibleCount(): number {
-    return this.projects().filter((project) => project.eligibleIndustrialisation === true).length;
+    return this.projects().filter((project) => this.projectEligibilityStatus(project) === 'ELIGIBLE').length;
   }
 
   get nonEligibleCount(): number {
-    return this.projects().filter((project) => project.eligibleIndustrialisation === false).length;
+    return this.projects().filter((project) =>
+      ['NON_ELIGIBLE', 'NON_ELIGIBLE_EN_L_ETAT', 'NOT_EVALUABLE'].includes(this.projectEligibilityStatus(project))
+    ).length;
   }
 
   ngOnInit(): void {
@@ -262,8 +264,7 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   }
 
   scoreLabelFor(evaluation: EvaluationResponse | null): string {
-    const score = this.scoreFor(evaluation);
-    return score == null ? 'Non calculé' : `${score} / 100`;
+    return this.formatScore(this.scoreFor(evaluation));
   }
 
   scoreTitleFor(evaluation: EvaluationResponse | null): string {
@@ -283,22 +284,35 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
     if (!evaluation || this.isEvaluationUncalculated(evaluation)) {
       return 'Non calculé';
     }
-    const score = evaluation.mlScore ?? evaluation.scoreFinal ?? null;
-    return score == null ? 'Non calculé' : `${score} / 100`;
+    return this.formatScore(evaluation.mlScore ?? evaluation.scoreFinal ?? null);
   }
 
   eligibilityLabelFor(evaluation: EvaluationResponse | null): string {
-    switch (evaluation?.eligibilityStatus) {
+    const status = (evaluation?.eligibilityStatus || '').toUpperCase();
+
+    switch (status) {
       case 'ELIGIBLE':
         return 'Éligible';
       case 'REVIEW_REQUIRED':
         return 'Revue requise';
+      case 'NON_ELIGIBLE':
+        return 'Non éligible';
       case 'NON_ELIGIBLE_EN_L_ETAT':
         return 'Non éligible en l’état';
       case 'NOT_EVALUABLE':
+      case 'NOT_EVALUABLE_NO_DELIVERABLE':
         return 'Non évaluable';
       default:
-        return evaluation?.eligibleIndustrialisation ? 'Éligible' : 'Non éligible';
+        if (!evaluation || this.isEvaluationUncalculated(evaluation)) {
+          return 'Non calculé';
+        }
+        if (evaluation.eligibleIndustrialisation === true) {
+          return 'Éligible';
+        }
+        if (evaluation.scoreFinal != null && !evaluation.hasEliminatoryWarnings && (evaluation.eliminatoryWarningsCount ?? 0) === 0) {
+          return 'Revue requise';
+        }
+        return evaluation.eligibleIndustrialisation === false ? 'Non éligible' : 'Non calculé';
     }
   }
 
@@ -387,34 +401,41 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
     if (project.latestEvaluation) {
       return this.scoreLabelFor(project.latestEvaluation);
     }
-    return project.scoreFinal == null ? 'Non calculé' : `${project.scoreFinal} / 100`;
+    return this.formatScore(project.scoreFinal ?? null);
   }
 
   projectEligibilityLabel(project: ProjetEvaluable): string {
     if (project.latestEvaluation) {
       return this.eligibilityLabelFor(project.latestEvaluation);
     }
-    if (project.eligibleIndustrialisation == null) {
-      return 'En attente';
+
+    switch (this.projectEligibilityStatus(project)) {
+      case 'ELIGIBLE':
+        return 'Éligible';
+      case 'REVIEW_REQUIRED':
+        return 'Revue requise';
+      case 'NON_ELIGIBLE':
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'Non éligible';
+      case 'NOT_EVALUABLE':
+        return 'Non évaluable';
+      default:
+        return 'En attente';
     }
-    return project.eligibleIndustrialisation ? 'Éligible' : 'Non éligible';
   }
 
   projectEligibilityClass(project: ProjetEvaluable): string {
-    const status = project.latestEvaluation?.eligibilityStatus;
+    const status = this.projectEligibilityStatus(project);
     if (status === 'ELIGIBLE') {
       return 'badge-success';
     }
     if (status === 'REVIEW_REQUIRED') {
       return 'badge-secondary';
     }
-    if (status === 'NON_ELIGIBLE_EN_L_ETAT' || status === 'NOT_EVALUABLE') {
+    if (['NON_ELIGIBLE', 'NON_ELIGIBLE_EN_L_ETAT', 'NOT_EVALUABLE'].includes(status)) {
       return 'badge-danger';
     }
-    if (project.eligibleIndustrialisation == null) {
-      return 'badge-secondary';
-    }
-    return project.eligibleIndustrialisation ? 'badge-success' : 'badge-danger';
+    return 'badge-secondary';
   }
 
   private normalize(value: unknown): string {
@@ -425,18 +446,49 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
       .trim();
   }
 
+  private formatScore(score: number | null | undefined): string {
+    return score == null ? 'Non calculé' : `${Number(score).toFixed(2)} / 100`;
+  }
+
+  private evaluationStatus(evaluation: EvaluationResponse | null | undefined): string {
+    return (evaluation?.processingStatus || evaluation?.mlStatus || '').toUpperCase();
+  }
+
+  private projectEligibilityStatus(project: ProjetEvaluable): string {
+    const latestStatus = (project.latestEvaluation?.eligibilityStatus || '').toUpperCase();
+    if (latestStatus) {
+      return latestStatus;
+    }
+
+    if (project.eligibleIndustrialisation === true) {
+      return 'ELIGIBLE';
+    }
+
+    if (project.eligibleIndustrialisation === false) {
+      if (project.bloqueParEliminatoire === true) {
+        return 'NON_ELIGIBLE_EN_L_ETAT';
+      }
+      if (project.scoreFinal != null) {
+        return 'REVIEW_REQUIRED';
+      }
+      return 'NON_ELIGIBLE';
+    }
+
+    return 'PENDING';
+  }
+
   private isEvaluationUncalculated(evaluation: EvaluationResponse): boolean {
-    return ['FAILED_RETRYABLE', 'FAILED_PERMANENT', 'MODEL_UNAVAILABLE', 'NOT_EVALUABLE_NO_DELIVERABLE']
-      .includes(evaluation.mlStatus ?? evaluation.processingStatus ?? '');
+    return ['FAILED_RETRYABLE', 'FAILED_PERMANENT', 'MODEL_UNAVAILABLE', 'NOT_EVALUABLE_NO_DELIVERABLE', 'NOT_EVALUABLE']
+      .includes(this.evaluationStatus(evaluation));
   }
 
   private isBusinessSuccess(evaluation: EvaluationResponse): boolean {
     return ['COMPLETED', 'COMPLETED_WITH_WARNINGS', 'PARTIAL_ANALYSIS']
-      .includes(evaluation.mlStatus ?? evaluation.processingStatus ?? '');
+      .includes(this.evaluationStatus(evaluation));
   }
 
   private businessStatusMessage(evaluation: EvaluationResponse): string {
-    const status = evaluation.mlStatus ?? evaluation.processingStatus;
+    const status = this.evaluationStatus(evaluation);
     if (status === 'FAILED_PERMANENT' && (evaluation.incompleteCriteriaCount ?? 0) > 0) {
       return 'L’évaluation n’a pas pu être effectuée car la configuration des critères est incomplète.';
     }
@@ -445,6 +497,12 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
     }
     if (status === 'FAILED_RETRYABLE') {
       return 'L’évaluation est temporairement indisponible. Veuillez réessayer.';
+    }
+    if (status === 'INSUFFICIENT_EVIDENCE') {
+      return 'Analyse terminée, preuves insuffisantes pour calculer un score.';
+    }
+    if (status === 'NOT_EVALUABLE' || status === 'NOT_EVALUABLE_NO_DELIVERABLE') {
+      return 'Le projet n’est pas évaluable avec les livrables disponibles.';
     }
     return 'L’évaluation n’a pas pu être effectuée.';
   }
