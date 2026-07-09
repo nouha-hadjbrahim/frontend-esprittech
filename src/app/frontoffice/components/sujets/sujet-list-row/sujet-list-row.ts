@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SujetProjet } from '../../../../core/models/sujet-projet.model';
-import { CATEGORIE_LABELS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
+import { CATEGORIE_LABELS, MES_SUJETS_STATUT_STYLES, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-sujet-list-row',
@@ -27,6 +27,10 @@ export class SujetListRow {
 
   get statutBadge() {
     return STATUT_LABELS[this.sujet.statut] ?? { label: this.sujet.statut, cssClass: 'badge--neutral' };
+  }
+
+  get statutListClass(): string {
+    return MES_SUJETS_STATUT_STYLES[this.sujet.statut]?.listClass ?? 'badge--neutral';
   }
 
   get accentClass(): string {

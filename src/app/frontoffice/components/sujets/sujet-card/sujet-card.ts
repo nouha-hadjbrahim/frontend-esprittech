@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CategorieSujet, SujetProjet } from '../../../../core/models/sujet-projet.model';
-import { STATUT_LABELS } from '../../../constants/sujet-projet.constants';
+import { STATUT_LABELS, MES_SUJETS_STATUT_STYLES } from '../../../constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-sujet-card',
@@ -46,29 +46,11 @@ export class SujetCard {
   }
 
   get statusTagClass(): string {
-    if (['badge--success', 'badge--info'].includes(this.statutBadge.cssClass)) {
-      if (this.sujet.statut === 'VALIDE') return 'dispo-card__status-tag--valid';
-      return 'dispo-card__status-tag--open';
-    }
-    if (['badge--warning', 'badge--progress'].includes(this.statutBadge.cssClass)) {
-      return 'dispo-card__status-tag--warning';
-    }
-    const restantes = Math.max(0, this.sujet.capaciteAccueil - this.placesTaken);
-    if (restantes === 0) return 'dispo-card__status-tag--full';
-    return 'dispo-card__status-tag--muted';
+    return MES_SUJETS_STATUT_STYLES[this.sujet.statut]?.cardTagClass ?? 'dispo-card__status-tag--muted';
   }
 
   get statusDotClass(): string {
-    if (this.sujet.statut === 'VALIDE') return 'dispo-card__status-dot--valid';
-    if (['badge--success', 'badge--info'].includes(this.statutBadge.cssClass)) {
-      return 'dispo-card__status-dot--open';
-    }
-    if (['badge--warning', 'badge--progress'].includes(this.statutBadge.cssClass)) {
-      return 'dispo-card__status-dot--warning';
-    }
-    const restantes = Math.max(0, this.sujet.capaciteAccueil - this.placesTaken);
-    if (restantes === 0) return 'dispo-card__status-dot--full';
-    return 'dispo-card__status-dot--muted';
+    return MES_SUJETS_STATUT_STYLES[this.sujet.statut]?.cardDotClass ?? 'dispo-card__status-dot--muted';
   }
 
   get primaryDomaine(): string {

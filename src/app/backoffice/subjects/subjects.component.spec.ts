@@ -37,10 +37,33 @@ describe('SubjectsComponent', () => {
       first: true,
       last: true,
     });
-    httpMock.expectOne(`${environment.apiUrl}/sujet-projets/technologies`).flush([]);
-    httpMock.expectOne(`${environment.apiUrl}/sujet-projets/suggestions/domaines`).flush([]);
-    httpMock.expectOne(`${environment.apiUrl}/sujet-projets/suggestions/prerequis`).flush([]);
+
+    const flushMatching = (urlPart: string) => {
+      httpMock.match((req) => req.url.includes(urlPart)).forEach((req) => req.flush({
+        content: [],
+        page: 0,
+        size: 1000,
+        totalElements: 0,
+        totalPages: 0,
+        first: true,
+        last: true,
+      }));
+    };
+    flushMatching('/sujet-projets/admin/references/technologies');
+    flushMatching('/sujet-projets/admin/references/domaines');
+    flushMatching('/sujet-projets/admin/references/prerequis');
 
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('should map distinct badge classes for type and status', () => {
+    const fixture = TestBed.createComponent(SubjectsComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.getCategorieClass('PFE')).toBe('badge--pfe');
+    expect(component.getCategorieClass('STAGE_INGENIEUR')).toBe('badge--stage');
+    expect(component.getCategorieClass('RDI')).toBe('badge--rdi');
+    expect(component.getStatutClass('VALIDE')).toBe('badge--statut-valide');
+    expect(component.getStatutClass('REALISATION_EN_COURS')).toBe('badge--statut-realisation');
   });
 });

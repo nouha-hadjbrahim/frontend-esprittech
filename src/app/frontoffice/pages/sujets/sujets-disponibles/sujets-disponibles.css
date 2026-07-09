@@ -170,6 +170,12 @@
   align-items: stretch;
 }
 
+.sujets-disponibles__grid > app-sujet-disponible-card {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
 .sujets-disponibles__loading {
   padding: 64px 24px;
   text-align: center;

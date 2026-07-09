@@ -34,6 +34,36 @@
   line-height: 1.5;
 }
 
+.mes-sujets__scope-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mes-sujets__scope-pill {
+  padding: 6px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mes-sujets__scope-pill:hover {
+  border-color: #d1d5db;
+}
+
+.mes-sujets__scope-pill--active {
+  border-color: #e53935;
+  background: #e53935;
+  color: #ffffff;
+}
+
 .mes-sujets__add-btn {
   display: inline-flex;
   align-items: center;
@@ -183,6 +213,13 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+  align-items: stretch;
+}
+
+.mes-sujets__grid > app-sujet-card {
+  display: block;
+  height: 100%;
+  min-height: 0;
 }
 
 .mes-sujets__list {

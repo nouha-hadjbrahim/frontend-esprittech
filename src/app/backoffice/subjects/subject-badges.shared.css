@@ -1,0 +1,81 @@
+/* Types de sujet */
+.badge--pfe {
+  background: #fff5f5;
+  color: #E23E3E;
+}
+
+.badge--stage {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.badge--rdi {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* Statuts — couleurs distinctes (alignées sur Mes sujets) */
+.badge--statut-soumis {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge--statut-attente {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.badge--statut-invalide {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge--statut-valide {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge--statut-cand-ouverte {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge--statut-cand-fermee {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.badge--statut-realisation {
+  background: #ffefe5;
+  color: #c2410c;
+}
+
+.badge--statut-terminee {
+  background: #ccfbf1;
+  color: #115e59;
+}
+
+.badge--statut-indust-interne {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.badge--statut-indust-externe {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.badge--statut-indus-dsi {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge--statut-indus-externe {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.badge--neutral {
+  background: #f3f4f6;
+  color: #6b7280;
+}

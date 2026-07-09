@@ -105,6 +105,18 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     return this.authService.getRole() === 'ROLE_ETUDIANT';
   }
 
+  get isEnseignant(): boolean {
+    return this.authService.getRole() === 'ROLE_ENSEIGNANT';
+  }
+
+  get isChefEquipe(): boolean {
+    return this.authService.getRole() === 'ROLE_CHEF_EQUIPE';
+  }
+
+  get canManageCandidatures(): boolean {
+    return this.isOwner && (this.isEnseignant || this.isChefEquipe);
+  }
+
   get tabs(): { label: string; icon: string }[] {
     if (this.isEtudiant) {
       return [
@@ -117,7 +129,7 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
       { label: 'Informations', icon: 'info' },
       { label: 'Membres', icon: 'membres' },
     ];
-    if (this.isOwner) {
+    if (this.canManageCandidatures) {
       items.push({ label: 'Candidatures', icon: 'candidatures' });
     }
     items.push(
@@ -151,6 +163,9 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
         if (this.isEtudiant && !['Informations', 'Membres'].includes(this.activeTab)) {
           this.activeTab = 'Informations';
         }
+        if (this.activeTab === 'Candidatures' && !this.canManageCandidatures) {
+          this.activeTab = 'Informations';
+        }
         this.loadMembres();
         this.loadLivrables();
         this.loadEvaluation();
@@ -165,14 +180,18 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   get backLink(): string {
     const role = this.authService.getRole();
     if (role === 'ROLE_ENSEIGNANT') return '/frontoffice/sujets/mes-sujets';
-    if (role === 'ROLE_CHEF_EQUIPE') return '/frontoffice/validation-sujets';
+    if (role === 'ROLE_CHEF_EQUIPE') {
+      return this.isOwner ? '/frontoffice/sujets/mes-sujets' : '/frontoffice/validation-sujets';
+    }
     return '/frontoffice/sujets/disponibles';
   }
 
   get backLabel(): string {
     const role = this.authService.getRole();
     if (role === 'ROLE_ENSEIGNANT') return 'Retour à mes sujets';
-    if (role === 'ROLE_CHEF_EQUIPE') return 'Retour à la validation';
+    if (role === 'ROLE_CHEF_EQUIPE') {
+      return this.isOwner ? 'Retour à mes sujets' : 'Retour à la validation';
+    }
     return 'Retour aux sujets disponibles';
   }
 
@@ -261,6 +280,7 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   annulerTerminaison(): void {
     this.terminaisonConfirmOpen = false;
     this.terminaisonLoading = false;
+    this.terminaisonError = '';
   }
 
   confirmerTerminaison(): void {
@@ -295,7 +315,7 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   }
 
   loadCandidatures(): void {
-    if (!this.sujet || !this.isOwner) return;
+    if (!this.sujet || !this.canManageCandidatures) return;
     this.candidaturesLoading = true;
     this.candidaturesError = '';
     this.candidatureService.getCandidaturesParSujet(this.sujet.id).subscribe({
@@ -324,21 +344,19 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   }
 
   candidatureStatutLabel(statut: StatutCandidature): string {
-    const labels: Record<StatutCandidature, string> = {
+    const labels: Partial<Record<StatutCandidature, string>> = {
       DEPOSEE: 'En attente',
       ACCEPTEE: 'Acceptée',
       REFUSEE: 'Refusée',
-      ARCHIVEE: 'Archivée',
     };
     return labels[statut] ?? statut;
   }
 
   candidatureStatutClass(statut: StatutCandidature): string {
-    const classes: Record<StatutCandidature, string> = {
+    const classes: Partial<Record<StatutCandidature, string>> = {
       DEPOSEE: 'candidature-card__status--pending',
       ACCEPTEE: 'candidature-card__status--accepted',
       REFUSEE: 'candidature-card__status--refused',
-      ARCHIVEE: 'candidature-card__status--archived',
     };
     return classes[statut] ?? '';
   }

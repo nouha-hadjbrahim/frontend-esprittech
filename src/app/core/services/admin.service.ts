@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Page } from '../models/page.model';
-import { CategorieSujet, StatutSujet, SujetProjet, SujetProjetRequest } from '../models/sujet-projet.model';
+import { CategorieSujet, StatutSujet, SujetProjet, SujetProjetRequest, AdminCreateSujetProjetRequest } from '../models/sujet-projet.model';
 import { CreateUserRequest, UpdateUserRequest, User } from '../models/user.model';
 
 /** Réponse générique porteuse d'un message (MessageResponse backend). */
@@ -63,6 +63,20 @@ export class AdminService {
   }
 
   // ----- Gestion des sujets -----
+
+  /** Recherche d'enseignants affiliés à une équipe (affectation de sujet). */
+  chercherEncadrants(search: string, page = 0, size = 6): Observable<Page<User>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (search?.trim()) {
+      params = params.set('search', search.trim());
+    }
+    return this.http.get<Page<User>>(`${this.baseUrl}/encadrants`, { params });
+  }
+
+  /** Crée un sujet validé et publié pour un encadrant affilié. */
+  createSujet(request: AdminCreateSujetProjetRequest): Observable<SujetProjet> {
+    return this.http.post<SujetProjet>(`${this.baseUrl}/sujet-projets`, request);
+  }
 
   /** Liste paginée de tous les sujets. */
   getSujets(

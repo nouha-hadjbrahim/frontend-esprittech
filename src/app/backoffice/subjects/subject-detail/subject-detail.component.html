@@ -14,7 +14,7 @@
     <header class="detail-header">
       <div class="detail-header__main">
         <div class="detail-header__badges">
-          <span class="badge badge--type">{{ categorieLabel }}</span>
+          <span class="badge" [ngClass]="getCategorieClass(sujet.categorie)">{{ categorieLabel }}</span>
           <span class="badge" [ngClass]="getStatutClass(sujet.statut)">{{ statutLabel }}</span>
           @if (sujet.catalogue) {
             <span class="badge badge--catalog">Catalogue</span>

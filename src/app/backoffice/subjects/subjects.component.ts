@@ -8,7 +8,7 @@ import { CategorieSujet, StatutSujet, SujetProjet } from '../../core/models/suje
 import { AdminService } from '../../core/services/admin.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { DeposerSujetModal } from '../../frontoffice/components/sujets/deposer-sujet-modal/deposer-sujet-modal';
-import { CATEGORIE_LABELS, STATUT_LABELS } from '../../frontoffice/constants/sujet-projet.constants';
+import { CATEGORIE_LABELS, MES_SUJETS_STATUT_STYLES, STATUT_LABELS } from '../../frontoffice/constants/sujet-projet.constants';
 
 type SubjectTab = 'sujets' | 'demandes' | 'disponibles';
 
@@ -68,6 +68,7 @@ export class SubjectsComponent implements OnInit, OnDestroy {
   sujetToDelete: SujetProjet | null = null;
 
   editModalOpen = false;
+  createModalOpen = false;
   sujetToEdit?: SujetProjet;
 
   readonly categorieOptions = [
@@ -172,25 +173,16 @@ export class SubjectsComponent implements OnInit, OnDestroy {
     return CATEGORIE_LABELS[categorie]?.label ?? categorie;
   }
 
+  getCategorieClass(categorie: CategorieSujet): string {
+    return CATEGORIE_LABELS[categorie]?.cssClass ?? 'badge--pfe';
+  }
+
   getStatutLabel(statut: StatutSujet): string {
     return STATUT_LABELS[statut]?.label ?? statut;
   }
 
   getStatutClass(statut: StatutSujet): string {
-    const cssClass = STATUT_LABELS[statut]?.cssClass ?? 'badge--neutral';
-    switch (cssClass) {
-      case 'badge--success': return 'status-success';
-      case 'badge--danger': return 'status-danger';
-      case 'badge--warning':
-      case 'badge--progress': return 'status-warning';
-      case 'badge--info': return 'status-info';
-      default: return 'status-neutral';
-    }
-  }
-
-  formatDate(iso: string | null): string {
-    if (!iso) return '—';
-    return iso.substring(0, 10);
+    return MES_SUJETS_STATUT_STYLES[statut]?.listClass ?? 'badge--neutral';
   }
 
   viewDetails(sujet: SujetProjet): void {
@@ -208,6 +200,20 @@ export class SubjectsComponent implements OnInit, OnDestroy {
         this.editModalOpen = true;
       },
     });
+  }
+
+  openCreateModal(): void {
+    this.createModalOpen = true;
+  }
+
+  closeCreateModal(): void {
+    this.createModalOpen = false;
+  }
+
+  onCreateSaved(): void {
+    this.closeCreateModal();
+    this.loadData();
+    this.loadPendingCount();
   }
 
   closeEditModal(): void {

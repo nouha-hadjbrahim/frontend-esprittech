@@ -5,7 +5,7 @@ import { SujetProjet } from '../../../core/models/sujet-projet.model';
 import { AdminService } from '../../../core/services/admin.service';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { DeposerSujetModal } from '../../../frontoffice/components/sujets/deposer-sujet-modal/deposer-sujet-modal';
-import { CATEGORIE_LABELS, STATUT_LABELS } from '../../../frontoffice/constants/sujet-projet.constants';
+import { CATEGORIE_LABELS, MES_SUJETS_STATUT_STYLES, STATUT_LABELS } from '../../../frontoffice/constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-subject-detail',
@@ -62,6 +62,10 @@ export class SubjectDetailComponent implements OnInit {
     return this.sujet ? (CATEGORIE_LABELS[this.sujet.categorie]?.label ?? this.sujet.categorie) : '';
   }
 
+  getCategorieClass(categorie: SujetProjet['categorie']): string {
+    return CATEGORIE_LABELS[categorie]?.cssClass ?? 'badge--pfe';
+  }
+
   get statutLabel(): string {
     return this.sujet ? (STATUT_LABELS[this.sujet.statut]?.label ?? this.sujet.statut) : '';
   }
@@ -93,20 +97,7 @@ export class SubjectDetailComponent implements OnInit {
   }
 
   getStatutClass(statut: SujetProjet['statut']): string {
-    const cssClass = STATUT_LABELS[statut]?.cssClass ?? 'badge--neutral';
-    switch (cssClass) {
-      case 'badge--success':
-        return 'status-success';
-      case 'badge--danger':
-        return 'status-danger';
-      case 'badge--warning':
-      case 'badge--progress':
-        return 'status-warning';
-      case 'badge--info':
-        return 'status-info';
-      default:
-        return 'status-neutral';
-    }
+    return MES_SUJETS_STATUT_STYLES[statut]?.listClass ?? 'badge--neutral';
   }
 
   getObjectifLines(): string[] {

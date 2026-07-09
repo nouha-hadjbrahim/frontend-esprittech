@@ -12,6 +12,7 @@ import { GererCandidaturesModal } from '../../../components/sujets/gerer-candida
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 export type ViewMode = 'cards' | 'list';
+export type SujetScope = 'mes' | 'equipe';
 
 @Component({
   selector: 'app-mes-sujets',
@@ -34,6 +35,7 @@ export class MesSujets implements OnInit {
   selectedStatut = '';
   sortOrder = 'recent';
   viewMode: ViewMode = 'cards';
+  sujetScope: SujetScope = 'mes';
 
   candidaturesModalOpen = false;
   sujetCandidatures?: SujetProjet;
@@ -61,17 +63,41 @@ export class MesSujets implements OnInit {
     return this.authService.getRole() === 'ROLE_CHEF_EQUIPE';
   }
 
+  get isEnseignant(): boolean {
+    return this.authService.getRole() === 'ROLE_ENSEIGNANT';
+  }
+
+  get canDeposerSujet(): boolean {
+    return this.isEnseignant || this.isChefEquipe;
+  }
+
   get pageTitle(): string {
+    if (this.isChefEquipe) {
+      return this.sujetScope === 'mes' ? 'Mes sujets' : "Sujets de l'équipe";
+    }
     return 'Mes sujets';
   }
 
   get pageSubtitle(): string {
-    return this.isChefEquipe
-      ? 'Sujets déposés par les enseignants de votre équipe.'
-      : 'Sujets déposés, leur statut de validation et leurs candidatures.';
+    if (this.isChefEquipe && this.sujetScope === 'equipe') {
+      return 'Sujets déposés par les enseignants de votre équipe (consultation uniquement).';
+    }
+    if (this.isChefEquipe) {
+      return 'Vos sujets déposés, validés automatiquement, avec gestion des candidatures.';
+    }
+    return 'Sujets déposés, leur statut de validation et leurs candidatures.';
   }
 
   ngOnInit(): void {
+    this.loadSujets();
+  }
+
+  setSujetScope(scope: SujetScope): void {
+    if (!this.isChefEquipe || this.sujetScope === scope) {
+      return;
+    }
+    this.sujetScope = scope;
+    this.searchQuery = '';
     this.loadSujets();
   }
 
@@ -81,26 +107,28 @@ export class MesSujets implements OnInit {
     const categorie = (this.selectedCategorie || undefined) as CategorieSujet | undefined;
     const statut = (this.selectedStatut || undefined) as StatutSujet | undefined;
 
-    const request$ = this.isChefEquipe
-      ? this.sujetProjetService.getSujetsEquipe(categorie, statut)
-      : this.sujetProjetService.getMesSujets(categorie, statut);
+    const request$ =
+      this.isChefEquipe && this.sujetScope === 'equipe'
+        ? this.sujetProjetService.getSujetsEquipe(categorie, statut)
+        : this.sujetProjetService.getMesSujets(categorie, statut);
 
     request$.subscribe({
       next: (sujets) => {
-        this.sujets = sujets;
+        this.sujets = this.filterSujetsForScope(sujets);
         this.applyFilters();
         this.isLoading = false;
         if (this.candidaturesModalOpen && this.sujetCandidatures) {
-          this.sujetCandidatures = sujets.find((s) => s.id === this.sujetCandidatures?.id) ?? this.sujetCandidatures;
+          this.sujetCandidatures = this.sujets.find((s) => s.id === this.sujetCandidatures?.id) ?? this.sujetCandidatures;
         }
       },
       error: () => {
         this.sujets = [];
         this.filteredSujets = [];
         this.isLoading = false;
-        this.loadError = this.isChefEquipe
-          ? 'Impossible de charger les sujets de l\'équipe. Vérifiez que le backend est démarré.'
-          : '';
+        this.loadError =
+          this.isChefEquipe && this.sujetScope === 'equipe'
+            ? "Impossible de charger les sujets de l'équipe. Vérifiez que le backend est démarré."
+            : 'Impossible de charger vos sujets. Vérifiez que le backend est démarré.';
       },
     });
   }
@@ -131,6 +159,9 @@ export class MesSujets implements OnInit {
   onSujetSaved(): void {
     this.isModalOpen = false;
     this.editSujet = undefined;
+    if (this.isChefEquipe) {
+      this.sujetScope = 'mes';
+    }
     this.loadSujets();
   }
 
@@ -203,7 +234,10 @@ export class MesSujets implements OnInit {
   }
 
   isOwner(sujet: SujetProjet): boolean {
-    if (this.isChefEquipe) {
+    if (this.isChefEquipe && this.sujetScope === 'equipe') {
+      return false;
+    }
+    if (!this.canDeposerSujet) {
       return false;
     }
     const userId = this.authService.currentUser()?.id;
@@ -222,6 +256,19 @@ export class MesSujets implements OnInit {
 
   onCandidaturesChanged(): void {
     this.loadSujets();
+  }
+
+  private filterSujetsForScope(sujets: SujetProjet[]): SujetProjet[] {
+    if (!this.isChefEquipe) {
+      return sujets;
+    }
+
+    const userId = this.authService.currentUser()?.id;
+    if (this.sujetScope === 'mes') {
+      return userId != null ? sujets.filter((s) => s.encadrantId === userId) : sujets;
+    }
+
+    return userId != null ? sujets.filter((s) => s.encadrantId !== userId) : sujets;
   }
 
   private applyFilters(): void {

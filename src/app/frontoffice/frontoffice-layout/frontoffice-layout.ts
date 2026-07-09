@@ -6,7 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { AffiliationService } from '../../core/services/affiliation.service';
 import { EquipeService } from '../../core/services/equipe.service';
 
-type NavIcon = 'layers' | 'document';
+type NavIcon = 'layers' | 'document' | 'validation';
 
 interface NavLink {
   label: string;
@@ -115,7 +115,7 @@ export class FrontofficeLayout implements OnInit {
       children: [
         { label: 'Sujets disponibles', path: '/frontoffice/sujets/disponibles', icon: 'layers' as NavIcon },
         { label: 'Mes sujets', path: '/frontoffice/sujets/mes-sujets', icon: 'document' as NavIcon },
-        { label: 'Validation des sujets', path: '/frontoffice/validation-sujets' },
+        { label: 'Validation des sujets', path: '/frontoffice/validation-sujets', icon: 'validation' as NavIcon },
       ],
     };
   }

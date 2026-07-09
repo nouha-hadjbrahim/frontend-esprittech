@@ -38,10 +38,12 @@ describe('MesSujets', () => {
   let component: MesSujets;
   let sujetService: jasmine.SpyObj<SujetProjetService>;
   let currentUser: WritableSignal<User | null>;
+  let currentRole = 'ROLE_ENSEIGNANT';
 
   beforeEach(async () => {
     sujetService = jasmine.createSpyObj('SujetProjetService', [
       'getMesSujets',
+      'getSujetsEquipe',
       'supprimerSujet',
       'getTechnologies',
       'getDomainesSuggestions',
@@ -50,11 +52,13 @@ describe('MesSujets', () => {
       'modifierSujet',
     ]);
     sujetService.getMesSujets.and.returnValue(of([mockSujetBase, mockSujet2]));
+    sujetService.getSujetsEquipe.and.returnValue(of([mockSujet2]));
     sujetService.getTechnologies.and.returnValue(of(['Python', 'Angular']));
     sujetService.getDomainesSuggestions.and.returnValue(of(['IA', 'Web']));
     sujetService.getPrerequisSuggestions.and.returnValue(of(['Java', 'SQL']));
     sujetService.creerSujet.and.returnValue(of(mockSujetBase));
     sujetService.modifierSujet.and.returnValue(of(mockSujetBase));
+    currentRole = 'ROLE_ENSEIGNANT';
     currentUser = signal<User | null>(makeUser(10));
     const referenceService = jasmine.createSpyObj<SujetReferenceService>('SujetReferenceService', [
       'suggestDomaine',
@@ -90,7 +94,7 @@ describe('MesSujets', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         { provide: SujetProjetService, useValue: sujetService },
-        { provide: AuthService, useValue: { currentUser, getRole: () => 'ROLE_ENSEIGNANT' } },
+        { provide: AuthService, useValue: { currentUser, getRole: () => currentRole } },
         { provide: SujetReferenceService, useValue: referenceService },
         { provide: CandidatureService, useValue: candidatureService },
       ],
@@ -262,6 +266,25 @@ describe('MesSujets', () => {
   it('isOwner should return false when no user is logged in', () => {
     currentUser.set(null);
     expect(component.isOwner(mockSujetBase)).toBeFalse();
+  });
+
+  it('chef equipe on equipe scope should not be owner', () => {
+    currentRole = 'ROLE_CHEF_EQUIPE';
+    component.sujetScope = 'equipe';
+    expect(component.isOwner(mockSujetBase)).toBeFalse();
+  });
+
+  it('chef equipe on mes scope should be owner for own subject', () => {
+    currentRole = 'ROLE_CHEF_EQUIPE';
+    component.sujetScope = 'mes';
+    expect(component.isOwner(mockSujetBase)).toBeTrue();
+  });
+
+  it('setSujetScope equipe should load team subjects', () => {
+    currentRole = 'ROLE_CHEF_EQUIPE';
+    component.setSujetScope('equipe');
+    expect(component.sujetScope).toBe('equipe');
+    expect(sujetService.getSujetsEquipe).toHaveBeenCalled();
   });
 
   // ── Candidatures modal ────────────────────────────────────────────

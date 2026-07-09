@@ -53,16 +53,16 @@
     <h3 class="dispo-card__title">{{ sujet.titre }}</h3>
     <p class="dispo-card__description">{{ shortDescription }}</p>
 
-    @if (sujet.technologies.length > 0) {
-      <div class="dispo-card__techs">
+    <div class="dispo-card__techs" [class.dispo-card__techs--empty]="sujet.technologies.length === 0">
+      @if (sujet.technologies.length > 0) {
         @for (tech of visibleTechs; track tech) {
           <span class="dispo-card__tech">{{ tech }}</span>
         }
         @if (extraTechCount > 0) {
           <span class="dispo-card__tech">+{{ extraTechCount }}</span>
         }
-      </div>
-    }
+      }
+    </div>
 
     <div class="dispo-card__mentor">
       <span class="dispo-card__avatar" [class]="avatarClass">{{ initials }}</span>
