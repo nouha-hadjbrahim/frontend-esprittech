@@ -55,7 +55,7 @@ export class CiIndustrialisationComponent implements OnInit {
   readonly orientations = ORIENTATION_OPTIONS;
   readonly statuts: StatutIndustrialisation[] = ['SOUMISE', 'RECUE_PAR_CI', 'A_COMPLETER', 'RECEVABLE', 'GO', 'NO_GO', 'REFUSEE'];
   readonly types: TypeIndustrialisation[] = ['INTERNE', 'EXTERNE'];
-  readonly missingLivrablesWarning = 'Aucun livrable nest déposé pour ce projet. La CI verra cette alerte.';
+  readonly missingLivrablesWarning = 'Aucun livrable n’est déposé pour ce projet. La CI verra cette alerte.';
 
   readonly domaines = computed(() => {
     const domaines = this.demandes()
@@ -231,14 +231,65 @@ export class CiIndustrialisationComponent implements OnInit {
   }
 
   scoreValue(candidature: CandidatureIndustrialisation): number | null {
+    const latest = candidature.latestEvaluation;
+    if (latest && this.isEvaluationUncalculated(latest)) {
+      return null;
+    }
     const score = this.scoreFor(candidature);
     if (score) {
       return score.scoreFinal;
     }
-    return candidature.latestEvaluation?.scoreFinal ?? candidature.scoreEvaluationProjet ?? null;
+    if (latest?.finalValidatedScore != null) {
+      return latest.finalValidatedScore;
+    }
+    return latest?.scoreFinal ?? candidature.scoreEvaluationProjet ?? null;
+  }
+
+  scoreDisplay(candidature: CandidatureIndustrialisation): string {
+    const score = this.scoreValue(candidature);
+    return score == null ? 'Non calculé' : String(score);
+  }
+
+  scoreTitle(candidature: CandidatureIndustrialisation): string {
+    const latest = candidature.latestEvaluation;
+    if (latest && this.isEvaluationUncalculated(latest)) {
+      return 'Score non calculé';
+    }
+    if (latest && ['VALIDATED', 'OVERRIDDEN'].includes(latest.validationStatus ?? '') && latest.finalValidatedScore != null) {
+      return 'Score final validé';
+    }
+    if (latest?.mlStatus === 'PARTIAL_ANALYSIS' || latest?.processingStatus === 'PARTIAL_ANALYSIS') {
+      return 'Score provisoire';
+    }
+    if (latest) {
+      return 'Score officiel provisoire';
+    }
+    return 'Score final';
+  }
+
+  eligibilityDisplay(candidature: CandidatureIndustrialisation): string {
+    switch (candidature.latestEvaluation?.eligibilityStatus) {
+      case 'ELIGIBLE':
+        return 'Éligible';
+      case 'REVIEW_REQUIRED':
+        return 'Revue requise';
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'Non éligible en l’état';
+      case 'NOT_EVALUABLE':
+        return 'Non évaluable';
+      default:
+        return candidature.eligibleIndustrialisation ? 'Éligible industrialisation' : 'Non éligible';
+    }
   }
 
   scoreClass(candidature: CandidatureIndustrialisation): string {
+    if (candidature.latestEvaluation?.eligibilityStatus === 'NON_ELIGIBLE_EN_L_ETAT'
+      || candidature.latestEvaluation?.eligibilityStatus === 'NOT_EVALUABLE') {
+      return 'score-card--danger';
+    }
+    if (candidature.latestEvaluation?.eligibilityStatus === 'REVIEW_REQUIRED') {
+      return 'score-card--warning';
+    }
     const backendScore = this.scoreFor(candidature);
     if (backendScore?.decisionRecommandee === 'NO_GO') {
       return 'score-card--danger';
@@ -328,6 +379,9 @@ export class CiIndustrialisationComponent implements OnInit {
   }
 
   recommendation(candidature: CandidatureIndustrialisation): string {
+    if (candidature.latestEvaluation && this.isEvaluationUncalculated(candidature.latestEvaluation)) {
+      return 'Analyse non calculée';
+    }
     const score = this.scoreFor(candidature);
     if (score) {
       return score.decisionRecommandee === 'A_INSTRUIRE'
@@ -335,26 +389,61 @@ export class CiIndustrialisationComponent implements OnInit {
         : `${this.decisionLabel(score.decisionRecommandee)} recommande`;
     }
     if (candidature.latestEvaluation?.evaluationComplete === false) {
-      return 'Analyse necessaire';
+      return 'Analyse nécessaire';
+    }
+    if (candidature.latestEvaluation?.eligibilityStatus === 'REVIEW_REQUIRED') {
+      return 'A instruire';
     }
     if (candidature.eligibleIndustrialisation && (candidature.scoreEvaluationProjet ?? 0) >= 70) {
       return 'GO recommande';
     }
-    return 'Analyse necessaire';
+    return 'Analyse nécessaire';
   }
 
   recommendationExplanation(candidature: CandidatureIndustrialisation): string {
+    if (candidature.latestEvaluation && this.isEvaluationUncalculated(candidature.latestEvaluation)) {
+      return 'Aucun score n’a été calculé pour l’évaluation courante.';
+    }
     const score = this.scoreFor(candidature);
     if (score) {
       return score.message;
     }
     if (this.eliminatoryWarningCount(candidature) > 0) {
-      return 'Alerte eliminatoire non bloquante : la CI peut continuer vers GO ou NO GO apres analyse.';
+      return 'Alerte éliminatoire non bloquante : la CI peut continuer vers GO ou NO GO après analyse.';
     }
     if (candidature.latestEvaluation?.evaluationComplete === false) {
-      return 'Analyse necessaire : certains criteres ou livrables nont pas pu etre analyses par le moteur ML.';
+      return 'Analyse nécessaire : certains critères ou livrables n’ont pas pu être analysés par le moteur ML.';
     }
     return 'La decision GO / NO GO reste manuelle pour la CI.';
+  }
+
+  currentScoreCardValue(candidature: CandidatureIndustrialisation): string {
+    return this.scoreDisplay(candidature);
+  }
+
+  currentScoreCardSuffix(candidature: CandidatureIndustrialisation): string {
+    return this.scoreValue(candidature) == null ? '' : '/100';
+  }
+
+  currentDecisionOrEligibility(candidature: CandidatureIndustrialisation): string {
+    if (candidature.latestEvaluation && this.isEvaluationUncalculated(candidature.latestEvaluation)) {
+      return this.eligibilityDisplay(candidature);
+    }
+    const score = this.scoreFor(candidature);
+    return score?.decisionRecommandee ? this.decisionLabel(score.decisionRecommandee) : this.eligibilityDisplay(candidature);
+  }
+
+  useBackendIndustrialisationScore(candidature: CandidatureIndustrialisation): boolean {
+    return !!this.scoreFor(candidature) && !(candidature.latestEvaluation && this.isEvaluationUncalculated(candidature.latestEvaluation));
+  }
+
+  backendIndustrialisationScore(candidature: CandidatureIndustrialisation): IndustrialisationScore | null {
+    return this.useBackendIndustrialisationScore(candidature) ? this.scoreFor(candidature) : null;
+  }
+
+  private isEvaluationUncalculated(evaluation: NonNullable<CandidatureIndustrialisation['latestEvaluation']>): boolean {
+    return ['FAILED_RETRYABLE', 'FAILED_PERMANENT', 'MODEL_UNAVAILABLE', 'NOT_EVALUABLE_NO_DELIVERABLE']
+      .includes(evaluation.mlStatus ?? evaluation.processingStatus ?? '');
   }
 
   analysisIssueCount(candidature: CandidatureIndustrialisation): number {
@@ -385,7 +474,7 @@ export class CiIndustrialisationComponent implements OnInit {
   componentLabel(component: string): string {
     if (component.startsWith('QUESTIONNAIRE')) return 'Questionnaire';
     if (component === 'LIVRABLES') return 'Livrables';
-    if (component === 'CRITERES_NOTES') return 'Criteres notes';
+    if (component === 'CRITERES_NOTES') return 'Critères notés';
     return component;
   }
 

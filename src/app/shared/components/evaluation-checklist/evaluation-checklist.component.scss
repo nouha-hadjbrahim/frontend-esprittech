@@ -73,7 +73,7 @@
 .score-overview,
 .checklist-insights {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -162,6 +162,25 @@
 .blocking-list {
   color: #92400e !important;
   font-weight: 700;
+}
+
+.technical-details {
+  margin-top: 12px;
+  color: #4b5563;
+  font-size: 0.78rem;
+}
+
+.technical-details summary {
+  width: fit-content;
+  cursor: pointer;
+  color: #374151;
+  font-weight: 800;
+}
+
+.technical-details span {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
 }
 
 .checklist-progress {
@@ -271,6 +290,67 @@
 .checklist-evidence--danger,
 .checklist-comment--danger {
   color: #92400e;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.evidence-item {
+  display: grid;
+  gap: 4px;
+  padding: 9px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.evidence-item strong {
+  color: #111827;
+  font-size: 0.78rem;
+}
+
+.evidence-item span,
+.evidence-item p {
+  color: #4b5563;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.evidence-badge {
+  width: fit-content;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 0.68rem !important;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.evidence-badge--supports {
+  color: #047857 !important;
+  background: #ecfdf5;
+}
+
+.evidence-badge--contradicts {
+  color: #b91c1c !important;
+  background: #fef2f2;
+}
+
+.evidence-badge--neutral {
+  color: #374151 !important;
+  background: #f3f4f6;
+}
+
+.evidence-badge--insufficient {
+  color: #92400e !important;
+  background: #fffbeb;
+}
+
+.evidence-badge--ignored {
+  color: #6b7280 !important;
+  background: #f3f4f6;
 }
 
 @media (max-width: 900px) {

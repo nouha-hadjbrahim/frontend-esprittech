@@ -16,11 +16,11 @@
       <strong>{{ evaluatedCount }}</strong>
     </article>
     <article class="kpi-card">
-      <span>Eligibles</span>
+      <span>Éligibles</span>
       <strong>{{ eligibleCount }}</strong>
     </article>
     <article class="kpi-card">
-      <span>Non eligibles</span>
+      <span>Non éligibles</span>
       <strong>{{ nonEligibleCount }}</strong>
     </article>
   </section>
@@ -66,7 +66,7 @@
             <th>Projet</th>
             <th>Statut</th>
             <th>Score</th>
-            <th>Eligibilite</th>
+            <th>Éligibilité</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -76,14 +76,12 @@
             <td><strong>{{ p.titre }}</strong></td>
             <td><span class="status-chip">{{ statusLabel(p.statut) }}</span></td>
             <td>
-              <span class="score-chip">{{ p.scoreFinal == null ? 'Non calcule' : (p.scoreFinal + ' / 100') }}</span>
+              <span class="score-chip">{{ projectScoreLabel(p) }}</span>
             </td>
             <td>
               <span class="badge"
-                [class.badge-success]="p.eligibleIndustrialisation"
-                [class.badge-danger]="p.eligibleIndustrialisation === false"
-                [class.badge-secondary]="p.eligibleIndustrialisation == null">
-                {{ p.eligibleIndustrialisation == null ? 'En attente' : (p.eligibleIndustrialisation ? 'Eligible' : 'Non eligible') }}
+                [ngClass]="projectEligibilityClass(p)">
+                {{ projectEligibilityLabel(p) }}
               </span>
             </td>
             <td class="actions-cell">
@@ -99,7 +97,7 @@
                 } @else if (isProjectCoolingDown(p.id)) {
                   Recalcul dans {{ cooldownLabel(p.id) }}
                 } @else {
-                  {{ p.scoreFinal == null ? 'Analyser contenu' : 'Reanalyser' }}
+                  {{ p.scoreFinal == null ? 'Analyser contenu' : 'Réanalyser' }}
                 }
               </button>
               @if (isProjectCoolingDown(p.id)) {
@@ -127,11 +125,15 @@
       <div class="summary-grid">
         <article class="metric">
           <span>Score ML</span>
-          <strong>{{ evalResult()!.mlScore ?? evalResult()!.scoreFinal }} / 100</strong>
+          <strong>{{ mlScoreLabelFor(evalResult()) }}</strong>
         </article>
         <article class="metric">
-          <span>Score final valide</span>
-          <strong>{{ scoreFor(evalResult()) }} / 100</strong>
+          <span>{{ scoreTitleFor(evalResult()) }}</span>
+          <strong>{{ scoreLabelFor(evalResult()) }}</strong>
+        </article>
+        <article class="metric">
+          <span>Éligibilité</span>
+          <strong>{{ eligibilityLabelFor(evalResult()) }}</strong>
         </article>
         <article class="metric">
           <span>Etat ML</span>
@@ -146,8 +148,8 @@
           <strong>{{ confidencePercent(evalResult()!.mlGlobalConfidence) }}</strong>
         </article>
         <article class="metric">
-          <span>Modele</span>
-          <strong>{{ evalResult()!.mlModelVersion || '-' }}</strong>
+          <span>Traitement</span>
+          <strong>{{ evalResult()!.processingStatus || evalResult()!.mlStatus || '-' }}</strong>
         </article>
         <article class="metric">
           <span>Calcule le</span>
@@ -204,10 +206,10 @@
       <div *ngIf="!loadingHistory() && evalHistory().length > 0" class="history-list">
         <article *ngFor="let item of evalHistory()" class="history-row">
           <div>
-            <strong>{{ scoreFor(item) }} / 100</strong>
+            <strong>{{ scoreLabelFor(item) }}</strong>
             <span>{{ item.dateCalcul | date:'yyyy-MM-dd HH:mm' }} - {{ validationStatusLabel(item.validationStatus) }}</span>
           </div>
-          <span>{{ item.mlModelVersion || 'Modele non renseigne' }}</span>
+          <span>{{ item.processingStatus || item.mlStatus || 'Statut non renseigne' }}</span>
         </article>
       </div>
     </section>

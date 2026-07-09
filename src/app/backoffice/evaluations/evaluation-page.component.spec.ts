@@ -52,7 +52,8 @@ describe('EvaluationPageComponent', () => {
     recalculationReason: 'Recalcul manuel',
     resultats: [],
     mlStatus: 'COMPLETED',
-    mlModelVersion: 'deliverable-content-evaluator-v1',
+    mlModelVersion: '2.0.0',
+    pipelineVersion: 'multimodal-semantic-v2',
     mlGlobalConfidence: 0.8,
     mlScore: 67,
     finalValidatedScore: null,
@@ -184,8 +185,39 @@ it('should calculate score, update the matching row and leave other rows untouch
     bloqueParEliminatoire: true,
   }));
 
-  expect(component.projects()[1]).toBe(projects[1]);
+    expect(component.projects()[1]).toBe(projects[1]);
 });
+  it('should label failed evaluations as non calculated and expose current eligibility', () => {
+    const failed = {
+      ...evaluation,
+      scoreFinal: 0,
+      mlScore: null,
+      mlStatus: 'FAILED_RETRYABLE',
+      eligibilityStatus: 'REVIEW_REQUIRED',
+      finalValidatedScore: null,
+    } as EvaluationResponse;
+
+    expect(component.scoreFor(failed)).toBeNull();
+    expect(component.scoreLabelFor(failed)).toBe('Non calculé');
+    expect(component.scoreTitleFor(failed)).toBe('Score non calculé');
+    expect(component.mlScoreLabelFor(failed)).toBe('Non calculé');
+    expect(component.eligibilityLabelFor(failed)).toBe('Revue requise');
+  });
+
+  it('should label partial pending analysis as provisional', () => {
+    const partial = {
+      ...evaluation,
+      mlStatus: 'PARTIAL_ANALYSIS',
+      eligibilityStatus: 'REVIEW_REQUIRED',
+      validationStatus: 'PENDING',
+      finalValidatedScore: null,
+    } as EvaluationResponse;
+
+    expect(component.scoreTitleFor(partial)).toBe('Score provisoire');
+    expect(component.scoreLabelFor(partial)).toBe('67 / 100');
+    expect(component.eligibilityLabelFor(partial)).toBe('Revue requise');
+  });
+
   it('should expose calculation errors with backend detail and fallback text', () => {
     evaluationService.calculateScore.and.returnValue(throwError(() => ({ error: { detail: 'Score indisponible' } })));
 

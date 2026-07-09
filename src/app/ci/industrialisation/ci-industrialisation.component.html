@@ -106,8 +106,8 @@
                   <span class="request-reference">{{ requestReference(demande) }} · {{ (demande.dateSoumission || demande.dateDemande) | date:'dd/MM/yyyy' }}</span>
                 </span>
                 <span class="request-score" [ngClass]="scoreClass(demande)">
-                  <strong>{{ scoreValue(demande) ?? '-' }}</strong>
-                  <span>/100</span>
+                  <strong>{{ scoreDisplay(demande) }}</strong>
+                  <span>{{ currentScoreCardSuffix(demande) }}</span>
                 </span>
               </button>
 
@@ -166,10 +166,10 @@
           </div>
 
           <aside class="score-card" [ngClass]="scoreClass(selected()!)">
-            <span>Score final</span>
-            <strong>{{ score()?.scoreFinal ?? scoreValue(selected()!) ?? '-' }}</strong>
-            <small>/100</small>
-            <p>{{ score()?.decisionRecommandee ? decisionLabel(score()!.decisionRecommandee) : (selected()!.eligibleIndustrialisation ? 'Eligible industrialisation' : 'Non eligible') }}</p>
+            <span>{{ scoreTitle(selected()!) }}</span>
+            <strong>{{ currentScoreCardValue(selected()!) }}</strong>
+            <small>{{ currentScoreCardSuffix(selected()!) }}</small>
+            <p>{{ currentDecisionOrEligibility(selected()!) }}</p>
           </aside>
         </section>
 
@@ -183,8 +183,8 @@
             <strong>{{ recommendation(selected()!) }}</strong>
           </div>
           <div>
-            <span>Alertes eliminatoires</span>
-            <strong>{{ eliminatoryWarningCount(selected()!) }}</strong>
+            <span>Critères éliminatoires</span>
+            <strong>{{ selected()!.latestEvaluation?.criteresEliminatoiresSatisfaits ?? 0 }} satisfaits · {{ selected()!.latestEvaluation?.criteresEliminatoiresNonSatisfaits ?? 0 }} non satisfaits · {{ selected()!.latestEvaluation?.criteresEliminatoiresIndetermines ?? eliminatoryWarningCount(selected()!) }} à vérifier</strong>
           </div>
           @if (canDecide(selected())) {
             <div class="decision-strip__actions">
@@ -274,10 +274,10 @@
               <h3>Aide a la decision CI</h3>
             </div>
           </header>
-          @if (score(); as scoreData) {
+          @if (backendIndustrialisationScore(selected()!); as scoreData) {
             <div class="helper-grid helper-grid--score">
               <div>
-                <span>Score final</span>
+                <span>{{ scoreTitle(selected()!) }}</span>
                 <strong>{{ scoreData.scoreFinal }}/100</strong>
               </div>
               <div>
@@ -299,7 +299,7 @@
             <div class="helper-grid">
               <div>
                 <span>Score utilise</span>
-                <strong>{{ selected()!.latestEvaluation?.scoreFinal ?? selected()!.scoreEvaluationProjet ?? '-' }}/100</strong>
+                <strong>{{ scoreDisplay(selected()!) }}{{ currentScoreCardSuffix(selected()!) ? ' / 100' : '' }}</strong>
               </div>
               <div>
                 <span>Analyse ML</span>
@@ -310,15 +310,15 @@
                 <strong>{{ analysisIssueCount(selected()!) }}</strong>
               </div>
               <div>
-                <span>Modele</span>
-                <strong>{{ selected()!.latestEvaluation?.mlModelVersion || '-' }}</strong>
+                <span>Éligibilité</span>
+                <strong>{{ eligibilityDisplay(selected()!) }}</strong>
               </div>
             </div>
           }
           <p class="helper-explanation">{{ recommendationExplanation(selected()!) }}</p>
         </section>
 
-        @if (score(); as scoreData) {
+        @if (backendIndustrialisationScore(selected()!); as scoreData) {
           <section class="panel section-card score-breakdown">
             <header class="section-header">
               <div>
@@ -339,7 +339,7 @@
                 <small>Analyse de contenu via criteres</small>
               </article>
               <article class="component-score">
-                <span>Criteres notes</span>
+                <span>Critères notés</span>
                 <strong>{{ scoreData.scoreCriteresNotes }}/100</strong>
                 <small>Poids 100%</small>
               </article>

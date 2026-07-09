@@ -73,11 +73,13 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   }
 
   get eligibleCount(): number {
-    return this.projects().filter((project) => project.eligibleIndustrialisation === true).length;
+    return this.projects().filter((project) => this.projectEligibilityStatus(project) === 'ELIGIBLE').length;
   }
 
   get nonEligibleCount(): number {
-    return this.projects().filter((project) => project.eligibleIndustrialisation === false).length;
+    return this.projects().filter((project) =>
+      ['NON_ELIGIBLE', 'NON_ELIGIBLE_EN_L_ETAT', 'NOT_EVALUABLE'].includes(this.projectEligibilityStatus(project))
+    ).length;
   }
 
   ngOnInit(): void {
@@ -146,7 +148,11 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
           this.selectedProject = project;
           this.setCurrentEvaluation(evaluation);
           this.loadEvaluationHistory(project.id);
-          this.startCooldown(project.id);
+          if (this.isBusinessSuccess(evaluation)) {
+            this.startCooldown(project.id);
+          } else {
+            this.evalError.set(this.businessStatusMessage(evaluation));
+          }
           this.savingProjectId.set(null);
         },
         error: (error) => {
@@ -248,15 +254,74 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
     if (!evaluation) {
       return null;
     }
-    return evaluation.finalValidatedScore ?? evaluation.scoreFinal ?? null;
+    if (evaluation.finalValidatedScore != null) {
+      return evaluation.finalValidatedScore;
+    }
+    if (this.isEvaluationUncalculated(evaluation)) {
+      return null;
+    }
+    return evaluation.scoreFinal ?? null;
+  }
+
+  scoreLabelFor(evaluation: EvaluationResponse | null): string {
+    return this.formatScore(this.scoreFor(evaluation));
+  }
+
+  scoreTitleFor(evaluation: EvaluationResponse | null): string {
+    if (!evaluation || this.isEvaluationUncalculated(evaluation)) {
+      return 'Score non calculé';
+    }
+    if (['VALIDATED', 'OVERRIDDEN'].includes(evaluation.validationStatus ?? '') && evaluation.finalValidatedScore != null) {
+      return 'Score final validé';
+    }
+    if (evaluation.mlStatus === 'PARTIAL_ANALYSIS' || evaluation.processingStatus === 'PARTIAL_ANALYSIS') {
+      return 'Score provisoire';
+    }
+    return 'Score officiel provisoire';
+  }
+
+  mlScoreLabelFor(evaluation: EvaluationResponse | null): string {
+    if (!evaluation || this.isEvaluationUncalculated(evaluation)) {
+      return 'Non calculé';
+    }
+    return this.formatScore(evaluation.mlScore ?? evaluation.scoreFinal ?? null);
+  }
+
+  eligibilityLabelFor(evaluation: EvaluationResponse | null): string {
+    const status = (evaluation?.eligibilityStatus || '').toUpperCase();
+
+    switch (status) {
+      case 'ELIGIBLE':
+        return 'Éligible';
+      case 'REVIEW_REQUIRED':
+        return 'Revue requise';
+      case 'NON_ELIGIBLE':
+        return 'Non éligible';
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'Non éligible en l’état';
+      case 'NOT_EVALUABLE':
+      case 'NOT_EVALUABLE_NO_DELIVERABLE':
+        return 'Non évaluable';
+      default:
+        if (!evaluation || this.isEvaluationUncalculated(evaluation)) {
+          return 'Non calculé';
+        }
+        if (evaluation.eligibleIndustrialisation === true) {
+          return 'Éligible';
+        }
+        if (evaluation.scoreFinal != null && !evaluation.hasEliminatoryWarnings && (evaluation.eliminatoryWarningsCount ?? 0) === 0) {
+          return 'Revue requise';
+        }
+        return evaluation.eligibleIndustrialisation === false ? 'Non éligible' : 'Non calculé';
+    }
   }
 
   validationStatusLabel(status: string | null | undefined): string {
     switch (status) {
       case 'VALIDATED':
-        return 'Validee';
+        return 'Validée';
       case 'REJECTED':
-        return 'Rejetee';
+        return 'Rejetée';
       case 'OVERRIDDEN':
         return 'Override admin';
       case 'PENDING':
@@ -316,6 +381,7 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
               scoreFinal: this.scoreFor(evaluation),
               eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
               bloqueParEliminatoire: evaluation.bloqueParEliminatoire,
+              latestEvaluation: evaluation,
             }
           : project
       )
@@ -326,8 +392,50 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
         scoreFinal: this.scoreFor(evaluation),
         eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
         bloqueParEliminatoire: evaluation.bloqueParEliminatoire,
+        latestEvaluation: evaluation,
       };
     }
+  }
+
+  projectScoreLabel(project: ProjetEvaluable): string {
+    if (project.latestEvaluation) {
+      return this.scoreLabelFor(project.latestEvaluation);
+    }
+    return this.formatScore(project.scoreFinal ?? null);
+  }
+
+  projectEligibilityLabel(project: ProjetEvaluable): string {
+    if (project.latestEvaluation) {
+      return this.eligibilityLabelFor(project.latestEvaluation);
+    }
+
+    switch (this.projectEligibilityStatus(project)) {
+      case 'ELIGIBLE':
+        return 'Éligible';
+      case 'REVIEW_REQUIRED':
+        return 'Revue requise';
+      case 'NON_ELIGIBLE':
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'Non éligible';
+      case 'NOT_EVALUABLE':
+        return 'Non évaluable';
+      default:
+        return 'En attente';
+    }
+  }
+
+  projectEligibilityClass(project: ProjetEvaluable): string {
+    const status = this.projectEligibilityStatus(project);
+    if (status === 'ELIGIBLE') {
+      return 'badge-success';
+    }
+    if (status === 'REVIEW_REQUIRED') {
+      return 'badge-secondary';
+    }
+    if (['NON_ELIGIBLE', 'NON_ELIGIBLE_EN_L_ETAT', 'NOT_EVALUABLE'].includes(status)) {
+      return 'badge-danger';
+    }
+    return 'badge-secondary';
   }
 
   private normalize(value: unknown): string {
@@ -336,6 +444,67 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .trim();
+  }
+
+  private formatScore(score: number | null | undefined): string {
+    return score == null ? 'Non calculé' : `${Number(score).toFixed(2)} / 100`;
+  }
+
+  private evaluationStatus(evaluation: EvaluationResponse | null | undefined): string {
+    return (evaluation?.processingStatus || evaluation?.mlStatus || '').toUpperCase();
+  }
+
+  private projectEligibilityStatus(project: ProjetEvaluable): string {
+    const latestStatus = (project.latestEvaluation?.eligibilityStatus || '').toUpperCase();
+    if (latestStatus) {
+      return latestStatus;
+    }
+
+    if (project.eligibleIndustrialisation === true) {
+      return 'ELIGIBLE';
+    }
+
+    if (project.eligibleIndustrialisation === false) {
+      if (project.bloqueParEliminatoire === true) {
+        return 'NON_ELIGIBLE_EN_L_ETAT';
+      }
+      if (project.scoreFinal != null) {
+        return 'REVIEW_REQUIRED';
+      }
+      return 'NON_ELIGIBLE';
+    }
+
+    return 'PENDING';
+  }
+
+  private isEvaluationUncalculated(evaluation: EvaluationResponse): boolean {
+    return ['FAILED_RETRYABLE', 'FAILED_PERMANENT', 'MODEL_UNAVAILABLE', 'NOT_EVALUABLE_NO_DELIVERABLE', 'NOT_EVALUABLE']
+      .includes(this.evaluationStatus(evaluation));
+  }
+
+  private isBusinessSuccess(evaluation: EvaluationResponse): boolean {
+    return ['COMPLETED', 'COMPLETED_WITH_WARNINGS', 'PARTIAL_ANALYSIS']
+      .includes(this.evaluationStatus(evaluation));
+  }
+
+  private businessStatusMessage(evaluation: EvaluationResponse): string {
+    const status = this.evaluationStatus(evaluation);
+    if (status === 'FAILED_PERMANENT' && (evaluation.incompleteCriteriaCount ?? 0) > 0) {
+      return 'L’évaluation n’a pas pu être effectuée car la configuration des critères est incomplète.';
+    }
+    if (status === 'MODEL_UNAVAILABLE') {
+      return 'Le modèle ML n’est pas disponible.';
+    }
+    if (status === 'FAILED_RETRYABLE') {
+      return 'L’évaluation est temporairement indisponible. Veuillez réessayer.';
+    }
+    if (status === 'INSUFFICIENT_EVIDENCE') {
+      return 'Analyse terminée, preuves insuffisantes pour calculer un score.';
+    }
+    if (status === 'NOT_EVALUABLE' || status === 'NOT_EVALUABLE_NO_DELIVERABLE') {
+      return 'Le projet n’est pas évaluable avec les livrables disponibles.';
+    }
+    return 'L’évaluation n’a pas pu être effectuée.';
   }
 
   private extractError(error: any, fallback: string): string {
