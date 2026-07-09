@@ -30,6 +30,29 @@
           <span class="form-error">{{ fieldErrors['typeProjet'] }}</span>
         }
 
+        <!-- Image de couverture -->
+        <div class="form-field">
+          <label class="form-label">Image de couverture <span class="form-hint">(PNG ou JPG, max 900 Ko, optionnel)</span></label>
+          <div class="cover-upload">
+            @if (coverPreview) {
+              <div class="cover-upload__preview">
+                <img [src]="coverPreview" alt="Aperçu de la couverture" />
+                <button type="button" class="cover-upload__remove" (click)="removeCover()" aria-label="Retirer l'image">✕</button>
+              </div>
+            } @else {
+              <label class="cover-upload__drop">
+                <input type="file" accept="image/png,image/jpeg" (change)="onCoverSelected($event)" hidden />
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 14L7 11L10 14L14 10L16 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="3" y="4" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <span>Choisir une image de couverture…</span>
+              </label>
+            }
+          </div>
+          @if (coverError) { <span class="form-error">{{ coverError }}</span> }
+        </div>
+
         <div class="modal__columns">
           <div class="modal__column">
             <!-- Titre -->

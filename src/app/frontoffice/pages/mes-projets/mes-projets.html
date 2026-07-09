@@ -81,6 +81,11 @@
     <div class="mes-projets__grid">
       @for (projet of filtered; track projet.id) {
         <div class="projet-card">
+          @if (projet.coverImage) {
+            <div class="projet-card__cover">
+              <img [src]="projet.coverImage" [alt]="'Couverture de ' + projet.titre" loading="lazy" />
+            </div>
+          }
           <div class="projet-card__header">
             <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">
               {{ typeLabels[projet.typeProjet].label }}
