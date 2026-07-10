@@ -38,6 +38,7 @@ yarn-error.log
 testem.log
 /typings
 .scannerwork
+.scannerwork/*
 
 # Claude
 .claude/

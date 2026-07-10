@@ -1,0 +1,90 @@
+<div class="kpi-dashboard">
+  <div *ngIf="loading()" class="state-message">Chargement du tableau de bord...</div>
+
+  <div *ngIf="error()" class="state-message error">
+    Impossible de charger les statistiques.
+    <button class="retry-btn" (click)="load()">Réessayer</button>
+  </div>
+
+  <ng-container *ngIf="stats() as s">
+    <!-- Sujets -->
+    <section class="kpi-section">
+      <h2 class="section-title">Sujets de projet</h2>
+      <div class="kpi-grid">
+        <app-card class="kpi-card">
+          <app-card-header><app-card-title>Total soumis</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.sujetsTotal }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-green">
+          <app-card-header><app-card-title>Validés</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.sujetsValides }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-red">
+          <app-card-header><app-card-title>Invalidés</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.sujetsInvalides }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-amber">
+          <app-card-header><app-card-title>En attente</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.sujetsEnAttente }}</span></app-card-content>
+        </app-card>
+      </div>
+    </section>
+
+    <!-- Candidatures -->
+    <section class="kpi-section">
+      <h2 class="section-title">Candidatures</h2>
+      <div class="kpi-grid">
+        <app-card class="kpi-card">
+          <app-card-header><app-card-title>Total</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.candidaturesTotal }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-amber">
+          <app-card-header><app-card-title>En attente</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.candidaturesEnAttente }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-green">
+          <app-card-header><app-card-title>Acceptées</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.candidaturesAcceptees }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-red">
+          <app-card-header><app-card-title>Refusées</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.candidaturesRefusees }}</span></app-card-content>
+        </app-card>
+      </div>
+    </section>
+
+    <!-- Catalogue -->
+    <section class="kpi-section">
+      <h2 class="section-title">Catalogue applicatif</h2>
+      <div class="kpi-grid">
+        <app-card class="kpi-card accent-green">
+          <app-card-header><app-card-title>Au catalogue</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.projetsAuCatalogue }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-amber">
+          <app-card-header><app-card-title>En attente de validation</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.projetsEnAttenteValidationCatalogue }}</span></app-card-content>
+        </app-card>
+      </div>
+    </section>
+
+    <!-- Industrialisation / Go-No-Go -->
+    <section class="kpi-section">
+      <h2 class="section-title">Industrialisation</h2>
+      <div class="kpi-grid">
+        <app-card class="kpi-card">
+          <app-card-header><app-card-title>Score moyen</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.scoreMoyen }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-green">
+          <app-card-header><app-card-title>Go</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.industrialisationsGo }}</span></app-card-content>
+        </app-card>
+        <app-card class="kpi-card accent-red">
+          <app-card-header><app-card-title>No-Go</app-card-title></app-card-header>
+          <app-card-content><span class="kpi-value">{{ s.industrialisationsNoGo }}</span></app-card-content>
+        </app-card>
+      </div>
+    </section>
+  </ng-container>
+</div>
