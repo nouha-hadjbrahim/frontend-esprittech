@@ -1,119 +1,186 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { Subject, debounceTime } from 'rxjs';
+import { ProjetCard, StatutProjet, TypeProjet } from '../../core/models/projet-catalogue.model';
+import { ProjetCatalogueService } from '../../core/services/projet-catalogue.service';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
+import {
+  STATUT_PROJET_LABELS,
+  TYPE_PROJET_LABELS,
+  TYPE_PROJET_OPTIONS,
+} from '../../frontoffice/constants/projet-catalogue.constants';
 
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, ConfirmDialog],
   templateUrl: './catalog.component.html',
-  styleUrl: './catalog.component.css'
+  styleUrl: './catalog.component.css',
 })
-export class CatalogComponent {
-  activeType = 'Tous';
+export class CatalogComponent implements OnInit {
+  private readonly projetService = inject(ProjetCatalogueService);
+  private readonly searchSubject = new Subject<void>();
 
-  projects = [
-    {
-      id: 1,
-      title: 'Tableau de bord RH',
-      description: 'Dashboard analytique des ressources humaines.',
-      type: 'PFE',
-      status: 'Candidat industrialisation interne',
-      statusColor: '#60A5FA', // Blue-ish
-      year: '2025',
-      supervisor: 'Dr. Kanray Imen',
-      domain: 'BI',
-      porteurs: 1,
-      score: 80,
-      cover: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      labelise: false,
-      technologies: [
-        { name: 'Power BI', color: '#6b7280', bgColor: '#f3f4f6' },
-        { name: 'Python', color: '#f59e0b', bgColor: '#fef3c7' },
-        { name: 'SQL', color: '#e23e3e', bgColor: '#fef2f2' }
-      ]
-    },
-    {
-      id: 2,
-      title: 'Gestion des absences étudiantes',
-      description: 'Plateforme de suivi en temps réel des présences avec QR code et reconnaissance faciale.',
-      type: 'PFE',
-      status: 'Industrialisé DSI',
-      statusColor: '#10B981', // Green-ish
-      year: '2024',
-      supervisor: 'Dr. Ben Ali Sami',
-      domain: 'Informatique',
-      porteurs: 2,
-      score: 88,
-      cover: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      labelise: true,
-      technologies: [
-        { name: 'React', color: '#e23e3e', bgColor: '#fef2f2' },
-        { name: 'Node.js', color: '#f59e0b', bgColor: '#fef3c7' },
-        { name: 'PostgreSQL', color: '#e23e3e', bgColor: '#fef2f2' }
-      ]
-    },
-    {
-      id: 3,
-      title: 'Chatbot scolarité IA',
-      description: 'Assistant conversationnel multilingue pour les questions étudiantes.',
-      type: 'Stage',
-      status: 'Réalisation terminée',
-      statusColor: '#FBBF24', // Yellow-ish
-      year: '2024',
-      supervisor: 'Dr. Mrad Fatma',
-      domain: 'Data Science',
-      porteurs: 1,
-      score: 72,
-      cover: 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      labelise: false,
-      technologies: [
-        { name: 'Python', color: '#f59e0b', bgColor: '#fef3c7' },
-        { name: 'LangChain', color: '#4b5563', bgColor: '#f3f4f6' },
-        { name: 'Next.js', color: '#f59e0b', bgColor: '#fef3c7' }
-      ]
-    },
-    {
-      id: 4,
-      title: 'Application Web E-commerce',
-      description: 'Plateforme B2B pour les entreprises.',
-      type: 'Stage',
-      status: 'Candidat industrialisation externe',
-      statusColor: '#60A5FA', // Blue-ish
-      year: '2024',
-      supervisor: 'Dr. Frikha Anis',
-      domain: 'Génie Logiciel',
-      porteurs: 1,
-      score: 85,
-      cover: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      labelise: false,
-      technologies: [
-        { name: 'Angular', color: '#e23e3e', bgColor: '#fef2f2' },
-        { name: 'Spring Boot', color: '#10B981', bgColor: '#ecfdf5' }
-      ]
-    },
-    {
-      id: 5,
-      title: 'Système IoT de Surveillance',
-      description: 'Capteurs de température et d\'humidité en temps réel.',
-      type: 'PFE',
-      status: 'Labelisé',
-      statusColor: '#e23e3e', // Red
-      year: '2025',
-      supervisor: 'Dr. Ines Khaldi',
-      domain: 'IoT',
-      porteurs: 3,
-      score: 92,
-      cover: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      labelise: true,
-      technologies: [
-        { name: 'C++', color: '#6b7280', bgColor: '#f3f4f6' },
-        { name: 'AWS IoT', color: '#f59e0b', bgColor: '#fef3c7' }
-      ]
-    }
+  readonly typeLabels = TYPE_PROJET_LABELS;
+  readonly statutLabels = STATUT_PROJET_LABELS;
+  readonly typeButtons = [{ value: '' as const, label: 'Tous' }, ...TYPE_PROJET_OPTIONS];
+  readonly statutOptions = [
+    { value: '' as const, label: 'Tous les statuts' },
+    ...(Object.entries(STATUT_PROJET_LABELS) as [StatutProjet, { label: string; cssClass: string }][]).map(
+      ([value, meta]) => ({ value, label: meta.label }),
+    ),
+  ];
+  readonly sortOptions = [
+    { value: 'recent', label: 'Plus récents' },
+    { value: 'ancien', label: 'Plus anciens' },
+    { value: 'score', label: 'Meilleur score' },
   ];
 
-  setType(type: string) {
-    this.activeType = type;
+  allProjets: ProjetCard[] = [];
+  filtered: ProjetCard[] = [];
+  isLoading = true;
+  errorMessage = '';
+
+  searchQuery = '';
+  selectedType: '' | TypeProjet = '';
+  selectedStatut: '' | StatutProjet = '';
+  selectedDomaine = '';
+  selectedAnnee = '';
+  sortOrder = 'recent';
+
+  domaineOptions: string[] = [];
+  anneeOptions: number[] = [];
+
+  deleteConfirmOpen = false;
+  deleting = false;
+  deleteError = '';
+  projetToDelete: ProjetCard | null = null;
+
+  ngOnInit(): void {
+    this.searchSubject.pipe(debounceTime(300)).subscribe(() => this.applyFilters());
+    this.load();
+  }
+
+  load(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.projetService.tousLesProjets().subscribe({
+      next: (projets) => {
+        this.allProjets = projets;
+        this.deriveOptions();
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: () => {
+        this.allProjets = [];
+        this.filtered = [];
+        this.errorMessage = 'Impossible de charger le catalogue. Vérifiez que le backend est démarré.';
+        this.isLoading = false;
+      },
+    });
+  }
+
+  private deriveOptions(): void {
+    const domaines = new Set<string>();
+    const annees = new Set<number>();
+    for (const p of this.allProjets) {
+      p.domaines.forEach((d) => domaines.add(d));
+      if (p.dateDebut) {
+        annees.add(new Date(p.dateDebut).getFullYear());
+      }
+    }
+    this.domaineOptions = Array.from(domaines).sort((a, b) => a.localeCompare(b));
+    this.anneeOptions = Array.from(annees).sort((a, b) => b - a);
+  }
+
+  selectType(type: '' | TypeProjet): void {
+    this.selectedType = type;
+    this.applyFilters();
+  }
+
+  onSearchChange(): void {
+    this.searchSubject.next();
+  }
+
+  onFilterChange(): void {
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
+    let result = [...this.allProjets];
+
+    if (this.selectedType) {
+      result = result.filter((p) => p.typeProjet === this.selectedType);
+    }
+    if (this.selectedStatut) {
+      result = result.filter((p) => p.statut === this.selectedStatut);
+    }
+    if (this.selectedDomaine) {
+      result = result.filter((p) => p.domaines.includes(this.selectedDomaine));
+    }
+    if (this.selectedAnnee) {
+      const annee = Number(this.selectedAnnee);
+      result = result.filter((p) => p.dateDebut && new Date(p.dateDebut).getFullYear() === annee);
+    }
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.titre.toLowerCase().includes(query) ||
+          p.description.toLowerCase().includes(query) ||
+          p.encadrantNom.toLowerCase().includes(query) ||
+          p.technologies.some((t) => t.toLowerCase().includes(query)),
+      );
+    }
+
+    result.sort((a, b) => {
+      if (this.sortOrder === 'score') {
+        return b.score - a.score;
+      }
+      const dateA = new Date(a.dateCreation).getTime();
+      const dateB = new Date(b.dateCreation).getTime();
+      return this.sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
+    });
+
+    this.filtered = result;
+  }
+
+  askDelete(projet: ProjetCard): void {
+    this.projetToDelete = projet;
+    this.deleteError = '';
+    this.deleteConfirmOpen = true;
+  }
+
+  cancelDelete(): void {
+    this.deleteConfirmOpen = false;
+    this.deleting = false;
+    this.projetToDelete = null;
+  }
+
+  confirmDelete(): void {
+    if (!this.projetToDelete) return;
+
+    this.deleting = true;
+    this.projetService.supprimerProjet(this.projetToDelete.id).subscribe({
+      next: () => {
+        this.deleting = false;
+        this.deleteConfirmOpen = false;
+        this.projetToDelete = null;
+        this.load();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.deleting = false;
+        this.deleteError = err.error?.detail ?? 'Échec de la suppression.';
+      },
+    });
+  }
+
+  get deleteConfirmMessage(): string {
+    return this.projetToDelete
+      ? `Voulez-vous vraiment supprimer « ${this.projetToDelete.titre} » ? Cette action est irréversible.`
+      : '';
   }
 }

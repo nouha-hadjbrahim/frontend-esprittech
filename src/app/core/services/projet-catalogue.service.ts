@@ -58,6 +58,16 @@ export class ProjetCatalogueService {
     return this.http.get<ProjetDetails>(`${this.catalogueUrl}/${id}`);
   }
 
+  // ── Admin ──────────────────────────────────────────────────────────
+  /** Tous les projets du catalogue applicatif, quel que soit leur statut. */
+  tousLesProjets(): Observable<ProjetCard[]> {
+    return this.http.get<ProjetCard[]>(`${this.projetsUrl}/admin`);
+  }
+
+  supprimerProjet(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.projetsUrl}/${id}`);
+  }
+
   // ── Catalogue public ───────────────────────────────────────────────
   catalogue(filtres: CatalogueFiltres = {}): Observable<ProjetCard[]> {
     let params = new HttpParams();

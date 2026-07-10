@@ -72,7 +72,10 @@ export class ProjetDetailEnseignant implements OnInit {
   };
 
   ngOnInit(): void {
-    if (this.router.url.includes('validation-projets')) {
+    if (this.router.url.includes('backoffice/catalog')) {
+      this.backLink = '/backoffice/catalog';
+      this.backLabel = 'Catalogue';
+    } else if (this.router.url.includes('validation-projets')) {
       this.backLink = '/frontoffice/validation-projets';
       this.backLabel = 'Validation projets';
     }
