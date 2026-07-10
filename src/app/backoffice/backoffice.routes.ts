@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { BackofficeLayoutComponent } from './backoffice-layout/backoffice-layout.component';
 import { UsersComponent } from './users/users.component';
-import { MyProjectsComponent } from './my-projects/my-projects.component';
 import { ProjectDetailsComponent } from './project-details/project-details.component';
 import { EquipesRechercheComponent } from './equipes-recherche/equipes-recherche.component';
 import { DomainesComponent } from './equipes-recherche/domaines/domaines.component';
@@ -23,7 +22,6 @@ export const backofficeRoutes: Routes = [
     component: BackofficeLayoutComponent,
     children: [
       { path: 'dashboard', component: DashboardComponent },
-      { path: 'my-projects', component: MyProjectsComponent },
       { path: 'project-details', component: ProjectDetailsComponent },
       { path: 'subjects', component: SubjectsComponent },
       { path: 'subjects/formulaires', component: FormulairesComponent },
@@ -33,6 +31,12 @@ export const backofficeRoutes: Routes = [
       { path: 'subjects/prerequis', redirectTo: 'subjects/formulaires', pathMatch: 'full' },
       { path: 'subjects/technologies', redirectTo: 'subjects/formulaires', pathMatch: 'full' },
       { path: 'catalog', component: CatalogComponent },
+      {
+        path: 'catalog/:id',
+        loadComponent: () =>
+          import('../frontoffice/pages/projet-detail-enseignant/projet-detail-enseignant')
+            .then(m => m.ProjetDetailEnseignant)
+      },
       { path: 'applications', component: ApplicationsComponent },
       { path: 'equipes-recherche', component: EquipesRechercheComponent },
       { path: 'equipes-recherche/domaines', component: DomainesComponent },
