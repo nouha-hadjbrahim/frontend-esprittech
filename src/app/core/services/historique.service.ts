@@ -3,7 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Page } from '../models/page.model';
-import { HistoriqueResponse, HistoriqueFilters } from '../models/historique.model';
+import {
+  HistoriqueEntry,
+  HistoriqueFilter,
+  HistoriqueFilters,
+  HistoriqueResponse,
+} from '../models/historique.model';
 
 @Injectable({ providedIn: 'root' })
 export class HistoriqueService {
@@ -41,5 +46,10 @@ export class HistoriqueService {
     }
 
     return this.http.get<Page<HistoriqueResponse>>(this.base, { params });
+  }
+
+  getBySujet(sujetId: number, filter: HistoriqueFilter = 'TOUT'): Observable<HistoriqueEntry[]> {
+    const params = new HttpParams().set('filter', filter);
+    return this.http.get<HistoriqueEntry[]>(`${this.base}/sujet/${sujetId}`, { params });
   }
 }
