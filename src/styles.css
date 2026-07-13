@@ -208,3 +208,20 @@ html, body { height: 100%; }
 .snack-error   .mdc-snackbar__label   { color: #fff !important; }
 .snack-success .mat-mdc-snack-bar-action,
 .snack-error   .mat-mdc-snack-bar-action { color: rgba(255,255,255,.8) !important; }
+
+/* Formulaires équipes backoffice — même design blanc que Domaines / Sujets */
+.equipe-form-dialog .mat-mdc-dialog-container {
+  --mdc-dialog-container-color: #ffffff;
+  --mat-dialog-container-max-width: none;
+  padding: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.equipe-form-dialog .mdc-dialog__surface {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
