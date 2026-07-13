@@ -73,7 +73,8 @@ describe('DemandesAffiliationComponent', () => {
       fixture.detectChanges();
       expect(svc.getAll).toHaveBeenCalled();
       expect(component.demandes().length).toBe(3);
-      expect(component.filtered.length).toBe(3);
+      expect(component.filtered.length).toBe(1);
+      expect(component.filtered[0].statut).toBe('EN_ATTENTE');
       expect(component.chargement).toBeFalse();
     });
 
@@ -94,31 +95,45 @@ describe('DemandesAffiliationComponent', () => {
       fixture.detectChanges();
     });
 
-    it('should return all when query is empty', () => {
+    it('should return only pending demandes when query is empty', () => {
       component.query = '';
+      component.selectedEquipeId = '';
       component.appliquerFiltre();
-      expect(component.filtered.length).toBe(3);
+      expect(component.filtered.length).toBe(1);
+      expect(component.filtered.every((d) => d.statut === 'EN_ATTENTE')).toBeTrue();
     });
 
-    it('should filter by enseignant name', () => {
+    it('should filter by enseignant name among pending', () => {
       component.query = 'Jean';
       component.appliquerFiltre();
       expect(component.filtered.length).toBe(1);
       expect(component.filtered[0].id).toBe(1);
     });
 
-    it('should filter by enseignant email', () => {
+    it('should hide accepted demandes even if email matches', () => {
       component.query = 'marie@test.tn';
       component.appliquerFiltre();
-      expect(component.filtered.length).toBe(1);
-      expect(component.filtered[0].id).toBe(2);
+      expect(component.filtered.length).toBe(0);
     });
 
-    it('should filter by equipe nom', () => {
-      component.query = 'data';
+    it('should filter by equipe nom among pending', () => {
+      component.query = 'ai lab';
       component.appliquerFiltre();
       expect(component.filtered.length).toBe(1);
-      expect(component.filtered[0].equipeNom).toBe('Data Science');
+      expect(component.filtered[0].equipeNom).toBe('AI Lab');
+    });
+
+    it('should filter by selected equipe', () => {
+      component.selectedEquipeId = '10';
+      component.appliquerFiltre();
+      expect(component.filtered.length).toBe(1);
+      expect(component.filtered[0].equipeId).toBe(10);
+    });
+
+    it('should return empty when selected equipe has no pending demandes', () => {
+      component.selectedEquipeId = '11';
+      component.appliquerFiltre();
+      expect(component.filtered.length).toBe(0);
     });
 
     it('should return empty for non-matching query', () => {
@@ -232,21 +247,6 @@ describe('DemandesAffiliationComponent', () => {
       component.annulerRefus();
       expect(component.motifDialogOpen).toBeFalse();
       expect(component.pendingRefuse).toBeNull();
-    });
-  });
-
-  describe('statutLabel', () => {
-    it('should return Acceptée for ACCEPTEE', () => {
-      expect(component.statutLabel('ACCEPTEE')).toBe('Acceptée');
-    });
-
-    it('should return Refusée for REFUSEE', () => {
-      expect(component.statutLabel('REFUSEE')).toBe('Refusée');
-    });
-
-    it('should return En attente for anything else', () => {
-      expect(component.statutLabel('EN_ATTENTE')).toBe('En attente');
-      expect(component.statutLabel('OTHER')).toBe('En attente');
     });
   });
 
