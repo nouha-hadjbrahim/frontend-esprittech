@@ -1,6 +1,6 @@
 :host {
   display: block;
-  background: #f8f9fa;
+  background: #ffffff;
   min-height: calc(100vh - 80px);
   margin: -2rem;
   padding: 2rem;
@@ -9,8 +9,9 @@
 }
 
 .sujet-detail {
-  max-width: 1280px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 .sujet-detail__back {

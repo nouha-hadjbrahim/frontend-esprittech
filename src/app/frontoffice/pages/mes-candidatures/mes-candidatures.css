@@ -7,8 +7,9 @@
 }
 
 .mes-candidatures {
-  max-width: 960px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 .mes-candidatures__header {

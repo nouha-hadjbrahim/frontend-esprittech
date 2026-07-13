@@ -1,5 +1,4 @@
 <div class="equipe-detail">
-  <!-- Back button -->
   <button type="button" class="equipe-detail__back" (click)="goBack()">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -12,84 +11,177 @@
   } @else if (error()) {
     <div class="equipe-detail__error">{{ error() }}</div>
   } @else if (equipe(); as eq) {
-    <!-- Hero -->
-    <div class="equipe-detail__hero">
-      <div class="equipe-detail__hero-banner">
-        <div class="equipe-detail__hero-bg"></div>
-        <div class="equipe-detail__hero-overlay"></div>
-        <div class="equipe-detail__hero-body">
-          <span class="equipe-detail__hero-domaine">{{ eq.domaine }}</span>
-          <h1 class="equipe-detail__hero-title">{{ eq.nom }}</h1>
-          <p class="equipe-detail__hero-desc">{{ eq.description }}</p>
+    <article class="equipe-detail__card">
+      <section class="equipe-detail__hero">
+        <div class="equipe-detail__hero-bg" aria-hidden="true"></div>
+        <div class="equipe-detail__hero-overlay" aria-hidden="true"></div>
+
+        <div class="equipe-detail__hero-content">
+          <div class="equipe-detail__hero-top">
+            <div class="equipe-detail__hero-tags">
+              <span class="equipe-detail__tag">{{ eq.domaine }}</span>
+              <span class="equipe-detail__tag">Équipe RDI</span>
+            </div>
+
+            <div class="equipe-detail__hero-actions">
+              @if (isChefOfThisTeam()) {
+                <button type="button" class="equipe-detail__join-btn" (click)="openEditModal()">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M11.5 1.5L14.5 4.5L5.5 13.5H2.5V10.5L11.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M9.5 3.5L12.5 6.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                  </svg>
+                  Modifier
+                </button>
+              }
+              @if (isEnseignant() && !alreadyInTeam() && !isMemberOfThisTeam()) {
+                @if (joinStatus()) {
+                  <span class="equipe-detail__join-status">{{ joinStatus() }}</span>
+                } @else {
+                  <button type="button" class="equipe-detail__join-btn" (click)="rejoindreEquipe()">
+                    <svg width="15" height="15" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.25"/>
+                      <path d="M1 12.5C1 10 2.8 8.5 5 8.5C7.2 8.5 9 10 9 12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+                      <path d="M10.5 3.5V7.5M8.5 5.5H12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+                    </svg>
+                    Rejoindre
+                  </button>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="equipe-detail__hero-main">
+            <p class="equipe-detail__eyebrow">
+              <span class="equipe-detail__eyebrow-line" aria-hidden="true"></span>
+              CENTRE RDI · ESPRITTECH
+            </p>
+            <h1 class="equipe-detail__title">{{ eq.nom }}</h1>
+            @if (eq.description) {
+              <p class="equipe-detail__desc">{{ eq.description }}</p>
+            }
+          </div>
+
+          <div class="equipe-detail__hero-meta">
+            <span class="equipe-detail__meta-item">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 1.5L9.2 5.2H13.1L10 7.5L11.2 11.2L8 8.9L4.8 11.2L6 7.5L2.9 5.2H6.8L8 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+              {{ chefName() }}
+            </span>
+            <span class="equipe-detail__meta-item">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="6" cy="5" r="2.2" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M2 13C2 10.8 3.8 9.2 6 9.2C8.2 9.2 10 10.8 10 13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                <circle cx="11.2" cy="5.2" r="1.7" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M14 13C14 11.4 12.9 10.2 11.2 10.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              {{ eq.nbMembres }} membre{{ eq.nbMembres > 1 ? 's' : '' }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div class="equipe-detail__stats">
+        <div class="equipe-detail__stat">
+          <span class="equipe-detail__stat-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="6.5" cy="5.5" r="2.4" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M2.2 14.5C2.2 11.9 4.1 10 6.5 10C8.9 10 10.8 11.9 10.8 14.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="12.5" cy="5.8" r="1.9" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M15.8 14.5C15.8 12.6 14.5 11.2 12.5 11.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <div class="equipe-detail__stat-text">
+            <span class="equipe-detail__stat-label">Membres</span>
+            <span class="equipe-detail__stat-value">{{ eq.nbMembres }}</span>
+          </div>
+        </div>
+
+        <div class="equipe-detail__stat">
+          <span class="equipe-detail__stat-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M9 2L10.2 5.8H14.2L11 8.2L12.2 12L9 9.6L5.8 12L7 8.2L3.8 5.8H7.8L9 2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="equipe-detail__stat-text">
+            <span class="equipe-detail__stat-label">Chef d'équipe</span>
+            <span class="equipe-detail__stat-value">{{ chefName() }}</span>
+          </div>
+        </div>
+
+        <div class="equipe-detail__stat">
+          <span class="equipe-detail__stat-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect x="3" y="3.5" width="12" height="3" rx="1" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="3" y="7.5" width="12" height="3" rx="1" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="3" y="11.5" width="12" height="3" rx="1" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+          </span>
+          <div class="equipe-detail__stat-text">
+            <span class="equipe-detail__stat-label">Domaine</span>
+            <span class="equipe-detail__stat-value">{{ eq.domaine }}</span>
+          </div>
+        </div>
+
+        <div class="equipe-detail__stat">
+          <span class="equipe-detail__stat-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect x="2.5" y="4" width="13" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M2.5 7H15.5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M6 10.5H12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <div class="equipe-detail__stat-text">
+            <span class="equipe-detail__stat-label">Demandes en attente</span>
+            <span class="equipe-detail__stat-value">{{ pendingAffiliations().length }}</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <section class="equipe-detail__members">
+      <header class="equipe-detail__members-header">
+        <div>
+          <h2 class="equipe-detail__members-title">Membres de l'équipe</h2>
+          <p class="equipe-detail__members-subtitle">
+            {{ membres().length }} personne{{ membres().length > 1 ? 's' : '' }} · Encadrants &amp; chercheurs
+          </p>
         </div>
         @if (isChefOfThisTeam()) {
-          <button type="button" class="equipe-detail__hero-edit" title="Modifier l'équipe" (click)="openEditModal()">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M11.5 1.5L14.5 4.5L5.5 13.5H2.5V10.5L11.5 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-              <path d="M9.5 3.5L12.5 6.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-            </svg>
-            Modifier
-          </button>
-        }
-        @if (isEnseignant() && !alreadyInTeam() && !isMemberOfThisTeam()) {
-          @if (joinStatus()) {
-            <span class="equipe-detail__hero-join equipe-detail__hero-join--status">{{ joinStatus() }}</span>
-          } @else {
-            <button type="button" class="equipe-detail__hero-join" (click)="rejoindreEquipe()">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M7 3V11M3 7H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              Rejoindre
-            </button>
-          }
-        }
-      </div>
-    </div>
-
-    <!-- Stat cards -->
-    <div class="equipe-detail__stats">
-      <div class="equipe-detail__stat-card">
-        <span class="equipe-detail__stat-label">Domaine</span>
-        <span class="equipe-detail__stat-value">{{ eq.domaine }}</span>
-      </div>
-      <div class="equipe-detail__stat-card">
-        <span class="equipe-detail__stat-label">Chef d'équipe</span>
-        <span class="equipe-detail__stat-value">{{ chefName() }}</span>
-      </div>
-      <div class="equipe-detail__stat-card">
-        <span class="equipe-detail__stat-label">Membres</span>
-        <span class="equipe-detail__stat-value">{{ eq.nbMembres }}</span>
-      </div>
-      <div class="equipe-detail__stat-card">
-        <span class="equipe-detail__stat-label">Statut</span>
-        <span class="equipe-detail__stat-value">{{ eq.statut }}</span>
-      </div>
-    </div>
-
-    
-
-    <!-- Members section -->
-    <section class="equipe-detail__section">
-      <div class="equipe-detail__section-header">
-        <h3 class="equipe-detail__section-title">Membres ({{ membres().length }})</h3>
-        @if (isChefOfThisTeam()) {
-          <button type="button" class="btn btn--add btn--sm" (click)="openAddMemberModal()">
+          <button type="button" class="equipe-detail__add-btn" (click)="openAddMemberModal()">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-              <path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M6 2V10M2 6H10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
             </svg>
             Ajouter
           </button>
         }
-      </div>
+      </header>
+
       @if (membres().length === 0) {
         <div class="equipe-detail__empty">Aucun membre dans cette équipe.</div>
       } @else {
         <div class="equipe-detail__member-grid">
-          @for (m of membres(); track m.id) {
+          @for (m of membres(); track m.id; let i = $index) {
             <div class="equipe-detail__member-card">
-              <div class="equipe-detail__member-avatar" [style.background]="couleurAvatar(m)">
-                {{ membreInitiales(m) }}
+              @if (eq.chef && m.id === eq.chef.id) {
+                <span class="equipe-detail__chef-pill">
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M8 1.5L9.2 5.2H13.1L10 7.5L11.2 11.2L8 8.9L4.8 11.2L6 7.5L2.9 5.2H6.8L8 1.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                  </svg>
+                  Chef
+                </span>
+              }
+
+              <div class="equipe-detail__member-avatar-wrap">
+                <div
+                  class="equipe-detail__member-avatar"
+                  [style.background]="couleurAvatarMembre(m, i)"
+                >
+                  {{ membreInitiales(m) }}
+                </div>
+                <span class="equipe-detail__member-status" aria-hidden="true"></span>
               </div>
+
               <div class="equipe-detail__member-info">
                 <div class="equipe-detail__member-name">{{ m.prenom }} {{ m.nom }}</div>
                 <div class="equipe-detail__member-email">{{ m.email }}</div>
@@ -102,6 +194,7 @@
                   }
                 </div>
               </div>
+
               @if (isChefOfThisTeam() && eq.chef && m.id !== eq.chef.id) {
                 <button
                   type="button"
@@ -120,17 +213,22 @@
       }
     </section>
 
-    <!-- Affiliation requests (chef of this team only) -->
     @if (isChefOfThisTeam()) {
-      <section class="equipe-detail__section">
-        <div class="equipe-detail__section-header">
-          <h3 class="equipe-detail__section-title">
-            Demandes d'intégration ({{ teamAffiliations().length }})
-            @if (pendingAffiliations().length > 0) {
-              <span class="detail-pending-badge">{{ pendingAffiliations().length }}</span>
-            }
-          </h3>
-        </div>
+      <section class="equipe-detail__requests">
+        <header class="equipe-detail__members-header">
+          <div>
+            <h2 class="equipe-detail__members-title">
+              Demandes d'intégration
+              @if (pendingAffiliations().length > 0) {
+                <span class="detail-pending-badge">{{ pendingAffiliations().length }}</span>
+              }
+            </h2>
+            <p class="equipe-detail__members-subtitle">
+              {{ teamAffiliations().length }} demande{{ teamAffiliations().length > 1 ? 's' : '' }}
+            </p>
+          </div>
+        </header>
+
         @if (teamAffiliations().length === 0) {
           <div class="equipe-detail__empty">Aucune demande pour cette équipe.</div>
         } @else {
@@ -148,15 +246,9 @@
                 @if (r.statut === 'EN_ATTENTE') {
                   <div class="equipe-detail__request-actions">
                     <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id, r.enseignant.prenom + ' ' + r.enseignant.nom)">
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                        <path d="M2.5 6.5L5 9L9.5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
                       Accepter
                     </button>
                     <button type="button" class="btn btn--danger btn--sm" (click)="ouvrirRefus(r.id)">
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                        <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                      </svg>
                       Refuser
                     </button>
                   </div>
@@ -174,7 +266,6 @@
   }
 </div>
 
-<!-- Modals -->
 @if (editModalOpen) {
   <app-modifier-equipe-modal
     [isOpen]="editModalOpen"
@@ -193,7 +284,6 @@
   />
 }
 
-<!-- Motif dialog for refusal -->
 @if (motifDialogOpen) {
   <div class="motif-overlay" (click)="annulerRefus()">
     <div class="motif-dialog" (click)="$event.stopPropagation()">

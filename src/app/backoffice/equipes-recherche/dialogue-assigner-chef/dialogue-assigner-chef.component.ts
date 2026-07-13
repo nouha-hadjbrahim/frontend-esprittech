@@ -85,7 +85,11 @@ import { ButtonComponent } from '../../../ui/button/button.component';
     </div>
   `,
   styles: [`
-    :host { display: block; }
+    :host {
+      display: block;
+      background: #ffffff;
+      color: #111827;
+    }
     .modal {
       display: flex;
       flex-direction: column;
@@ -93,47 +97,48 @@ import { ButtonComponent } from '../../../ui/button/button.component';
       max-height: 640px;
       padding: 0;
       overflow: hidden;
+      background: #ffffff;
+      border-radius: 16px;
     }
 
-    /* ── Header ── */
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 1.5rem 1.5rem 0;
+      padding: 28px 28px 0;
       flex-shrink: 0;
+      background: #ffffff;
     }
     .modal-header-text { min-width: 0; }
     .modal-title {
       margin: 0;
       font-size: 1.25rem;
       font-weight: 700;
-      color: var(--foreground, #111827);
+      color: #111827;
       line-height: 1.3;
     }
     .modal-subtitle {
       margin: 0.25rem 0 0;
-      font-size: 0.875rem;
-      color: var(--muted-foreground, #6b7280);
+      font-size: 0.9rem;
+      color: #6b7280;
     }
     .close-btn {
       background: none;
       border: none;
-      color: var(--muted-foreground, #9ca3af);
+      color: #6b7280;
       cursor: pointer;
-      padding: 0.25rem;
+      padding: 4px;
       border-radius: 8px;
       display: flex;
       transition: background 0.15s, color 0.15s;
       flex-shrink: 0;
     }
-    .close-btn:hover { background: var(--muted, #f3f4f6); color: var(--foreground, #374151); }
+    .close-btn:hover { background: #f3f4f6; color: #111827; }
     .close-btn mat-icon { font-size: 20px; width: 20px; height: 20px; }
 
-    /* ── Search ── */
     .search-wrap {
       position: relative;
-      margin: 1rem 1.5rem 0;
+      margin: 20px 28px 0;
       flex-shrink: 0;
     }
     .search-icon {
@@ -144,27 +149,27 @@ import { ButtonComponent } from '../../../ui/button/button.component';
       font-size: 18px;
       width: 18px;
       height: 18px;
-      color: var(--muted-foreground, #9ca3af);
+      color: #9ca3af;
       pointer-events: none;
     }
     .search-input {
       width: 100%;
-      height: 2.5rem;
-      padding: 0 0.75rem 0 2.5rem;
-      border: 1px solid var(--border, #e5e7eb);
-      border-radius: 12px;
-      background: var(--background, #fff);
-      font-size: 0.875rem;
+      height: 2.75rem;
+      padding: 10px 14px 10px 2.5rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
+      font-size: 0.95rem;
       font-family: inherit;
-      color: var(--foreground, #111827);
+      color: #111827;
       outline: none;
       box-sizing: border-box;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .search-input::placeholder { color: var(--muted-foreground, #9ca3af); }
+    .search-input::placeholder { color: #9ca3af; }
     .search-input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+      border-color: #E23E3E;
+      box-shadow: 0 0 0 3px rgba(226, 62, 62, 0.12);
     }
     .search-spinner {
       position: absolute;
@@ -173,30 +178,29 @@ import { ButtonComponent } from '../../../ui/button/button.component';
       transform: translateY(-50%);
       width: 16px;
       height: 16px;
-      border: 2px solid var(--border, #e5e7eb);
-      border-top-color: var(--primary, #E63946);
+      border: 2px solid #e5e7eb;
+      border-top-color: #E23E3E;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
     }
     .search-spinner-lg {
       width: 28px;
       height: 28px;
-      border: 3px solid var(--border, #e5e7eb);
-      border-top-color: var(--primary, #E63946);
+      border: 3px solid #e5e7eb;
+      border-top-color: #E23E3E;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
     }
     @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
 
-    /* ── Results (scrollable) ── */
     .results {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
       min-height: 0;
-      padding: 0.75rem 1.5rem 1rem;
+      padding: 0.75rem 28px 1rem;
       margin-top: 0.5rem;
-
+      background: #ffffff;
       scrollbar-width: thin;
       scrollbar-color: rgba(0,0,0,0.15) transparent;
       scroll-behavior: smooth;
@@ -206,7 +210,6 @@ import { ButtonComponent } from '../../../ui/button/button.component';
     .results::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
     .results::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
 
-    /* ── Empty state ── */
     .empty-state {
       display: flex;
       flex-direction: column;
@@ -217,19 +220,18 @@ import { ButtonComponent } from '../../../ui/button/button.component';
       gap: 0.5rem;
       opacity: 0.6;
     }
-    .empty-icon { font-size: 36px; width: 36px; height: 36px; color: var(--muted-foreground, #9ca3af); }
-    .empty-text { margin: 0; font-size: 0.8125rem; color: var(--muted-foreground, #9ca3af); text-align: center; }
+    .empty-icon { font-size: 36px; width: 36px; height: 36px; color: #9ca3af; }
+    .empty-text { margin: 0; font-size: 0.8125rem; color: #9ca3af; text-align: center; }
 
-    /* ── User card ── */
     .user-card {
       display: flex;
       align-items: center;
       gap: 0.75rem;
       padding: 0.625rem 0.75rem;
       margin-bottom: 0.375rem;
-      border-radius: 14px;
-      background: var(--background, #fff);
-      border: 1.5px solid transparent;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1.5px solid #e5e7eb;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background 0.2s;
       animation: cardIn 0.25s ease both;
@@ -237,13 +239,14 @@ import { ButtonComponent } from '../../../ui/button/button.component';
     }
     .user-card:hover {
       transform: scale(1.01);
-      background: var(--muted, #f9fafb);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      background: #f9fafb;
+      border-color: #fecaca;
+      box-shadow: 0 4px 12px rgba(226, 62, 62, 0.08);
     }
     .user-card.selected {
-      border-color: #3b82f6;
-      background: #eff6ff;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+      border-color: #E23E3E;
+      background: #fef2f2;
+      box-shadow: 0 0 0 3px rgba(226, 62, 62, 0.12);
     }
     @keyframes cardIn {
       from { opacity: 0; transform: translateY(8px); }
@@ -272,14 +275,14 @@ import { ButtonComponent } from '../../../ui/button/button.component';
     .card-name {
       font-size: 0.8125rem;
       font-weight: 600;
-      color: var(--foreground, #111827);
+      color: #111827;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .card-email {
       font-size: 0.6875rem;
-      color: var(--muted-foreground, #6b7280);
+      color: #6b7280;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -293,16 +296,16 @@ import { ButtonComponent } from '../../../ui/button/button.component';
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      background: var(--muted, #f3f4f6);
-      color: var(--muted-foreground, #6b7280);
-      border: 1px solid var(--border, #e5e7eb);
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 1px solid #e5e7eb;
     }
     .check-badge {
       flex-shrink: 0;
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: #3b82f6;
+      background: #E23E3E;
       color: #fff;
       display: flex;
       align-items: center;
@@ -310,13 +313,14 @@ import { ButtonComponent } from '../../../ui/button/button.component';
     }
     .check-badge mat-icon { font-size: 14px; width: 14px; height: 14px; }
 
-    /* ── Footer ── */
     .modal-footer {
       display: flex;
       justify-content: flex-end;
-      gap: 0.5rem;
-      padding: 0 1.5rem 1.5rem;
+      gap: 12px;
+      padding: 20px 28px 28px;
       flex-shrink: 0;
+      background: #ffffff;
+      border-top: 1px solid #f3f4f6;
     }
     .btn-icon { font-size: 16px; width: 16px; height: 16px; }
   `],
