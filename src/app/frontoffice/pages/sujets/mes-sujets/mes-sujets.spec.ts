@@ -27,7 +27,7 @@ const mockSujet2: any = {
 function makeUser(id: number): User {
   return {
     id, nom: 'Martin', prenom: 'Dr', email: 'dr@esprit.tn',
-    identifiant: 'DM1', role: 'ROLE_ENSEIGNANT',
+    role: 'ROLE_ENSEIGNANT',
     typeUtilisateur: 'ENSEIGNANT', departement: null,
     enabled: true, createdAt: null,
     isAffilieToEquipe: false, equipeId: null, equipeNom: null,

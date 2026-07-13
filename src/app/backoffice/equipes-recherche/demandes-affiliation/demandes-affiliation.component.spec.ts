@@ -8,7 +8,6 @@ import { AffiliationEnseignantResponse } from '../../../core/models/affiliation-
 
 const mockEnseignant = (id: number, prenom: string, nom: string, email: string) => ({
   id, prenom, nom, email,
-  identifiant: email.split('@')[0],
   role: 'ROLE_ENSEIGNANT' as const,
   typeUtilisateur: 'ENSEIGNANT' as const,
   departement: 'Info',

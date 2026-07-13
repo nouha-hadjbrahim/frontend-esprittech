@@ -19,7 +19,14 @@
             <h1 class="auth-title">Créer un compte</h1>
             <p class="auth-subtitle">Rejoignez la plateforme EspriTECH.</p>
 
-            <div *ngIf="serverError()" class="alert-error">{{ serverError() }}</div>
+            <div *ngIf="serverError()" class="alert-error" role="alert">
+                <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.63-1.516 2.63H3.72c-1.347 0-2.189-1.463-1.516-2.63L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span>{{ serverError() }}</span>
+            </div>
 
             <div class="row">
                 <div class="form-group flex-1">
@@ -61,16 +68,6 @@
                     L'email doit être valide et se terminer par &#64;esprit.tn.
                 </small>
                 <small *ngIf="f.email.errors?.['server']" class="field-error">{{ f.email.errors?.['server'] }}</small>
-            </div>
-
-            <div class="form-group">
-                <label for="identifiant">Identifiant ESPRIT</label>
-                <input type="text" id="identifiant" formControlName="identifiant" placeholder="Ex : ET10011">
-                <small *ngIf="f.identifiant.touched && f.identifiant.errors?.['required']" class="field-error">
-                    L'identifiant est obligatoire (vérifié avec le référentiel).
-                </small>
-                <small *ngIf="f.identifiant.errors?.['server']" class="field-error">{{ f.identifiant.errors?.['server']
-                    }}</small>
             </div>
 
             <div class="form-group">

@@ -15,7 +15,6 @@ describe('SignUpComponent', () => {
     prenom: 'Jean',
     nom: 'Dupont',
     email: 'jean@esprit.tn',
-    identifiant: 'JD1',
     password: 'Passw0rd',
     confirmPassword: 'Passw0rd',
   };
@@ -73,7 +72,7 @@ describe('SignUpComponent', () => {
     authService.register.and.returnValue(of({} as User));
     component.onSubmit();
     expect(authService.register).toHaveBeenCalledWith({
-      nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn', identifiant: 'JD1', password: 'Passw0rd',
+      nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn', password: 'Passw0rd',
     });
     expect(router.navigateByUrl).toHaveBeenCalledWith('/frontoffice/sujets/disponibles');
     expect(component.loading()).toBeFalse();

@@ -3,7 +3,14 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, RegisterRequest, Role, User } from '../models/user.model';
+import {
+  ChangePasswordRequest,
+  LoginRequest,
+  RegisterRequest,
+  Role,
+  UpdateProfileRequest,
+  User,
+} from '../models/user.model';
 
 /** Anciennes clés localStorage (tokens + user) à purger : plus aucune donnée sensible côté JS. */
 const LEGACY_STORAGE_KEYS = [
@@ -78,6 +85,16 @@ export class AuthService {
         return of(undefined);
       }),
     );
+  }
+
+  updateProfile(request: UpdateProfileRequest): Observable<User> {
+    return this.http
+      .put<User>(`${this.baseUrl}/me`, request)
+      .pipe(tap((user) => this._currentUser.set(user)));
+  }
+
+  changePassword(request: ChangePasswordRequest): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/me/password`, request);
   }
 
   logout(): void {

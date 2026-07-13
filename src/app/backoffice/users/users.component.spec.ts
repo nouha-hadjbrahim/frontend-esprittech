@@ -8,7 +8,7 @@ import { UsersComponent } from './users.component';
 
 function makeUser(over: Partial<User> = {}): User {
   return {
-    id: 1, nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn', identifiant: 'JD1',
+    id: 1, nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn',
     role: 'ROLE_ETUDIANT', typeUtilisateur: 'ETUDIANT', departement: null, enabled: true,
     createdAt: '2025-01-15T10:00:00Z', isAffilieToEquipe: false, equipeId: null, equipeNom: null, ...over,
   };
@@ -174,14 +174,14 @@ describe('UsersComponent', () => {
     });
 
     it('should not create when required fields are missing', () => {
-      component.createUserForm = { name: '', email: '', identifiant: '', password: '', role: '', status: 'Actif' };
+      component.createUserForm = { name: '', email: '', password: '', role: '', status: 'Actif' };
       component.createUser();
       expect(adminService.createUser).not.toHaveBeenCalled();
     });
 
     it('should create a user and reload', () => {
       component.createUserForm = {
-        name: 'Marie Curie', email: 'm@esprit.tn', identifiant: 'MC1', password: 'pw', role: 'Administrateur', status: 'Actif',
+        name: 'Marie Curie', email: 'm@esprit.tn', password: 'pw', role: 'Administrateur', status: 'Actif',
       };
       adminService.createUser.and.returnValue(of(makeUser()));
       component.createUser();
@@ -193,7 +193,7 @@ describe('UsersComponent', () => {
 
     it('should map an unknown role label to ROLE_ETUDIANT', () => {
       component.createUserForm = {
-        name: 'Solo', email: 'm@esprit.tn', identifiant: 'MC1', password: 'pw', role: 'Bogus', status: 'Suspendu',
+        name: 'Solo', email: 'm@esprit.tn', password: 'pw', role: 'Bogus', status: 'Suspendu',
       };
       adminService.createUser.and.returnValue(of(makeUser()));
       component.createUser();
@@ -203,28 +203,28 @@ describe('UsersComponent', () => {
     });
 
     it('should surface a field-validation error (400)', () => {
-      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', identifiant: 'I', password: 'pw', role: 'CI', status: 'Actif' };
-      adminService.createUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 400, error: { errors: { email: 'bad', identifiant: 'dup' } } })));
+      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', password: 'pw', role: 'CI', status: 'Actif' };
+      adminService.createUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 400, error: { errors: { email: 'bad' } } })));
       component.createUser();
-      expect(component.createError()).toBe('bad dup');
+      expect(component.createError()).toBe('bad');
     });
 
     it('should surface an unreachable-server error (0)', () => {
-      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', identifiant: 'I', password: 'pw', role: 'CI', status: 'Actif' };
+      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', password: 'pw', role: 'CI', status: 'Actif' };
       adminService.createUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
       component.createUser();
       expect(component.createError()).toBe('Serveur injoignable.');
     });
 
     it('should surface the backend detail otherwise', () => {
-      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', identifiant: 'I', password: 'pw', role: 'CI', status: 'Actif' };
+      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', password: 'pw', role: 'CI', status: 'Actif' };
       adminService.createUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { detail: 'Conflit' } })));
       component.createUser();
       expect(component.createError()).toBe('Conflit');
     });
 
     it('should fall back to a generic message when no detail is provided', () => {
-      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', identifiant: 'I', password: 'pw', role: 'CI', status: 'Actif' };
+      component.createUserForm = { name: 'A B', email: 'm@esprit.tn', password: 'pw', role: 'CI', status: 'Actif' };
       adminService.createUser.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
       component.createUser();
       expect(component.createError()).toBe('Une erreur est survenue. Veuillez réessayer.');
