@@ -1,7 +1,0 @@
-organization=mokaddemkarim89
-projectKey=mokaddemkarim89_industrialisationprojets
-serverUrl=https://sonarcloud.io
-serverVersion=8.0.0.93576
-dashboardUrl=https://sonarcloud.io/dashboard?id=mokaddemkarim89_industrialisationprojets
-ceTaskId=AZ8KLpOkcKSByF-xfzGU
-ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZ8KLpOkcKSByF-xfzGU
