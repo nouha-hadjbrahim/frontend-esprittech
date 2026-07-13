@@ -41,6 +41,7 @@ export const STATUT_CANDIDATURE_LABELS: Record<
   DEPOSEE: { label: 'En attente', cssClass: 'badge--warning' },
   ACCEPTEE: { label: 'Acceptée', cssClass: 'badge--success' },
   REFUSEE: { label: 'Refusée', cssClass: 'badge--danger' },
+  RETIREE: { label: 'Retirée', cssClass: 'badge--info' },
 };
 
 /** Couleurs distinctes par statut — cartes et liste « Mes sujets » uniquement */

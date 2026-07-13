@@ -7,13 +7,11 @@ import { KpiDashboardComponent } from '../../shared/components/kpi-dashboard/kpi
     imports: [KpiDashboardComponent],
     template: `
     <div class="page-container">
-      <h1>Tableau de bord</h1>
       <app-kpi-dashboard></app-kpi-dashboard>
     </div>
   `,
     styles: [`
-    .page-container { padding: 20px; }
-    h1 { margin-bottom: 1.5rem; }
+    .page-container { padding: 1.25rem; }
   `]
 })
 export class DashboardComponent { }

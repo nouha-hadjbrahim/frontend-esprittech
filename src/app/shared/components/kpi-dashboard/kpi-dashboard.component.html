@@ -1,90 +1,356 @@
-<div class="kpi-dashboard">
-  <div *ngIf="loading()" class="state-message">Chargement du tableau de bord...</div>
+<div class="space-y-6">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="state-message">Chargement du tableau de bord...</div>
+  }
 
-  <div *ngIf="error()" class="state-message error">
-    Impossible de charger les statistiques.
-    <button class="retry-btn" (click)="load()">Réessayer</button>
-  </div>
+  <!-- Error -->
+  @if (error()) {
+    <div class="state-message error">
+      Impossible de charger les statistiques.
+      <button class="retry-btn" (click)="load()">Réessayer</button>
+    </div>
+  }
 
-  <ng-container *ngIf="stats() as s">
-    <!-- Sujets -->
-    <section class="kpi-section">
-      <h2 class="section-title">Sujets de projet</h2>
-      <div class="kpi-grid">
-        <app-card class="kpi-card">
-          <app-card-header><app-card-title>Total soumis</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.sujetsTotal }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-green">
-          <app-card-header><app-card-title>Validés</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.sujetsValides }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-red">
-          <app-card-header><app-card-title>Invalidés</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.sujetsInvalides }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-amber">
-          <app-card-header><app-card-title>En attente</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.sujetsEnAttente }}</span></app-card-content>
-        </app-card>
+  <!-- Dashboard content -->
+  @if (data(); as d) {
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold">Tableau de bord</h1>
+      <p class="text-sm text-muted-foreground mt-1">Vue d'ensemble de l'activité de la plateforme.</p>
+    </div>
+
+    <!-- KPI grid -->
+    <div class="kpi-grid-inner">
+      <!-- Utilisateurs -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-info bg-info/10">
+              <svg lucideUsers class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.usersTotal }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.usersTotal }}</div>
+            <div class="kpi-label">Utilisateurs</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Total sujets -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-primary bg-primary-soft">
+              <svg lucideFileText class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.sujetsTotal }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.sujetsTotal }}</div>
+            <div class="kpi-label">Total sujets</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Sujets en attente -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-warning bg-warning/10">
+              <svg lucideClock class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta" [class.up]="d.kpis.sujetsEnAttente > 0" [class.down]="d.kpis.sujetsEnAttente === 0">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.sujetsEnAttente }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.sujetsEnAttente }}</div>
+            <div class="kpi-label">Sujets en attente</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Sujets validés -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-success bg-success/10">
+              <svg lucideCheckCircle2 class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.sujetsValides }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.sujetsValides }}</div>
+            <div class="kpi-label">Sujets validés</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Sujets refusés -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-destructive bg-destructive/10">
+              <svg lucideCircleX class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta down">
+              <svg lucideTrendingDown class="h-3 w-3"></svg>
+              {{ d.kpis.sujetsInvalides }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.sujetsInvalides }}</div>
+            <div class="kpi-label">Sujets refusés</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Candidatures attente -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-warning bg-warning/10">
+              <svg lucideInbox class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.candidaturesEnAttente }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.candidaturesEnAttente }}</div>
+            <div class="kpi-label">Candidatures attente</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Candidatures acceptées -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-success bg-success/10">
+              <svg lucideThumbsUp class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.candidaturesAcceptees }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.candidaturesAcceptees }}</div>
+            <div class="kpi-label">Candidatures acceptées</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Candidatures refusées -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-destructive bg-destructive/10">
+              <svg lucideThumbsDown class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta down">
+              <svg lucideTrendingDown class="h-3 w-3"></svg>
+              {{ d.kpis.candidaturesRefusees }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.candidaturesRefusees }}</div>
+            <div class="kpi-label">Candidatures refusées</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Projets catalogue -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-info bg-info/10">
+              <svg lucideLibrary class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.projetsCatalogue }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.projetsCatalogue }}</div>
+            <div class="kpi-label">Projets catalogue</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Encadrants -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-primary bg-primary-soft">
+              <svg lucideGraduationCap class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.encadrantsTotal }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.encadrantsTotal }}</div>
+            <div class="kpi-label">Encadrants</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Équipes recherche -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-success bg-success/10">
+              <svg lucideUsersRound class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta up">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.equipesTotal }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.equipesTotal }}</div>
+            <div class="kpi-label">Équipes recherche</div>
+          </div>
+        </div>
+      </app-card>
+
+      <!-- Affiliations attente -->
+      <app-card class="kpi-card">
+        <div class="kpi-card-inner">
+          <div class="kpi-card-top">
+            <div class="kpi-icon-box text-warning bg-warning/10">
+              <svg lucideUserPlus class="h-5 w-5"></svg>
+            </div>
+            <span class="kpi-delta" [class.up]="d.kpis.affiliationsEnAttente > 0" [class.down]="d.kpis.affiliationsEnAttente === 0">
+              <svg lucideTrendingUp class="h-3 w-3"></svg>
+              {{ d.kpis.affiliationsEnAttente }}
+            </span>
+          </div>
+          <div class="mt-3">
+            <div class="kpi-value">{{ d.kpis.affiliationsEnAttente }}</div>
+            <div class="kpi-label">Affiliations attente</div>
+          </div>
+        </div>
+      </app-card>
+    </div>
+
+    <!-- Charts row 1 -->
+    <div class="charts-row-2">
+      <app-card class="chart-card chart-card-span-2">
+        <div class="chart-card-header">
+          <div>
+            <h3 class="chart-title">Évolution des candidatures</h3>
+            <p class="chart-subtitle">7 derniers mois</p>
+          </div>
+          <span class="badge-success">+18% vs N-1</span>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart
+            [type]="'line'"
+            [data]="areaChartData"
+            [options]="areaChartOptions"
+            style="height: 260px">
+          </canvas>
+        </div>
+      </app-card>
+
+      <app-card class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Sujets par statut</h3>
+          <p class="chart-subtitle">Répartition actuelle</p>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart
+            [type]="'doughnut'"
+            [data]="pieChartData"
+            [options]="pieChartOptions"
+            style="height: 220px">
+          </canvas>
+        </div>
+        <div class="pie-legend">
+          @for (item of d.sujetsByStatut; track item.name) {
+            <div class="pie-legend-item">
+              <span class="pie-dot" [style.background]="item.color"></span>
+              <span class="pie-label">{{ item.name }}</span>
+              <span class="pie-value">{{ item.value }}</span>
+            </div>
+          }
+        </div>
+      </app-card>
+    </div>
+
+    <!-- Charts row 2 -->
+    <div class="charts-row-3">
+      <app-card class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Utilisateurs par rôle</h3>
+          <p class="chart-subtitle">Distribution</p>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart
+            [type]="'bar'"
+            [data]="barChartData"
+            [options]="barChartOptions"
+            style="height: 220px">
+          </canvas>
+        </div>
+      </app-card>
+
+      <app-card class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Catalogue par domaine</h3>
+          <p class="chart-subtitle">Projets publiés</p>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart
+            [type]="'bar'"
+            [data]="hBarChartData"
+            [options]="hBarChartOptions"
+            style="height: 220px">
+          </canvas>
+        </div>
+      </app-card>
+    </div>
+
+    <!-- Recent Activity -->
+    <app-card class="activity-card">
+      <div class="activity-header">
+        <div>
+          <h3 class="chart-title">Activité récente</h3>
+          <p class="chart-subtitle">Dernières actions sur la plateforme</p>
+        </div>
       </div>
-    </section>
-
-    <!-- Candidatures -->
-    <section class="kpi-section">
-      <h2 class="section-title">Candidatures</h2>
-      <div class="kpi-grid">
-        <app-card class="kpi-card">
-          <app-card-header><app-card-title>Total</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.candidaturesTotal }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-amber">
-          <app-card-header><app-card-title>En attente</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.candidaturesEnAttente }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-green">
-          <app-card-header><app-card-title>Acceptées</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.candidaturesAcceptees }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-red">
-          <app-card-header><app-card-title>Refusées</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.candidaturesRefusees }}</span></app-card-content>
-        </app-card>
-      </div>
-    </section>
-
-    <!-- Catalogue -->
-    <section class="kpi-section">
-      <h2 class="section-title">Catalogue applicatif</h2>
-      <div class="kpi-grid">
-        <app-card class="kpi-card accent-green">
-          <app-card-header><app-card-title>Au catalogue</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.projetsAuCatalogue }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-amber">
-          <app-card-header><app-card-title>En attente de validation</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.projetsEnAttenteValidationCatalogue }}</span></app-card-content>
-        </app-card>
-      </div>
-    </section>
-
-    <!-- Industrialisation / Go-No-Go -->
-    <section class="kpi-section">
-      <h2 class="section-title">Industrialisation</h2>
-      <div class="kpi-grid">
-        <app-card class="kpi-card">
-          <app-card-header><app-card-title>Score moyen</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.scoreMoyen }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-green">
-          <app-card-header><app-card-title>Go</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.industrialisationsGo }}</span></app-card-content>
-        </app-card>
-        <app-card class="kpi-card accent-red">
-          <app-card-header><app-card-title>No-Go</app-card-title></app-card-header>
-          <app-card-content><span class="kpi-value">{{ s.industrialisationsNoGo }}</span></app-card-content>
-        </app-card>
-      </div>
-    </section>
-  </ng-container>
+      <ul class="activity-list">
+        @for (a of d.recentActivity; track a.id) {
+          <li class="activity-item">
+            <span class="activity-dot" [class.bg-success]="a.type === 'validation' || a.type === 'acceptation'"
+              [class.bg-destructive]="a.type === 'refus'"
+              [class.bg-info]="a.type === 'creation' || a.type === 'en_attente'"></span>
+            <div class="activity-content">
+              <p class="activity-message">{{ a.message }}</p>
+              <p class="activity-actor">par {{ a.actor }}</p>
+            </div>
+            <span class="activity-time">{{ a.time }}</span>
+          </li>
+        }
+      </ul>
+    </app-card>
+  }
 </div>

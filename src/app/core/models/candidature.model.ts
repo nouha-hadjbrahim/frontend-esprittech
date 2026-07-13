@@ -1,4 +1,4 @@
-export type StatutCandidature = 'DEPOSEE' | 'ACCEPTEE' | 'REFUSEE' | 'ARCHIVEE';
+export type StatutCandidature = 'DEPOSEE' | 'ACCEPTEE' | 'REFUSEE' | 'RETIREE' | 'ARCHIVEE';
 
 export type StatutAffectation = 'ACTIVE' | 'RETIREE_ARCHIVEE';
 
