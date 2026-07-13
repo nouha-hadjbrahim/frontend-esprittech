@@ -12,7 +12,6 @@ const USER: User = {
   nom: 'Ben',
   prenom: 'Ali',
   email: 'ali@esprit.tn',
-  identifiant: 'AB5',
   role: 'ROLE_ETUDIANT',
   typeUtilisateur: 'ETUDIANT',
   departement: null,
@@ -55,7 +54,7 @@ describe('AdminService', () => {
 
   it('should create a user', () => {
     service
-      .createUser({ nom: 'N', prenom: 'P', email: 'e@esprit.tn', identifiant: 'I', password: 'pw', role: 'ROLE_ETUDIANT', enabled: true })
+      .createUser({ nom: 'N', prenom: 'P', email: 'e@esprit.tn', password: 'pw', role: 'ROLE_ETUDIANT', enabled: true })
       .subscribe((res) => expect(res).toEqual(USER));
     const req = http.expectOne(`${API}/users`);
     expect(req.request.method).toBe('POST');

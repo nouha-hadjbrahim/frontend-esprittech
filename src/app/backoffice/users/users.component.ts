@@ -92,8 +92,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     editUserForm: { name: string; email: string; role: string; status: string } = {
         name: '', email: '', role: '', status: '',
     };
-    createUserForm: { name: string; email: string; identifiant: string; password: string; role: string; status: string } = {
-        name: '', email: '', identifiant: '', password: '', role: '', status: 'Actif',
+    createUserForm: { name: string; email: string; password: string; role: string; status: string } = {
+        name: '', email: '', password: '', role: '', status: 'Actif',
     };
 
     ngOnInit(): void {
@@ -192,7 +192,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     // --- Actions Methods ---
 
     openCreateModal(): void {
-        this.createUserForm = { name: '', email: '', identifiant: '', password: '', role: '', status: 'Actif' };
+        this.createUserForm = { name: '', email: '', password: '', role: '', status: 'Actif' };
         this.createError.set(null);
         this.isCreateModalOpen = true;
     }
@@ -204,7 +204,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     createUser(): void {
         const f = this.createUserForm;
-        if (!f.name || !f.email || !f.identifiant || !f.password || !f.role) {
+        if (!f.name || !f.email || !f.password || !f.role) {
             return;
         }
         const { prenom, nom } = this.splitName(f.name);
@@ -215,7 +215,6 @@ export class UsersComponent implements OnInit, OnDestroy {
                 nom,
                 prenom,
                 email: f.email,
-                identifiant: f.identifiant,
                 password: f.password,
                 role: UsersComponent.LABEL_TO_ROLE[f.role] ?? 'ROLE_ETUDIANT',
                 enabled: f.status === 'Actif',

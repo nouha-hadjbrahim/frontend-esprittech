@@ -41,7 +41,7 @@
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
                 <label for="user-search" class="sr-only">Rechercher un utilisateur</label>
-                <input id="user-search" type="text" placeholder="Nom, email ou identifiant..." #searchBox
+                <input id="user-search" type="text" placeholder="Nom ou email..." #searchBox
                     (input)="onSearchInput(searchBox.value)">
             </div>
             <div class="filter-dropdown">
@@ -279,15 +279,6 @@
                     <small *ngIf="cEmail.touched && (cEmail.errors?.['email'] || cEmail.errors?.['pattern'])"
                         class="field-error">
                         Email valide se terminant par &#64;esprit.tn requis.
-                    </small>
-                </div>
-
-                <div class="form-group">
-                    <label for="newIdentifiant">Identifiant ESPRIT</label>
-                    <input type="text" id="newIdentifiant" name="identifiant" [(ngModel)]="createUserForm.identifiant"
-                        #cId="ngModel" required placeholder="Ex : ET10011">
-                    <small *ngIf="cId.touched && cId.errors?.['required']" class="field-error">
-                        L'identifiant est obligatoire.
                     </small>
                 </div>
 

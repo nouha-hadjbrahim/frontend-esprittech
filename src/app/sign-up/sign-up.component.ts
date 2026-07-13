@@ -47,7 +47,6 @@ export class SignUpComponent {
         '',
         [Validators.required, Validators.email, Validators.pattern(SignUpComponent.ESPRIT_EMAIL_PATTERN)],
       ],
-      identifiant: ['', [Validators.required]],
       password: [
         '',
         [Validators.required, Validators.minLength(8), Validators.pattern(SignUpComponent.PASSWORD_PATTERN)],
@@ -68,9 +67,9 @@ export class SignUpComponent {
       return;
     }
 
-    const { nom, prenom, email, identifiant, password } = this.form.getRawValue();
+    const { nom, prenom, email, password } = this.form.getRawValue();
     this.loading.set(true);
-    this.authService.register({ nom, prenom, email, identifiant, password }).subscribe({
+    this.authService.register({ nom, prenom, email, password }).subscribe({
       next: () => {
         this.loading.set(false);
         // Le compte est créé et connecté : on dirige selon le rôle (étudiant/enseignant)
@@ -91,12 +90,12 @@ export class SignUpComponent {
     }
     if (err.status === 404) {
       this.serverError.set(
-        err.error?.detail ?? 'Utilisateur non trouvé dans le référentiel.',
+        err.error?.detail ?? 'Utilisateur non trouvé dans le référentiel. Vérifiez votre email.',
       );
       return;
     }
     if (err.status === 409) {
-      this.serverError.set(err.error?.detail ?? 'Cet email ou identifiant est déjà utilisé.');
+      this.serverError.set(err.error?.detail ?? 'Cet email est déjà utilisé.');
       return;
     }
     // 400 : erreurs de validation champ par champ

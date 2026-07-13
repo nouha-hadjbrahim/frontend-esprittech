@@ -86,7 +86,7 @@
                 </button>
 
                 <div class="dropdown-menu" [class.show]="isProfileDropdownOpen()">
-                    <a class="dropdown-item" href="#">Mon profil</a>
+                    <a class="dropdown-item" routerLink="/frontoffice/profil" (click)="isProfileDropdownOpen.set(false)">Mon profil</a>
                     <button class="dropdown-item logout-btn" (click)="logout()">Déconnexion</button>
                 </div>
             </div>
