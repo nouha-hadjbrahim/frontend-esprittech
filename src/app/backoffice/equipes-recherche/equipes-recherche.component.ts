@@ -14,8 +14,7 @@ import { AffiliationEnseignantResponse } from '../../core/models/affiliation-req
 
 import { ButtonComponent } from '../../ui/button/button.component';
 import { BadgeComponent } from '../../ui/badge/badge.component';
-import { CardComponent, CardContentComponent } from '../../ui/card/card.component';
-import { InputComponent } from '../../ui/input/input.component';
+import { CardComponent } from '../../ui/card/card.component';
 import { DialogueCreerEquipeComponent } from './dialogue-creer-equipe/dialogue-creer-equipe.component';
 import { DialogueModifierEquipeComponent } from './dialogue-modifier-equipe/dialogue-modifier-equipe.component';
 import { DialogueDetailsEquipeComponent } from './dialogue-details-equipe/dialogue-details-equipe.component';
@@ -30,11 +29,10 @@ import { DialogueConfirmationComponent } from '../../ui/dialogue-confirmation/di
     CommonModule, FormsModule,
     MatIconModule, MatTooltipModule,
     ButtonComponent, BadgeComponent,
-    CardComponent, CardContentComponent,
-    InputComponent,
+    CardComponent,
   ],
   templateUrl: './equipes-recherche.component.html',
-  styleUrls: ['./equipes-recherche.component.css'],
+  styleUrl: './equipes-recherche.component.css',
 })
 export class EquipesRechercheComponent implements OnInit {
   private readonly svc        = inject(EquipeService);
@@ -46,7 +44,7 @@ export class EquipesRechercheComponent implements OnInit {
   readonly affiliations      = signal<AffiliationEnseignantResponse[]>([]);
   filtered: Equipe[]         = [];
   query   = '';
-  vue: 'grille' | 'liste' = 'grille';
+  vue: 'grille' | 'liste' = 'liste';
   chargement = true;
 
   readonly pendingCountByEquipeId = computed(() => {
@@ -68,6 +66,10 @@ export class EquipesRechercheComponent implements OnInit {
     { label: 'Membres totaux', value: this.totalMembres(), color: 'bleu', icon: 'groups' },
     { label: 'Chefs désignés', value: this.nbChefs(), color: 'rouge', icon: 'star' },
   ]);
+
+  getInitial(nom: string): string {
+    return (nom?.trim()?.charAt(0) || '?').toUpperCase();
+  }
 
   ngOnInit() {
     this.charger();
@@ -104,7 +106,11 @@ export class EquipesRechercheComponent implements OnInit {
   }
 
   ouvrirCreation() {
-    this.dialog.open(DialogueCreerEquipeComponent, { width: '520px' })
+    this.dialog.open(DialogueCreerEquipeComponent, {
+      width: '520px',
+      panelClass: 'equipe-form-dialog',
+      autoFocus: false,
+    })
       .afterClosed()
       .subscribe((payload: CreateEquipePayload | undefined) => {
         if (!payload) return;
@@ -128,7 +134,12 @@ export class EquipesRechercheComponent implements OnInit {
   }
 
   ouvrirModification(equipe: Equipe) {
-    this.dialog.open(DialogueModifierEquipeComponent, { width: '520px', data: equipe })
+    this.dialog.open(DialogueModifierEquipeComponent, {
+      width: '520px',
+      data: equipe,
+      panelClass: 'equipe-form-dialog',
+      autoFocus: false,
+    })
       .afterClosed()
       .subscribe((updated: Equipe | undefined) => {
         if (!updated) return;
@@ -164,7 +175,12 @@ export class EquipesRechercheComponent implements OnInit {
   }
 
   ouvrirAssignerChef(equipe: Equipe) {
-    const ref = this.dialog.open(DialogueAssignerChefComponent, { width: '480px', data: equipe });
+    const ref = this.dialog.open(DialogueAssignerChefComponent, {
+      width: '480px',
+      data: equipe,
+      panelClass: 'equipe-form-dialog',
+      autoFocus: false,
+    });
     ref.afterClosed().subscribe((updated) => {
       if (!updated) return;
       this.equipes.update((arr) => arr.map((e) => (e.id === updated.id ? updated : e)));

@@ -15,7 +15,6 @@ export interface User {
   nom: string;
   prenom: string;
   email: string;
-  identifiant: string;
   role: Role;
   typeUtilisateur: TypeUtilisateur;
   departement: string | null;
@@ -41,7 +40,6 @@ export interface CreateUserRequest {
   nom: string;
   prenom: string;
   email: string;
-  identifiant: string;
   password: string;
   role: Role;
   enabled: boolean;
@@ -52,7 +50,6 @@ export interface RegisterRequest {
   nom: string;
   prenom: string;
   email: string;
-  identifiant: string;
   password: string;
 }
 
@@ -60,4 +57,16 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+/** Corps de mise à jour du profil par l'utilisateur lui-même (email non modifiable). */
+export interface UpdateProfileRequest {
+  nom: string;
+  prenom: string;
+}
+
+/** Corps de la requête de changement de mot de passe. */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }

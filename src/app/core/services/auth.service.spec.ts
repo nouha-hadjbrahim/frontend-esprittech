@@ -13,7 +13,6 @@ function userWith(role: Role): User {
     nom: 'Dupont',
     prenom: 'Jean',
     email: 'jean@esprit.tn',
-    identifiant: 'JD1',
     role,
     typeUtilisateur: 'ETUDIANT',
     departement: null,
@@ -92,7 +91,7 @@ describe('AuthService', () => {
   it('should register and store the user in memory', () => {
     const user = userWith('ROLE_ETUDIANT');
     service
-      .register({ nom: 'D', prenom: 'J', email: 'j@esprit.tn', identifiant: 'JD1', password: 'Passw0rd' })
+      .register({ nom: 'D', prenom: 'J', email: 'j@esprit.tn', password: 'Passw0rd' })
       .subscribe();
     const req = http.expectOne(`${API}/register`);
     expect(req.request.method).toBe('POST');

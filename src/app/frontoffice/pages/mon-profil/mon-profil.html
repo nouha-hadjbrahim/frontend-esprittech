@@ -1,0 +1,89 @@
+<div class="profile-page">
+    <div class="page-header">
+        <h1>Mon profil</h1>
+        <p>Gérez vos informations personnelles et votre mot de passe.</p>
+    </div>
+
+    <div class="profile-card">
+        <div class="profile-user-header">
+            <div class="avatar">{{ initials() }}</div>
+            <div class="user-main-info">
+                <h2>{{ user()?.prenom }} {{ user()?.nom }}</h2>
+                <span class="role">{{ roleLabel() }}</span>
+            </div>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="profile-prenom">Prénom</label>
+                    <input id="profile-prenom" type="text" formControlName="prenom" placeholder="Prénom">
+                    @if (profileForm.controls.prenom.invalid && profileForm.controls.prenom.touched) {
+                        <span class="field-error">Le prénom doit contenir entre 2 et 50 caractères.</span>
+                    }
+                </div>
+                <div class="form-group">
+                    <label for="profile-nom">Nom</label>
+                    <input id="profile-nom" type="text" formControlName="nom" placeholder="Nom">
+                    @if (profileForm.controls.nom.invalid && profileForm.controls.nom.touched) {
+                        <span class="field-error">Le nom doit contenir entre 2 et 50 caractères.</span>
+                    }
+                </div>
+                <div class="form-group full-width">
+                    <label for="profile-email">Email</label>
+                    <input id="profile-email" type="email" [value]="user()?.email" readonly class="readonly-input">
+                </div>
+            </div>
+
+            @if (profileError) {
+                <p class="message message--error">{{ profileError }}</p>
+            }
+            @if (profileSuccess) {
+                <p class="message message--success">{{ profileSuccess }}</p>
+            }
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" [disabled]="isSavingProfile">
+                    {{ isSavingProfile ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="profile-card password-card">
+        <h3>Modifier le mot de passe</h3>
+        <form [formGroup]="passwordForm" (ngSubmit)="savePassword()">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="profile-current-password">Mot de passe actuel</label>
+                    <input id="profile-current-password" type="password" formControlName="currentPassword" placeholder="••••••••">
+                </div>
+                <div class="form-group"></div>
+                <div class="form-group">
+                    <label for="profile-new-password">Nouveau mot de passe</label>
+                    <input id="profile-new-password" type="password" formControlName="newPassword" placeholder="••••••••">
+                    @if (passwordForm.controls.newPassword.invalid && passwordForm.controls.newPassword.touched) {
+                        <span class="field-error">Le mot de passe doit contenir au moins 8 caractères.</span>
+                    }
+                </div>
+                <div class="form-group">
+                    <label for="profile-confirm-password">Confirmer le nouveau mot de passe</label>
+                    <input id="profile-confirm-password" type="password" formControlName="confirmPassword" placeholder="••••••••">
+                </div>
+            </div>
+
+            @if (passwordError) {
+                <p class="message message--error">{{ passwordError }}</p>
+            }
+            @if (passwordSuccess) {
+                <p class="message message--success">{{ passwordSuccess }}</p>
+            }
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" [disabled]="isSavingPassword">
+                    {{ isSavingPassword ? 'Modification...' : 'Changer le mot de passe' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -310,7 +310,12 @@ export class DialogueDetailsEquipeComponent implements OnInit {
   }
 
   ouvrirAssignerChef() {
-    this.dialog.open(DialogueAssignerChefComponent, { width: '480px', data: this.eq })
+    this.dialog.open(DialogueAssignerChefComponent, {
+      width: '480px',
+      data: this.eq,
+      panelClass: 'equipe-form-dialog',
+      autoFocus: false,
+    })
       .afterClosed().subscribe((updated) => {
         if (!updated) return;
         this.eq.chef = updated.chef;

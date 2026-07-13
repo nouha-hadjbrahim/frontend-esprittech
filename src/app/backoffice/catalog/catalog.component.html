@@ -1,118 +1,137 @@
-<div class="catalog-page">
-    <div class="page-header">
-        <h1>Catalogue des projets</h1>
-        <p>Galerie de tous les projets de l'école d'ingénieurs.</p>
+<div class="catalogue">
+  <div class="page-header">
+    <h1>Catalogue des projets</h1>
+    <p>Galerie de tous les projets de l'école d'ingénieurs.</p>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert alert--error">{{ errorMessage }}</div>
+  }
+
+  <!-- Barre d'outils : recherche + filtres -->
+  <div class="catalogue__toolbar">
+    <div class="catalogue__search-box">
+      <svg class="catalogue__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="catalogue__search-input"
+        placeholder="Rechercher un projet..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
     </div>
 
-    <!-- Filters Section -->
-    <div class="filters-card">
-        <div class="filters-top-row">
-            <div class="search-field">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input type="text" placeholder="Rechercher un projet...">
-            </div>
+    <div class="catalogue__filters">
+      <select class="catalogue__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
+        @for (opt of statutOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
 
-            <div class="dropdowns-group">
-                <div class="filter-dropdown">
-                    <span>Statut</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m6 9 6 6 6-6"></path>
-                    </svg>
-                </div>
-                <div class="filter-dropdown">
-                    <span>Domaine</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m6 9 6 6 6-6"></path>
-                    </svg>
-                </div>
-                <div class="filter-dropdown">
-                    <span>Année</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m6 9 6 6 6-6"></path>
-                    </svg>
-                </div>
-                <div class="filter-dropdown sort-dropdown">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="20" x2="12" y2="10"></line>
-                        <line x1="18" y1="20" x2="18" y2="4"></line>
-                        <line x1="6" y1="20" x2="6" y2="16"></line>
-                    </svg>
-                    <span>Plus récents</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m6 9 6 6 6-6"></path>
-                    </svg>
-                </div>
+      <select class="catalogue__select" [(ngModel)]="selectedDomaine" (ngModelChange)="onFilterChange()">
+        <option value="">Tous les domaines</option>
+        @for (d of domaineOptions; track d) {
+          <option [value]="d">{{ d }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="selectedAnnee" (ngModelChange)="onFilterChange()">
+        <option value="">Toutes les années</option>
+        @for (a of anneeOptions; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
+        @for (opt of sortOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Pastilles de type -->
+  <div class="catalogue__type-pills">
+    @for (t of typeButtons; track t.value) {
+      <button
+        type="button"
+        class="catalogue__type-pill"
+        [class.catalogue__type-pill--active]="selectedType === t.value"
+        (click)="selectType(t.value)"
+      >
+        {{ t.label }}
+      </button>
+    }
+  </div>
+
+  @if (!isLoading) {
+    <p class="catalogue__count">{{ filtered.length }} projet(s)</p>
+  }
+
+  @if (isLoading) {
+    <div class="catalogue__loading">Chargement...</div>
+  } @else if (filtered.length === 0) {
+    <div class="catalogue__empty">
+      <div class="catalogue__empty-icon" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="catalogue__empty-title">Aucun projet disponible</h2>
+      <p class="catalogue__empty-text">Aucun projet ne correspond à votre recherche.</p>
+    </div>
+  } @else {
+    <div class="catalogue__grid">
+      @for (projet of filtered; track projet.id) {
+        <div class="projet-card">
+          <div class="projet-card__cover">
+            @if (projet.coverImage) {
+              <img [src]="projet.coverImage" [alt]="'Couverture de ' + projet.titre" loading="lazy" />
+            }
+            <span class="badge projet-card__cover-type" [class]="typeLabels[projet.typeProjet].cssClass">
+              {{ typeLabels[projet.typeProjet].label }}
+            </span>
+            <div class="score-note" [title]="'Score : ' + projet.score">
+              <span class="score-note__value">{{ projet.score }}</span><span class="score-note__max">/100</span>
             </div>
+          </div>
+
+          <span class="badge statut-badge" [class]="statutLabels[projet.statut].cssClass">
+            {{ statutLabels[projet.statut].label }}
+          </span>
+
+          <h3 class="projet-card__title">{{ projet.titre }}</h3>
+          <p class="projet-card__description">{{ projet.description }}</p>
+          <p class="projet-card__meta">{{ projet.encadrantNom }} • {{ projet.equipeNom ?? '—' }}</p>
+
+          @if (projet.technologies.length) {
+            <div class="tags">
+              @for (t of projet.technologies; track t) { <span class="tag">{{ t }}</span> }
+            </div>
+          }
+
+          <div class="card-actions">
+            <a class="details-link" [routerLink]="['/backoffice/catalog', projet.id]">Voir détails →</a>
+            <button type="button" class="delete-btn" (click)="askDelete(projet)">Supprimer</button>
+          </div>
         </div>
-
-        <div class="filters-bottom-row">
-            <span class="type-label">TYPE</span>
-            <div class="type-pills">
-                <button class="type-pill" [class.active]="activeType === 'Tous'" (click)="setType('Tous')">Tous</button>
-                <button class="type-pill" [class.active]="activeType === 'PFE'" (click)="setType('PFE')">PFE</button>
-                <button class="type-pill" [class.active]="activeType === 'Stage'"
-                    (click)="setType('Stage')">Stage</button>
-                <button class="type-pill" [class.active]="activeType === 'RDI'" (click)="setType('RDI')">RDI</button>
-            </div>
-        </div>
+      }
     </div>
-
-    <div class="results-count">
-        {{ projects.length }} projet(s)
-    </div>
-
-    <!-- Projects Grid -->
-    <div class="projects-grid">
-        <div class="project-card" *ngFor="let proj of projects">
-            <!-- Cover Frame -->
-            <div class="card-cover" [style.background-image]="'url(' + proj.cover + ')'">
-                <div class="top-badges">
-                    <span class="badge-type">{{ proj.type }}</span>
-                    <span class="badge-labelise" *ngIf="proj.labelise">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                            <polygon
-                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                            </polygon>
-                        </svg>
-                        Labelisé
-                    </span>
-                </div>
-                <div class="bottom-badges">
-                    <div class="score-pill">
-                        <span class="score-val">{{ proj.score }}</span><span class="score-max">/100</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card Content -->
-            <div class="card-body">
-                <div class="status-indicator" [style.color]="proj.statusColor"
-                    [style.background-color]="proj.statusColor + '22'">
-                    {{ proj.status }}
-                </div>
-
-                <h3 class="proj-title">{{ proj.title }}</h3>
-                <p class="proj-desc">{{ proj.description }}</p>
-                <p class="proj-meta">{{ proj.supervisor }} • {{ proj.year }} • {{ proj.domain }}</p>
-
-                <div class="tech-tags">
-                    <span class="tech-tag" *ngFor="let tech of proj.technologies" [style.color]="tech.color"
-                        [style.border-color]="tech.color + '44' ">
-                        {{ tech.name }}
-                    </span>
-                </div>
-            </div>
-
-            <!-- Card Footer -->
-            <div class="card-footer">
-                <span class="porteurs-count">{{ proj.porteurs }} porteur(s)</span>
-                <a routerLink="/backoffice/project-details" class="details-link">
-                    Voir détails →
-                </a>
-            </div>
-        </div>
-    </div>
+  }
 </div>
+
+<app-confirm-dialog
+  [isOpen]="deleteConfirmOpen"
+  title="Supprimer le projet"
+  [message]="deleteConfirmMessage"
+  confirmLabel="Supprimer"
+  [loading]="deleting"
+  [errorMessage]="deleteError"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+></app-confirm-dialog>

@@ -6,7 +6,7 @@ import { ProfileComponent } from './profile.component';
 
 function userWith(role: Role): User {
   return {
-    id: 1, nom: 'Dupont', prenom: 'Jean', email: 'j@esprit.tn', identifiant: 'JD1',
+    id: 1, nom: 'Dupont', prenom: 'Jean', email: 'j@esprit.tn',
     role, typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: null,
     isAffilieToEquipe: false, equipeId: null, equipeNom: null,
   };

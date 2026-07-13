@@ -15,11 +15,20 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ModifierEquipeModal } from './modifier-equipe-modal/modifier-equipe-modal';
 import { AjouterMembreModal } from './ajouter-membre-modal/ajouter-membre-modal';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
+import { FilterDropdown } from '../../components/sujets/filter-dropdown/filter-dropdown';
 
 @Component({
   selector: 'app-equipes-recherche',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ModifierEquipeModal, AjouterMembreModal, ConfirmDialog],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    ModifierEquipeModal,
+    AjouterMembreModal,
+    ConfirmDialog,
+    FilterDropdown,
+  ],
   templateUrl: './equipes-recherche.html',
   styleUrl: './equipes-recherche.scss',
 })
@@ -38,7 +47,23 @@ export class EquipesRecherche implements OnInit {
   loading = signal(true);
   activeTab = signal(0);
   searchQuery = signal('');
+  selectedDomaine = signal('');
+  selectedStatut = signal('');
+  sortOrder = signal('recent');
   newMemberName = '';
+
+  readonly statutOptions = [
+    { value: '', label: 'Tous les statuts' },
+    { value: 'Actif', label: 'Actif' },
+    { value: 'Inactif', label: 'Inactif' },
+  ];
+
+  readonly sortOptions = [
+    { value: 'recent', label: 'Plus récents' },
+    { value: 'ancien', label: 'Plus anciens' },
+    { value: 'nom', label: 'Nom A–Z' },
+    { value: 'membres', label: 'Plus de membres' },
+  ];
 
   editModalOpen = false;
   addMemberModalOpen = false;
@@ -51,6 +76,13 @@ export class EquipesRecherche implements OnInit {
 
   isChef = computed(() => this.authSvc.getRole() === 'ROLE_CHEF_EQUIPE');
   isEnseignant = computed(() => this.authSvc.getRole() === 'ROLE_ENSEIGNANT');
+
+  domainePills = computed(() => {
+    const names = [...new Set(this.equipes().map((e) => e.domaine).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b, 'fr'),
+    );
+    return [{ value: '', label: 'Tous' }, ...names.map((d) => ({ value: d, label: d }))];
+  });
 
   myTeam = computed(() => {
     const user = this.currentUser();
@@ -74,49 +106,58 @@ export class EquipesRecherche implements OnInit {
 
   filteredTeams = computed(() => {
     const source = this.isChef() ? this.otherTeams() : this.equipes();
-    const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return source;
-    return source.filter(
-      (t) =>
-        t.nom.toLowerCase().includes(q) ||
-        t.domaine.toLowerCase().includes(q) ||
-        (t.chef && `${t.chef.prenom} ${t.chef.nom}`.toLowerCase().includes(q)),
-    );
+    return this.applyTeamFilters(source);
   });
 
   enseignantTeamsList = computed(() => {
     const all = this.equipes();
     const my = this.enseignantTeam();
-    const q = this.searchQuery().toLowerCase().trim();
-    let list = my ? all.filter((e) => e.id !== my.id) : all;
-    if (q) {
-      list = list.filter(
-        (t) =>
-          t.nom.toLowerCase().includes(q) ||
-          t.domaine.toLowerCase().includes(q) ||
-          (t.chef && `${t.chef.prenom} ${t.chef.nom}`.toLowerCase().includes(q)),
-      );
-    }
-    return list;
+    const list = my ? all.filter((e) => e.id !== my.id) : all;
+    return this.applyTeamFilters(list);
   });
 
   allTeamsUnified = computed(() => {
     const user = this.currentUser();
-    if (!user) return this.equipes();
+    if (!user) return this.applyTeamFilters(this.equipes());
     const my = this.enseignantTeam();
-    if (!my) return this.filtredByQuery(this.equipes());
-    return this.filtredByQuery([my, ...this.equipes().filter((e) => e.id !== my.id)]);
+    if (!my) return this.applyTeamFilters(this.equipes());
+    return this.applyTeamFilters([my, ...this.equipes().filter((e) => e.id !== my.id)]);
   });
 
-  private filtredByQuery(list: Equipe[]): Equipe[] {
+  private applyTeamFilters(list: Equipe[]): Equipe[] {
     const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return list;
-    return list.filter(
-      (t) =>
+    const domaine = this.selectedDomaine();
+    const statut = this.selectedStatut();
+    const sort = this.sortOrder();
+
+    let result = list.filter((t) => {
+      if (domaine && t.domaine !== domaine) return false;
+      if (statut && t.statut !== statut) return false;
+      if (!q) return true;
+      const chefName = t.chef ? `${t.chef.prenom} ${t.chef.nom}` : '';
+      const desc = t.description ?? '';
+      return (
         t.nom.toLowerCase().includes(q) ||
         t.domaine.toLowerCase().includes(q) ||
-        (t.chef && `${t.chef.prenom} ${t.chef.nom}`.toLowerCase().includes(q)),
-    );
+        desc.toLowerCase().includes(q) ||
+        chefName.toLowerCase().includes(q)
+      );
+    });
+
+    result = [...result].sort((a, b) => {
+      if (sort === 'nom') return a.nom.localeCompare(b.nom, 'fr');
+      if (sort === 'membres') return b.nbMembres - a.nbMembres;
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      if (sort === 'ancien') return da - db;
+      return db - da;
+    });
+
+    return result;
+  }
+
+  selectDomainePill(value: string): void {
+    this.selectedDomaine.set(value);
   }
 
   myTeamAffiliations = computed(() => {
@@ -344,6 +385,30 @@ export class EquipesRecherche implements OnInit {
     return `${m.prenom ?? ''} ${m.nom ?? ''}`.trim().split(' ').map((p) => p[0]?.toUpperCase() ?? '').slice(0, 2).join('');
   }
 
+  /** Jusqu'à 3 personnes (chef + membres) pour la pile d'avatars sur les cartes. */
+  membresPourAvatar(equipe: Equipe): User[] {
+    const list: User[] = [];
+    const chefId = equipe.chef?.id;
+
+    if (equipe.chef) {
+      list.push(equipe.chef);
+    }
+
+    for (const member of equipe.members ?? []) {
+      if (member.id !== chefId) {
+        list.push(member);
+      }
+    }
+
+    return list.slice(0, 3);
+  }
+
+  /** Couleurs fixes de la pile d'avatars (comme la maquette). */
+  couleurAvatarCarte(index: number): string {
+    const colors = ['#e23e3e', '#8d99ae', '#4a5568'];
+    return colors[index] ?? '#4a5568';
+  }
+
   couleurAvatar(u: User): string {
     const colors = ['#E63946', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899'];
     if (!u?.id) return colors[0];
@@ -367,10 +432,47 @@ export class EquipesRecherche implements OnInit {
     }
   }
 
+  affiliationAccentClass(statut: string): string {
+    switch (statut) {
+      case 'ACCEPTEE': return 'accent--acceptee';
+      case 'REFUSEE': return 'accent--refusee';
+      default: return 'accent--attente';
+    }
+  }
+
+  equipeDomaine(equipeId: number): string {
+    return this.equipes().find((e) => e.id === equipeId)?.domaine ?? 'Équipe RDI';
+  }
+
   formatDate(date: string): string {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  formatDateYmd(date: string): string {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '—';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  timeAgo(date: string): string {
+    if (!date) return '';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    const days = Math.max(0, Math.floor((Date.now() - d.getTime()) / 86_400_000));
+    if (days === 0) return "Aujourd'hui";
+    if (days === 1) return 'Il y a 1 jour';
+    if (days < 7) return `Il y a ${days} jours`;
+    const weeks = Math.floor(days / 7);
+    if (weeks === 1) return 'Il y a 1 semaine';
+    if (weeks < 5) return `Il y a ${weeks} semaines`;
+    const months = Math.floor(days / 30);
+    return months <= 1 ? 'Il y a 1 mois' : `Il y a ${months} mois`;
   }
 
   private toast(msg: string, type: 'succes' | 'erreur' = 'erreur') {
