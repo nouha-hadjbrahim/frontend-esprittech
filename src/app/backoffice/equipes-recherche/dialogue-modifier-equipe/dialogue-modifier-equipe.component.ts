@@ -186,7 +186,11 @@ import { LabelComponent } from '../../../ui/label/label.component';
     </div>
   `,
   styles: [`
-    :host { display: block; }
+    :host {
+      display: block;
+      background: #ffffff;
+      color: #111827;
+    }
 
     .modal {
       display: flex;
@@ -195,52 +199,53 @@ import { LabelComponent } from '../../../ui/label/label.component';
       max-height: 780px;
       padding: 0;
       overflow: hidden;
+      background: #ffffff;
+      border-radius: 16px;
     }
 
-    /* ── Header ── */
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 1.75rem 1.75rem 0;
+      padding: 28px 28px 0;
       flex-shrink: 0;
+      background: #ffffff;
     }
     .modal-header-text { min-width: 0; }
     .modal-title {
       margin: 0;
-      font-size: 1.35rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      color: var(--foreground, #1e293b);
+      color: #111827;
       letter-spacing: -0.01em;
       line-height: 1.3;
     }
     .modal-subtitle {
       margin: 0.35rem 0 0;
-      font-size: 0.875rem;
-      color: var(--muted-foreground, #64748b);
+      font-size: 0.9rem;
+      color: #6b7280;
     }
     .close-btn {
       background: none;
       border: none;
-      color: var(--muted-foreground, #94a3b8);
+      color: #6b7280;
       cursor: pointer;
-      padding: 0.375rem;
-      border-radius: 50%;
+      padding: 4px;
+      border-radius: 8px;
       display: flex;
-      transition: background 0.2s, color 0.2s;
+      transition: background 0.15s, color 0.15s;
       flex-shrink: 0;
     }
-    .close-btn:hover { background: var(--accent, #f1f5f9); color: var(--foreground, #1e293b); }
+    .close-btn:hover { background: #f3f4f6; color: #111827; }
     .close-btn mat-icon { font-size: 20px; width: 20px; height: 20px; }
 
-    /* ── Scrollable body ── */
     .modal-body {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
       min-height: 0;
-      padding: 1.25rem 1.75rem 0;
-
+      padding: 20px 28px 0;
+      background: #ffffff;
       scrollbar-width: thin;
       scrollbar-color: rgba(0,0,0,0.12) transparent;
       scroll-behavior: smooth;
@@ -250,33 +255,30 @@ import { LabelComponent } from '../../../ui/label/label.component';
     .modal-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
     .modal-body::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
 
-    .form-content { display: flex; flex-direction: column; gap: 1.5rem; padding-bottom: 1rem; }
+    .form-content { display: flex; flex-direction: column; gap: 1.25rem; padding-bottom: 1rem; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .req { color: #E23E3E; font-weight: 600; }
+    .opt { font-weight: 400; color: #6b7280; font-size: 0.75rem; }
 
-    .field { display: flex; flex-direction: column; gap: 0.375rem; }
-
-    .req { color: #ef4444; font-weight: 600; }
-    .opt { font-weight: 400; color: var(--muted-foreground); font-size: 0.75rem; }
-
-    /* ── Inputs / textarea / select ── */
     .inp {
       width: 100%;
-      height: 3rem;
-      padding: 0 0.875rem;
-      border: 1px solid var(--border, #e2e8f0);
-      border-radius: 12px;
-      background: var(--background, #fff);
-      font-size: 0.875rem;
+      height: 2.75rem;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
+      font-size: 0.95rem;
       font-family: inherit;
-      color: var(--foreground, #1e293b);
+      color: #111827;
       outline: none;
       box-sizing: border-box;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .inp::placeholder { color: var(--muted-foreground, #94a3b8); }
-    .inp:hover { border-color: #cbd5e1; }
+    .inp::placeholder { color: #9ca3af; }
+    .inp:hover { border-color: #d1d5db; }
     .inp:focus {
-      border-color: var(--ring, #E63946);
-      box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
+      border-color: #E23E3E;
+      box-shadow: 0 0 0 3px rgba(226, 62, 62, 0.12);
     }
 
     .ta { height: auto; min-height: 5rem; padding: 0.75rem 0.875rem; resize: vertical; line-height: 1.5; }
@@ -287,7 +289,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
       cursor: pointer;
       padding-left: 0.875rem;
       padding-right: 2.5rem;
-      background: var(--background, #fff);
+      background: #ffffff;
       transition: padding-left 0.2s;
     }
     .sel-wrap.has-value .sel { padding-left: 2rem; }
@@ -297,9 +299,8 @@ import { LabelComponent } from '../../../ui/label/label.component';
       top: 50%;
       transform: translateY(-50%);
       pointer-events: none;
-      color: var(--muted-foreground, #94a3b8);
+      color: #9ca3af;
       font-size: 20px;
-      transition: transform 0.2s;
     }
     .sel-dot {
       position: absolute;
@@ -320,28 +321,25 @@ import { LabelComponent } from '../../../ui/label/label.component';
       gap: 1rem;
     }
 
-    /* ── Chip input (integrated chips + input) ── */
-    .chip-input-wrap {
-      position: relative;
-    }
+    .chip-input-wrap { position: relative; }
     .chip-input {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 0.375rem;
-      min-height: 3rem;
+      min-height: 2.75rem;
       padding: 0.375rem 0.875rem;
-      border: 1px solid var(--border, #e2e8f0);
-      border-radius: 12px;
-      background: var(--background, #fff);
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
       cursor: text;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     .chip-input:focus-within {
-      border-color: var(--ring, #E63946);
-      box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
+      border-color: #E23E3E;
+      box-shadow: 0 0 0 3px rgba(226, 62, 62, 0.12);
     }
-    .chip-input:hover { border-color: #cbd5e1; }
+    .chip-input:hover { border-color: #d1d5db; }
     .chip-inp {
       flex: 1;
       min-width: 100px;
@@ -352,9 +350,9 @@ import { LabelComponent } from '../../../ui/label/label.component';
       font-size: 0.875rem;
       font-family: inherit;
       background: transparent;
-      color: var(--foreground, #1e293b);
+      color: #111827;
     }
-    .chip-inp::placeholder { color: var(--muted-foreground, #94a3b8); }
+    .chip-inp::placeholder { color: #9ca3af; }
 
     .chip {
       display: inline-flex;
@@ -362,11 +360,11 @@ import { LabelComponent } from '../../../ui/label/label.component';
       gap: 0.375rem;
       padding: 0.25rem 0.375rem 0.25rem 0.25rem;
       border-radius: 999px;
-      background: var(--muted, #f8fafc);
-      border: 1px solid var(--border, #e2e8f0);
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
       font-size: 0.75rem;
       font-weight: 500;
-      color: var(--foreground, #1e293b);
+      color: #111827;
       animation: chipIn 0.2s ease both;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
@@ -395,23 +393,21 @@ import { LabelComponent } from '../../../ui/label/label.component';
       cursor: pointer;
       padding: 1px;
       border-radius: 50%;
-      color: var(--muted-foreground, #94a3b8);
+      color: #9ca3af;
       transition: background 0.15s, color 0.15s;
       width: 18px;
       height: 18px;
     }
-    .chip-remove:hover { background: var(--accent, #e2e8f0); color: var(--foreground, #475569); }
+    .chip-remove:hover { background: #e5e7eb; color: #374151; }
     .chip-remove mat-icon { font-size: 14px; width: 14px; height: 14px; }
-
-    /* ── Dropdown (shared for both pickers) ── */
 
     .picker-dropdown {
       position: absolute;
       left: 0; right: 0;
       margin-top: 0.25rem;
       z-index: 50;
-      background: var(--popover, #fff);
-      border: 1px solid var(--border, #e2e8f0);
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
       border-radius: 14px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.08);
       overflow: hidden;
@@ -429,7 +425,6 @@ import { LabelComponent } from '../../../ui/label/label.component';
       padding: 0.375rem;
       max-height: 260px;
       overflow-y: auto;
-
       scrollbar-width: thin;
       scrollbar-color: rgba(0,0,0,0.12) transparent;
     }
@@ -452,7 +447,7 @@ import { LabelComponent } from '../../../ui/label/label.component';
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .picker-dropdown li.hi { background: var(--accent, #f1f5f9); }
+    .picker-dropdown li.hi { background: #f3f4f6; }
     .picker-dropdown li.selected { background: #fef2f2; }
 
     .res-avatar {
@@ -468,8 +463,8 @@ import { LabelComponent } from '../../../ui/label/label.component';
       box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
     .res-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-    .res-name { font-size: 0.8125rem; font-weight: 600; color: var(--foreground, #1e293b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .res-email { font-size: 0.6875rem; color: var(--muted-foreground, #64748b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-name { font-size: 0.8125rem; font-weight: 600; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-email { font-size: 0.6875rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .res-badge {
       flex-shrink: 0;
       font-size: 0.625rem;
@@ -479,16 +474,16 @@ import { LabelComponent } from '../../../ui/label/label.component';
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      background: var(--muted, #f1f5f9);
-      color: var(--muted-foreground, #64748b);
-      border: 1px solid var(--border, #e2e8f0);
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 1px solid #e5e7eb;
     }
     .check-mark {
       flex-shrink: 0;
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: var(--ring, #E63946);
+      background: #E23E3E;
       color: #fff;
       display: flex;
       align-items: center;
@@ -499,14 +494,14 @@ import { LabelComponent } from '../../../ui/label/label.component';
     .field-error {
       margin: 0.25rem 0 0;
       font-size: 0.75rem;
-      color: #ef4444;
+      color: #E23E3E;
       font-weight: 500;
     }
 
     .no-result {
       margin: 0.25rem 0 0;
       font-size: 0.75rem;
-      color: var(--muted-foreground);
+      color: #6b7280;
       padding: 0.25rem 0.25rem;
     }
 
@@ -521,14 +516,14 @@ import { LabelComponent } from '../../../ui/label/label.component';
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: var(--muted, #e2e8f0);
+      background: #e5e7eb;
       animation: shimmer 1.4s infinite;
     }
     .sk-lines { flex: 1; display: flex; flex-direction: column; gap: 0.375rem; }
     .sk-line {
       height: 10px;
       border-radius: 6px;
-      background: var(--muted, #e2e8f0);
+      background: #e5e7eb;
       animation: shimmer 1.4s infinite;
     }
     .w-32 { width: 60%; }
@@ -538,22 +533,22 @@ import { LabelComponent } from '../../../ui/label/label.component';
       50% { opacity: 0.5; }
     }
 
-    /* ── Footer ── */
     .modal-footer {
       display: flex;
       justify-content: flex-end;
-      gap: 0.75rem;
-      padding: 1.25rem 1.75rem 1.75rem;
+      gap: 12px;
+      padding: 20px 28px 28px;
       flex-shrink: 0;
+      background: #ffffff;
+      border-top: 1px solid #f3f4f6;
     }
     .btn-i { font-size: 16px; width: 16px; height: 16px; }
 
-    /* ── Responsive ── */
     @media (max-width: 640px) {
-      .grid-2 { grid-template-columns: 1fr; gap: 1.5rem; }
-      .modal-header { padding: 1.25rem 1.25rem 0; }
-      .modal-body { padding: 1rem 1.25rem 0; }
-      .modal-footer { padding: 1rem 1.25rem 1.25rem; }
+      .grid-2 { grid-template-columns: 1fr; gap: 1.25rem; }
+      .modal-header { padding: 20px 20px 0; }
+      .modal-body { padding: 16px 20px 0; }
+      .modal-footer { padding: 16px 20px 20px; }
     }
   `],
 })

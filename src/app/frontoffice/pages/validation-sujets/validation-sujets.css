@@ -7,8 +7,9 @@
 }
 
 .validation-sujets {
-  max-width: 1280px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 .validation-sujets__header {
