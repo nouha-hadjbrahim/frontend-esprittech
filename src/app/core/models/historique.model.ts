@@ -1,20 +1,44 @@
 import { Role } from './user.model';
 
+export type HistoriqueAction =
+  | 'CREATE'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'VALIDATE'
+  | 'INVALIDATE'
+  | 'SUBMIT'
+  | 'ACCEPT'
+  | 'REFUSE'
+  | 'RETRAIT'
+  | 'RETRAIT_ETUDIANT'
+  | 'DECLARER_TERMINAISON'
+  | 'OUVRIR_CANDIDATURES'
+  | 'FERMER_CANDIDATURES'
+  | string;
+
+export type HistoriqueEntityType = 'SUJET_PROJET' | 'CANDIDATURE' | string;
+
+/** Filtre onglet Historique du détail sujet */
+export type HistoriqueFilter = 'TOUT' | 'SUJET' | 'CANDIDATURE';
+
 export interface HistoriqueResponse {
   id: number;
   actorId: number;
   actorNom: string;
   actorPrenom: string;
-  actorRole: Role;
+  actorRole: Role | string;
   action: string;
   entityType: string;
-  entityId: number;
+  entityId: number | null;
   summary: string;
   oldValues: string | null;
   newValues: string | null;
   metadata: string | null;
   createdAt: string;
 }
+
+/** Alias utilisé par le détail sujet */
+export type HistoriqueEntry = HistoriqueResponse;
 
 export interface HistoriqueFilters {
   entityType?: string;

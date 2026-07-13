@@ -83,7 +83,11 @@ export class SujetProjetService {
     return this.http.get<SujetProjet[]>(`${this.baseUrl}/equipe`, { params });
   }
 
-  declarerTerminaison(id: number): Observable<SujetProjet> {
-    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/terminer`, {});
+  declarerTerminaison(
+    id: number,
+    cover?: { coverImageBase64?: string | null; coverImageContentType?: string | null },
+  ): Observable<SujetProjet> {
+    const body = cover ?? {};
+    return this.http.post<SujetProjet>(`${this.baseUrl}/${id}/terminer`, body);
   }
 }
