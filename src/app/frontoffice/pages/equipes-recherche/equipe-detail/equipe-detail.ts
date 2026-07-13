@@ -296,11 +296,18 @@ export class EquipeDetail implements OnInit {
     return `${m.prenom ?? ''} ${m.nom ?? ''}`.trim().split(' ').map((p) => p[0]?.toUpperCase() ?? '').slice(0, 2).join('');
   }
 
+  /** Couleurs avatars membres : chef rouge, puis gris/bleu comme la maquette. */
+  couleurAvatarMembre(m: User, index: number): string {
+    const eq = this.equipe();
+    if (eq?.chef && m.id === eq.chef.id) {
+      return '#ef4444';
+    }
+    const colors = ['#64748b', '#334155', '#475569', '#0f172a'];
+    return colors[Math.max(0, index - 1) % colors.length];
+  }
+
   couleurAvatar(u: User): string {
-    const colors = ['#E63946', '#0ea5e9', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6', '#ec4899'];
-    if (!u?.id) return colors[0];
-    const idx = String(u.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
-    return colors[idx];
+    return this.couleurAvatarMembre(u, 0);
   }
 
   statutClass(statut: string): string {
