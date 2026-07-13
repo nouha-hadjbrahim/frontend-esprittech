@@ -201,7 +201,7 @@ describe('SujetDetail industrialisation warnings', () => {
       processingStatus: 'FAILED_PERMANENT',
       eligibilityStatus: 'NOT_EVALUABLE',
       commentaire: 'Evaluation impossible avec les informations disponibles.',
-    } as never));
+    } as any));
 
     component.sujet = sujet;
     component.recalculateScore();

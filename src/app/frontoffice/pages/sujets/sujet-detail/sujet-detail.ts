@@ -15,20 +15,21 @@ import {
 } from '../../../../core/models/industrialisation.model';
 import { Livrable, TYPE_LIVRABLE_LABELS, TYPE_LIVRABLE_OPTIONS, TypeLivrable } from '../../../../core/models/livrable.model';
 import { Affectation, Candidature, StatutCandidature } from '../../../../core/models/candidature.model';
+import { HistoriqueEntry, HistoriqueFilter } from '../../../../core/models/historique.model';
 import { SujetProjet } from '../../../../core/models/sujet-projet.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CandidatureService } from '../../../../core/services/candidature.service';
 import { EvaluationService } from '../../../../core/services/evaluation.service';
+import { HistoriqueService } from '../../../../core/services/historique.service';
 import { IndustrialisationService } from '../../../../core/services/industrialisation.service';
 import { LivrableService } from '../../../../core/services/livrable.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
 import { EvaluationChecklistComponent } from '../../../../shared/components/evaluation-checklist/evaluation-checklist.component';
-import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import { CATEGORIE_LABELS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
+import { CATEGORIE_LABELS, STATUT_CANDIDATURE_LABELS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-sujet-detail',
-  imports: [RouterLink, DatePipe, FormsModule, EvaluationChecklistComponent, ConfirmDialog],
+  imports: [RouterLink, DatePipe, FormsModule, EvaluationChecklistComponent],
   templateUrl: './sujet-detail.html',
   styleUrl: './sujet-detail.css',
 })
@@ -40,6 +41,7 @@ export class SujetDetail implements OnInit,OnDestroy  {
   private readonly livrableService = inject(LivrableService);
   private readonly industrialisationService = inject(IndustrialisationService);
   private readonly candidatureService = inject(CandidatureService);
+  private readonly historiqueService = inject(HistoriqueService);
 
   sujet: SujetProjet | null = null;
   isLoading = true;
@@ -63,6 +65,16 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   candidatures: Candidature[] = [];
   candidaturesLoading = false;
   candidaturesError = '';
+  historiqueEntries: HistoriqueEntry[] = [];
+  historiqueLoading = false;
+  historiqueError = '';
+  historiqueFilter: HistoriqueFilter = 'TOUT';
+  historiqueSearch = '';
+  readonly historiqueFilterChips: { value: HistoriqueFilter; label: string; dot?: string }[] = [
+    { value: 'TOUT', label: 'Tous' },
+    { value: 'SUJET', label: 'Sujets', dot: 'sujet' },
+    { value: 'CANDIDATURE', label: 'Candidatures', dot: 'candidature' },
+  ];
   livrables: Livrable[] = [];
   livrablesLoading = false;
   livrableError = '';
@@ -89,6 +101,22 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   terminaisonConfirmOpen = false;
   terminaisonLoading = false;
   terminaisonError = '';
+  terminaisonCoverPreview: string | null = null;
+  terminaisonCoverBase64: string | null = null;
+  terminaisonCoverContentType: string | null = null;
+  terminaisonCoverError = '';
+
+  private static readonly COVER_ALLOWED_TYPES = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/webp',
+  ];
+  /** Limite d'entrée avant compression automatique (20 Mo). */
+  private static readonly COVER_INPUT_MAX_BYTES = 20 * 1024 * 1024;
+  /** Taille cible après compression pour l'envoi API. */
+  private static readonly COVER_TARGET_MAX_BYTES = 2 * 1024 * 1024;
   industrialisationMessage = '';
   industrialisationSubmitAttempted = false;
   eliminatoryWarningConfirmation: EliminatoryWarningsConfirmation | null = null;
@@ -117,6 +145,14 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     return this.isOwner && (this.isEnseignant || this.isChefEquipe);
   }
 
+  get canViewHistorique(): boolean {
+    const role = this.authService.getRole();
+    if (role === 'ROLE_ADMIN' || role === 'ROLE_CI' || role === 'ROLE_CHEF_EQUIPE') {
+      return true;
+    }
+    return this.isEnseignant && this.isOwner;
+  }
+
   get tabs(): { label: string; icon: string }[] {
     if (this.isEtudiant) {
       return [
@@ -132,11 +168,42 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     if (this.canManageCandidatures) {
       items.push({ label: 'Candidatures', icon: 'candidatures' });
     }
+    if (this.canViewHistorique) {
+      items.push({ label: 'Historique', icon: 'historique' });
+    }
     items.push(
       { label: 'Livrables', icon: 'livrables' },
       { label: 'Industrialisation', icon: 'progression' },
     );
     return items;
+  }
+
+  get filteredHistorique(): HistoriqueEntry[] {
+    const q = this.historiqueSearch.trim().toLowerCase();
+    if (!q) return this.historiqueEntries;
+    return this.historiqueEntries.filter((entry) => {
+      const actor = `${entry.actorPrenom ?? ''} ${entry.actorNom ?? ''}`.toLowerCase();
+      const action = this.historiqueActionTitle(entry).toLowerCase();
+      const summary = (entry.summary ?? '').toLowerCase();
+      const motif = (this.historiqueMotif(entry) ?? '').toLowerCase();
+      return actor.includes(q) || action.includes(q) || summary.includes(q) || motif.includes(q);
+    });
+  }
+
+  get historiqueGroups(): { dateKey: string; dateLabel: string; count: number; entries: HistoriqueEntry[] }[] {
+    const groups = new Map<string, HistoriqueEntry[]>();
+    for (const entry of this.filteredHistorique) {
+      const key = this.historiqueDateKey(entry.createdAt);
+      const list = groups.get(key) ?? [];
+      list.push(entry);
+      groups.set(key, list);
+    }
+    return Array.from(groups.entries()).map(([dateKey, entries]) => ({
+      dateKey,
+      dateLabel: this.formatHistoriqueDateLabel(dateKey),
+      count: entries.length,
+      entries,
+    }));
   }
 
   private readonly techColorClasses = [
@@ -164,6 +231,9 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
           this.activeTab = 'Informations';
         }
         if (this.activeTab === 'Candidatures' && !this.canManageCandidatures) {
+          this.activeTab = 'Informations';
+        }
+        if (this.activeTab === 'Historique' && !this.canViewHistorique) {
           this.activeTab = 'Informations';
         }
         this.loadMembres();
@@ -274,6 +344,10 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
 
   ouvrirTerminaisonConfirm(): void {
     this.terminaisonError = '';
+    this.terminaisonCoverError = '';
+    this.terminaisonCoverPreview = null;
+    this.terminaisonCoverBase64 = null;
+    this.terminaisonCoverContentType = null;
     this.terminaisonConfirmOpen = true;
   }
 
@@ -281,29 +355,142 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     this.terminaisonConfirmOpen = false;
     this.terminaisonLoading = false;
     this.terminaisonError = '';
+    this.terminaisonCoverError = '';
+    this.terminaisonCoverPreview = null;
+    this.terminaisonCoverBase64 = null;
+    this.terminaisonCoverContentType = null;
+  }
+
+  onTerminaisonCoverSelected(event: Event): void {
+    this.terminaisonCoverError = '';
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const normalizedType = (file.type || '').toLowerCase();
+    const extensionOk = /\.(png|jpe?g|webp)$/i.test(file.name);
+    const typeOk =
+      !normalizedType ||
+      SujetDetail.COVER_ALLOWED_TYPES.includes(normalizedType) ||
+      normalizedType.startsWith('image/');
+
+    if (!typeOk && !extensionOk) {
+      this.terminaisonCoverError = 'Format non autorisé. Choisissez une image (PNG, JPG, WEBP).';
+      input.value = '';
+      return;
+    }
+    if (file.size > SujetDetail.COVER_INPUT_MAX_BYTES) {
+      this.terminaisonCoverError = "L'image est trop volumineuse (max 20 Mo).";
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUri = reader.result as string;
+      void this.prepareTerminaisonCover(dataUri, file).catch(() => {
+        this.terminaisonCoverError = "Impossible de préparer l'image sélectionnée.";
+      });
+    };
+    reader.onerror = () => {
+      this.terminaisonCoverError = "Impossible de lire l'image sélectionnée.";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  private async prepareTerminaisonCover(dataUri: string, file: File): Promise<void> {
+    // Toujours recompresser en JPEG pour accepter les grandes images.
+    const compressed = await this.compressImageDataUri(dataUri, SujetDetail.COVER_TARGET_MAX_BYTES);
+    this.terminaisonCoverPreview = compressed;
+    this.terminaisonCoverContentType = 'image/jpeg';
+    const commaIndex = compressed.indexOf(',');
+    this.terminaisonCoverBase64 = commaIndex >= 0 ? compressed.substring(commaIndex + 1) : compressed;
+    this.terminaisonCoverError = '';
+  }
+
+  private compressImageDataUri(dataUri: string, maxBytes: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSide = 1600;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas unavailable'));
+          return;
+        }
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(image, 0, 0, width, height);
+
+        let quality = 0.85;
+        let result = canvas.toDataURL('image/jpeg', quality);
+        while (this.estimateDataUriBytes(result) > maxBytes && quality > 0.35) {
+          quality -= 0.1;
+          result = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(result);
+      };
+      image.onerror = () => reject(new Error('Image load failed'));
+      image.src = dataUri;
+    });
+  }
+
+  private estimateDataUriBytes(dataUri: string): number {
+    const commaIndex = dataUri.indexOf(',');
+    const base64 = commaIndex >= 0 ? dataUri.substring(commaIndex + 1) : dataUri;
+    return Math.floor((base64.length * 3) / 4);
+  }
+
+  removeTerminaisonCover(): void {
+    this.terminaisonCoverPreview = null;
+    this.terminaisonCoverBase64 = null;
+    this.terminaisonCoverContentType = null;
+    this.terminaisonCoverError = '';
   }
 
   confirmerTerminaison(): void {
     if (!this.sujet) return;
     this.terminaisonLoading = true;
     this.terminaisonError = '';
-    this.sujetProjetService.declarerTerminaison(this.sujet.id).subscribe({
-      next: (updated) => {
-        this.terminaisonLoading = false;
-        this.terminaisonConfirmOpen = false;
-        this.sujet = updated;
-        this.loadEvaluation();
-      },
-      error: (err) => {
-        this.terminaisonLoading = false;
-        this.terminaisonError = err?.error?.detail ?? err?.error?.message ?? 'Impossible de déclarer la terminaison.';
-      },
-    });
+    this.sujetProjetService
+      .declarerTerminaison(
+        this.sujet.id,
+        this.terminaisonCoverBase64
+          ? {
+              coverImageBase64: this.terminaisonCoverBase64,
+              coverImageContentType: this.terminaisonCoverContentType,
+            }
+          : {},
+      )
+      .subscribe({
+        next: (updated) => {
+          this.terminaisonLoading = false;
+          this.annulerTerminaison();
+          this.sujet = updated;
+          // Même API / logique que le bouton « Recalculer score »
+          // (POST /api/projets/{id}/calculer-score) pour enregistrer le score
+          // et le synchroniser sur le catalogue.
+          this.recalculateScore();
+        },
+        error: (err) => {
+          this.terminaisonLoading = false;
+          this.terminaisonError =
+            err?.error?.detail ?? err?.error?.message ?? 'Impossible de déclarer la terminaison.';
+        },
+      });
   }
 
   get terminaisonConfirmMessage(): string {
     return this.sujet
-      ? `Voulez-vous déclarer le sujet « ${this.sujet.titre} » comme terminé ?`
+      ? `Votre sujet « ${this.sujet.titre} » sera publié dans le catalogue. Vous pouvez insérer une image comme cover.`
       : '';
   }
 
@@ -311,6 +498,9 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     this.activeTab = label;
     if (label === 'Candidatures') {
       this.loadCandidatures();
+    }
+    if (label === 'Historique') {
+      this.loadHistorique();
     }
   }
 
@@ -331,6 +521,199 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
         this.candidaturesLoading = false;
       },
     });
+  }
+
+  loadHistorique(): void {
+    if (!this.sujet || !this.canViewHistorique) return;
+    this.historiqueLoading = true;
+    this.historiqueError = '';
+    this.historiqueService.getBySujet(this.sujet.id, this.historiqueFilter).subscribe({
+      next: (entries) => {
+        this.historiqueEntries = entries ?? [];
+        this.historiqueLoading = false;
+      },
+      error: () => {
+        this.historiqueEntries = [];
+        this.historiqueError = "Impossible de charger l'historique.";
+        this.historiqueLoading = false;
+      },
+    });
+  }
+
+  setHistoriqueFilter(filter: HistoriqueFilter): void {
+    if (this.historiqueFilter === filter) return;
+    this.historiqueFilter = filter;
+    this.loadHistorique();
+  }
+
+  historiqueActorName(entry: HistoriqueEntry): string {
+    return `${entry.actorPrenom ?? ''} ${entry.actorNom ?? ''}`.trim() || 'Utilisateur';
+  }
+
+  historiqueRoleLabel(role: string | null | undefined): string {
+    const labels: Record<string, string> = {
+      ROLE_ADMIN: 'Administrateur',
+      ROLE_CI: 'CI',
+      ROLE_CHEF_EQUIPE: "Chef d'équipe",
+      ROLE_ENSEIGNANT: 'Encadrant',
+      ROLE_ETUDIANT: 'Étudiant',
+    };
+    return labels[role ?? ''] ?? role ?? '';
+  }
+
+  historiqueModule(entry: HistoriqueEntry): 'sujet' | 'candidature' {
+    return entry.action === 'ACCEPT' || entry.action === 'REFUSE' ? 'candidature' : 'sujet';
+  }
+
+  historiqueModuleLabel(entry: HistoriqueEntry): string {
+    return this.historiqueModule(entry) === 'candidature' ? 'CANDIDATURES' : 'SUJETS';
+  }
+
+  historiqueActionTitle(entry: HistoriqueEntry): string {
+    const titles: Record<string, string> = {
+      CREATE: entry.entityType === 'CANDIDATURE' ? 'Dépôt candidature' : 'Création sujet',
+      UPDATE: 'Modification sujet',
+      DELETE: 'Suppression sujet',
+      VALIDATE: 'Validation sujet',
+      INVALIDATE: 'Invalidation sujet',
+      ACCEPT: 'Acceptation candidature',
+      REFUSE: 'Refus candidature',
+      RETRAIT: 'Retrait étudiant',
+      RETRAIT_ETUDIANT: 'Retrait candidature',
+      DECLARER_TERMINAISON: 'Terminaison sujet',
+      OUVRIR_CANDIDATURES: 'Ouverture candidatures',
+      FERMER_CANDIDATURES: 'Fermeture candidatures',
+      SUBMIT: 'Soumission',
+    };
+    return titles[entry.action] ?? entry.summary ?? entry.action;
+  }
+
+  historiqueTransition(entry: HistoriqueEntry): { from: string; to: string } | null {
+    const oldValues = this.parseHistoriqueJson(entry.oldValues);
+    const newValues = this.parseHistoriqueJson(entry.newValues);
+    let fromStatut = this.readStatut(oldValues);
+    let toStatut = this.readStatut(newValues);
+
+    if (!fromStatut) {
+      fromStatut = this.inferredPreviousStatut(entry);
+    }
+    if (!toStatut) {
+      toStatut = this.inferredNextStatut(entry);
+    }
+
+    if (!fromStatut || !toStatut) {
+      return null;
+    }
+
+    return {
+      from: this.displayStatut(fromStatut, entry),
+      to: this.displayStatut(toStatut, entry),
+    };
+  }
+
+  private inferredPreviousStatut(entry: HistoriqueEntry): string | null {
+    const byAction: Record<string, string> = {
+      CREATE: 'NOUVEAU',
+      VALIDATE: 'EN_ATTENTE',
+      INVALIDATE: 'EN_ATTENTE',
+      OUVRIR_CANDIDATURES: 'VALIDE',
+      FERMER_CANDIDATURES: 'CANDIDATURE_OUVERTE',
+      DECLARER_TERMINAISON: 'REALISATION_EN_COURS',
+      ACCEPT: 'DEPOSEE',
+      REFUSE: 'DEPOSEE',
+      RETRAIT: 'ACTIVE',
+      RETRAIT_ETUDIANT: 'DEPOSEE',
+    };
+    return byAction[entry.action] ?? null;
+  }
+
+  private inferredNextStatut(entry: HistoriqueEntry): string | null {
+    const byAction: Record<string, string> = {
+      CREATE: entry.entityType === 'CANDIDATURE' ? 'DEPOSEE' : 'SOUMIS_EN_VALIDATION',
+      VALIDATE: 'VALIDE',
+      INVALIDATE: 'INVALIDE',
+      OUVRIR_CANDIDATURES: 'CANDIDATURE_OUVERTE',
+      FERMER_CANDIDATURES: 'REALISATION_EN_COURS',
+      DECLARER_TERMINAISON: 'REALISATION_TERMINEE',
+      ACCEPT: 'ACCEPTEE',
+      REFUSE: 'REFUSEE',
+      RETRAIT: 'RETIREE_ARCHIVEE',
+      RETRAIT_ETUDIANT: 'ARCHIVEE',
+    };
+    return byAction[entry.action] ?? null;
+  }
+
+  historiqueMotif(entry: HistoriqueEntry): string | null {
+    const metadata = this.parseHistoriqueJson(entry.metadata);
+    if (!metadata) return null;
+    const motif =
+      (metadata['motif'] as string | undefined) ??
+      (metadata['motifRefus'] as string | undefined) ??
+      (metadata['motifRetrait'] as string | undefined) ??
+      (metadata['commentaire'] as string | undefined);
+    return motif?.trim() || null;
+  }
+
+  historiqueTime(entry: HistoriqueEntry): string {
+    const date = new Date(entry.createdAt);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  private historiqueDateKey(iso: string): string {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso.slice(0, 10);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  private formatHistoriqueDateLabel(dateKey: string): string {
+    const date = new Date(`${dateKey}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return dateKey;
+    return date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  private parseHistoriqueJson(raw: string | null): Record<string, unknown> | null {
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+
+  private readStatut(values: Record<string, unknown> | null): string | null {
+    if (!values) return null;
+    const statut = values['statut'];
+    if (typeof statut === 'string' && statut.trim()) return statut.trim();
+    if (statut != null && typeof statut !== 'object') return String(statut);
+    return null;
+  }
+
+  private displayStatut(statut: string, entry: HistoriqueEntry): string {
+    if (statut === 'NOUVEAU') return 'Nouveau';
+    if (entry.entityType === 'CANDIDATURE' || this.historiqueModule(entry) === 'candidature') {
+      const candidatureLabel = STATUT_CANDIDATURE_LABELS[statut as keyof typeof STATUT_CANDIDATURE_LABELS];
+      if (candidatureLabel) return candidatureLabel.label;
+      if (statut === 'ARCHIVEE') return 'Archivée';
+    }
+    const sujetLabel = STATUT_LABELS[statut as keyof typeof STATUT_LABELS];
+    if (sujetLabel) return sujetLabel.label;
+    const fallback: Record<string, string> = {
+      ACTIVE: 'Active',
+      RETIREE: 'Retiré',
+      RETIREE_ARCHIVEE: 'Retiré',
+      CREATED: 'Créé',
+      ARCHIVEE: 'Archivée',
+    };
+    return fallback[statut] ?? statut;
   }
 
   candidatureFullName(candidature: Candidature): string {
