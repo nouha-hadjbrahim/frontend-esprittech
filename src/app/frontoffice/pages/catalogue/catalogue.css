@@ -228,31 +228,39 @@
   gap: 8px;
 }
 
-.projet-card__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
+/* Badge type (PFE, Stage…) en surimpression, coin haut-gauche de la couverture */
+.projet-card__cover-type {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
 
-.projet-card__badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+/* Note (score) en surimpression, coin haut-droit de la couverture */
+.score-note {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: baseline;
+  padding: 4px 11px;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
-.score-circle {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #E23E3E;
-  color: #fff;
-  font-weight: 700;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.score-note__value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.score-note__max {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  line-height: 1;
 }
 
 .projet-card__title {
@@ -314,18 +322,12 @@
   white-space: nowrap;
 }
 
-.badge--stage { background: #e0f2fe; color: #075985; }
-.badge--pfe { background: #fae8ff; color: #86198f; }
-.badge--rdi { background: #fef9c3; color: #854d0e; }
-.badge--label { background: #fef3c7; color: #92400e; }
-
-.badge--soumis { background: #fef3c7; color: #92400e; }
-.badge--invalide { background: #fee2e2; color: #991b1b; }
-.badge--valide { background: #d1fae5; color: #065f46; }
-.badge--cand-interne { background: #dbeafe; color: #1e40af; }
-.badge--cand-externe { background: #fed7aa; color: #9a3412; }
-.badge--indus-dsi { background: #a7f3d0; color: #064e3b; }
-.badge--indus-externe { background: #ddd6fe; color: #5b21b6; }
+.badge--stage,
+.badge--pfe,
+.badge--rdi {
+  background: #fde2e5;
+  color: #9b0f24;
+}
 
 @media (max-width: 1100px) {
   .catalogue__grid {
@@ -362,6 +364,7 @@
 }
 
 .projet-card__cover {
+  position: relative;
   margin: -20px -20px 4px;
   height: 150px;
   overflow: hidden;

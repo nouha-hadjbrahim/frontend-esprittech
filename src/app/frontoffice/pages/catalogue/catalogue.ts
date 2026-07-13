@@ -6,10 +6,8 @@ import { ProjetCard, StatutProjet, TypeProjet } from '../../../core/models/proje
 import { ProjetCatalogueService } from '../../../core/services/projet-catalogue.service';
 import {
   STATUT_CATALOGUE_OPTIONS,
-  STATUT_PROJET_LABELS,
   TYPE_PROJET_LABELS,
   TYPE_PROJET_OPTIONS,
-  estLabellise,
 } from '../../constants/projet-catalogue.constants';
 
 /** Page « Catalogue des projets » : projets validés/industrialisés, avec filtres. */
@@ -24,7 +22,6 @@ export class Catalogue implements OnInit {
   private readonly searchSubject = new Subject<void>();
 
   readonly typeLabels = TYPE_PROJET_LABELS;
-  readonly statutLabels = STATUT_PROJET_LABELS;
   readonly typeButtons = [{ value: '' as const, label: 'Tous' }, ...TYPE_PROJET_OPTIONS];
   readonly statutOptions = STATUT_CATALOGUE_OPTIONS;
   readonly sortOptions = [
@@ -47,8 +44,6 @@ export class Catalogue implements OnInit {
 
   domaineOptions: string[] = [];
   anneeOptions: number[] = [];
-
-  readonly estLabellise = estLabellise;
 
   ngOnInit(): void {
     this.searchSubject.pipe(debounceTime(300)).subscribe(() => this.applyFilters());
