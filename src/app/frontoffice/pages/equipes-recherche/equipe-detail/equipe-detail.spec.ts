@@ -13,10 +13,10 @@ import { User } from '../../../../core/models/user.model';
 import { AffiliationEnseignantResponse } from '../../../../core/models/affiliation-request.model';
 import { EquipeDomaineService } from '../../../../core/services/equipe-domaine.service';
 
-const chefUser: User = { id: 20, prenom: 'Alice', nom: 'Chef', email: 'alice@test.tn', identifiant: 'ac', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: 'Info', enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: true, equipeId: 1, equipeNom: 'AI Lab' };
-const enseignantUser: User = { id: 30, prenom: 'Bob', nom: 'Enseignant', email: 'bob@test.tn', identifiant: 'be', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: 'Maths', enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null };
-const memberUser: User = { id: 40, prenom: 'Charlie', nom: 'Member', email: 'charlie@test.tn', identifiant: 'cm', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: true, equipeId: 1, equipeNom: 'AI Lab' };
-const otherUser: User = { id: 50, prenom: 'Diana', nom: 'Other', email: 'diana@test.tn', identifiant: 'do', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null };
+const chefUser: User = { id: 20, prenom: 'Alice', nom: 'Chef', email: 'alice@test.tn', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: 'Info', enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: true, equipeId: 1, equipeNom: 'AI Lab' };
+const enseignantUser: User = { id: 30, prenom: 'Bob', nom: 'Enseignant', email: 'bob@test.tn', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: 'Maths', enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null };
+const memberUser: User = { id: 40, prenom: 'Charlie', nom: 'Member', email: 'charlie@test.tn', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: true, equipeId: 1, equipeNom: 'AI Lab' };
+const otherUser: User = { id: 50, prenom: 'Diana', nom: 'Other', email: 'diana@test.tn', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null };
 
 const mockEquipe: Equipe = {
   id: 1, nom: 'AI Lab', description: 'Recherche en IA', domaineId: 2, domaine: 'Informatique',

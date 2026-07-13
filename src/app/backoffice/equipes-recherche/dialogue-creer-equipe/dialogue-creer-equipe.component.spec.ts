@@ -14,9 +14,9 @@ const domaines: EquipeDomaine[] = [
 ];
 
 const mockUsers: User[] = [
-  { id: 10, prenom: 'Jean', nom: 'Dupont', email: 'jean@test.tn', identifiant: 'jd', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
-  { id: 11, prenom: 'Marie', nom: 'Curie', email: 'marie@test.tn', identifiant: 'mc', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
-  { id: 12, prenom: 'Paul', nom: 'Sab', email: 'paul@test.tn', identifiant: 'ps', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
+  { id: 10, prenom: 'Jean', nom: 'Dupont', email: 'jean@test.tn', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
+  { id: 11, prenom: 'Marie', nom: 'Curie', email: 'marie@test.tn', role: 'ROLE_CHEF_EQUIPE', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
+  { id: 12, prenom: 'Paul', nom: 'Sab', email: 'paul@test.tn', role: 'ROLE_ENSEIGNANT', typeUtilisateur: 'ENSEIGNANT', departement: null, enabled: true, createdAt: '2025-01-01', isAffilieToEquipe: false, equipeId: null, equipeNom: null },
 ];
 
 describe('DialogueCreerEquipeComponent', () => {
