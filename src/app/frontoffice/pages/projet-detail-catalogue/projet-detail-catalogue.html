@@ -113,5 +113,38 @@
         <p class="section-note__empty">Aucun prérequis renseigné.</p>
       }
     </section>
+
+    <!-- Historique : timeline chronologique des actions sur le projet -->
+    @if (canViewHistorique && !historiqueForbidden) {
+      <section class="panel history-card">
+        <header class="section-header">
+          <div>
+            <span class="section-kicker">Historique</span>
+            <h3>Suivi du projet</h3>
+          </div>
+        </header>
+
+        @if (isHistoriqueLoading) {
+          <p class="hint">Chargement de l'historique...</p>
+        } @else if (historiqueError) {
+          <div class="alert alert--error">{{ historiqueError }}</div>
+        } @else if (historique.length) {
+          <ol class="timeline">
+            @for (h of historique; track h.id) {
+              <li class="timeline-entry">
+                <span class="timeline-dot"></span>
+                <div class="timeline-content">
+                  <span class="timeline-date">{{ h.createdAt | date:'dd/MM/yyyy' }}</span>
+                  <strong class="timeline-summary">{{ h.summary }}</strong>
+                  <span class="timeline-meta">{{ actionLabels[h.action] }} · {{ h.actorPrenom }} {{ h.actorNom }}</span>
+                </div>
+              </li>
+            }
+          </ol>
+        } @else {
+          <p class="section-note__empty">Aucun historique disponible pour ce projet.</p>
+        }
+      </section>
+    }
   }
 </div>

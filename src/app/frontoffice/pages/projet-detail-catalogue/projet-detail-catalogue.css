@@ -340,6 +340,73 @@
   color: #9b0f24;
 }
 
+/* ---------------------------------------------------------------- */
+/* Historique                                                         */
+/* ---------------------------------------------------------------- */
+.history-card {
+  margin-bottom: 20px;
+}
+
+.timeline {
+  position: relative;
+  margin: 4px 0 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 4px;
+  width: 2px;
+  background: #eef2f7;
+}
+
+.timeline-entry {
+  position: relative;
+  padding: 0 0 20px 20px;
+}
+
+.timeline-entry:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  top: 4px;
+  left: -20px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #c8102e;
+  box-shadow: 0 0 0 3px #fde2e5;
+}
+
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.timeline-date {
+  color: #6b7280;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.timeline-summary {
+  color: #111827;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.timeline-meta {
+  color: #6b7280;
+  font-size: 12px;
+}
+
 @media (max-width: 900px) {
   .detail-grid {
     grid-template-columns: 1fr;

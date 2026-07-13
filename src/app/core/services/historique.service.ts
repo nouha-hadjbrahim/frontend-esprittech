@@ -42,4 +42,12 @@ export class HistoriqueService {
 
     return this.http.get<Page<HistoriqueResponse>>(this.base, { params });
   }
+
+  /**
+   * Historique d'un projet du catalogue. Accessible aux rôles de gouvernance ainsi
+   * qu'à l'enseignant encadrant du projet (contrôle d'accès fait côté serveur).
+   */
+  findByProjet(projetId: number): Observable<HistoriqueResponse[]> {
+    return this.http.get<HistoriqueResponse[]>(`${this.base}/projet/${projetId}`);
+  }
 }
