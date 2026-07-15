@@ -38,9 +38,12 @@ export class AuthService {
 
   private readonly _currentUser = signal<User | null>(null);
   private readonly _accessToken = signal<string | null>(null);
+  private readonly _tokenRefreshed = signal(0);
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
+  readonly tokenRefreshed = this._tokenRefreshed.asReadonly();
 
   constructor() {
     this.clearLegacyStorage();
@@ -105,6 +108,10 @@ export class AuthService {
   }
 
   clearSession(): void {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
     this._currentUser.set(null);
     this._accessToken.set(null);
   }
@@ -159,7 +166,33 @@ export class AuthService {
   private captureAccessToken(response: HttpResponse<unknown>): void {
     const authHeader = response.headers.get('Authorization');
     if (authHeader?.startsWith('Bearer ')) {
-      this._accessToken.set(authHeader.slice('Bearer '.length).trim());
+      const newToken = authHeader.slice('Bearer '.length).trim();
+      if (newToken !== this._accessToken()) {
+        this._accessToken.set(newToken);
+        this._tokenRefreshed.update((c) => c + 1);
+        this.scheduleTokenRefresh(newToken);
+      }
+    }
+  }
+
+  private scheduleTokenRefresh(token: string): void {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiresAt = payload.exp * 1000;
+      const delay = expiresAt - Date.now() - 60_000;
+      if (delay > 0) {
+        this.refreshTimer = setTimeout(() => {
+          if (this.isLoggedIn()) {
+            this.refreshToken().subscribe();
+          }
+        }, delay);
+      }
+    } catch {
+      // invalid token format — skip proactive refresh
     }
   }
 

@@ -5,6 +5,8 @@ import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { AffiliationService } from '../../core/services/affiliation.service';
 import { EquipeService } from '../../core/services/equipe.service';
+import { NotificationService } from '../../core/services/notification.service';
+import { NotificationBellComponent } from '../../shared/components/notification-bell/notification-bell.component';
 
 type NavIcon = 'layers' | 'document' | 'validation';
 
@@ -17,7 +19,7 @@ interface NavLink {
 
 @Component({
   selector: 'app-frontoffice-layout',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NotificationBellComponent],
   templateUrl: './frontoffice-layout.html',
   styleUrl: './frontoffice-layout.css'
 })
@@ -25,6 +27,7 @@ export class FrontofficeLayout implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly affiliationSvc = inject(AffiliationService);
   private readonly equipeSvc = inject(EquipeService);
+  private readonly notificationService = inject(NotificationService);
 
   /** Utilisateur authentifié (signal partagé depuis AuthService). */
   readonly user = this.authService.currentUser;
@@ -34,6 +37,7 @@ export class FrontofficeLayout implements OnInit {
 
   ngOnInit(): void {
     this.loadPendingCount();
+    this.notificationService.initialize();
   }
 
   private loadPendingCount(): void {
