@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, effect, inject, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { Notification } from '../models/notification.model';
+import { Notification, NotificationPage } from '../models/notification.model';
 import { AuthService } from './auth.service';
 import { WebSocketService } from './websocket.service';
 
@@ -15,9 +15,14 @@ export class NotificationService {
 
   private readonly _notifications = signal<Notification[]>([]);
   private readonly _unreadCount = signal(0);
+  private readonly _loading = signal(false);
+  private readonly _hasMore = signal(true);
+  private readonly _currentPage = signal(0);
 
   readonly notifications = this._notifications.asReadonly();
   readonly unreadCount = this._unreadCount.asReadonly();
+  readonly loading = this._loading.asReadonly();
+  readonly hasMore = this._hasMore.asReadonly();
 
   private initialized = false;
 
@@ -34,7 +39,7 @@ export class NotificationService {
     if (this.initialized || !this.authService.isLoggedIn()) return;
     this.initialized = true;
 
-    this.fetchNotifications();
+    this.fetchNotifications(true);
     this.fetchUnreadCount();
 
     this.websocketService.connect((notification) => {
@@ -43,10 +48,28 @@ export class NotificationService {
     });
   }
 
-  fetchNotifications(): void {
-    this.http.get<Notification[]>(this.baseUrl).subscribe({
-      next: (notifications) => this._notifications.set(notifications),
+  fetchNotifications(reset = false): void {
+    if (this._loading()) return;
+
+    const page = reset ? 0 : this._currentPage();
+    this._loading.set(true);
+
+    this.http.get<NotificationPage>(`${this.baseUrl}?page=${page}`).subscribe({
+      next: (res) => {
+        this._notifications.update((list) =>
+          reset ? res.content : [...list, ...res.content],
+        );
+        this._currentPage.set(res.number + 1);
+        this._hasMore.set(!res.last);
+        this._loading.set(false);
+      },
+      error: () => this._loading.set(false),
     });
+  }
+
+  loadMore(): void {
+    if (!this._hasMore() || this._loading()) return;
+    this.fetchNotifications(false);
   }
 
   fetchUnreadCount(): void {

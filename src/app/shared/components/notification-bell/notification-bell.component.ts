@@ -17,6 +17,7 @@ const NOTIFICATION_CONFIG: Record<NotificationType, { icon: string; color: strin
   PROJET_REJETE:         { icon: '❌', color: '#dc2626' },
   SUJET_VALIDE:          { icon: '✅', color: '#16a34a' },
   SUJET_REJETE:          { icon: '❌', color: '#dc2626' },
+  EVALUATION_CALCULEE:   { icon: '📊', color: '#8b5cf6' },
   EVALUATION_TERMINEE:   { icon: '📊', color: '#3b82f6' },
   CI_DEMANDE_SOUMISE:    { icon: '📋', color: '#f59e0b' },
   CI_DEMANDE_APPOUVEE:   { icon: '✅', color: '#16a34a' },
@@ -38,6 +39,8 @@ export class NotificationBellComponent {
 
   readonly notifications = this.notificationService.notifications;
   readonly unreadCount = this.notificationService.unreadCount;
+  readonly loading = this.notificationService.loading;
+  readonly hasMore = this.notificationService.hasMore;
 
   isOpen = signal(false);
 
@@ -47,6 +50,11 @@ export class NotificationBellComponent {
     if (!this.elementRef.nativeElement.contains(target)) {
       this.isOpen.set(false);
     }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.isOpen.set(false);
   }
 
   toggle(event: MouseEvent): void {
@@ -71,9 +79,21 @@ export class NotificationBellComponent {
     this.isOpen.set(false);
   }
 
+  onMarkRead(notification: Notification, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!notification.read) {
+      this.notificationService.marquerCommeLu(notification.id);
+    }
+  }
+
   marquerToutCommeLu(event: MouseEvent): void {
     event.stopPropagation();
     this.notificationService.marquerToutCommeLu();
+  }
+
+  onLoadMore(event: MouseEvent): void {
+    event.stopPropagation();
+    this.notificationService.loadMore();
   }
 
   getNotifConfig(type: NotificationType): { icon: string; color: string } {
@@ -88,7 +108,7 @@ export class NotificationBellComponent {
     const diffH = Math.floor(diffMin / 60);
     const diffJ = Math.floor(diffH / 24);
 
-    if (diffMin < 1) return "a l'instant";
+    if (diffMin < 1) return "à l'instant";
     if (diffMin < 60) return `il y a ${diffMin} min`;
     if (diffH < 24) return `il y a ${diffH}h`;
     return `il y a ${diffJ}j`;

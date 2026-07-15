@@ -11,6 +11,7 @@ export type NotificationType =
   | 'PROJET_REJETE'
   | 'SUJET_VALIDE'
   | 'SUJET_REJETE'
+  | 'EVALUATION_CALCULEE'
   | 'EVALUATION_TERMINEE'
   | 'CI_DEMANDE_SOUMISE'
   | 'CI_DEMANDE_APPOUVEE'
@@ -25,4 +26,13 @@ export interface Notification {
   link: string | null;
   read: boolean;
   createdAt: string;
+}
+
+export interface NotificationPage {
+  content: Notification[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  last: boolean;
 }
