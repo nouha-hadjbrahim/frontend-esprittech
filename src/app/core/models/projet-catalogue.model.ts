@@ -89,4 +89,6 @@ export interface ProjetDetails extends ProjetCatalogue {
   chefEquipeNom: string | null;
   /** Image de couverture en data URI base64, ou null si absente. */
   coverImage?: string | null;
+  /** Identifiant du sujet d'origine si ce projet a été publié automatiquement après terminaison, sinon null. */
+  sujetId: number | null;
 }
