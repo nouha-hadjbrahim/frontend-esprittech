@@ -88,16 +88,35 @@ describe('AuthService', () => {
     expect(localStorage.getItem('esprittech.accessToken')).toBeNull();
   });
 
-  it('should register and store the user in memory', () => {
-    const user = userWith('ROLE_ETUDIANT');
+  it('should start registration by posting to /register without opening a session', () => {
     service
-      .register({ nom: 'D', prenom: 'J', email: 'j@esprit.tn', password: 'Passw0rd' })
+      .startRegister({ nom: 'D', prenom: 'J', email: 'j@esprit.tn', password: 'Passw0rd' })
       .subscribe();
     const req = http.expectOne(`${API}/register`);
     expect(req.request.method).toBe('POST');
+    req.flush({ message: 'Code envoyé', timestamp: 'now' });
+
+    // Aucun compte n'est encore créé : pas de session.
+    expect(service.currentUser()).toBeNull();
+  });
+
+  it('should verify the email code and store the user in memory', () => {
+    const user = userWith('ROLE_ETUDIANT');
+    service.verifyEmail('j@esprit.tn', '123456').subscribe();
+    const req = http.expectOne(`${API}/register/verify`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ email: 'j@esprit.tn', code: '123456' });
     req.flush(user);
 
     expect(service.currentUser()).toEqual(user);
+  });
+
+  it('should resend a verification code by posting to /register/resend', () => {
+    service.resendCode('j@esprit.tn').subscribe();
+    const req = http.expectOne(`${API}/register/resend`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ email: 'j@esprit.tn' });
+    req.flush({ message: 'Code renvoyé', timestamp: 'now' });
   });
 
   it('should refresh by posting to /refresh without sending a token in the body', () => {

@@ -50,12 +50,6 @@ export class UsersComponent implements OnInit, OnDestroy {
         '#E23E3E', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#14B8A6',
     ];
 
-    // Import du référentiel CSV
-    readonly selectedFile = signal<File | null>(null);
-    readonly importing = signal(false);
-    readonly importMessage = signal<string | null>(null);
-    readonly importError = signal<string | null>(null);
-
     // Données et états de la table
     users: UserRow[] = [];
     readonly loading = signal(false);
@@ -156,37 +150,6 @@ export class UsersComponent implements OnInit, OnDestroy {
             case 'en attente': return 'status-pending';
             default: return '';
         }
-    }
-
-    onFileSelected(event: Event): void {
-        const input = event.target as HTMLInputElement;
-        this.selectedFile.set(input.files?.[0] ?? null);
-        this.importMessage.set(null);
-        this.importError.set(null);
-    }
-
-    importReferentiel(): void {
-        const file = this.selectedFile();
-        if (!file) {
-            return;
-        }
-        this.importing.set(true);
-        this.importMessage.set(null);
-        this.importError.set(null);
-
-        this.adminService.importCsv(file).subscribe({
-            next: (res) => {
-                this.importing.set(false);
-                this.importMessage.set(res.message);
-                this.selectedFile.set(null);
-                // Le référentiel n'ajoute pas de comptes, mais on rafraîchit par cohérence
-                this.loadUsers();
-            },
-            error: (err: HttpErrorResponse) => {
-                this.importing.set(false);
-                this.importError.set(err.error?.detail ?? 'Échec de l\'import du référentiel.');
-            },
-        });
     }
 
     // --- Actions Methods ---

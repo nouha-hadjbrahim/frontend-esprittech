@@ -40,18 +40,6 @@ describe('AdminService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should import a CSV referential as multipart form data', () => {
-    const file = new File(['a;b'], 'ref.csv', { type: 'text/csv' });
-    const message: MessageResponse = { message: 'ok', timestamp: 'now' };
-    service.importCsv(file).subscribe((res) => expect(res).toEqual(message));
-
-    const req = http.expectOne(`${API}/import-referentiel`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body instanceof FormData).toBeTrue();
-    expect((req.request.body as FormData).get('file')).toBe(file);
-    req.flush(message);
-  });
-
   it('should create a user', () => {
     service
       .createUser({ nom: 'N', prenom: 'P', email: 'e@esprit.tn', password: 'pw', role: 'ROLE_ETUDIANT', enabled: true })
