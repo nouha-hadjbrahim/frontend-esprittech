@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Candidature, StatutCandidature } from '../../../core/models/candidature.model';
 import { CategorieSujet } from '../../../core/models/sujet-projet.model';
 import { CandidatureService } from '../../../core/services/candidature.service';
@@ -22,6 +23,7 @@ type StatusTone = 'attente' | 'acceptee' | 'refusee' | 'neutral';
 })
 export class MesCandidatures implements OnInit {
   private readonly candidatureService = inject(CandidatureService);
+  private readonly snack = inject(MatSnackBar);
 
   candidatures: Candidature[] = [];
   filteredCandidatures: Candidature[] = [];
@@ -135,6 +137,7 @@ export class MesCandidatures implements OnInit {
         this.deleteConfirmOpen = false;
         this.candidatureToDelete = undefined;
         this.loadCandidatures();
+        this.toast('Candidature retirée avec succès', 'succes');
       },
       error: () => {
         this.deleting = false;
@@ -259,5 +262,12 @@ export class MesCandidatures implements OnInit {
     });
 
     this.filteredCandidatures = result;
+  }
+
+  private toast(msg: string, type: 'succes' | 'erreur' = 'erreur') {
+    this.snack.open(msg, '✕', {
+      duration: 3500,
+      panelClass: type === 'succes' ? ['snack-success'] : ['snack-error'],
+    });
   }
 }

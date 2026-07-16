@@ -26,6 +26,11 @@ export class IndustrialisationService {
     return this.http.post<CandidatureIndustrialisation>(`${this.apiUrl}/projets/${projetId}/industrialisation`, request);
   }
 
+  /** Demande d'industrialisation sur un projet du catalogue applicatif (ProjetCatalogue), éligible dès qu'il est au statut VALIDE. */
+  createForCatalogue(projetId: number, request: CandidatureIndustrialisationRequest): Observable<CandidatureIndustrialisation> {
+    return this.http.post<CandidatureIndustrialisation>(`${this.apiUrl}/projets-catalogue/${projetId}/industrialisation`, request);
+  }
+
   getFormulaire(id: number): Observable<IndustrialisationFormResponse> {
     return this.http.get<IndustrialisationFormResponse>(`${this.apiUrl}/industrialisation/${id}/formulaire`);
   }

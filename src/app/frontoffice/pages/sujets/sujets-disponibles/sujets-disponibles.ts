@@ -79,7 +79,8 @@ export class SujetsDisponibles implements OnInit {
         this.applyFilters();
         this.isLoading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Erreur lors du chargement des sujets disponibles:', err);
         this.sujets = [];
         this.filteredSujets = [];
         this.pagedSujets = [];
@@ -123,7 +124,9 @@ export class SujetsDisponibles implements OnInit {
     this.candidatureService.getMesCandidatures().subscribe({
       next: (candidatures) => {
         this.mesCandidaturesSujetIds = new Set(
-          candidatures.map((c: { sujetId: number }) => c.sujetId),
+          candidatures
+            .filter((c: { statut: string }) => c.statut === 'DEPOSEE' || c.statut === 'ACCEPTEE')
+            .map((c: { sujetId: number }) => c.sujetId),
         );
       },
       error: () => {},

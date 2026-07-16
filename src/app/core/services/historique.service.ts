@@ -48,6 +48,14 @@ export class HistoriqueService {
     return this.http.get<Page<HistoriqueResponse>>(this.base, { params });
   }
 
+  /**
+   * Historique d'un projet du catalogue. Accessible aux rôles de gouvernance ainsi
+   * qu'à l'enseignant encadrant du projet (contrôle d'accès fait côté serveur).
+   */
+  findByProjet(projetId: number): Observable<HistoriqueResponse[]> {
+    return this.http.get<HistoriqueResponse[]>(`${this.base}/projet/${projetId}`);
+  }
+
   getBySujet(sujetId: number, filter: HistoriqueFilter = 'TOUT'): Observable<HistoriqueEntry[]> {
     const params = new HttpParams().set('filter', filter);
     return this.http.get<HistoriqueEntry[]>(`${this.base}/sujet/${sujetId}`, { params });
