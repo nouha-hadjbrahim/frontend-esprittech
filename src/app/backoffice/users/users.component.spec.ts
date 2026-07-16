@@ -31,7 +31,7 @@ describe('UsersComponent', () => {
 
   beforeEach(() => {
     adminService = jasmine.createSpyObj<AdminService>('AdminService', [
-      'getUsers', 'importCsv', 'createUser', 'updateUser', 'deleteUser',
+      'getUsers', 'createUser', 'updateUser', 'deleteUser',
     ]);
     adminService.getUsers.and.returnValue(of(makePage([])));
 
@@ -126,42 +126,6 @@ describe('UsersComponent', () => {
       expect(component.getStatusClass('Suspendu')).toBe('status-suspended');
       expect(component.getStatusClass('En attente')).toBe('status-pending');
       expect(component.getStatusClass('Inconnu')).toBe('');
-    });
-  });
-
-  describe('CSV import', () => {
-    it('should capture the selected file', () => {
-      const file = new File([''], 'r.csv');
-      const event = { target: { files: [file] } } as unknown as Event;
-      component.onFileSelected(event);
-      expect(component.selectedFile()).toBe(file);
-    });
-
-    it('should clear the file when none is selected', () => {
-      const event = { target: { files: null } } as unknown as Event;
-      component.onFileSelected(event);
-      expect(component.selectedFile()).toBeNull();
-    });
-
-    it('should do nothing when importing without a file', () => {
-      component.selectedFile.set(null);
-      component.importReferentiel();
-      expect(adminService.importCsv).not.toHaveBeenCalled();
-    });
-
-    it('should import the referential and show a message', () => {
-      component.selectedFile.set(new File([''], 'r.csv'));
-      adminService.importCsv.and.returnValue(of({ message: 'Imported', timestamp: 'now' }));
-      component.importReferentiel();
-      expect(component.importMessage()).toBe('Imported');
-      expect(component.selectedFile()).toBeNull();
-    });
-
-    it('should show an import error on failure', () => {
-      component.selectedFile.set(new File([''], 'r.csv'));
-      adminService.importCsv.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
-      component.importReferentiel();
-      expect(component.importError()).toContain('import du référentiel');
     });
   });
 

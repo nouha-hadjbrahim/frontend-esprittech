@@ -15,7 +15,8 @@
             <p class="brand">EspritTECH</p>
         </div>
 
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+        <!-- Étape 1 : saisie des informations -->
+        <form *ngIf="step() === 'form'" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
             <h1 class="auth-title">Créer un compte</h1>
             <p class="auth-subtitle">Rejoignez la plateforme EspriTECH.</p>
 
@@ -97,11 +98,53 @@
             </div>
 
             <button type="submit" class="submit-btn" [disabled]="form.invalid || loading()">
-                {{ loading() ? 'Création…' : 'Créer mon compte' }}
+                {{ loading() ? 'Envoi du code…' : 'Continuer' }}
             </button>
 
             <p class="auth-footer">
                 Déjà inscrit ? <a routerLink="/sign-in">Se connecter</a>
+            </p>
+        </form>
+
+        <!-- Étape 2 : vérification du code reçu par email -->
+        <form *ngIf="step() === 'verify'" [formGroup]="codeForm" (ngSubmit)="onVerify()" novalidate>
+            <h1 class="auth-title">Vérifiez votre email</h1>
+            <p class="auth-subtitle">
+                Saisissez le code à 6 chiffres envoyé à <strong>{{ pendingEmail() }}</strong>.
+            </p>
+
+            <output *ngIf="infoMessage()" class="alert-info">{{ infoMessage() }}</output>
+
+            <div *ngIf="serverError()" class="alert-error" role="alert">
+                <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.63-1.516 2.63H3.72c-1.347 0-2.189-1.463-1.516-2.63L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span>{{ serverError() }}</span>
+            </div>
+
+            <div class="form-group">
+                <label for="code">Code de vérification</label>
+                <input type="text" id="code" formControlName="code" inputmode="numeric" maxlength="6"
+                    autocomplete="one-time-code" placeholder="______">
+                <small *ngIf="c.code.touched && c.code.errors?.['required']" class="field-error">
+                    Le code est obligatoire.
+                </small>
+                <small *ngIf="c.code.touched && c.code.errors?.['pattern']" class="field-error">
+                    Le code doit contenir 6 chiffres.
+                </small>
+            </div>
+
+            <button type="submit" class="submit-btn" [disabled]="codeForm.invalid || loading()">
+                {{ loading() ? 'Vérification…' : 'Valider et créer mon compte' }}
+            </button>
+
+            <p class="auth-footer">
+                Vous n'avez rien reçu ?
+                <a href="javascript:void(0)" (click)="onResend()">Renvoyer le code</a>
+                &nbsp;·&nbsp;
+                <a href="javascript:void(0)" (click)="backToForm()">Modifier l'email</a>
             </p>
         </form>
     </div>

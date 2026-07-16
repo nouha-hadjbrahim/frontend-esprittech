@@ -51,8 +51,19 @@ export class AuthService {
     return this._accessToken();
   }
 
-  register(request: RegisterRequest): Observable<User> {
-    return this.authPost<User>(`${this.baseUrl}/register`, request);
+  /** Inscription — étape 1 : déclenche l'envoi d'un code de vérification par email. */
+  startRegister(request: RegisterRequest): Observable<void> {
+    return this.http.post(`${this.baseUrl}/register`, request).pipe(map(() => undefined));
+  }
+
+  /** Inscription — étape 2 : valide le code OTP, crée le compte et ouvre la session. */
+  verifyEmail(email: string, code: string): Observable<User> {
+    return this.authPost<User>(`${this.baseUrl}/register/verify`, { email, code });
+  }
+
+  /** Inscription — renvoie un nouveau code de vérification. */
+  resendCode(email: string): Observable<void> {
+    return this.http.post(`${this.baseUrl}/register/resend`, { email }).pipe(map(() => undefined));
   }
 
   login(request: LoginRequest): Observable<User> {
