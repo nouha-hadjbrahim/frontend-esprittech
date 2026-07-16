@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SujetProjet } from '../../../../core/models/sujet-projet.model';
@@ -6,7 +5,7 @@ import { CATEGORIE_LABELS, MES_SUJETS_STATUT_STYLES, STATUT_LABELS } from '../..
 
 @Component({
   selector: 'app-sujet-list-row',
-  imports: [DatePipe, RouterLink],
+  imports: [RouterLink],
   templateUrl: './sujet-list-row.html',
   styleUrl: './sujet-list-row.css',
 })
@@ -25,12 +24,39 @@ export class SujetListRow {
     return CATEGORIE_LABELS[this.sujet.categorie] ?? { label: this.sujet.categorie, cssClass: 'badge--pfe' };
   }
 
+  get categorieShortLabel(): string {
+    const map: Record<string, string> = {
+      PFE: 'PFE',
+      RDI: 'RDI',
+      STAGE_INGENIEUR: 'STAGE',
+    };
+    return map[this.sujet.categorie] ?? 'PFE';
+  }
+
   get statutBadge() {
     return STATUT_LABELS[this.sujet.statut] ?? { label: this.sujet.statut, cssClass: 'badge--neutral' };
   }
 
   get statutListClass(): string {
     return MES_SUJETS_STATUT_STYLES[this.sujet.statut]?.listClass ?? 'badge--neutral';
+  }
+
+  get statusDotClass(): string {
+    const map: Record<string, string> = {
+      SOUMIS_EN_VALIDATION: 'dot--soumis',
+      EN_ATTENTE: 'dot--attente',
+      INVALIDE: 'dot--invalide',
+      VALIDE: 'dot--valide',
+      CANDIDATURE_OUVERTE: 'dot--cand-ouverte',
+      CANDIDATURE_FERMEE: 'dot--cand-fermee',
+      REALISATION_EN_COURS: 'dot--realisation',
+      REALISATION_TERMINEE: 'dot--terminee',
+      CANDIDAT_INDUSTRIALISATION_INTERNE: 'dot--indust-interne',
+      CANDIDAT_INDUSTRIALISATION_EXTERNE: 'dot--indust-externe',
+      INDUSTRIALISE_DSI: 'dot--indus-dsi',
+      INDUSTRIALISE_EXTERNE: 'dot--indus-externe',
+    };
+    return map[this.sujet.statut] ?? '';
   }
 
   get accentClass(): string {
@@ -48,20 +74,22 @@ export class SujetListRow {
     return text.length > 110 ? `${text.slice(0, 107)}...` : text;
   }
 
-  get timeAgo(): string {
+  get formattedDate(): string {
     const dateStr = this.sujet.dateSoumission || this.sujet.dateCreation;
     if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    const diffMs = Date.now() - date.getTime();
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (days <= 0) return "Aujourd'hui";
-    if (days === 1) return 'Il y a 1 jour';
-    if (days < 7) return `Il y a ${days} jours`;
-    const weeks = Math.floor(days / 7);
-    if (weeks === 1) return 'Il y a 1 semaine';
-    if (weeks < 5) return `Il y a ${weeks} semaines`;
-    const months = Math.floor(days / 30);
-    return months <= 1 ? 'Il y a 1 mois' : `Il y a ${months} mois`;
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  get placesLabel(): string {
+    const taken = this.sujet.nombreMembresActifs ?? 0;
+    const restantes = Math.max(0, this.sujet.capaciteAccueil - taken);
+    if (restantes === 0) return 'Complet';
+    if (restantes === 1) return '1 place restante';
+    return `${restantes} places restantes`;
   }
 
   get initials(): string {

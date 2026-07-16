@@ -177,34 +177,34 @@ describe('AuthService', () => {
       expect(service.landingRoute()).toBe('/backoffice/users');
     });
 
-    it('should route affiliated ROLE_ENSEIGNANT to mes sujets', () => {
+    it('should route affiliated ROLE_ENSEIGNANT to accueil', () => {
       service.login({ email: 'a@esprit.tn', password: 'x' }).subscribe();
       http.expectOne(`${API}/login`).flush({ ...userWith('ROLE_ENSEIGNANT'), isAffilieToEquipe: true, equipeId: 1, equipeNom: 'REEE' });
-      expect(service.landingRoute()).toBe('/frontoffice/sujets/mes-sujets');
+      expect(service.landingRoute()).toBe('/frontoffice/accueil');
     });
 
-    it('should route non-affiliated ROLE_ENSEIGNANT to catalogue', () => {
+    it('should route non-affiliated ROLE_ENSEIGNANT to accueil', () => {
       loginAs('ROLE_ENSEIGNANT');
-      expect(service.landingRoute()).toBe('/frontoffice/catalogue');
+      expect(service.landingRoute()).toBe('/frontoffice/accueil');
     });
 
-    it('should route ROLE_ETUDIANT to available subjects', () => {
+    it('should route ROLE_ETUDIANT to accueil', () => {
       loginAs('ROLE_ETUDIANT');
-      expect(service.landingRoute()).toBe('/frontoffice/sujets/disponibles');
+      expect(service.landingRoute()).toBe('/frontoffice/accueil');
     });
 
-    it('should route ROLE_CHEF_EQUIPE to the dashboard', () => {
+    it('should route ROLE_CHEF_EQUIPE to accueil', () => {
       loginAs('ROLE_CHEF_EQUIPE');
-      expect(service.landingRoute()).toBe('/frontoffice/tableau-de-bord');
+      expect(service.landingRoute()).toBe('/frontoffice/accueil');
     });
 
-    it('should route ROLE_CI to the industrialisation workspace', () => {
+    it('should route ROLE_CI to accueil', () => {
       loginAs('ROLE_CI');
-      expect(service.landingRoute()).toBe('/ci/industrialisation');
+      expect(service.landingRoute()).toBe('/frontoffice/accueil');
     });
 
-    it('should fall back to available subjects when no role is present', () => {
-      expect(service.landingRoute()).toBe('/frontoffice/sujets/disponibles');
+    it('should fall back to accueil when no role is present', () => {
+      expect(service.landingRoute()).toBe('/frontoffice/accueil');
     });
   });
 });

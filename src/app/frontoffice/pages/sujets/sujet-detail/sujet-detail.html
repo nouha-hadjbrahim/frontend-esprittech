@@ -1,8 +1,10 @@
 <div class="sujet-detail">
   <a [routerLink]="backLink" class="sujet-detail__back">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+    <span class="sujet-detail__back-icon" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
     {{ backLabel }}
   </a>
 
@@ -11,53 +13,121 @@
   } @else if (error || !sujet) {
     <div class="sujet-detail__error">Sujet introuvable.</div>
   } @else {
-    <section class="sujet-detail__hero">
-      <div class="sujet-detail__hero-badges">
-        <span class="hero-badge hero-badge--type">{{ categorieLabel }}</span>
-        <span class="hero-badge" [class]="statutClass">{{ statutLabel }}</span>
-      </div>
-      <h1 class="sujet-detail__hero-title">{{ sujet.titre }}</h1>
-      <p class="sujet-detail__hero-subtitle">
-        {{ sujet.encadrantNom }} · {{ sujet.domaines.join(', ') }} · {{ sujet.technologies.slice(0, 3).join(', ') }}
-      </p>
-    </section>
-
-    <div class="sujet-detail__summary">
-      <div class="summary-card">
-        <span class="summary-card__label">Catégorie</span>
-        <span class="summary-card__value">{{ categorieLabel }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Domaines</span>
-        <span class="summary-card__value">{{ sujet.domaines.join(', ') }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Encadrant</span>
-        <span class="summary-card__value">{{ sujet.encadrantNom }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Date soumission</span>
-        <span class="summary-card__value">{{ sujet.dateSoumission ? (sujet.dateSoumission | date:'yyyy-MM-dd') : '—' }}</span>
-      </div>
-      <div class="summary-card summary-card--capacity" [class.summary-card--full]="capaciteEstComplete">
-        <span class="summary-card__label">Capacité</span>
-        <span class="summary-card__value">{{ nombreMembres }}/{{ sujet.capaciteAccueil }}</span>
-        <div class="capacity-meter" aria-hidden="true">
-          <div class="capacity-meter__fill" [style.width.%]="capacitePourcentage"></div>
+    <section class="sujet-hero-card" aria-label="Résumé du sujet">
+      <div class="sujet-hero-card__info">
+        <div class="sujet-hero-card__top">
+          <div class="sujet-hero-card__badges">
+            <span class="sujet-chip sujet-chip--muted">
+              <span class="sujet-chip__dot" aria-hidden="true"></span>
+              {{ categorieLabel }}
+            </span>
+            <span class="sujet-chip" [class]="statutClass">
+              <span class="sujet-chip__dot" aria-hidden="true"></span>
+              {{ statutLabel }}
+            </span>
+          </div>
+          <span class="sujet-hero-card__id">#{{ sujet.id }}</span>
         </div>
-        <span class="summary-card__hint">
-          @if (capaciteEstComplete) {
-            Complet
+
+        <h1 class="sujet-hero-card__title">
+          @if (titleAccent) {
+            <span>{{ titleMain }} </span>
+            <em>{{ titleAccent }}</em>
           } @else {
-            {{ placesRestantes }} place{{ placesRestantes > 1 ? 's' : '' }} restante{{ placesRestantes > 1 ? 's' : '' }}
+            {{ sujet.titre }}
           }
-        </span>
+        </h1>
+        @if (sujet.description) {
+          <p class="sujet-hero-card__lead">{{ sujet.description }}</p>
+        }
+
+        <div class="sujet-hero-card__meta">
+          <div class="sujet-meta-item sujet-meta-item--person">
+            <span class="sujet-meta-avatar" aria-hidden="true">{{ encadrantInitials }}</span>
+            <div class="sujet-meta-item__text">
+              <span class="sujet-meta-item__label">Encadrant</span>
+              <span class="sujet-meta-item__value">{{ sujet.encadrantNom }}</span>
+            </div>
+          </div>
+          <div class="sujet-meta-item sujet-meta-item--iconed">
+            <span class="sujet-meta-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 9.5L7 3.5L11.5 9.5H2.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                <path d="M4 9.5L7 6.2L10 9.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <div class="sujet-meta-item__text">
+              <span class="sujet-meta-item__label">Équipe</span>
+              <span class="sujet-meta-item__value">{{ sujet.equipeNom || '—' }}</span>
+            </div>
+          </div>
+          <div class="sujet-meta-item sujet-meta-item--iconed">
+            <span class="sujet-meta-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2.2L8.1 4.8H10.9L8.7 6.5L9.6 9.3L7 7.8L4.4 9.3L5.3 6.5L3.1 4.8H5.9L7 2.2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                <path d="M3.5 11.5H10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div class="sujet-meta-item__text">
+              <span class="sujet-meta-item__label">Domaine</span>
+              <span class="sujet-meta-item__value">{{ domaineLabel }}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Statut</span>
-        <span class="summary-card__value">{{ statutLabel }}</span>
+
+      <div class="sujet-hero-card__visual">
+        <div class="sujet-hero-card__stats">
+          <div class="sujet-hero-stat">
+            <span class="sujet-hero-stat__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+                <path d="M2.5 6.5H13.5M5.5 2.5V4.5M10.5 2.5V4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div>
+              <span class="sujet-hero-stat__label">Période</span>
+              <span class="sujet-hero-stat__value">{{ periodeStartLabel }}</span>
+              <span class="sujet-hero-stat__sub">→ {{ periodeEndLabel }}</span>
+            </div>
+          </div>
+          <div class="sujet-hero-stat">
+            <span class="sujet-hero-stat__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.3"/>
+                <path d="M8 5V8.2L10 9.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div>
+              <span class="sujet-hero-stat__label">Durée</span>
+              <span class="sujet-hero-stat__value">{{ dureeLabel }}</span>
+              @if (dureeHeuresLabel) {
+                <span class="sujet-hero-stat__sub">{{ dureeHeuresLabel }}</span>
+              }
+            </div>
+          </div>
+          <div class="sujet-hero-stat sujet-hero-stat--capacity">
+            <div class="sujet-hero-stat__capacity-head">
+              <span class="sujet-hero-stat__icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 11.5A5.5 5.5 0 0 1 13 11.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M8 11.5L10.2 7.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  <circle cx="8" cy="11.5" r="1.1" fill="currentColor"/>
+                </svg>
+              </span>
+              <div class="sujet-hero-stat__capacity-labels">
+                <span class="sujet-hero-stat__label">Capacité</span>
+                <span class="sujet-hero-stat__value">{{ nombreMembres }} / {{ sujet.capaciteAccueil }}</span>
+              </div>
+            </div>
+            <div class="sujet-capacity-bar">
+              <div class="sujet-capacity-bar__fill" [style.width.%]="capacitePourcentage"></div>
+            </div>
+            <span class="sujet-hero-stat__hint">{{ capaciteHint }}</span>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
     <div class="sujet-detail__tabs-bar">
       <nav class="sujet-detail__tabs" aria-label="Sections du sujet">
@@ -119,39 +189,47 @@
     @if (activeTab === 'Informations') {
     <div class="sujet-detail__content">
       <div class="sujet-detail__main">
-       <article class="detail-panel evaluation-panel">
-  <section class="detail-panel__section">
-    <div class="evaluation-panel__header">
+       <article class="info-card info-card--evaluation evaluation-panel">
+  <div class="info-card__heading info-card__heading--split">
+    <div class="info-card__heading-main">
+      <span class="info-card__icon info-card__icon--red" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1.8L8.1 5H11.5L8.85 7.1L9.85 10.4L7 8.4L4.15 10.4L5.15 7.1L2.5 5H5.9L7 1.8Z" fill="#ffffff"/>
+        </svg>
+      </span>
       <div>
-        <h2 class="detail-panel__title">Évaluation du projet</h2>
-        <p class="detail-panel__text">
-          @if (sujet.statut !== 'REALISATION_TERMINEE') {
-            Le score sera recalculé automatiquement à la terminaison du projet (même calcul que « Recalculer score »).
-          } @else {
-            Dernière évaluation disponible pour ce projet terminé.
-          }
-        </p>
+        <span class="info-card__eyebrow">Évaluation</span>
+        <h2 class="info-card__title">Évaluation du projet</h2>
       </div>
-
-      @if (canRecalculateScore) {
-        <div class="score-recalculate-actions">
-          <button
-            type="button"
-            class="action-btn"
-            [disabled]="recalculatingScore || scoreCooldownActive"
-            (click)="recalculateScore()"
-          >
-            @if (recalculatingScore) {
-              Recalcul...
-            } @else if (scoreCooldownActive) {
-              Recalcul dans {{ scoreCooldownLabel }}
-            } @else {
-              Recalculer score
-            }
-          </button>
-        </div>
-      }
     </div>
+
+    @if (canRecalculateScore) {
+      <div class="score-recalculate-actions">
+        <button
+          type="button"
+          class="action-btn"
+          [disabled]="recalculatingScore || scoreCooldownActive"
+          (click)="recalculateScore()"
+        >
+          @if (recalculatingScore) {
+            Recalcul...
+          } @else if (scoreCooldownActive) {
+            Recalcul dans {{ scoreCooldownLabel }}
+          } @else {
+            Recalculer score
+          }
+        </button>
+      </div>
+    }
+  </div>
+
+  <p class="info-card__text">
+    @if (sujet.statut !== 'REALISATION_TERMINEE') {
+      Le score sera recalculé automatiquement à la terminaison du projet (même calcul que « Recalculer score »).
+    } @else {
+      Dernière évaluation disponible pour ce projet terminé.
+    }
+  </p>
 
     @if (evaluationMessage) {
       <div class="tab-alert tab-alert--success">{{ evaluationMessage }}</div>
@@ -262,64 +340,91 @@
         </div>
       }
     } @else if (sujet.statut === 'REALISATION_TERMINEE') {
-      <p class="detail-panel__text">Aucune évaluation enregistrée pour ce projet.</p>
+      <p class="info-card__text">Aucune évaluation enregistrée pour ce projet.</p>
     }
-  </section>
 </article>
 
-        <article class="detail-panel">
-          <section class="detail-panel__section">
-            <h2 class="detail-panel__title">Description</h2>
-            <p class="detail-panel__text">{{ sujet.description }}</p>
-          </section>
+        <article class="info-card info-card--about">
+          <span class="info-card__badge info-card__badge--red">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            Description
+          </span>
+          <span class="info-card__quote" aria-hidden="true">“</span>
+          <h2 class="info-card__title">À propos du sujet</h2>
+          <p class="info-card__text">{{ sujet.description }}</p>
+        </article>
 
-          <section class="detail-panel__section">
-            <h2 class="detail-panel__title">Objectifs</h2>
-            <ul class="detail-panel__list">
-              @for (line of objectifLines; track $index) {
-                <li>
-                  <span class="detail-panel__check" aria-hidden="true">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 5L4 7L8 3" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </span>
-                  {{ line }}
-                </li>
-              }
-            </ul>
-          </section>
-
-          <section class="detail-panel__section detail-panel__section--last">
-            <h2 class="detail-panel__title">Prérequis</h2>
-            <p class="detail-panel__text">{{ sujet.prerequis.join(', ') }}</p>
-          </section>
+        <article class="info-card info-card--objectifs">
+          <div class="info-card__heading">
+            <span class="info-card__icon info-card__icon--mint" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7.2L5.6 9.8L11 4.4" stroke="#0f766e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <div>
+              <span class="info-card__eyebrow">Objectifs</span>
+              <h2 class="info-card__title">Ce qui sera accompli</h2>
+            </div>
+          </div>
+          <ol class="info-objectifs">
+            @for (line of objectifLines; track $index; let i = $index) {
+              <li class="info-objectifs__item">
+                <span class="info-objectifs__num" aria-hidden="true">{{ i + 1 }}</span>
+                <span class="info-objectifs__text">{{ line }}</span>
+              </li>
+            }
+          </ol>
         </article>
       </div>
 
       <aside class="sujet-detail__sidebar">
         <div class="sidebar-card">
-          <h3 class="sidebar-card__title">Technologies</h3>
+          <span class="sidebar-chip sidebar-chip--red">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1.2L7.9 5H12L8.7 7.4L9.8 11.2L7 8.9L4.2 11.2L5.3 7.4L2 5H6.1L7 1.2Z" fill="currentColor"/>
+            </svg>
+            Stack technique
+          </span>
           <div class="sidebar-card__tags">
-            @for (tech of sujet.technologies; track tech; let i = $index) {
-              <span class="tag" [class]="techColors[i]">{{ tech }}</span>
+            @for (tech of sujet.technologies; track tech) {
+              <span class="tag tag--stack">
+                <span class="tag__dot" aria-hidden="true"></span>
+                {{ tech }}
+              </span>
             }
           </div>
         </div>
 
         <div class="sidebar-card">
-          <h3 class="sidebar-card__title">Prérequis / Classes cibles</h3>
+          <span class="sidebar-chip sidebar-chip--amber">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <circle cx="5" cy="5" r="2.2" stroke="currentColor" stroke-width="1.2"/>
+              <circle cx="9.2" cy="5.5" r="1.8" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M1.8 12C1.8 9.8 3.2 8.5 5 8.5M12.2 12C12.2 10.2 11 9 9.2 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Prérequis · Classes
+          </span>
           <div class="sidebar-card__tags">
             @for (item of sujet.prerequis; track item) {
-              <span class="tag tag--grey">{{ item }}</span>
+              <span class="tag tag--prerequis">{{ item }}</span>
             }
           </div>
         </div>
 
         <div class="sidebar-card">
-          <h3 class="sidebar-card__title">Mots-clés</h3>
+          <span class="sidebar-chip sidebar-chip--red">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2.5 4.5H8.5L11.5 7.5V11.5C11.5 12 11.1 12.5 10.5 12.5H2.5C2 12.5 1.5 12 1.5 11.5V5.5C1.5 5 2 4.5 2.5 4.5Z" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M8.5 4.5V7.5H11.5" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            Mots-clés
+          </span>
           <div class="sidebar-card__tags">
             @for (keyword of keywordTags; track keyword) {
-              <span class="tag tag--keyword">{{ keyword }}</span>
+              <span class="tag tag--keyword">#{{ keyword }}</span>
             }
           </div>
         </div>

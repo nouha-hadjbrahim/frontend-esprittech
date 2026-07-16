@@ -8,14 +8,24 @@ import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-moda
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
 import { PostulerModal } from '../../../components/sujets/postuler-modal/postuler-modal';
 import { SujetDisponibleCard } from '../../../components/sujets/sujet-disponible-card/sujet-disponible-card';
+import { SujetsPagination } from '../../../components/sujets/sujets-pagination/sujets-pagination';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 const CATALOGUE_STATUTS: StatutSujet[] = ['VALIDE', 'CANDIDATURE_OUVERTE'];
+const PAGE_SIZE = 9;
 
 @Component({
   selector: 'app-sujets-disponibles',
-  imports: [FormsModule, DeposerSujetModal, SujetDisponibleCard, FilterDropdown, PostulerModal, ConfirmDialog],
+  imports: [
+    FormsModule,
+    DeposerSujetModal,
+    SujetDisponibleCard,
+    FilterDropdown,
+    PostulerModal,
+    ConfirmDialog,
+    SujetsPagination,
+  ],
   templateUrl: './sujets-disponibles.html',
   styleUrl: './sujets-disponibles.css',
 })
@@ -26,6 +36,7 @@ export class SujetsDisponibles implements OnInit {
 
   sujets: SujetProjet[] = [];
   filteredSujets: SujetProjet[] = [];
+  pagedSujets: SujetProjet[] = [];
   isLoading = true;
   isModalOpen = false;
   searchQuery = '';
@@ -34,6 +45,8 @@ export class SujetsDisponibles implements OnInit {
   selectedEquipe = '';
   selectedEncadrant = '';
   sortOrder = 'recent';
+  currentPage = 1;
+  readonly pageSize = PAGE_SIZE;
 
   showPostulerModal = false;
   showCandidatureFermeeAlert = false;
@@ -69,9 +82,20 @@ export class SujetsDisponibles implements OnInit {
       error: () => {
         this.sujets = [];
         this.filteredSujets = [];
+        this.pagedSujets = [];
         this.isLoading = false;
       },
     });
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredSujets.length / this.pageSize));
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = page;
+    this.updatePagedSujets();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   get statutOptions(): { value: string; label: string }[] {
@@ -212,5 +236,16 @@ export class SujetsDisponibles implements OnInit {
     });
 
     this.filteredSujets = result;
+    this.currentPage = 1;
+    this.updatePagedSujets();
+  }
+
+  private updatePagedSujets(): void {
+    const total = this.totalPages;
+    if (this.currentPage > total) {
+      this.currentPage = total;
+    }
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.pagedSujets = this.filteredSujets.slice(start, start + this.pageSize);
   }
 }

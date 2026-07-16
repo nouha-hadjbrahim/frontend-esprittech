@@ -18,11 +18,12 @@ import { IndustrialisationService } from '../../core/services/industrialisation.
 import { LivrableService } from '../../core/services/livrable.service';
 import { EvaluationChecklistComponent } from '../../shared/components/evaluation-checklist/evaluation-checklist.component';
 import { Livrable } from '../../core/models/livrable.model';
+import { FilterDropdown, FilterOption } from '../../frontoffice/components/sujets/filter-dropdown/filter-dropdown';
 
 @Component({
   selector: 'app-ci-industrialisation',
   standalone: true,
-  imports: [CommonModule, FormsModule, EvaluationChecklistComponent],
+  imports: [CommonModule, FormsModule, EvaluationChecklistComponent, FilterDropdown],
   templateUrl: './ci-industrialisation.component.html',
   styleUrl: './ci-industrialisation.component.css',
 })
@@ -57,12 +58,34 @@ export class CiIndustrialisationComponent implements OnInit {
   readonly types: TypeIndustrialisation[] = ['INTERNE', 'EXTERNE'];
   readonly missingLivrablesWarning = 'Aucun livrable n’est déposé pour ce projet. La CI verra cette alerte.';
 
+  readonly statutOptions: FilterOption[] = [
+    { value: '', label: 'Tous les statuts' },
+    ...this.statuts.map((statut) => ({ value: statut, label: STATUT_INDUSTRIALISATION_LABELS[statut] })),
+  ];
+
+  readonly typeOptions: FilterOption[] = [
+    { value: '', label: 'Interne et externe' },
+    ...this.types.map((type) => ({ value: type, label: TYPE_INDUSTRIALISATION_LABELS[type] })),
+  ];
+
+  readonly sortOptions: FilterOption[] = [
+    { value: 'date-desc', label: 'Plus récentes' },
+    { value: 'score-desc', label: 'Score élevé' },
+    { value: 'score-asc', label: 'Score faible' },
+    { value: 'title-asc', label: 'Projet A-Z' },
+  ];
+
   readonly domaines = computed(() => {
     const domaines = this.demandes()
       .map((demande) => demande.projetDomaine?.trim())
       .filter((domaine): domaine is string => !!domaine);
     return Array.from(new Set(domaines)).sort((a, b) => a.localeCompare(b));
   });
+
+  readonly domaineOptions = computed<FilterOption[]>(() => [
+    { value: '', label: 'Tous les domaines' },
+    ...this.domaines().map((domaine) => ({ value: domaine, label: domaine })),
+  ]);
 
   readonly demandesEnInstruction = computed(() =>
     this.demandes().filter((demande) => !['GO', 'NO_GO', 'REFUSEE'].includes(demande.statut)).length
@@ -107,6 +130,24 @@ export class CiIndustrialisationComponent implements OnInit {
 
   set sortBy(value: 'date-desc' | 'score-desc' | 'score-asc' | 'title-asc') {
     this.sortBySignal.set(value);
+  }
+
+  onStatutChange(value: string): void {
+    this.statutFilter = value;
+    this.load();
+  }
+
+  onTypeChange(value: string): void {
+    this.typeFilter = value;
+    this.load();
+  }
+
+  onDomaineChange(value: string): void {
+    this.domaineFilter = value;
+  }
+
+  onSortChange(value: string): void {
+    this.sortBy = value as 'date-desc' | 'score-desc' | 'score-asc' | 'title-asc';
   }
 
   ngOnInit(): void {
@@ -322,6 +363,16 @@ export class CiIndustrialisationComponent implements OnInit {
 
   initials(candidature: CandidatureIndustrialisation): string {
     return candidature.projetTitre
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase() || 'CI';
+  }
+
+  personInitials(name: string): string {
+    return name
       .split(/\s+/)
       .filter(Boolean)
       .slice(0, 2)

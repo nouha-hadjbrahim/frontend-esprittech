@@ -16,7 +16,7 @@ describe('SignInComponent', () => {
     redirectValue = null;
     authService = jasmine.createSpyObj<AuthService>('AuthService', ['login', 'landingRoute']);
     router = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
-    authService.landingRoute.and.returnValue('/frontoffice/sujets/disponibles');
+    authService.landingRoute.and.returnValue('/frontoffice/accueil');
 
     TestBed.configureTestingModule({
       imports: [SignInComponent],
@@ -51,7 +51,7 @@ describe('SignInComponent', () => {
     authService.login.and.returnValue(of({} as User));
     component.onSubmit();
     expect(authService.login).toHaveBeenCalled();
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/frontoffice/sujets/disponibles');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/frontoffice/accueil');
     expect(component.loading()).toBeFalse();
   });
 

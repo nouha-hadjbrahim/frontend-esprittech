@@ -1,17 +1,38 @@
 <div class="mes-candidatures">
-  <header class="mes-candidatures__header">
-    <div class="mes-candidatures__header-text">
-      <h1 class="mes-candidatures__title">Mes candidatures</h1>
-      <p class="mes-candidatures__subtitle">
-        Suivez l'état de vos candidatures et retirez celles encore en attente de traitement.
-      </p>
+  <header class="cand-hero-banner">
+    <div class="cand-hero-banner__main">
+      <span class="cand-hero-banner__icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M8 3.5h5.5L17.5 7.5V19a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 19V5A1.5 1.5 0 0 1 8 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M13.5 3.5V7.5H17.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M9.5 11.5h5M9.5 15h3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <div class="cand-hero-banner__copy">
+        <span class="cand-hero-banner__eyebrow">ESPRITTECH · ESPACE ÉTUDIANT</span>
+        <h1>Mes candidatures</h1>
+        <p>Suivez l'état de vos candidatures et retirez celles encore en attente de traitement.</p>
+      </div>
     </div>
-    <a routerLink="/frontoffice/sujets/disponibles" class="mes-candidatures__cta">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-        <path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      Explorer les sujets
-    </a>
+
+    <div class="cand-hero-banner__stats" aria-label="Synthèse des candidatures">
+      <article class="cand-hero-stat">
+        <div class="cand-hero-stat__top"><span>Total</span></div>
+        <strong>{{ summary.total }}</strong>
+      </article>
+      <article class="cand-hero-stat">
+        <div class="cand-hero-stat__top"><span>En attente</span></div>
+        <strong>{{ summary.enAttente }}</strong>
+      </article>
+      <article class="cand-hero-stat">
+        <div class="cand-hero-stat__top"><span>Acceptées</span></div>
+        <strong>{{ summary.acceptees }}</strong>
+      </article>
+      <article class="cand-hero-stat">
+        <div class="cand-hero-stat__top"><span>Refusées</span></div>
+        <strong>{{ summary.refusees }}</strong>
+      </article>
+    </div>
   </header>
 
   <div class="mes-candidatures__toolbar">
@@ -88,90 +109,132 @@
       </a>
     </div>
   } @else {
+    <p class="mes-candidatures__count">
+      {{ filteredCandidatures.length }} candidature(s) affichée(s) sur {{ candidatures.length }}
+    </p>
+
     <div class="mes-candidatures__list" role="list">
       @for (candidature of filteredCandidatures; track candidature.id) {
         <article class="candidature-row" role="listitem">
-          <div class="candidature-row__accent" [class]="getStatutClass(candidature.statut)"></div>
+          <div class="candidature-row__accent" aria-hidden="true"></div>
 
-          <div class="candidature-row__main">
-            <div class="candidature-row__top">
-              <div class="candidature-row__title-block">
-                <a
-                  class="candidature-row__title"
-                  [routerLink]="['/frontoffice/sujets', candidature.sujetId]"
-                >
-                  {{ getSujetTitre(candidature) }}
-                </a>
-                <div class="candidature-row__badges">
-                  <span class="badge" [class]="getCategorieClass(candidature.sujetCategorie)">
-                    {{ getCategorieLabel(candidature.sujetCategorie) }}
-                  </span>
-                  <span class="badge" [class]="getStatutClass(candidature.statut)">
-                    {{ getStatutLabel(candidature.statut) }}
-                  </span>
-                </div>
-              </div>
+          <div
+            class="candidature-row__icon"
+            [class]="'candidature-row__icon--' + statutTone(candidature.statut)"
+            aria-hidden="true"
+          >
+            @switch (candidature.statut) {
+              @case ('ACCEPTEE') {
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="7.25" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M6.5 10.2l2.4 2.4 4.6-4.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              }
+              @case ('REFUSEE') {
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="7.25" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M7.2 7.2l5.6 5.6M12.8 7.2l-5.6 5.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              }
+              @default {
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="7.25" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M10 6.5v4.2l2.6 1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              }
+            }
+          </div>
 
-              <div class="candidature-row__actions">
-                @if (canRetirer(candidature)) {
-                  <button
-                    type="button"
-                    class="candidature-row__withdraw"
-                    (click)="openDeleteConfirm(candidature)"
-                    title="Retirer la candidature"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M3 6H5H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                      <path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="1.5"/>
-                      <path d="M10 11V17M14 11V17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                      <path d="M6 6L7 19.5C7 20.33 7.67 21 8.5 21H15.5C16.33 21 17 20.33 17 19.5L18 6" stroke="currentColor" stroke-width="1.5"/>
-                    </svg>
-                    Retirer
-                  </button>
-                }
-              </div>
+          <div class="candidature-row__content">
+            <div class="candidature-row__tags">
+              <span class="candidature-row__domain">{{ getCategorieLabel(candidature.sujetCategorie) }}</span>
+              <span class="candidature-row__type">{{ getCategorieShortLabel(candidature.sujetCategorie) }}</span>
+              <span class="candidature-row__statut" [class]="'candidature-row__statut--' + statutTone(candidature.statut)">
+                <span class="candidature-row__statut-icon" aria-hidden="true">
+                  @switch (candidature.statut) {
+                    @case ('ACCEPTEE') {
+                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                        <path d="M3 7.2l2.6 2.6L11 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    }
+                    @case ('REFUSEE') {
+                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                        <path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                    }
+                    @default {
+                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.3"/>
+                        <path d="M7 4.2v3.2L9.2 9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                      </svg>
+                    }
+                  }
+                </span>
+                {{ getStatutLabel(candidature.statut) }}
+              </span>
             </div>
+
+            <h3 class="candidature-row__title">
+              <a [routerLink]="['/frontoffice/sujets', candidature.sujetId]">
+                {{ getSujetTitre(candidature) }}
+              </a>
+            </h3>
+
+            <p class="candidature-row__description">
+              @if (candidature.statut === 'REFUSEE' && candidature.motifRefus) {
+                Motif : {{ candidature.motifRefus }}
+              } @else if (candidature.messageEtudiant) {
+                {{ candidature.messageEtudiant }}
+              } @else {
+                Candidature déposée pour ce sujet
+              }
+            </p>
 
             <div class="candidature-row__meta">
               @if (candidature.encadrantNom) {
-                <span class="candidature-row__meta-item">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M5 20C5 16.134 8.134 13 12 13C15.866 13 19 16.134 19 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
-                  {{ candidature.encadrantNom }}
-                </span>
+                <span class="candidature-row__avatar" aria-hidden="true">{{ initials(candidature.encadrantNom) }}</span>
+                <span class="candidature-row__author">{{ candidature.encadrantNom }}</span>
               }
               <span class="candidature-row__meta-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="4" y="5" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M8 3V7M16 3V7M4 11H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M4.5 1V3.5M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
                 </svg>
-                Déposée le {{ candidature.dateDepot | date:'dd MMM yyyy' }}
+                {{ formatDateLong(candidature.dateDepot) }}
               </span>
               @if (candidature.dateDecision) {
-                <span class="candidature-row__meta-item">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
-                  Traitée le {{ candidature.dateDecision | date:'dd MMM yyyy' }}
+                <span class="candidature-row__meta-item candidature-row__meta-item--highlight">
+                  Décision · {{ formatDateLong(candidature.dateDecision) }}
                 </span>
               }
             </div>
+          </div>
 
-            @if (candidature.messageEtudiant) {
-              <blockquote class="candidature-row__message">
-                <span class="candidature-row__message-label">Message de motivation</span>
-                {{ candidature.messageEtudiant }}
-              </blockquote>
-            }
+          <div class="candidature-row__actions">
+            <a
+              [routerLink]="['/frontoffice/sujets', candidature.sujetId]"
+              class="candidature-row__btn"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.2"/>
+                <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              Détails
+            </a>
 
-            @if (candidature.statut === 'REFUSEE' && candidature.motifRefus) {
-              <div class="candidature-row__refus">
-                <span class="candidature-row__refus-label">Motif du refus</span>
-                {{ candidature.motifRefus }}
-              </div>
+            @if (canRetirer(candidature)) {
+              <button
+                type="button"
+                class="candidature-row__btn candidature-row__btn--danger"
+                (click)="openDeleteConfirm(candidature)"
+                title="Retirer la candidature"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M2 4H12M5 4V2.5H9V4M5.5 6V10M8.5 6V10M3.5 4L4 11.5H10L10.5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Retirer
+              </button>
             }
           </div>
         </article>
