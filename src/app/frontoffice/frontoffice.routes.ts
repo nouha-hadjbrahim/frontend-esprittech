@@ -11,6 +11,11 @@ export const frontofficeRoutes: Routes = [
         component: FrontofficeLayout,
         children: [
             {
+                path: 'accueil',
+                canActivate: [roleGuard([...AUTHENTICATED_ROLES])],
+                loadComponent: () => import('./pages/accueil/accueil').then(m => m.Accueil)
+            },
+            {
                 path: 'catalogue',
                 canActivate: [roleGuard(['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
                 loadComponent: () => import('./pages/catalogue/catalogue').then(m => m.Catalogue)
@@ -129,7 +134,7 @@ export const frontofficeRoutes: Routes = [
                 path: 'profil',
                 loadComponent: () => import('./pages/mon-profil/mon-profil').then(m => m.MonProfil)
             },
-            { path: '', redirectTo: 'sujets/disponibles', pathMatch: 'full' }
+            { path: '', redirectTo: 'accueil', pathMatch: 'full' }
         ]
     }
 ];

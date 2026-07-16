@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   CandidatureIndustrialisation,
+  ORIENTATION_OPTIONS,
   STATUT_INDUSTRIALISATION_LABELS,
   StatutIndustrialisation,
   TYPE_INDUSTRIALISATION_LABELS,
@@ -11,13 +12,16 @@ import {
 } from '../../../core/models/industrialisation.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { IndustrialisationService } from '../../../core/services/industrialisation.service';
+import {
+  FilterDropdown,
+  FilterOption,
+} from '../../components/sujets/filter-dropdown/filter-dropdown';
 
 type StatutFilterValue = StatutIndustrialisation | '';
 type TypeFilterValue = TypeIndustrialisation | '';
-type StatusTone = 'draft' | 'pending' | 'info' | 'go' | 'nogo';
-
 interface StatusPresentation {
   label: string;
+  shortLabel: string;
   cssClass: string;
   icon: string;
   ariaLabel: string;
@@ -27,11 +31,12 @@ interface SummaryIndicator {
   label: string;
   value: number;
   cssClass: string;
+  icon: 'total' | 'go' | 'pending' | 'nogo';
 }
 
 @Component({
   selector: 'app-demandes-industrialisation',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, FilterDropdown],
   templateUrl: './demandes-industrialisation.html',
   styleUrl: './demandes-industrialisation.css',
 })
@@ -61,54 +66,72 @@ export class DemandesIndustrialisation implements OnInit {
   readonly types: TypeIndustrialisation[] = ['INTERNE', 'EXTERNE'];
   readonly loadingSkeletons = [1, 2, 3];
 
+  readonly statutOptions: FilterOption[] = [
+    { value: '', label: 'Tous les statuts' },
+    ...this.statuts.map((statut) => ({ value: statut, label: statut })),
+  ];
+
+  readonly typeOptions: FilterOption[] = [
+    { value: '', label: 'Interne et externe' },
+    ...this.types.map((type) => ({ value: type, label: this.typeLabels[type] })),
+  ];
+
   private readonly statusPresentations: Record<StatutIndustrialisation, StatusPresentation> = {
     BROUILLON: {
       label: 'Brouillon',
+      shortLabel: 'BR',
       cssClass: 'status-pill--draft',
-      icon: '...',
-      ariaLabel: 'Statut brouillon',
+      icon: 'BR',
+      ariaLabel: 'Statut BROUILLON',
     },
     SOUMISE: {
       label: 'Soumise',
+      shortLabel: 'SO',
       cssClass: 'status-pill--pending',
-      icon: '...',
-      ariaLabel: 'Demande soumise, en attente de decision CI',
+      icon: 'SO',
+      ariaLabel: 'Statut SOUMISE',
     },
     RECUE_PAR_CI: {
       label: 'Recue par CI',
+      shortLabel: 'CI',
       cssClass: 'status-pill--pending',
-      icon: '...',
-      ariaLabel: 'Demande recue par la cellule industrialisation',
+      icon: 'CI',
+      ariaLabel: 'Statut RECUE_PAR_CI',
     },
     A_COMPLETER: {
       label: 'A completer',
+      shortLabel: 'AC',
       cssClass: 'status-pill--pending',
-      icon: '!',
-      ariaLabel: 'Demande a completer avant decision',
+      icon: 'AC',
+      ariaLabel: 'Statut A_COMPLETER',
     },
     RECEVABLE: {
       label: 'Recevable',
+      shortLabel: 'EC',
       cssClass: 'status-pill--info',
-      icon: 'i',
-      ariaLabel: 'Demande recevable en instruction',
+      icon: 'EC',
+      ariaLabel: 'Statut RECEVABLE',
     },
     GO: {
-      label: 'GO confirme',
+      label: 'Go',
+      shortLabel: 'GO',
       cssClass: 'status-pill--go',
-      icon: 'OK',
-      ariaLabel: 'Decision GO confirmee',
+      icon: 'GO',
+      ariaLabel: 'Statut GO',
     },
     NO_GO: {
       label: 'No Go',
+      shortLabel: 'NO',
       cssClass: 'status-pill--nogo',
       icon: 'NO',
-      ariaLabel: 'Decision No Go',
+      ariaLabel: 'Statut NO_GO',
     },
     REFUSEE: {
       label: 'Refusee',
+      shortLabel: 'RF',
       cssClass: 'status-pill--nogo',
-      icon: 'NO',
-      ariaLabel: 'Demande refusee',
+      icon: 'RF',
+      ariaLabel: 'Statut REFUSEE',
     },
   };
 
@@ -118,7 +141,11 @@ export class DemandesIndustrialisation implements OnInit {
     const type = this.typeFilterSignal();
 
     return this.demandes().filter((demande) => {
-      const matchesSearch = !search || this.normalize(demande.projetTitre).includes(search);
+      const reference = this.normalize(this.requestReference(demande));
+      const matchesSearch =
+        !search
+        || this.normalize(demande.projetTitre).includes(search)
+        || reference.includes(search);
       const matchesStatus = !statut || demande.statut === statut;
       const matchesType = !type || demande.typeIndustrialisation === type;
       return matchesSearch && matchesStatus && matchesType;
@@ -132,33 +159,16 @@ export class DemandesIndustrialisation implements OnInit {
   readonly summaryIndicators = computed<SummaryIndicator[]>(() => {
     const demandes = this.demandes();
     const counts = this.countByStatus(demandes);
-    const indicators: SummaryIndicator[] = [
-      { label: 'Total', value: demandes.length, cssClass: 'summary-card--total' },
+    const go = counts['GO'] ?? 0;
+    const nogo = (counts['NO_GO'] ?? 0) + (counts['REFUSEE'] ?? 0);
+    const enCours = Math.max(0, demandes.length - go - nogo);
+
+    return [
+      { label: 'Total', value: demandes.length, cssClass: 'summary-card--total', icon: 'total' },
+      { label: 'Go', value: go, cssClass: 'summary-card--go', icon: 'go' },
+      { label: 'En cours', value: enCours, cssClass: 'summary-card--pending', icon: 'pending' },
+      { label: 'No Go', value: nogo, cssClass: 'summary-card--nogo', icon: 'nogo' },
     ];
-
-    const statusSummaries: { statut: StatutIndustrialisation; label: string }[] = [
-      { statut: 'BROUILLON', label: 'Brouillons' },
-      { statut: 'SOUMISE', label: 'Soumises' },
-      { statut: 'RECUE_PAR_CI', label: 'Recues CI' },
-      { statut: 'A_COMPLETER', label: 'A completer' },
-      { statut: 'RECEVABLE', label: 'Recevables' },
-      { statut: 'GO', label: 'Go' },
-      { statut: 'NO_GO', label: 'No Go' },
-      { statut: 'REFUSEE', label: 'Refusees' },
-    ];
-
-    statusSummaries.forEach(({ statut, label }) => {
-      const value = counts[statut] ?? 0;
-      if (value > 0) {
-        indicators.push({
-          label,
-          value,
-          cssClass: `summary-card--${this.statusTone(statut)}`,
-        });
-      }
-    });
-
-    return indicators;
   });
 
   ngOnInit(): void {
@@ -217,12 +227,21 @@ export class DemandesIndustrialisation implements OnInit {
     this.typeFilter = '';
   }
 
+  onStatusFilterChange(value: string): void {
+    this.statusFilter = (value || '') as StatutFilterValue;
+  }
+
+  onTypeFilterChange(value: string): void {
+    this.typeFilter = (value || '') as TypeFilterValue;
+  }
+
   statusPresentation(statut: StatutIndustrialisation): StatusPresentation {
     return this.statusPresentations[statut] ?? {
       label: this.statutLabels[statut] ?? statut,
+      shortLabel: statut.slice(0, 2),
       cssClass: 'status-pill--info',
       icon: 'i',
-      ariaLabel: `Statut ${this.statutLabels[statut] ?? statut}`,
+      ariaLabel: `Statut ${statut}`,
     };
   }
 
@@ -248,17 +267,58 @@ export class DemandesIndustrialisation implements OnInit {
     return !!demande.projetDescription?.trim() && !!demande.commentaire?.trim();
   }
 
-  scoreDisplay(demande: CandidatureIndustrialisation): string {
+  orientationDisplay(demande: CandidatureIndustrialisation): string {
+    if (!demande.orientation) {
+      return 'A definir';
+    }
+    return ORIENTATION_OPTIONS.find((item) => item.value === demande.orientation)?.label
+      ?? demande.orientation;
+  }
+
+  scoreValue(demande: CandidatureIndustrialisation): number | null {
     const score = demande.latestEvaluation?.finalValidatedScore
       ?? demande.latestEvaluation?.scoreFinal
       ?? demande.scoreEvaluationProjet;
-    return score == null ? 'Non calcule' : `${score}/100`;
+    return score == null ? null : Number(score);
+  }
+
+  scoreDisplay(demande: CandidatureIndustrialisation): string {
+    const score = this.scoreValue(demande);
+    return score == null ? 'Non calcule' : `${score} / 100`;
+  }
+
+  scorePercent(demande: CandidatureIndustrialisation): number {
+    const score = this.scoreValue(demande);
+    if (score == null) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, score));
+  }
+
+  eligibilityTone(demande: CandidatureIndustrialisation): 'ok' | 'warn' | 'ko' | 'neutral' {
+    const status = demande.latestEvaluation?.eligibilityStatus;
+    if (status === 'ELIGIBLE' || demande.eligibleIndustrialisation === true) return 'ok';
+    if (status === 'REVIEW_REQUIRED') return 'warn';
+    if (status === 'NON_ELIGIBLE_EN_L_ETAT' || demande.eligibleIndustrialisation === false) return 'ko';
+    return 'neutral';
+  }
+
+  decisionTone(demande: CandidatureIndustrialisation): 'go' | 'nogo' | 'neutral' {
+    if (demande.statut === 'GO' || demande.decisionGoNoGo === true) return 'go';
+    if (
+      demande.statut === 'NO_GO'
+      || demande.statut === 'REFUSEE'
+      || demande.decisionGoNoGo === false
+    ) {
+      return 'nogo';
+    }
+    return 'neutral';
   }
 
   eligibilityDisplay(demande: CandidatureIndustrialisation): string {
     switch (demande.latestEvaluation?.eligibilityStatus) {
       case 'ELIGIBLE':
-        return 'Eligible';
+        return 'Eligible industrialisation';
       case 'REVIEW_REQUIRED':
         return 'Revue requise';
       case 'NON_ELIGIBLE_EN_L_ETAT':
@@ -294,14 +354,6 @@ export class DemandesIndustrialisation implements OnInit {
       acc[demande.statut] = (acc[demande.statut] ?? 0) + 1;
       return acc;
     }, {});
-  }
-
-  private statusTone(statut: StatutIndustrialisation): StatusTone {
-    if (statut === 'GO') return 'go';
-    if (statut === 'NO_GO' || statut === 'REFUSEE') return 'nogo';
-    if (statut === 'BROUILLON') return 'draft';
-    if (statut === 'RECEVABLE') return 'info';
-    return 'pending';
   }
 
   private normalize(value: string | null | undefined): string {

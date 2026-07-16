@@ -44,10 +44,10 @@ describe('FrontofficeLayout', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should fall back to "U" initials and empty role/nav without a user', () => {
+  it('should fall back to "U" initials and Accueil-only nav without a user', () => {
     expect(component.initials()).toBe('U');
     expect(component.roleLabel()).toBe('');
-    expect(component.navLinks()).toEqual([]);
+    expect(component.navLinks().map((l) => l.label)).toEqual(['Accueil']);
   });
 
   it('should compute initials and role label from the user', () => {
@@ -59,6 +59,7 @@ describe('FrontofficeLayout', () => {
   it('should build the teacher navigation without mes sujets when not affiliated', () => {
     currentUser.set(userWith('ROLE_ENSEIGNANT'));
     const labels = component.navLinks().map((l) => l.label);
+    expect(labels[0]).toBe('Accueil');
     expect(labels).toContain('Catalogue');
     expect(labels).toContain('Sujets');
     expect(labels).toContain('Demandes d\'industrialisation');
@@ -79,12 +80,13 @@ describe('FrontofficeLayout', () => {
   it('should build the student navigation', () => {
     currentUser.set(userWith('ROLE_ETUDIANT'));
     const labels = component.navLinks().map((l) => l.label);
-    expect(labels).toEqual(['Sujets disponibles', 'Mes candidatures']);
+    expect(labels).toEqual(['Accueil', 'Sujets disponibles', 'Mes candidatures']);
   });
 
   it('should build the team-lead navigation', () => {
     currentUser.set(userWith('ROLE_CHEF_EQUIPE'));
     const labels = component.navLinks().map((l) => l.label);
+    expect(labels[0]).toBe('Accueil');
     expect(labels).toContain('Sujets');
     expect(labels).not.toContain('Sujets disponibles');
 
@@ -95,12 +97,13 @@ describe('FrontofficeLayout', () => {
       'Validation des sujets',
     ]);
     expect(sujetsNode?.path).toBe('/frontoffice/validation-sujets');
-    expect(component.navLinks().length).toBe(5);
+    expect(component.navLinks().length).toBe(6);
   });
 
   it('should build the CI navigation', () => {
     currentUser.set(userWith('ROLE_CI'));
-    expect(component.navLinks().length).toBe(4);
+    expect(component.navLinks()[0].label).toBe('Accueil');
+    expect(component.navLinks().length).toBe(5);
   });
 
   it('should toggle the profile dropdown', () => {

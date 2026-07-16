@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CategorieSujet, SujetProjet } from '../../../../core/models/sujet-projet.model';
-import { STATUT_LABELS } from '../../../constants/sujet-projet.constants';
+import { MES_SUJETS_STATUT_STYLES, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 @Component({
   selector: 'app-sujet-disponible-card',
@@ -30,16 +30,12 @@ export class SujetDisponibleCard {
 
   get statusTagClass(): string {
     if (this.isComplet) return 'dispo-card__status-tag--full';
-    if (this.isOpen) return 'dispo-card__status-tag--open';
-    if (this.sujet.statut === 'VALIDE') return 'dispo-card__status-tag--valid';
-    return 'dispo-card__status-tag--muted';
+    return MES_SUJETS_STATUT_STYLES[this.sujet.statut]?.cardTagClass ?? 'dispo-card__status-tag--muted';
   }
 
   get statusDotClass(): string {
     if (this.isComplet) return 'dispo-card__status-dot--full';
-    if (this.isOpen) return 'dispo-card__status-dot--open';
-    if (this.sujet.statut === 'VALIDE') return 'dispo-card__status-dot--valid';
-    return 'dispo-card__status-dot--muted';
+    return MES_SUJETS_STATUT_STYLES[this.sujet.statut]?.cardDotClass ?? 'dispo-card__status-dot--muted';
   }
 
   get capacityPercent(): number {
@@ -64,22 +60,12 @@ export class SujetDisponibleCard {
     return `${restantes} places restantes`;
   }
 
-  get avatarClass(): string {
-    const map: Record<CategorieSujet, string> = {
-      PFE: 'dispo-card__avatar--pfe',
-      RDI: 'dispo-card__avatar--rdi',
-      STAGE_INGENIEUR: 'dispo-card__avatar--stage',
-    };
-    return map[this.sujet.categorie] ?? 'dispo-card__avatar--pfe';
-  }
-
   get statutBadge() {
     return STATUT_LABELS[this.sujet.statut] ?? { label: this.sujet.statut, cssClass: 'badge--neutral' };
   }
 
   get statusLabel(): string {
     if (this.isComplet) return 'Complet';
-    if (this.isOpen) return 'Candidature ouverte';
     return this.statutBadge.label;
   }
 

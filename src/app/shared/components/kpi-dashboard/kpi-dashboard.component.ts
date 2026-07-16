@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Chart, registerables } from 'chart.js';
+import { Chart, registerables, type ScriptableContext } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
 import {
@@ -79,7 +79,7 @@ export class KpiDashboardComponent implements OnInit {
         data: values,
         fill: true,
         borderColor: '#E63946',
-        backgroundColor: (ctx) => {
+        backgroundColor: (ctx: ScriptableContext<'line'>) => {
           const grad = ctx.chart.ctx.createLinearGradient(0, 0, 0, 260);
           grad.addColorStop(0, 'rgba(230,57,70,0.3)');
           grad.addColorStop(1, 'rgba(230,57,70,0)');

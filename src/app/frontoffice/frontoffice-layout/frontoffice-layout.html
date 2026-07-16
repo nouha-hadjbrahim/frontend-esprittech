@@ -3,7 +3,13 @@
     <header class="header">
         <div class="header-left">
             <div class="logo">
-                <img src="assets/logo.png" alt="EspriTECH Logo" style="height: 40px;" />
+                <a routerLink="/frontoffice/accueil" class="logo-link" aria-label="Accueil EspritTECH">
+                    <img src="assets/images/logo.png" alt="EspritTECH" class="logo-link__icon" />
+                    <span class="logo-link__text">
+                        <span class="logo-link__brand">EspritTECH</span>
+                        <span class="logo-link__tagline">RDI PLATFORM</span>
+                    </span>
+                </a>
             </div>
 
             <!-- Dynamic Navigation Based on Role -->
@@ -11,7 +17,11 @@
                 <ng-container *ngFor="let link of navLinks()">
                     <!-- Dropdown for links with children -->
                     <div class="nav-item-dropdown" *ngIf="link.children; else singleLink">
-                        <button class="nav-link dropdown-toggle">
+                        <button
+                            type="button"
+                            class="nav-link dropdown-toggle"
+                            [class.active]="isNavActive(link)"
+                        >
                             {{ link.label }}
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -50,7 +60,12 @@
                     </div>
                     <!-- Single Link -->
                     <ng-template #singleLink>
-                        <a [routerLink]="link.path" routerLinkActive="active" class="nav-link">
+                        <a
+                            [routerLink]="link.path"
+                            routerLinkActive="active"
+                            [routerLinkActiveOptions]="{ exact: link.path === '/frontoffice/accueil' }"
+                            class="nav-link"
+                        >
                             {{ link.label }}
                         </a>
                     </ng-template>
@@ -63,14 +78,13 @@
 
             <div class="profile-dropdown">
                 <button class="profile-toggle" (click)="toggleProfileDropdown()">
-                    <img src="assets/images/avatar.jpg" alt="Profile" class="avatar"
-                        onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'" />
+                    <span class="avatar" aria-hidden="true">{{ initials() }}</span>
                     <div class="profile-info">
                         <span class="profile-name">{{ user() ? user()!.prenom + ' ' + user()!.nom : 'Utilisateur'
                             }}</span>
                         <span class="profile-role">{{ roleLabel() }}</span>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                             stroke-linejoin="round" />
                     </svg>

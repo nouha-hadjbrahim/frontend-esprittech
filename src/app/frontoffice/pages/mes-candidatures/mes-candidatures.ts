@@ -1,5 +1,4 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -14,9 +13,11 @@ import {
   STATUT_CANDIDATURE_LABELS,
 } from '../../constants/sujet-projet.constants';
 
+type StatusTone = 'attente' | 'acceptee' | 'refusee' | 'neutral';
+
 @Component({
   selector: 'app-mes-candidatures',
-  imports: [FormsModule, RouterLink, DatePipe, FilterDropdown, ConfirmDialog],
+  imports: [FormsModule, RouterLink, FilterDropdown, ConfirmDialog],
   templateUrl: './mes-candidatures.html',
   styleUrl: './mes-candidatures.css',
 })
@@ -41,7 +42,7 @@ export class MesCandidatures implements OnInit {
 
   readonly statutOptions = [
     { value: '', label: 'Tous les statuts' },
-  ...Object.entries(STATUT_CANDIDATURE_LABELS).map(([value, info]) => ({
+    ...Object.entries(STATUT_CANDIDATURE_LABELS).map(([value, info]) => ({
       value,
       label: info.label,
     })),
@@ -56,6 +57,16 @@ export class MesCandidatures implements OnInit {
     { value: 'recent', label: 'Plus récentes' },
     { value: 'ancien', label: 'Plus anciennes' },
   ];
+
+  get summary(): { total: number; enAttente: number; acceptees: number; refusees: number } {
+    const list = this.candidatures;
+    return {
+      total: list.length,
+      enAttente: list.filter((c) => c.statut === 'DEPOSEE').length,
+      acceptees: list.filter((c) => c.statut === 'ACCEPTEE').length,
+      refusees: list.filter((c) => c.statut === 'REFUSEE').length,
+    };
+  }
 
   ngOnInit(): void {
     this.loadCandidatures();
@@ -157,11 +168,34 @@ export class MesCandidatures implements OnInit {
     return STATUT_CANDIDATURE_LABELS[statut as keyof typeof STATUT_CANDIDATURE_LABELS]?.cssClass ?? 'badge--neutral';
   }
 
+  statutTone(statut: StatutCandidature): StatusTone {
+    switch (statut) {
+      case 'ACCEPTEE':
+        return 'acceptee';
+      case 'REFUSEE':
+        return 'refusee';
+      case 'DEPOSEE':
+        return 'attente';
+      default:
+        return 'neutral';
+    }
+  }
+
   getCategorieLabel(categorie?: string | null): string {
     if (!categorie) {
       return '—';
     }
     return CATEGORIE_LABELS[categorie as CategorieSujet]?.label ?? categorie;
+  }
+
+  getCategorieShortLabel(categorie?: string | null): string {
+    const map: Record<string, string> = {
+      PFE: 'PFE',
+      RDI: 'RDI',
+      STAGE_INGENIEUR: 'STAGE',
+    };
+    if (!categorie) return 'SUJET';
+    return map[categorie] ?? categorie;
   }
 
   getCategorieClass(categorie?: string | null): string {
@@ -173,6 +207,24 @@ export class MesCandidatures implements OnInit {
 
   getSujetTitre(candidature: Candidature): string {
     return candidature.sujetTitre?.trim() || `Sujet #${candidature.sujetId}`;
+  }
+
+  formatDateLong(date: string | null | undefined): string {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  initials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
   get deleteConfirmMessage(): string {

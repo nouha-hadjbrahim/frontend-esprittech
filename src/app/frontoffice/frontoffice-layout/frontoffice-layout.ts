@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { AffiliationService } from '../../core/services/affiliation.service';
@@ -28,12 +30,56 @@ export class FrontofficeLayout implements OnInit {
   private readonly affiliationSvc = inject(AffiliationService);
   private readonly equipeSvc = inject(EquipeService);
   private readonly notificationService = inject(NotificationService);
+  private readonly router = inject(Router);
 
   /** Utilisateur authentifié (signal partagé depuis AuthService). */
   readonly user = this.authService.currentUser;
   isProfileDropdownOpen = signal<boolean>(false);
 
   readonly pendingDemandesCount = signal(0);
+
+  /** URL courante pour rafraîchir le style actif de la navbar. */
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(() => this.router.url),
+      startWith(this.router.url)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  /** Active un item (lien simple ou parent avec sous-menus) comme Accueil. */
+  isNavActive(link: NavLink): boolean {
+    const url = (this.currentUrl() || '').split('?')[0];
+    const paths = [
+      link.path,
+      ...(link.children?.map((c) => c.path) ?? []),
+    ].filter((p): p is string => !!p);
+
+    const matchesPath = (path: string): boolean => {
+      if (path === '/frontoffice/accueil') {
+        return url === path;
+      }
+      return url === path || url.startsWith(`${path}/`);
+    };
+
+    if (paths.some(matchesPath)) {
+      return true;
+    }
+
+    // Couvre les pages filles (ex. /frontoffice/sujets/:id)
+    if (link.children?.length) {
+      const prefixes = new Set(
+        link.children.map((child) => {
+          const parts = child.path.split('/').filter(Boolean);
+          return parts.length >= 2 ? `/${parts.slice(0, 2).join('/')}` : child.path;
+        })
+      );
+      return [...prefixes].some((prefix) => url === prefix || url.startsWith(`${prefix}/`));
+    }
+
+    return false;
+  }
 
   ngOnInit(): void {
     this.loadPendingCount();
@@ -77,6 +123,7 @@ export class FrontofficeLayout implements OnInit {
 
   // Routes disponibles
   private readonly allLinks = {
+    accueil: { label: 'Accueil', path: '/frontoffice/accueil' },
     tableauDeBord: { label: 'Tableau de bord', path: '/frontoffice/tableau-de-bord' },
     catalogueSimple: { label: 'Catalogue', path: '/frontoffice/catalogue' },
     sujets: {
@@ -173,6 +220,7 @@ export class FrontofficeLayout implements OnInit {
     switch (this.user()?.role) {
       case 'ROLE_ENSEIGNANT':
         return [
+          this.allLinks.accueil,
           this.catalogueEnseignant(),
           this.sujetsEnseignant(),
           this.allLinks.demandesIndustrialisation,
@@ -180,11 +228,13 @@ export class FrontofficeLayout implements OnInit {
         ];
       case 'ROLE_ETUDIANT':
         return [
+          this.allLinks.accueil,
           this.allLinks.sujetsDisponibles,
           this.allLinks.mesCandidatures
         ];
       case 'ROLE_CHEF_EQUIPE':
         return [
+          this.allLinks.accueil,
           this.allLinks.tableauDeBord,
           this.catalogueChef(),
           this.sujetsChef(),
@@ -193,13 +243,14 @@ export class FrontofficeLayout implements OnInit {
         ];
       case 'ROLE_CI':
         return [
+          this.allLinks.accueil,
           this.allLinks.tableauDeBord,
           this.allLinks.espaceCiIndustrialisation,
           this.allLinks.catalogueSimple,
           this.allLinks.sujetsDisponibles
         ];
       default:
-        return [];
+        return [this.allLinks.accueil];
     }
   });
 

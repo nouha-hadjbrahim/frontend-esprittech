@@ -1,9 +1,9 @@
 @import '../sujet-disponible-card/sujet-disponible-card.css';
 
-/* ── Badges statut « Mes sujets » — une couleur par statut ── */
+/* ── Badges statut « Mes sujets » — alignés sur la maquette ── */
 
-.dispo-card__status-tag--soumis { background: #fef3c7; color: #92400e; }
-.dispo-card__status-dot--soumis { background: #f59e0b; }
+.dispo-card__status-tag--soumis { background: #fdeceb; color: #b42318; }
+.dispo-card__status-dot--soumis { background: #e11d48; }
 
 .dispo-card__status-tag--attente { background: #ede9fe; color: #5b21b6; }
 .dispo-card__status-dot--attente { background: #8b5cf6; }
@@ -14,17 +14,17 @@
 .dispo-card__status-tag--valide { background: #dbeafe; color: #1e40af; }
 .dispo-card__status-dot--valide { background: #3b82f6; }
 
-.dispo-card__status-tag--cand-ouverte { background: #dcfce7; color: #166534; }
+.dispo-card__status-tag--cand-ouverte { background: #e8f8ee; color: #166534; }
 .dispo-card__status-dot--cand-ouverte { background: #22c55e; }
 
 .dispo-card__status-tag--cand-fermee { background: #f1f5f9; color: #475569; }
 .dispo-card__status-dot--cand-fermee { background: #94a3b8; }
 
-.dispo-card__status-tag--realisation { background: #ffefe5; color: #c2410c; }
-.dispo-card__status-dot--realisation { background: #ff9b54; }
+.dispo-card__status-tag--realisation { background: #f8efd8; color: #1f2937; }
+.dispo-card__status-dot--realisation { background: #d4a017; }
 
-.dispo-card__status-tag--terminee { background: #ccfbf1; color: #115e59; }
-.dispo-card__status-dot--terminee { background: #14b8a6; }
+.dispo-card__status-tag--terminee { background: #e7f6ec; color: #15803d; }
+.dispo-card__status-dot--terminee { background: #22c55e; }
 
 .dispo-card__status-tag--indust-interne { background: #f3e8ff; color: #6b21a8; }
 .dispo-card__status-dot--indust-interne { background: #a855f7; }
@@ -43,7 +43,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .sujet-card__tags-row .dispo-card__tags {

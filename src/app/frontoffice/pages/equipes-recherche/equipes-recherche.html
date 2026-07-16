@@ -1,17 +1,19 @@
 <div class="equipes-recherche">
-  <!-- Header -->
-  <header class="equipes-recherche__header">
-    <div class="equipes-recherche__header-text">
-      <h1 class="equipes-recherche__title">Équipes de recherche</h1>
-      <p class="equipes-recherche__subtitle">
-        @if (isChef()) {
-          Gérez votre équipe, consultez les demandes d'affiliation et découvrez les autres équipes RDI.
-        } @else {
-          Découvrez les équipes RDI et rejoignez celle qui correspond à votre domaine.
-        }
-      </p>
-    </div>
-  </header>
+  <!-- Header (masqué sur l'onglet demandes d'affiliation) -->
+  @if (activeTab() !== 1) {
+    <header class="equipes-recherche__header">
+      <div class="equipes-recherche__header-text">
+        <h1 class="equipes-recherche__title">Équipes de recherche</h1>
+        <p class="equipes-recherche__subtitle">
+          @if (isChef()) {
+            Gérez votre équipe, consultez les demandes d'affiliation et découvrez les autres équipes RDI.
+          } @else {
+            Découvrez les équipes RDI et rejoignez celle qui correspond à votre domaine.
+          }
+        </p>
+      </div>
+    </header>
+  }
 
   <!-- ════════════════════════════════════════ -->
   <!-- TAB 0: Mon équipe (Chef only)          -->
@@ -220,116 +222,180 @@
   <!-- TAB 1: Demandes d'affiliation (Chef)   -->
   <!-- ════════════════════════════════════════ -->
   @if (activeTab() === 1 && isChef()) {
-    <section class="equipes-recherche__section">
-      <div class="equipes-recherche__section-header">
-        <h3 class="equipes-recherche__section-title">
-          Demandes d'affiliation
-          @if (chefPendingCount() > 0) {
-            <span class="pending-section-badge">{{ chefPendingCount() }}</span>
-          }
-        </h3>
+    <div class="affil-page">
+    @let summary = affiliationSummary();
+    <header class="affil-hero-banner">
+      <div class="affil-hero-banner__main">
+        <span class="affil-hero-banner__icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3ZM8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3ZM8 13c-2.67 0-8 1.34-8 4v2h10v-2c0-1.1.45-2.1 1.17-2.9C10.18 13.4 9.12 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45v2h8v-2c0-2.66-5.33-4-9-4Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <div class="affil-hero-banner__copy">
+          <span class="affil-hero-banner__eyebrow">ESPRITTECH · ÉQUIPES RDI</span>
+          <h1>Demandes d'affiliation</h1>
+          <p>Consultez et traitez les demandes d'affiliation adressées à votre équipe.</p>
+        </div>
       </div>
-      @if (myTeamAffiliations().length === 0) {
-        <div class="equipes-recherche__empty">
-          <div class="equipes-recherche__empty-icon" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <h2 class="equipes-recherche__empty-title">Aucune demande d'affiliation</h2>
-          <p class="equipes-recherche__empty-text">
-            Aucune demande d'affiliation pour votre équipe pour le moment.
-          </p>
+      <div class="affil-hero-banner__stats" aria-label="Synthèse des demandes">
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>Total</span></div>
+          <strong>{{ summary.total }}</strong>
+        </article>
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>En attente</span></div>
+          <strong>{{ summary.enAttente }}</strong>
+        </article>
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>Acceptées</span></div>
+          <strong>{{ summary.acceptees }}</strong>
+        </article>
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>Refusées</span></div>
+          <strong>{{ summary.refusees }}</strong>
+        </article>
+      </div>
+    </header>
+
+    <div class="equipes-recherche__toolbar">
+      <div class="equipes-recherche__search-box">
+        <svg class="equipes-recherche__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="text"
+          class="equipes-recherche__search-input"
+          placeholder="Rechercher un enseignant, email, domaine..."
+          [ngModel]="affilSearchQuery()"
+          (ngModelChange)="affilSearchQuery.set($event)"
+        />
+      </div>
+
+      <div class="equipes-recherche__filters">
+        <app-filter-dropdown
+          class="equipes-recherche__filter"
+          label="Statut"
+          [options]="affilStatutOptions"
+          [value]="affilSelectedStatut()"
+          (valueChange)="affilSelectedStatut.set($event)"
+        />
+
+        <app-filter-dropdown
+          class="equipes-recherche__filter equipes-recherche__filter--sort"
+          label="Plus récents"
+          [options]="affilSortOptions"
+          [value]="affilSortOrder()"
+          defaultValue="recent"
+          [showSortIcon]="true"
+          (valueChange)="affilSortOrder.set($event)"
+        />
+      </div>
+    </div>
+
+    @if (affiliationSource().length === 0) {
+      <div class="equipes-recherche__empty">
+        <div class="equipes-recherche__empty-icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </div>
-      } @else {
-        <div class="equipes-recherche__request-list">
-          @for (r of myTeamAffiliations(); track r.id) {
-            <article class="affil-row">
-              <div class="affil-row__accent-wrap" aria-hidden="true">
-                <div class="affil-row__accent" [class]="affiliationAccentClass(r.statut)"></div>
+        <h2 class="equipes-recherche__empty-title">Aucune demande d'affiliation</h2>
+        <p class="equipes-recherche__empty-text">
+          Aucune demande d'affiliation pour votre équipe pour le moment.
+        </p>
+      </div>
+    } @else if (filteredAffiliations().length === 0) {
+      <div class="equipes-recherche__empty">
+        <h2 class="equipes-recherche__empty-title">Aucun résultat</h2>
+        <p class="equipes-recherche__empty-text">
+          Aucune demande ne correspond à votre recherche ou aux filtres sélectionnés.
+        </p>
+      </div>
+    } @else {
+      <p class="equipes-recherche__count">
+        {{ filteredAffiliations().length }} demande(s) affichée(s) sur {{ affiliationSource().length }}
+      </p>
+      <div class="equipes-recherche__request-list">
+        @for (r of filteredAffiliations(); track r.id) {
+          <article class="affil-row">
+            <div class="affil-row__accent" aria-hidden="true"></div>
+
+            <div class="affil-row__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M6 2.5H12L15.5 6V16.5C15.5 17.05 15.05 17.5 14.5 17.5H5.5C4.95 17.5 4.5 17.05 4.5 16.5V3.5C4.5 2.95 4.95 2.5 5.5 2.5H6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M12 2.5V6H15.5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M7.5 10H12.5M7.5 13H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+
+            <div class="affil-row__content">
+              <div class="affil-row__tags">
+                <span class="affil-row__domain">{{ equipeDomaine(r.equipeId) }}</span>
+                <span class="affil-row__type">Affiliation</span>
+                <span class="affil-row__statut" [class]="statutClass(r.statut)">
+                  <span class="affil-row__statut-dot" aria-hidden="true"></span>
+                  {{ statutLabel(r.statut) }}
+                </span>
               </div>
 
-              <div class="affil-row__avatar-box" [class]="affiliationAccentClass(r.statut)" aria-hidden="true">
-                {{ initiales(r.enseignant.prenom + ' ' + r.enseignant.nom) }}
-              </div>
-
-              <div class="affil-row__content">
-                <div class="affil-row__tags">
-                  <span class="affil-row__tag affil-row__tag--domain">{{ equipeDomaine(r.equipeId) }}</span>
-                  <span class="affil-row__tag affil-row__tag--type">Affiliation</span>
-                  <span class="affil-row__tag affil-row__tag--statut" [class]="statutClass(r.statut)">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
-                      <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                    </svg>
-                    {{ statutLabel(r.statut) }}
-                  </span>
-                </div>
-
-                <h3 class="affil-row__title">{{ r.enseignant.prenom }} {{ r.enseignant.nom }}</h3>
-                <p class="affil-row__description">
-                  @if (r.motifDecision) {
-                    Motif : {{ r.motifDecision }}
-                  } @else {
-                    Demande d'affiliation à votre équipe
-                  }
-                </p>
-
-                <div class="affil-row__author-meta">
-                  <span class="affil-row__avatar">{{ initiales(r.enseignant.prenom + ' ' + r.enseignant.nom) }}</span>
-                  <span class="affil-row__author-name">{{ r.enseignant.prenom }} {{ r.enseignant.nom }}</span>
-                  <span class="affil-row__meta-sep">·</span>
-                  <span class="affil-row__meta-item">{{ r.enseignant.email }}</span>
-                  <span class="affil-row__meta-sep">·</span>
-                  <span class="affil-row__meta-item">
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-                      <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
-                    </svg>
-                    {{ formatDateYmd(r.dateDemande) }}
-                  </span>
-                  <span class="affil-row__meta-sep">·</span>
-                  <span class="affil-row__meta-item">
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
-                      <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                    </svg>
-                    {{ timeAgo(r.dateDemande) }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="affil-row__actions">
-                @if (r.statut === 'EN_ATTENTE') {
-                  <button
-                    type="button"
-                    class="affil-row__btn affil-row__btn--accept"
-                    (click)="accepterDemande(r.id, r.equipeId, r.enseignant.prenom + ' ' + r.enseignant.nom)"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Accepter
-                  </button>
-                  <button
-                    type="button"
-                    class="affil-row__btn affil-row__btn--reject"
-                    (click)="ouvrirRefus(r.id, r.equipeId)"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <path d="M3.5 3.5L10.5 10.5M10.5 3.5L3.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                    Refuser
-                  </button>
+              <h3 class="affil-row__title">{{ r.enseignant.prenom }} {{ r.enseignant.nom }}</h3>
+              <p class="affil-row__description">
+                @if (r.motifDecision) {
+                  Motif : {{ r.motifDecision }}
+                } @else {
+                  Demande d'affiliation à votre équipe
                 }
+              </p>
+
+              <div class="affil-row__meta">
+                <span class="affil-row__avatar" aria-hidden="true">{{ initiales(r.enseignant.prenom + ' ' + r.enseignant.nom) }}</span>
+                <span class="affil-row__author">{{ r.enseignant.prenom }} {{ r.enseignant.nom }}</span>
+                <span class="affil-row__meta-item">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M4.5 1V3.5M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  </svg>
+                  {{ formatDateLong(r.dateDemande) }}
+                </span>
+                <span class="affil-row__meta-item affil-row__meta-item--highlight">
+                  {{ r.enseignant.email }}
+                </span>
               </div>
-            </article>
-          }
-        </div>
-      }
-    </section>
+            </div>
+
+            <div class="affil-row__actions">
+              @if (r.statut === 'EN_ATTENTE') {
+                <button
+                  type="button"
+                  class="affil-row__btn affil-row__btn--accept"
+                  (click)="accepterDemande(r.id, r.equipeId, r.enseignant.prenom + ' ' + r.enseignant.nom)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Accepter
+                </button>
+                <button
+                  type="button"
+                  class="affil-row__btn affil-row__btn--reject"
+                  (click)="ouvrirRefus(r.id, r.equipeId)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M3.5 3.5L10.5 10.5M10.5 3.5L3.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  Refuser
+                </button>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+    </div>
   }
 
   <!-- ════════════════════════════════════════ -->
@@ -515,105 +581,174 @@
   <!-- TAB: Mes demandes (Enseignant)         -->
   <!-- ════════════════════════════════════════ -->
   @if (activeTab() === 1 && isEnseignant()) {
-    <section class="equipes-recherche__section">
-      <div class="equipes-recherche__section-header">
-        <h3 class="equipes-recherche__section-title">Mes demandes d'affiliation</h3>
+    <div class="affil-page">
+    @let summary = affiliationSummary();
+    <header class="affil-hero-banner">
+      <div class="affil-hero-banner__main">
+        <span class="affil-hero-banner__icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3ZM8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3ZM8 13c-2.67 0-8 1.34-8 4v2h10v-2c0-1.1.45-2.1 1.17-2.9C10.18 13.4 9.12 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45v2h8v-2c0-2.66-5.33-4-9-4Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <div class="affil-hero-banner__copy">
+          <span class="affil-hero-banner__eyebrow">ESPRITTECH · ÉQUIPES RDI</span>
+          <h1>Mes demandes d'affiliation</h1>
+          <p>Suivez l'état de vos demandes d'affiliation aux équipes de recherche.</p>
+        </div>
       </div>
-      @if (myDemandes().length === 0) {
-        <div class="equipes-recherche__empty">
-          <div class="equipes-recherche__empty-icon" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <h2 class="equipes-recherche__empty-title">Aucune demande</h2>
-          <p class="equipes-recherche__empty-text">
-            Vous n'avez pas encore de demande d'affiliation en cours.
-          </p>
+      <div class="affil-hero-banner__stats" aria-label="Synthèse des demandes">
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>Total</span></div>
+          <strong>{{ summary.total }}</strong>
+        </article>
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>En attente</span></div>
+          <strong>{{ summary.enAttente }}</strong>
+        </article>
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>Acceptées</span></div>
+          <strong>{{ summary.acceptees }}</strong>
+        </article>
+        <article class="affil-hero-stat">
+          <div class="affil-hero-stat__top"><span>Refusées</span></div>
+          <strong>{{ summary.refusees }}</strong>
+        </article>
+      </div>
+    </header>
+
+    <div class="equipes-recherche__toolbar">
+      <div class="equipes-recherche__search-box">
+        <svg class="equipes-recherche__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="text"
+          class="equipes-recherche__search-input"
+          placeholder="Rechercher une équipe, domaine, motif..."
+          [ngModel]="affilSearchQuery()"
+          (ngModelChange)="affilSearchQuery.set($event)"
+        />
+      </div>
+
+      <div class="equipes-recherche__filters">
+        <app-filter-dropdown
+          class="equipes-recherche__filter"
+          label="Statut"
+          [options]="affilStatutOptions"
+          [value]="affilSelectedStatut()"
+          (valueChange)="affilSelectedStatut.set($event)"
+        />
+
+        <app-filter-dropdown
+          class="equipes-recherche__filter equipes-recherche__filter--sort"
+          label="Plus récents"
+          [options]="affilSortOptions"
+          [value]="affilSortOrder()"
+          defaultValue="recent"
+          [showSortIcon]="true"
+          (valueChange)="affilSortOrder.set($event)"
+        />
+      </div>
+    </div>
+
+    @if (affiliationSource().length === 0) {
+      <div class="equipes-recherche__empty">
+        <div class="equipes-recherche__empty-icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </div>
-      } @else {
-        <div class="equipes-recherche__request-list">
-          @for (r of myDemandes(); track r.id) {
-            <article class="affil-row">
-              <div class="affil-row__accent-wrap" aria-hidden="true">
-                <div class="affil-row__accent" [class]="affiliationAccentClass(r.statut)"></div>
+        <h2 class="equipes-recherche__empty-title">Aucune demande</h2>
+        <p class="equipes-recherche__empty-text">
+          Vous n'avez pas encore de demande d'affiliation en cours.
+        </p>
+      </div>
+    } @else if (filteredAffiliations().length === 0) {
+      <div class="equipes-recherche__empty">
+        <h2 class="equipes-recherche__empty-title">Aucun résultat</h2>
+        <p class="equipes-recherche__empty-text">
+          Aucune demande ne correspond à votre recherche ou aux filtres sélectionnés.
+        </p>
+      </div>
+    } @else {
+      <p class="equipes-recherche__count">
+        {{ filteredAffiliations().length }} demande(s) affichée(s) sur {{ affiliationSource().length }}
+      </p>
+      <div class="equipes-recherche__request-list">
+        @for (r of filteredAffiliations(); track r.id) {
+          <article class="affil-row">
+            <div class="affil-row__accent" aria-hidden="true"></div>
+
+            <div class="affil-row__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <path d="M6 2.5H12L15.5 6V16.5C15.5 17.05 15.05 17.5 14.5 17.5H5.5C4.95 17.5 4.5 17.05 4.5 16.5V3.5C4.5 2.95 4.95 2.5 5.5 2.5H6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M12 2.5V6H15.5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M7.5 10H12.5M7.5 13H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+
+            <div class="affil-row__content">
+              <div class="affil-row__tags">
+                <span class="affil-row__domain">{{ equipeDomaine(r.equipeId) }}</span>
+                <span class="affil-row__type">Affiliation</span>
+                <span class="affil-row__statut" [class]="statutClass(r.statut)">
+                  <span class="affil-row__statut-dot" aria-hidden="true"></span>
+                  {{ statutLabel(r.statut) }}
+                </span>
               </div>
 
-              <div class="affil-row__icon-box" [class]="affiliationAccentClass(r.statut)" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M6 2.5H12L15.5 6V16.5C15.5 17.05 15.05 17.5 14.5 17.5H5.5C4.95 17.5 4.5 17.05 4.5 16.5V3.5C4.5 2.95 4.95 2.5 5.5 2.5H6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                  <path d="M12 2.5V6H15.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                  <path d="M7.5 10H12.5M7.5 13H11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-                </svg>
-              </div>
+              <h3 class="affil-row__title">{{ r.equipeNom || 'Équipe #' + r.equipeId }}</h3>
+              <p class="affil-row__description">
+                @if (r.motifDecision) {
+                  Motif : {{ r.motifDecision }}
+                } @else {
+                  Demande d'affiliation envoyée
+                }
+              </p>
 
-              <div class="affil-row__content">
-                <div class="affil-row__tags">
-                  <span class="affil-row__tag affil-row__tag--domain">{{ equipeDomaine(r.equipeId) }}</span>
-                  <span class="affil-row__tag affil-row__tag--type">Affiliation</span>
-                  <span class="affil-row__tag affil-row__tag--statut" [class]="statutClass(r.statut)">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
-                      <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                    </svg>
-                    {{ statutLabel(r.statut) }}
-                  </span>
-                </div>
-
-                <h3 class="affil-row__title">{{ r.equipeNom || 'Équipe #' + r.equipeId }}</h3>
-                <p class="affil-row__description">
-                  @if (r.motifDecision) {
-                    Motif : {{ r.motifDecision }}
-                  } @else {
-                    Demande d'affiliation envoyée
-                  }
-                </p>
-
-                <div class="affil-row__author-meta">
-                  @if (currentUser(); as u) {
-                    <span class="affil-row__avatar">{{ initiales(u.prenom + ' ' + u.nom) }}</span>
-                    <span class="affil-row__author-name">{{ u.prenom }} {{ u.nom }}</span>
-                    <span class="affil-row__meta-sep">·</span>
-                    <span class="affil-row__meta-item">{{ u.email }}</span>
-                    <span class="affil-row__meta-sep">·</span>
-                  }
-                  <span class="affil-row__meta-item">
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-                      <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
-                    </svg>
-                    {{ formatDateYmd(r.dateDemande) }}
-                  </span>
-                  <span class="affil-row__meta-sep">·</span>
-                  <span class="affil-row__meta-item">
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                      <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
-                      <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                    </svg>
-                    {{ timeAgo(r.dateDemande) }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="affil-row__actions">
-                <a
-                  [routerLink]="['/frontoffice/equipes-recherche', r.equipeId]"
-                  class="affil-row__btn affil-row__btn--outline"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.2"/>
-                    <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+              <div class="affil-row__meta">
+                @if (currentUser(); as u) {
+                  <span class="affil-row__avatar" aria-hidden="true">{{ initiales(u.prenom + ' ' + u.nom) }}</span>
+                  <span class="affil-row__author">{{ u.prenom }} {{ u.nom }}</span>
+                }
+                <span class="affil-row__meta-item">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M4.5 1V3.5M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
                   </svg>
-                  Détails
-                </a>
+                  {{ formatDateLong(r.dateDemande) }}
+                </span>
+                <span class="affil-row__meta-item affil-row__meta-item--highlight">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  </svg>
+                  {{ timeAgo(r.dateDemande) }}
+                </span>
               </div>
-            </article>
-          }
-        </div>
-      }
-    </section>
+            </div>
+
+            <div class="affil-row__actions">
+              <a
+                [routerLink]="['/frontoffice/equipes-recherche', r.equipeId]"
+                class="affil-row__btn"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M1 7C1 7 3.5 2.5 7 2.5C10.5 2.5 13 7 13 7C13 7 10.5 11.5 7 11.5C3.5 11.5 1 7 1 7Z" stroke="currentColor" stroke-width="1.2"/>
+                  <circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/>
+                </svg>
+                Détails
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    }
+    </div>
   }
 </div>
 

@@ -62,6 +62,9 @@
         <button type="button" class="projet-detail__tab" [class.projet-detail__tab--active]="activeTab === 'industrialisation'" (click)="setTab('industrialisation')">
           Industrialisation
         </button>
+        <button type="button" class="projet-detail__tab" [class.projet-detail__tab--active]="activeTab === 'historique'" (click)="setTab('historique')">
+          Historique
+        </button>
       </nav>
     </div>
 
@@ -72,6 +75,109 @@
             @if (projet.statut === 'INVALIDE' && projet.motifRefus) {
               <div class="tab-alert tab-alert--danger"><strong>Motif du refus :</strong> {{ projet.motifRefus }}</div>
             }
+            <article class="detail-panel evaluation-panel">
+              <section class="detail-panel__section detail-panel__section--last">
+                <div class="evaluation-panel__header">
+                  <div>
+                    <h2 class="detail-panel__title">Évaluation du projet</h2>
+                    <p class="detail-panel__text">
+                      @if (!isEvaluable) {
+                        Le recalcul du score est disponible lorsque le projet est validé.
+                      } @else if (evaluation) {
+                        Dernière évaluation disponible pour ce projet validé.
+                      } @else {
+                        Aucune évaluation enregistrée pour ce projet. Cliquez sur « Recalculer score » pour lancer l'évaluation automatique.
+                      }
+                    </p>
+                  </div>
+
+                  @if (canRecalculateScore) {
+                    <div class="score-recalculate-actions">
+                      <button
+                        type="button"
+                        class="action-btn"
+                        [disabled]="recalculatingScore || scoreCooldownActive"
+                        (click)="recalculateScore()"
+                      >
+                        @if (recalculatingScore) {
+                          Recalcul...
+                        } @else if (scoreCooldownActive) {
+                          Recalcul dans {{ scoreCooldownLabel }}
+                        } @else {
+                          Recalculer score
+                        }
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                @if (evaluationMessage) {
+                  <div class="tab-alert tab-alert--success">{{ evaluationMessage }}</div>
+                }
+                @if (evaluationError) {
+                  <div class="tab-alert tab-alert--danger">{{ evaluationError }}</div>
+                }
+                @if (scoreCooldownActive) {
+                  <div class="tab-alert tab-alert--warning">
+                    Le score vient d’être recalculé. Veuillez patienter {{ scoreCooldownLabel }} avant un nouveau recalcul.
+                  </div>
+                }
+
+                @if (evaluationLoading) {
+                  <div class="projet-detail__loading">Chargement de l'évaluation...</div>
+                } @else if (evaluation) {
+                  <div class="evaluation-grid">
+                    <div class="summary-card">
+                      <span class="summary-card__label">Score final</span>
+                      <span class="summary-card__value">
+                        @if (evaluation.scoreFinal != null) {
+                          {{ evaluation.scoreFinal }} / 100
+                        } @else {
+                          Non calculé
+                        }
+                      </span>
+                    </div>
+
+                    <div class="summary-card">
+                      <span class="summary-card__label">Éligibilité</span>
+                      <span class="summary-card__value">
+                        @switch (evaluation.eligibilityStatus) {
+                          @case ('ELIGIBLE') { Éligible }
+                          @case ('REVIEW_REQUIRED') { Revue requise }
+                          @case ('NON_ELIGIBLE') { Non éligible }
+                          @case ('NON_ELIGIBLE_EN_L_ETAT') { Non éligible en l’état }
+                          @case ('NOT_EVALUABLE') { Non évaluable }
+                          @default {
+                            @if (evaluation.eligibleIndustrialisation === true) {
+                              Éligible
+                            } @else if (evaluation.scoreFinal != null && !evaluation.hasEliminatoryWarnings) {
+                              Revue requise
+                            } @else if (evaluation.eligibleIndustrialisation === false) {
+                              Non éligible
+                            } @else {
+                              Non calculé
+                            }
+                          }
+                        }
+                      </span>
+                    </div>
+
+                    <div class="summary-card">
+                      <span class="summary-card__label">Alertes éliminatoires</span>
+                      <span class="summary-card__value">
+                        {{ evaluation.eliminatoryWarningsCount ?? (evaluation.hasEliminatoryWarnings ? 1 : 0) }}
+                      </span>
+                    </div>
+
+                    <div class="summary-card">
+                      <span class="summary-card__label">Calculé le</span>
+                      <span class="summary-card__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</span>
+                    </div>
+                  </div>
+                }
+              </section>
+            </article>
+
             <article class="detail-panel">
               <section class="detail-panel__section">
                 <h2 class="detail-panel__title">Description</h2>
@@ -213,10 +319,359 @@
         </div>
       }
       @case ('industrialisation') {
+        <div class="tab-panel industrialisation-panel">
+          <section class="detail-panel">
+            <div class="industrialisation-header">
+              <div>
+                <h2 class="detail-panel__title">Demande d'industrialisation</h2>
+                <p class="detail-panel__text">
+                  Score :
+                  @if ((evaluation?.scoreFinal ?? sujetProjet?.scoreFinal) != null) {
+                    {{ evaluation?.scoreFinal ?? sujetProjet?.scoreFinal }} / 100
+                  } @else {
+                    non calculé
+                  }
+                  -
+                  @switch (evaluation?.eligibilityStatus) {
+                    @case ('ELIGIBLE') { Éligible }
+                    @case ('REVIEW_REQUIRED') { Revue requise }
+                    @case ('NON_ELIGIBLE') { Non éligible }
+                    @case ('NON_ELIGIBLE_EN_L_ETAT') { Non éligible en l'état }
+                    @case ('NOT_EVALUABLE') { Non évaluable }
+                    @default {
+                      @if (sujetProjet?.eligibleIndustrialisation === true) {
+                        Éligible
+                      } @else if ((evaluation?.scoreFinal ?? sujetProjet?.scoreFinal) != null && !sujetProjet?.hasEliminatoryWarnings) {
+                        Revue requise
+                      } @else if (sujetProjet?.eligibleIndustrialisation === false) {
+                        Non éligible
+                      } @else {
+                        Non calculé
+                      }
+                    }
+                  }
+                </p>
+              </div>
+              @if (canRequestIndustrialisation) {
+                <button type="button" class="action-btn" (click)="openIndustrialisation()">Demander industrialisation</button>
+              }
+            </div>
+            @if (!canRequestIndustrialisation) {
+              <p class="detail-panel__text">
+                La demande est disponible pour l'encadrant lorsque le projet est validé.
+              </p>
+            }
+          </section>
+        </div>
+      }
+      @case ('historique') {
         <div class="tab-panel">
-          <div class="placeholder">Section « Industrialisation » à venir.</div>
+          <section class="detail-panel historique-panel">
+            <h2 class="detail-panel__title">Historique du projet</h2>
+            @if (historiqueLoading) {
+              <div class="projet-detail__loading">Chargement...</div>
+            } @else if (historiqueError) {
+              <div class="tab-alert tab-alert--danger">{{ historiqueError }}</div>
+            } @else if (historiqueForbidden) {
+              <p class="detail-panel__text">Vous n'avez pas accès à l'historique de ce projet.</p>
+            } @else if (historique.length) {
+              <ol class="historique-timeline">
+                @for (h of historique; track h.id) {
+                  <li class="historique-entry">
+                    <span class="historique-dot"></span>
+                    <div class="historique-content">
+                      <span class="historique-date">{{ h.createdAt | date:'dd/MM/yyyy à HH:mm' }}</span>
+                      <strong class="historique-summary">{{ h.summary }}</strong>
+                      <span class="historique-meta">{{ actionLabels[h.action] }} · {{ h.actorPrenom }} {{ h.actorNom }}</span>
+                    </div>
+                  </li>
+                }
+              </ol>
+            } @else {
+              <p class="detail-panel__text">Aucun historique disponible pour ce projet.</p>
+            }
+          </section>
         </div>
       }
     }
   }
 </div>
+
+@if (industrialisationOpen) {
+  <div class="modal-backdrop" (click)="closeIndustrialisation()">
+    <div class="industrialisation-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h2>Demande d'industrialisation</h2>
+          <p class="modal-subtitle">Une seule demande guidee : type, questionnaire, puis soumission a la CI.</p>
+        </div>
+        <button type="button" class="modal-close" (click)="closeIndustrialisation()">Fermer</button>
+      </header>
+
+      <div class="industrialisation-steps">
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(1)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(1)"
+          [attr.aria-current]="isIndustrialisationStepActive(1) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">1</span>
+          <span>Type</span>
+        </span>
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(2)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(2)"
+          [attr.aria-current]="isIndustrialisationStepActive(2) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">2</span>
+          <span>Questionnaire</span>
+        </span>
+        <span
+          class="industrialisation-step"
+          [class.industrialisation-step--active]="isIndustrialisationStepActive(3)"
+          [class.industrialisation-step--completed]="isIndustrialisationStepCompleted(3)"
+          [attr.aria-current]="isIndustrialisationStepActive(3) ? 'step' : null"
+        >
+          <span class="industrialisation-step__number">3</span>
+          <span>Soumission</span>
+        </span>
+      </div>
+
+      @if (industrialisationError) { <div class="tab-alert tab-alert--danger">{{ industrialisationError }}</div> }
+      @if (industrialisationMessage) { <div class="tab-alert tab-alert--success">{{ industrialisationMessage }}</div> }
+      @if (hasBlockingEliminatoryAnswer()) {
+        <div class="tab-alert tab-alert--warning">Cette demande contient une ou plusieurs alertes eliminatoires. Elles ne bloquent pas l'envoi, mais la CI les verra.</div>
+      }
+      @for (warning of submissionWarnings; track warning) {
+        <div class="tab-alert tab-alert--warning">{{ warning }}</div>
+      }
+
+      @if (!industrialisationForm) {
+        <section class="industrialisation-summary">
+          <div>
+            <span>Projet</span>
+            <strong>{{ projet?.titre }}</strong>
+          </div>
+          <div>
+            <span>Score</span>
+            <strong>
+              @if ((evaluation?.scoreFinal ?? sujetProjet?.scoreFinal) != null) {
+                {{ evaluation?.scoreFinal ?? sujetProjet?.scoreFinal }} / 100
+              } @else {
+                non calculé
+              }
+            </strong>
+          </div>
+          <div>
+            <span>Éligibilité</span>
+            <strong>
+              @switch (evaluation?.eligibilityStatus) {
+                @case ('ELIGIBLE') { Éligible }
+                @case ('REVIEW_REQUIRED') { Revue requise }
+                @case ('NON_ELIGIBLE') { Non éligible }
+                @case ('NON_ELIGIBLE_EN_L_ETAT') { Non éligible en l'état }
+                @case ('NOT_EVALUABLE') { Non évaluable }
+                @default {
+                  @if (sujetProjet?.eligibleIndustrialisation === true) {
+                    Éligible
+                  } @else if ((evaluation?.scoreFinal ?? sujetProjet?.scoreFinal) != null && !sujetProjet?.hasEliminatoryWarnings) {
+                    Revue requise
+                  } @else if (sujetProjet?.eligibleIndustrialisation === false) {
+                    Non éligible
+                  } @else {
+                    Non calculé
+                  }
+                }
+              }
+            </strong>
+          </div>
+          <div>
+            <span>Livrables</span>
+            <strong>{{ livrables.length }}</strong>
+          </div>
+        </section>
+        <div class="form-grid">
+          <label>
+            Type
+            <select [(ngModel)]="industrialisationType">
+              <option value="INTERNE">{{ typeIndustrialisationLabels.INTERNE }}</option>
+              <option value="EXTERNE">{{ typeIndustrialisationLabels.EXTERNE }}</option>
+            </select>
+          </label>
+          <label class="form-grid__wide">
+            Commentaire
+            <textarea rows="4" [(ngModel)]="industrialisationCommentaire"></textarea>
+          </label>
+        </div>
+        <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy()" (click)="createIndustrialisation()">
+            {{ industrialisationSaving ? 'Preparation...' : 'Continuer vers le questionnaire' }}
+          </button>
+        } @else {
+          <div class="wizard-section-title">
+            <h3>Formulaire d'industrialisation</h3>
+            <span>{{ industrialisationForm.candidature.statut }}</span>
+          </div>
+          <div class="question-list">
+          @for (question of industrialisationForm.questions; track question.id) {
+            <section
+              class="question-card"
+              [class.question-card--invalid]="isRequiredQuestionInvalid(question) || (question.typeCritere === 'NOTE' && isRequiredNoteInvalid(question))"
+              [class.question-card--blocking]="automaticEliminatoryResult(question) === ReponseEliminatoire.NOT_OK"
+            >
+              <div class="question-card__header">
+                <div class="question-card__title">
+                  <div class="question-card__meta">
+                    <span>Question {{ question.ordre }}</span>
+                    <span>{{ questionTypeLabel(question) }}</span>
+                    @if (question.obligatoire) { <span>Obligatoire</span> }
+                  </div>
+                  <h3>{{ question.libelle }}</h3>
+                </div>
+                @if (question.typeCritere === 'ELIMINATOIRE') {
+                  <span class="criterion-badge criterion-badge--elim">Critere eliminatoire</span>
+                } @else {
+                  <span class="criterion-badge">Critere note</span>
+                }
+              </div>
+              @if (question.description) { <p class="question-card__description">{{ question.description }}</p> }
+
+              <div class="question-field">
+                <span class="question-field__label">Reponse</span>
+              @switch (question.typeReponse) {
+                @case ('BOOLEAN') {
+                  <div class="boolean-choice" role="radiogroup" [attr.aria-label]="question.libelle">
+                    <button
+                      type="button"
+                      class="boolean-choice__pill"
+                      [class.boolean-choice__pill--selected]="answers[question.id].valeurBoolean === true"
+                      [attr.aria-pressed]="answers[question.id].valeurBoolean === true"
+                      (click)="setBooleanAnswer(question, true)"
+                    >
+                      Oui
+                    </button>
+                    <button
+                      type="button"
+                      class="boolean-choice__pill"
+                      [class.boolean-choice__pill--selected]="answers[question.id].valeurBoolean === false"
+                      [attr.aria-pressed]="answers[question.id].valeurBoolean === false"
+                      (click)="setBooleanAnswer(question, false)"
+                    >
+                      Non
+                    </button>
+                  </div>
+                }
+                @case ('NUMERIQUE') {
+                  <input type="number" [(ngModel)]="answers[question.id].valeurNumerique" (ngModelChange)="onIndustrialisationAnswerChange()" />
+                }
+                @case ('URL') {
+                  <input type="url" [(ngModel)]="answers[question.id].valeurUrl" (ngModelChange)="onIndustrialisationAnswerChange()" />
+                }
+                @case ('FICHIER') {
+                  <div class="file-answer">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt"
+                      [disabled]="isIndustrialisationBusy()"
+                      (change)="uploadProof(question, $event)"
+                    />
+                    @if (isQuestionUploading(question)) {
+                      <span class="file-answer__state">Upload...</span>
+                    } @else if (hasUploadedProof(question)) {
+                      <span class="file-answer__state file-answer__state--ok">Preuve ajoutee</span>
+                    }
+                  </div>
+                }
+                @case ('CHOIX') {
+                  <input type="text" [(ngModel)]="answers[question.id].valeurTexte" (ngModelChange)="onIndustrialisationAnswerChange()" />
+                }
+                @default {
+                  <textarea rows="3" [(ngModel)]="answers[question.id].valeurTexte" (ngModelChange)="onIndustrialisationAnswerChange()"></textarea>
+                }
+              }
+                @if (isRequiredQuestionInvalid(question)) {
+                  <span class="field-error">Reponse obligatoire.</span>
+                }
+              </div>
+
+              @if (question.typeCritere === 'ELIMINATOIRE') {
+                <div class="auto-result-row">
+                  <span class="question-field__label">Resultat automatique</span>
+                  <span
+                    class="auto-result"
+                    [class.auto-result--ok]="automaticEliminatoryResult(question) === ReponseEliminatoire.OK"
+                    [class.auto-result--ko]="automaticEliminatoryResult(question) === ReponseEliminatoire.NOT_OK"
+                    [class.auto-result--pending]="automaticEliminatoryResult(question) === null"
+                  >
+                    {{ eliminatoryPreviewLabel(question) }}
+                  </span>
+                </div>
+              }
+              @if (question.typeCritere === 'NOTE') {
+                <label class="question-field question-field--compact">
+                  <span class="question-field__label">Note obtenue</span>
+                  <input
+                    type="number"
+                    [(ngModel)]="answers[question.id].noteObtenue"
+                    [class.input-invalid]="isRequiredNoteInvalid(question)"
+                    (ngModelChange)="onIndustrialisationAnswerChange()"
+                  />
+                  @if (isRequiredNoteInvalid(question)) {
+                    <span class="field-error">Note obligatoire pour ce critere.</span>
+                  }
+                </label>
+              }
+              <label class="question-field">
+                <span class="question-field__label">Justificatif</span>
+                <textarea rows="2" [(ngModel)]="answers[question.id].justificatif" (ngModelChange)="onIndustrialisationAnswerChange()"></textarea>
+              </label>
+            </section>
+          }
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="action-btn action-btn--ghost" [disabled]="isIndustrialisationBusy()" (click)="saveIndustrialisationAnswers()">Enregistrer brouillon</button>
+          <button type="button" class="action-btn" [disabled]="isIndustrialisationBusy()" (click)="submitIndustrialisation()">
+            {{ industrialisationSaving ? 'Soumission...' : 'Soumettre a la CI' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (eliminatoryWarningConfirmation) {
+  <div class="modal-backdrop" (click)="cancelEliminatoryWarnings()">
+    <div class="industrialisation-modal confirmation-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <h2>Alertes eliminatoires</h2>
+          <p class="modal-subtitle">{{ eliminatoryWarningConfirmation.message }}</p>
+        </div>
+        <button type="button" class="modal-close" (click)="cancelEliminatoryWarnings()">Fermer</button>
+      </header>
+      <div class="tab-alert tab-alert--warning">
+        Vous avez {{ eliminatoryWarningConfirmation.nbCriteresEliminatoires }} critere(s) eliminatoire(s) non satisfait(s).
+      </div>
+      <div class="question-list">
+        @for (detail of eliminatoryWarningConfirmation.details; track detail.source + detail.referenceId) {
+          <section class="question-card question-card--blocking">
+            <div class="question-card__header">
+              <div class="question-card__title">
+                <div class="question-card__meta">
+                  <span>{{ detail.source }}</span>
+                </div>
+                <h3>{{ detail.libelle }}</h3>
+              </div>
+              <span class="criterion-badge criterion-badge--elim">Alerte</span>
+            </div>
+            <p class="question-card__description">{{ detail.raison }}</p>
+          </section>
+        }
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="action-btn action-btn--ghost" (click)="cancelEliminatoryWarnings()">Annuler</button>
+        <button type="button" class="action-btn" (click)="confirmEliminatoryWarnings()">Continuer et envoyer</button>
+      </div>
+    </div>
+  </div>
+}

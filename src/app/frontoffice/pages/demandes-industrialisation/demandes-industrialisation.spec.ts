@@ -139,7 +139,7 @@ describe('DemandesIndustrialisation', () => {
     expect(fixture.componentInstance.error()).toBe('Impossible de charger vos demandes.');
     expect(fixture.componentInstance.loading()).toBeFalse();
     expect(fixture.nativeElement.textContent).toContain('Chargement impossible');
-    expect(fixture.nativeElement.textContent).toContain('Reessayer');
+    expect(fixture.nativeElement.textContent).toContain('Réessayer');
   });
 
   it('should filter requests by project title search', () => {
@@ -149,7 +149,7 @@ describe('DemandesIndustrialisation', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.filteredDemandes().map((demande) => demande.projetTitre)).toEqual(['ERP Finance']);
-    expect(fixture.nativeElement.textContent).toContain('1 demande(s) affichee(s) sur 3');
+    expect(fixture.nativeElement.textContent).toContain('1 demande(s) affichée(s) sur 3');
   });
 
   it('should filter requests by status', () => {
@@ -194,9 +194,9 @@ describe('DemandesIndustrialisation', () => {
     const fixture = createComponent();
     const component = fixture.componentInstance;
 
-    expect(component.statusLabel('GO')).toBe('GO confirme');
+    expect(component.statusLabel('GO')).toBe('Go');
     expect(component.statusClass('GO')).toBe('status-pill--go');
-    expect(component.statusPresentation('GO').icon).toBe('OK');
+    expect(component.statusPresentation('GO').icon).toBe('GO');
   });
 
   it('should return the correct label and class for NO_GO', () => {
@@ -222,7 +222,7 @@ describe('DemandesIndustrialisation', () => {
     const fixture = createComponent();
 
     expect(fixture.nativeElement.querySelectorAll('.decision-box').length).toBe(1);
-    expect(fixture.nativeElement.textContent).toContain('Motif de decision');
+    expect(fixture.nativeElement.textContent).toContain('Motif de décision');
     expect(fixture.nativeElement.textContent).toContain('Industrialisation validee par la CI.');
   });
 
@@ -230,8 +230,8 @@ describe('DemandesIndustrialisation', () => {
     industrialisationService.mesDemandes.and.returnValue(of([demandes[0]]));
     const fixture = createComponent();
 
-    expect(fixture.nativeElement.textContent).toContain("En attente de decision de la cellule d'industrialisation.");
-    expect(fixture.nativeElement.textContent).not.toContain('Motif de decision');
+    expect(fixture.nativeElement.textContent).toContain("En attente de décision de la cellule d'industrialisation.");
+    expect(fixture.nativeElement.textContent).not.toContain('Motif de décision');
   });
 
   it('should display the empty API state when no request exists', () => {
@@ -250,8 +250,8 @@ describe('DemandesIndustrialisation', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.filteredDemandes()).toEqual([]);
-    expect(fixture.nativeElement.textContent).toContain('Aucune demande ne correspond aux filtres selectionnes.');
-    expect(fixture.nativeElement.textContent).toContain('Reinitialiser les filtres');
+    expect(fixture.nativeElement.textContent).toContain('Aucune demande ne correspond aux filtres sélectionnés.');
+    expect(fixture.nativeElement.textContent).toContain('Réinitialiser les filtres');
   });
 
   it('should keep the existing CI workspace navigation for CI users', () => {
@@ -261,7 +261,7 @@ describe('DemandesIndustrialisation', () => {
     expect(fixture.componentInstance.isCi).toBeTrue();
     expect(industrialisationService.mesDemandes).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain("Ouvrir l'espace CI");
-    expect(fixture.nativeElement.textContent).toContain("Aller a l'espace CI");
+    expect(fixture.nativeElement.textContent).toContain("Aller à l'espace CI");
   });
 
   it('should render safely when optional fields are null or missing', () => {

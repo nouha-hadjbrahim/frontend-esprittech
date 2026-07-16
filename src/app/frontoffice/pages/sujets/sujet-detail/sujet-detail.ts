@@ -313,6 +313,83 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     return this.sujet?.technologies.slice(0, 4) ?? [];
   }
 
+  get encadrantInitials(): string {
+    const name = this.sujet?.encadrantNom?.trim() ?? '';
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+
+  get periodeLabel(): string {
+    if (!this.sujet) return '—';
+    const start = this.sujet.dateDebutRealisation || this.sujet.dateSoumission || this.sujet.dateCreation;
+    const end = this.sujet.dateTerminaison;
+    if (!start) return '—';
+    const fmt = (d: string) => d.slice(0, 10);
+    return end ? `${fmt(start)} → ${fmt(end)}` : `${fmt(start)} → …`;
+  }
+
+  get dureeLabel(): string {
+    if (!this.sujet) return '—';
+    const start = this.sujet.dateDebutRealisation || this.sujet.dateSoumission;
+    const end = this.sujet.dateTerminaison;
+    if (!start || !end) return '—';
+    const weeks = Math.max(
+      1,
+      Math.round((new Date(end).getTime() - new Date(start).getTime()) / (7 * 24 * 3600 * 1000))
+    );
+    return `${weeks} semaine${weeks > 1 ? 's' : ''}`;
+  }
+
+  get domaineLabel(): string {
+    return this.sujet?.domaines?.filter(Boolean).join(', ') || '—';
+  }
+
+  get titleMain(): string {
+    const titre = this.sujet?.titre?.trim() ?? '';
+    const parts = titre.split(/\s+/);
+    if (parts.length <= 1) return titre;
+    return parts.slice(0, -1).join(' ');
+  }
+
+  get titleAccent(): string {
+    const titre = this.sujet?.titre?.trim() ?? '';
+    const parts = titre.split(/\s+/);
+    if (parts.length <= 1) return '';
+    return parts[parts.length - 1];
+  }
+
+  get periodeStartLabel(): string {
+    if (!this.sujet) return '—';
+    const start = this.sujet.dateDebutRealisation || this.sujet.dateSoumission || this.sujet.dateCreation;
+    return start ? start.slice(0, 10) : '—';
+  }
+
+  get periodeEndLabel(): string {
+    if (!this.sujet?.dateTerminaison) return '…';
+    return this.sujet.dateTerminaison.slice(0, 10);
+  }
+
+  get dureeHeuresLabel(): string {
+    if (!this.sujet) return '';
+    const start = this.sujet.dateDebutRealisation || this.sujet.dateSoumission;
+    const end = this.sujet.dateTerminaison;
+    if (!start || !end) return '';
+    const hours = Math.max(
+      1,
+      Math.round((new Date(end).getTime() - new Date(start).getTime()) / (3600 * 1000))
+    );
+    return `= ${hours} heures`;
+  }
+
+  get capaciteHint(): string {
+    if (!this.sujet) return '';
+    if (this.capaciteEstComplete) return 'Capacité complète.';
+    const n = this.placesRestantes;
+    return `${n} place${n > 1 ? 's' : ''} encore disponible${n > 1 ? 's' : ''}.`;
+  }
+
   get isOwner(): boolean {
     const userId = this.authService.currentUser()?.id;
     if (!this.sujet || userId == null) return false;

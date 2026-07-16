@@ -103,7 +103,7 @@
     </div>
   } @else {
     <div class="sujets-disponibles__grid">
-      @for (sujet of filteredSujets; track sujet.id) {
+      @for (sujet of pagedSujets; track sujet.id) {
         <app-sujet-disponible-card
           [sujet]="sujet"
           [showPostuler]="isEtudiant()"
@@ -112,6 +112,14 @@
         />
       }
     </div>
+
+    <app-sujets-pagination
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalItems]="filteredSujets.length"
+      [pageSize]="pageSize"
+      (pageChange)="goToPage($event)"
+    />
   }
 </div>
 

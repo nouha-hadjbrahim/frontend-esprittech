@@ -1,15 +1,57 @@
 <div class="industrialisation-page">
-  <header class="industrialisation-header">
-    <div class="industrialisation-header__content">
-      <span class="industrialisation-header__eyebrow">EspritTECH</span>
-      <h1>Demandes d'industrialisation</h1>
-      <p>Liste des demandes soumises et des decisions de la cellule d'industrialisation.</p>
+  <header class="hero-banner">
+    <div class="hero-banner__main">
+      <span class="hero-banner__icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M4 20V9.5L8 7v2l4-2.5V9l4-2.5V20H4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M4 20h16M10 12v4M14 12v4M7 12v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <div class="hero-banner__copy">
+        <span class="hero-banner__eyebrow">ESPRITTECH · CELLULE D'INDUSTRIALISATION</span>
+        <h1>Demandes d'industrialisation</h1>
+        <p>Liste des demandes soumises et des décisions de la cellule d'industrialisation.</p>
+      </div>
     </div>
 
     @if (!isCi) {
-      <div class="industrialisation-header__counter" aria-label="Nombre total de demandes">
-        <span>Total demandes</span>
-        <strong>{{ demandes().length }}</strong>
+      <div class="hero-banner__stats" aria-label="Synthèse des demandes">
+        @for (indicator of summaryIndicators(); track indicator.label) {
+          <article class="hero-stat" [ngClass]="indicator.cssClass">
+            <div class="hero-stat__top">
+              <span>{{ indicator.label }}</span>
+              <span class="hero-stat__glyph" aria-hidden="true">
+                @switch (indicator.icon) {
+                  @case ('total') {
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <rect x="3" y="2" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+                      <path d="M6 5.5h4M6 8h4M6 10.5h2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                  }
+                  @case ('go') {
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+                      <path d="M5.5 8.2l1.8 1.8 3.2-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  }
+                  @case ('pending') {
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+                      <path d="M8 5v3.2L10.2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                  }
+                  @default {
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+                      <path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                  }
+                }
+              </span>
+            </div>
+            <strong>{{ indicator.value }}</strong>
+          </article>
+        }
       </div>
     }
 
@@ -22,8 +64,8 @@
     <section class="state-card state-card--compact">
       <span class="state-card__icon" aria-hidden="true">CI</span>
       <h2>Traitement dans l'espace CI</h2>
-      <p>Le suivi operationnel des decisions GO / No Go se fait dans l'espace dedie.</p>
-      <a routerLink="/ci/industrialisation" class="primary-link primary-link--state">Aller a l'espace CI</a>
+      <p>Le suivi opérationnel des décisions GO / No Go se fait dans l'espace dédié.</p>
+      <a routerLink="/ci/industrialisation" class="primary-link primary-link--state">Aller à l'espace CI</a>
     </section>
   } @else if (loading()) {
     <section class="loading-list" aria-label="Chargement des demandes" aria-busy="true">
@@ -47,168 +89,224 @@
       <span class="state-card__icon" aria-hidden="true">!</span>
       <h2>Chargement impossible</h2>
       <p>{{ error() }}</p>
-      <button type="button" class="secondary-action" (click)="loadDemandes()">Reessayer</button>
+      <button type="button" class="secondary-action" (click)="loadDemandes()">Réessayer</button>
     </section>
   } @else if (demandes().length === 0) {
     <section class="state-card">
       <span class="state-card__icon" aria-hidden="true">CI</span>
       <h2>Aucune demande d'industrialisation.</h2>
-      <p>Demarrez une demande depuis le detail d'un projet termine pour suivre son instruction CI.</p>
+      <p>Démarrez une demande depuis le détail d'un projet terminé pour suivre son instruction CI.</p>
     </section>
   } @else {
-    <section class="summary-grid" aria-label="Synthese des demandes">
-      @for (indicator of summaryIndicators(); track indicator.label) {
-        <article class="summary-card" [ngClass]="indicator.cssClass">
-          <span>{{ indicator.label }}</span>
-          <strong>{{ indicator.value }}</strong>
-        </article>
-      }
-    </section>
+    <div class="industrialisation-toolbar" aria-label="Recherche et filtres des demandes">
+      <div class="industrialisation-toolbar__search-box">
+        <svg class="industrialisation-toolbar__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input
+          type="text"
+          class="industrialisation-toolbar__search-input"
+          [(ngModel)]="searchTerm"
+          placeholder="Rechercher par titre ou référence"
+        />
+      </div>
 
-    <section class="filters-card" aria-label="Recherche et filtres des demandes">
-      <label class="filter-field filter-field--search" for="industrialisation-search">
-        <span>Projet</span>
-        <div class="search-control">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
-            <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
-          <input
-            id="industrialisation-search"
-            type="search"
-            [(ngModel)]="searchTerm"
-            placeholder="Rechercher par titre de projet"
-          />
-        </div>
-      </label>
+      <div class="industrialisation-toolbar__filters">
+        <app-filter-dropdown
+          class="industrialisation-toolbar__filter"
+          label="Statut"
+          [options]="statutOptions"
+          [value]="statusFilter"
+          (valueChange)="onStatusFilterChange($event)"
+        />
 
-      <label class="filter-field" for="industrialisation-status">
-        <span>Statut</span>
-        <select id="industrialisation-status" [(ngModel)]="statusFilter">
-          <option value="">Tous les statuts</option>
-          @for (statut of statuts; track statut) {
-            <option [value]="statut">{{ statusLabel(statut) }}</option>
-          }
-        </select>
-      </label>
-
-      <label class="filter-field" for="industrialisation-type">
-        <span>Type</span>
-        <select id="industrialisation-type" [(ngModel)]="typeFilter">
-          <option value="">Interne et externe</option>
-          @for (type of types; track type) {
-            <option [value]="type">{{ typeLabels[type] }}</option>
-          }
-        </select>
-      </label>
-
-      <button
-        type="button"
-        class="reset-button"
-        [disabled]="!hasActiveFilters()"
-        (click)="resetFilters()"
-      >
-        Reinitialiser
-      </button>
-    </section>
+        <app-filter-dropdown
+          class="industrialisation-toolbar__filter"
+          label="Type"
+          [options]="typeOptions"
+          [value]="typeFilter"
+          (valueChange)="onTypeFilterChange($event)"
+        />
+      </div>
+    </div>
 
     <p class="result-count" aria-live="polite">
-      {{ filteredDemandes().length }} demande(s) affichee(s) sur {{ demandes().length }}
+      {{ filteredDemandes().length }} demande(s) affichée(s) sur {{ demandes().length }}
     </p>
 
     @if (filteredDemandes().length === 0) {
       <section class="state-card">
         <span class="state-card__icon" aria-hidden="true">0</span>
-        <h2>Aucune demande ne correspond aux filtres selectionnes.</h2>
-        <p>Modifiez votre recherche ou reinitialisez les filtres pour revoir toutes les demandes.</p>
-        <button type="button" class="secondary-action" (click)="resetFilters()">Reinitialiser les filtres</button>
+        <h2>Aucune demande ne correspond aux filtres sélectionnés.</h2>
+        <p>Modifiez votre recherche ou réinitialisez les filtres pour revoir toutes les demandes.</p>
+        <button type="button" class="secondary-action" (click)="resetFilters()">Réinitialiser les filtres</button>
       </section>
     } @else {
       <section class="requests-list" aria-label="Liste des demandes d'industrialisation">
         @for (demande of filteredDemandes(); track demande.id) {
           @let status = statusPresentation(demande.statut);
-          <article class="request-card">
-            <div class="request-card__identity">
-              <div class="request-card__badges">
-                <span class="type-badge">{{ typeLabels[demande.typeIndustrialisation] }}</span>
-                @if (demande.projetCategorie) {
-                  <span class="meta-badge">{{ demande.projetCategorie }}</span>
-                }
-              </div>
-
-              <h2>{{ demande.projetTitre }}</h2>
-              <p class="request-card__description">{{ descriptionText(demande) }}</p>
-
-              @if (showSeparateComment(demande)) {
-                <p class="request-card__comment">
-                  <span>Commentaire demande</span>
-                  {{ demande.commentaire }}
-                </p>
-              }
-
-              <dl class="metadata-list">
-                <div>
-                  <dt>Reference</dt>
-                  <dd>{{ requestReference(demande) }}</dd>
-                </div>
-                <div>
-                  <dt>Demandeur</dt>
-                  <dd>{{ demande.demandeurNom || 'Non renseigne' }}</dd>
-                </div>
-                <div>
-                  <dt>Demande le</dt>
-                  <dd>{{ demande.dateDemande | date:'dd/MM/yyyy' }}</dd>
-                </div>
-                @if (demande.dateSoumission) {
-                  <div>
-                    <dt>Soumise le</dt>
-                    <dd>{{ demande.dateSoumission | date:'dd/MM/yyyy' }}</dd>
-                  </div>
-                }
-              </dl>
-            </div>
-
-            <div class="request-card__details">
-              <dl class="detail-grid">
-                <div>
-                  <dt>Orientation</dt>
-                  <dd>{{ demande.orientation || 'A definir' }}</dd>
-                </div>
-                <div>
-                  <dt>Score evaluation</dt>
-                  <dd>{{ scoreDisplay(demande) }}</dd>
-                </div>
-                <div>
-                  <dt>Eligibilite</dt>
-                  <dd>{{ eligibilityDisplay(demande) }}</dd>
-                </div>
-                @if (demande.projetDomaine) {
-                  <div>
-                    <dt>Domaine</dt>
-                    <dd>{{ demande.projetDomaine }}</dd>
-                  </div>
-                }
-              </dl>
-            </div>
-
-            <aside class="request-card__decision" aria-label="Statut et decision">
-              <span class="status-pill" [ngClass]="status.cssClass" [attr.aria-label]="status.ariaLabel">
-                <span class="status-pill__icon" aria-hidden="true">{{ status.icon }}</span>
-                {{ status.label }}
-              </span>
-
-              @if (hasDecision(demande)) {
-                <div class="decision-box">
-                  <span>Motif de decision</span>
-                  <p>{{ decisionReason(demande) }}</p>
-                  @if (demande.dateDecisionCI) {
-                    <small>Decision du {{ demande.dateDecisionCI | date:'dd/MM/yyyy' }}</small>
+          @let eligibility = eligibilityTone(demande);
+          @let decision = decisionTone(demande);
+          <article
+            class="request-card"
+            [class.request-card--go]="demande.statut === 'GO'"
+            [class.request-card--nogo]="demande.statut === 'NO_GO' || demande.statut === 'REFUSEE'"
+            [class.request-card--pending]="demande.statut !== 'GO' && demande.statut !== 'NO_GO' && demande.statut !== 'REFUSEE'"
+          >
+            <div class="request-card__body">
+              <div class="request-card__identity">
+                <div class="request-card__badges">
+                  <span
+                    class="type-badge"
+                    [class.type-badge--interne]="demande.typeIndustrialisation === 'INTERNE'"
+                    [class.type-badge--externe]="demande.typeIndustrialisation === 'EXTERNE'"
+                  >
+                    {{ demande.typeIndustrialisation }}
+                  </span>
+                  @if (demande.projetCategorie) {
+                    <span class="meta-badge">{{ demande.projetCategorie }}</span>
                   }
                 </div>
-              } @else {
-                <p class="pending-message">En attente de decision de la cellule d'industrialisation.</p>
-              }
-            </aside>
+
+                <h2>{{ demande.projetTitre }}</h2>
+                <p class="request-card__description">{{ descriptionText(demande) }}</p>
+
+                @if (showSeparateComment(demande)) {
+                  <div class="request-card__comment">
+                    <span>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M3 3.5h10v7H8l-3 2v-2H3v-7Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                      </svg>
+                      Commentaire demande
+                    </span>
+                    <p>{{ demande.commentaire }}</p>
+                  </div>
+                }
+
+                <dl class="metadata-list">
+                  <div>
+                    <dt># Référence</dt>
+                    <dd>{{ requestReference(demande) }}</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <circle cx="8" cy="6" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+                        <path d="M3.5 13c.8-2.2 2.4-3.3 4.5-3.3S11.7 10.8 12.5 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                      </svg>
+                      Demandeur
+                    </dt>
+                    <dd>{{ demande.demandeurNom || 'Non renseigné' }}</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+                        <path d="M2.5 6.5h11M5.5 2.5v2M10.5 2.5v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                      </svg>
+                      Demande le
+                    </dt>
+                    <dd>{{ demande.dateDemande | date:'dd/MM/yyyy' }}</dd>
+                  </div>
+                  @if (demande.dateSoumission) {
+                    <div>
+                      <dt>
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+                          <path d="M2.5 6.5h11M5.5 2.5v2M10.5 2.5v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                        </svg>
+                        Soumise le
+                      </dt>
+                      <dd>{{ demande.dateSoumission | date:'dd/MM/yyyy' }}</dd>
+                    </div>
+                  }
+                </dl>
+              </div>
+
+              <div class="request-card__panel">
+                <div class="request-card__status-row">
+                  <span class="status-pill" [ngClass]="status.cssClass" [attr.aria-label]="status.ariaLabel">
+                    <span class="status-pill__icon" aria-hidden="true">{{ status.icon }}</span>
+                    {{ status.label }}
+                  </span>
+                </div>
+
+                <div class="info-grid">
+                  <div class="info-box">
+                    <span class="info-box__label">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.3"/>
+                        <circle cx="8" cy="8" r="1.6" fill="currentColor"/>
+                        <path d="M8 2.5v2M8 11.5v2M2.5 8h2M11.5 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                      </svg>
+                      Orientation
+                    </span>
+                    <strong>{{ orientationDisplay(demande) }}</strong>
+                  </div>
+
+                  <div class="info-box" [ngClass]="'info-box--elig-' + eligibility">
+                    <span class="info-box__label">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M8 2.5l5 2v3.8c0 2.8-2 4.8-5 5.7-3-.9-5-2.9-5-5.7V4.5l5-2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                        <path d="M6 8.1l1.5 1.5L10.3 6.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      Éligibilité
+                    </span>
+                    <strong>{{ eligibilityDisplay(demande) }}</strong>
+                  </div>
+
+                  <div class="info-box info-box--score" [class.info-box--score-go]="demande.statut === 'GO'" [class.info-box--score-pending]="demande.statut !== 'GO' && demande.statut !== 'NO_GO' && demande.statut !== 'REFUSEE'">
+                    <div class="info-box__score-head">
+                      <span class="info-box__label">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path d="M5 3.5h6v2.2c0 1.5-1.2 2.8-2.7 3L9 11.5H7l.7-2.8C6.2 8.5 5 7.2 5 5.7V3.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                          <path d="M5 4.2H3.5V5c0 1 .7 1.7 1.5 1.8M11 4.2h1.5V5c0 1-.7 1.7-1.5 1.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                        </svg>
+                        Score évaluation
+                      </span>
+                      <strong>{{ scoreDisplay(demande) }}</strong>
+                    </div>
+                    <div class="score-bar" aria-hidden="true">
+                      <span
+                        class="score-bar__fill"
+                        [style.width.%]="scorePercent(demande)"
+                        [class.score-bar__fill--go]="demande.statut === 'GO'"
+                        [class.score-bar__fill--pending]="demande.statut !== 'GO' && demande.statut !== 'NO_GO' && demande.statut !== 'REFUSEE'"
+                        [class.score-bar__fill--nogo]="demande.statut === 'NO_GO' || demande.statut === 'REFUSEE'"
+                      ></span>
+                    </div>
+                  </div>
+
+                  @if (demande.projetDomaine) {
+                    <div class="info-box info-box--domain">
+                      <span class="info-box__label">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path d="M8 2.5l1.2 2.8L12.2 6l-2.5 2 .7 3.2L8 9.7 5.6 11.2l.7-3.2L3.8 6l3-0.7L8 2.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                        </svg>
+                        Domaine
+                      </span>
+                      <strong>{{ demande.projetDomaine }}</strong>
+                    </div>
+                  }
+
+                  @if (hasDecision(demande)) {
+                    <div class="info-box info-box--motif decision-box" [ngClass]="'info-box--motif-' + decision">
+                      <span class="info-box__label">
+                        <span class="motif-dot" aria-hidden="true"></span>
+                        Motif de décision
+                      </span>
+                      <strong>{{ decisionReason(demande) }}</strong>
+                      @if (demande.dateDecisionCI) {
+                        <small>Décision du {{ demande.dateDecisionCI | date:'dd/MM/yyyy' }}</small>
+                      }
+                    </div>
+                  } @else {
+                    <p class="pending-message">En attente de décision de la cellule d'industrialisation.</p>
+                  }
+                </div>
+              </div>
+            </div>
           </article>
         }
       </section>

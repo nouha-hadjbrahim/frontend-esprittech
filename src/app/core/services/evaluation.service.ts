@@ -13,9 +13,13 @@ import {
 export class EvaluationService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/projets`;
+  /** Endpoints dédiés au catalogue applicatif, indexés par l'identifiant de projet catalogue. */
+  private readonly catalogueBaseUrl = `${environment.apiUrl}/projets-catalogue`;
   private readonly calculationTimeoutMs = 320_000;
 
   private readonly inFlightCalculations =
+    new Map<number, Observable<EvaluationResponse>>();
+  private readonly inFlightCatalogueCalculations =
     new Map<number, Observable<EvaluationResponse>>();
 
   calculateScore(projetId: number): Observable<EvaluationResponse> {
@@ -37,6 +41,38 @@ export class EvaluationService {
 
     this.inFlightCalculations.set(projetId, request$);
     return request$;
+  }
+
+  /**
+   * Recalcule le score d'un projet du catalogue (indexé par l'identifiant de projet catalogue,
+   * pas par celui du sujet). Le backend résout le sujet d'origine et synchronise projet.score.
+   */
+  calculateProjetCatalogueScore(projetId: number): Observable<EvaluationResponse> {
+    const existing = this.inFlightCatalogueCalculations.get(projetId);
+    if (existing) {
+      return existing;
+    }
+
+    const request$ = this.http
+      .post<EvaluationResponse>(
+        `${this.catalogueBaseUrl}/${projetId}/calculer-score`,
+        {},
+      )
+      .pipe(
+        timeout(this.calculationTimeoutMs),
+        finalize(() => this.inFlightCatalogueCalculations.delete(projetId)),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+
+    this.inFlightCatalogueCalculations.set(projetId, request$);
+    return request$;
+  }
+
+  /** Dernière évaluation d'un projet du catalogue (indexé par l'identifiant de projet catalogue). */
+  getLatestProjetCatalogueEvaluation(projetId: number): Observable<EvaluationResponse> {
+    return this.http.get<EvaluationResponse>(
+      `${this.catalogueBaseUrl}/${projetId}/evaluation`,
+    );
   }
 
   isScoreCalculationRunning(projetId: number): boolean {
