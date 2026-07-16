@@ -300,7 +300,7 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
 
     if (this.scoreCooldownActive) {
       this.evaluationMessage = '';
-      this.evaluationError = `Le score vient d’être recalculé. Veuillez patienter ${this.scoreCooldownLabel} avant un nouveau recalcul.`;
+      this.evaluationError = '';
       return;
     }
 
@@ -333,16 +333,8 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
         this.loadEvaluation();
       },
       error: (err) => {
-        const retryAfterSeconds =
-          Number(err?.error?.retryAfterSeconds ?? err?.headers?.get?.('Retry-After') ?? this.SCORE_COOLDOWN_SECONDS);
-
-        if (err?.status === 409 || err?.status === 429) {
-          this.startScoreCooldown(Number.isNaN(retryAfterSeconds) ? this.SCORE_COOLDOWN_SECONDS : retryAfterSeconds);
-          this.evaluationError = `Le score vient d’être recalculé. Veuillez patienter ${this.scoreCooldownLabel} avant un nouveau recalcul.`;
-        } else {
-          this.evaluationError = err?.error?.detail ?? err?.error?.message ?? 'Recalcul impossible.';
-        }
-
+        this.clearScoreCooldown();
+        this.evaluationError = err?.error?.message ?? err?.error?.detail ?? 'Recalcul impossible.';
         this.evaluationMessage = '';
         this.recalculatingScore = false;
       },

@@ -75,6 +75,43 @@ describe('EvaluationService', () => {
     req.flush(mockRes);
   });
 
+  it('should use catalogue endpoints for catalogue evaluations', () => {
+    const mockRes: EvaluationResponse = {
+      id: 9,
+      sujetProjetId: null,
+      projetCatalogueId: 5,
+      evaluationContext: 'PROJET_CATALOGUE',
+      scoreFinal: 80,
+      eligibleIndustrialisation: true,
+      bloqueParEliminatoire: false,
+      dateCalcul: new Date().toISOString(),
+      commentaire: '',
+      resultats: []
+    };
+
+    service.calculateProjetCatalogueScore(5).subscribe(res => {
+      expect(res).toEqual(mockRes);
+    });
+    const calculateReq = http.expectOne(`${environment.apiUrl}/projets-catalogue/5/calculer-score`);
+    expect(calculateReq.request.method).toBe('POST');
+    expect(calculateReq.request.body).toEqual({});
+    calculateReq.flush(mockRes);
+
+    service.getLatestProjetCatalogueEvaluation(5).subscribe(res => {
+      expect(res).toEqual(mockRes);
+    });
+    const latestReq = http.expectOne(`${environment.apiUrl}/projets-catalogue/5/evaluation`);
+    expect(latestReq.request.method).toBe('GET');
+    latestReq.flush(mockRes);
+
+    service.getProjetCatalogueEvaluationHistory(5).subscribe(res => {
+      expect(res).toEqual([mockRes]);
+    });
+    const historyReq = http.expectOne(`${environment.apiUrl}/projets-catalogue/5/evaluations`);
+    expect(historyReq.request.method).toBe('GET');
+    historyReq.flush([mockRes]);
+  });
+
   it('should call history and validation workflow endpoints', () => {
     service.getEvaluationHistory(5).subscribe();
     const historyReq = http.expectOne(`${environment.apiUrl}/projets/5/evaluations`);

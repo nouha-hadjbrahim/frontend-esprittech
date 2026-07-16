@@ -87,7 +87,9 @@ export interface EvidenceReference {
 
 export interface EvaluationResponse {
   id: number;
-  sujetProjetId: number;
+  sujetProjetId?: number | null;
+  projetCatalogueId?: number | null;
+  evaluationContext?: 'SUJET_PROJET' | 'PROJET_CATALOGUE' | string | null;
   scoreFinal: number | null;
   eligibleIndustrialisation: boolean;
   bloqueParEliminatoire: boolean;

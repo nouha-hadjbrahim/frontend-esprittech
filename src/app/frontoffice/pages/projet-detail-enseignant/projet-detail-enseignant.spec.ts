@@ -1,9 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
+import { EvaluationResponse } from '../../../core/models/evaluation.model';
 import { ProjetDetails } from '../../../core/models/projet-catalogue.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { ProjetDetailEnseignant } from './projet-detail-enseignant';
 
 describe('ProjetDetailEnseignant', () => {
@@ -22,6 +24,31 @@ describe('ProjetDetailEnseignant', () => {
     chefValidateurId: null, chefValidateurNom: null, motifRefus: null,
     dateCreation: '2026-01-10T10:00:00', dateValidation: null,
     domaines: ['IA'], technologies: ['Python'], prerequis: ['Math'],
+    sujetId: null,
+  };
+
+  const validDetails: ProjetDetails = {
+    ...mockDetails,
+    statut: 'VALIDE',
+  };
+
+  const evaluation: EvaluationResponse = {
+    id: 10,
+    sujetProjetId: null,
+    projetCatalogueId: 1,
+    evaluationContext: 'PROJET_CATALOGUE',
+    scoreFinal: 82,
+    eligibleIndustrialisation: true,
+    bloqueParEliminatoire: false,
+    dateCalcul: '2026-07-16T10:00:00',
+    commentaire: 'Evaluation OK',
+    calculatedBy: 'ROLE_ENSEIGNANT Jean Dupont',
+    recalculationReason: 'Recalcul manuel projet catalogue',
+    resultats: [],
+    mlStatus: 'COMPLETED_WITH_WARNINGS',
+    mlGlobalConfidence: 0.7975,
+    processingStatus: 'PROCESSED',
+    eligibilityStatus: 'ELIGIBLE',
   };
 
   function createComponent(id: string = '1', url: string = '/frontoffice/mes-projets/1'): void {
@@ -34,6 +61,22 @@ describe('ProjetDetailEnseignant', () => {
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: (key: string) => key === 'id' ? id : null } } },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            currentUser: () => ({
+              id: 1,
+              nom: 'Dupont',
+              prenom: 'Jean',
+              email: 'jean@esprit.tn',
+              role: 'ROLE_ENSEIGNANT',
+              typeUtilisateur: 'ENSEIGNANT',
+              departement: null,
+              enabled: true,
+              createdAt: null,
+            }),
+          },
         },
       ],
     });
@@ -49,12 +92,27 @@ describe('ProjetDetailEnseignant', () => {
     httpTesting.expectOne(`${API}/projets-catalogue/${id}/livrables`).flush([]);
   }
 
+  function flushHistorique(id: string = '1'): void {
+    httpTesting.expectOne(`${API}/historique/projet/${id}`).flush([]);
+  }
+
+  function flushValidProjectWithNoEvaluation(): void {
+    httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
+      { message: 'Aucune evaluation trouvee' },
+      { status: 404, statusText: 'Not Found' },
+    );
+    flushHistorique();
+  }
+
   it('should create and load project', () => {
     createComponent();
     fixture.detectChanges();
     const req = httpTesting.expectOne(`${API}/projets/1`);
     req.flush(mockDetails);
     flushLivrables();
+    flushHistorique();
     expect(component.projet).toBeTruthy();
     expect(component.projet!.titre).toBe('Projet IA');
     expect(component.isLoading).toBe(false);
@@ -90,6 +148,7 @@ describe('ProjetDetailEnseignant', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/projets/1`).flush(mockDetails);
     flushLivrables();
+    flushHistorique();
     expect(component.backLink).toBe('/frontoffice/mes-projets');
     expect(component.backLabel).toBe('Mes projets');
   });
@@ -99,8 +158,83 @@ describe('ProjetDetailEnseignant', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/projets/1`).flush(mockDetails);
     flushLivrables();
+    flushHistorique();
     expect(component.activeTab).toBe('infos');
     component.setTab('livrables');
     expect(component.activeTab).toBe('livrables');
+  });
+
+  it('treats initial missing evaluation as empty state without technical error', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    flushValidProjectWithNoEvaluation();
+    fixture.detectChanges();
+
+    expect(component.evaluation).toBeNull();
+    expect(component.evaluationError).toBe('');
+    expect(fixture.nativeElement.textContent).toContain('Aucune évaluation enregistrée');
+  });
+
+  it('successful recalculation refreshes evaluation and starts one cooldown', fakeAsync(() => {
+    createComponent();
+    fixture.detectChanges();
+    flushValidProjectWithNoEvaluation();
+
+    component.recalculateScore();
+    const post = httpTesting.expectOne(`${API}/projets-catalogue/1/calculer-score`);
+    expect(post.request.method).toBe('POST');
+    post.flush(evaluation);
+
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
+    fixture.detectChanges();
+
+    expect(component.evaluation).toEqual(evaluation);
+    expect(component.evaluationError).toBe('');
+    expect(component.scoreCooldownActive).toBeTrue();
+    expect(fixture.nativeElement.textContent).not.toContain('Aucune évaluation enregistrée');
+    expect(fixture.nativeElement.querySelectorAll('.tab-alert--warning').length).toBe(1);
+
+    component.ngOnDestroy();
+    tick(3000);
+    expect(component.scoreCooldownRemaining).toBe(0);
+  }));
+
+  it('failed recalculation restores the button and does not start cooldown', () => {
+    createComponent();
+    fixture.detectChanges();
+    flushValidProjectWithNoEvaluation();
+
+    component.recalculateScore();
+    const post = httpTesting.expectOne(`${API}/projets-catalogue/1/calculer-score`);
+    post.flush(
+      {
+        code: 'EVALUATION_PERSISTENCE_FAILED',
+        message: "L'evaluation a ete calculee mais n'a pas pu etre enregistree.",
+      },
+      { status: 500, statusText: 'Server Error' },
+    );
+    fixture.detectChanges();
+
+    expect(component.recalculatingScore).toBeFalse();
+    expect(component.scoreCooldownActive).toBeFalse();
+    expect(component.evaluationError).toContain("n'a pas pu etre enregistree");
+    expect(fixture.nativeElement.querySelectorAll('.tab-alert--danger').length).toBe(1);
+    expect(fixture.nativeElement.querySelectorAll('.tab-alert--warning').length).toBe(0);
+  });
+
+  it('does not render duplicate cooldown alerts when already cooling down', () => {
+    createComponent();
+    fixture.detectChanges();
+    flushValidProjectWithNoEvaluation();
+
+    (component as any).startScoreCooldown(120);
+    component.recalculateScore();
+    fixture.detectChanges();
+
+    expect(component.evaluationError).toBe('');
+    expect(fixture.nativeElement.querySelectorAll('.tab-alert--warning').length).toBe(1);
+    expect(fixture.nativeElement.querySelectorAll('.tab-alert--danger').length).toBe(0);
+    component.ngOnDestroy();
   });
 });
