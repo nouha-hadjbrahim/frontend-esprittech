@@ -469,7 +469,7 @@
                   @let etat = affiliationState(t.id);
                   @if (isEnseignant()) {
                     @let dejaAffilie = !!enseignantTeam();
-                    @let canJoin = !dejaAffilie && !etat;
+                    @let canJoin = !dejaAffilie && etat !== 'EN_ATTENTE' && etat !== 'ACCEPTEE';
                     <div class="join-btn-wrap">
                       <button
                         type="button"
@@ -479,7 +479,7 @@
                         [disabled]="!canJoin"
                         (click)="rejoindreEquipe(t.id)"
                       >
-                        @if (etat !== 'REFUSEE') {
+                        @if (canJoin) {
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                             <circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2"/>
                             <path d="M1 12.5C1 10 2.8 8.5 5 8.5C7.2 8.5 9 10 9 12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
@@ -490,8 +490,6 @@
                           Mon équipe
                         } @else if (etat === 'EN_ATTENTE') {
                           Demande envoyée
-                        } @else if (etat === 'REFUSEE') {
-                          Refusée
                         } @else {
                           Rejoindre
                         }
