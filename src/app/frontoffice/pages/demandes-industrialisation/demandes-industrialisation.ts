@@ -16,6 +16,7 @@ import {
   FilterDropdown,
   FilterOption,
 } from '../../components/sujets/filter-dropdown/filter-dropdown';
+import { FrontofficeEmptyState } from '../../components/frontoffice-empty-state/frontoffice-empty-state';
 
 type StatutFilterValue = StatutIndustrialisation | '';
 type TypeFilterValue = TypeIndustrialisation | '';
@@ -36,7 +37,7 @@ interface SummaryIndicator {
 
 @Component({
   selector: 'app-demandes-industrialisation',
-  imports: [CommonModule, FormsModule, RouterLink, FilterDropdown],
+  imports: [CommonModule, FormsModule, RouterLink, FilterDropdown, FrontofficeEmptyState],
   templateUrl: './demandes-industrialisation.html',
   styleUrl: './demandes-industrialisation.css',
 })

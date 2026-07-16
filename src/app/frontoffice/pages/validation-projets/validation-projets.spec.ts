@@ -176,6 +176,7 @@ describe('ValidationProjets', () => {
     component.confirmerRefus();
 
     httpTesting.expectNone(`${API}/projets/1/refuser`);
+    expect(component.rejectError).toBeTruthy();
   });
 
   it('confirmerRefus with no target does nothing', () => {

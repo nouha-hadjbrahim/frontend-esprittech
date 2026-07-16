@@ -2,19 +2,17 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CategorieSujet, StatutSujet, SujetProjet } from '../../../core/models/sujet-projet.model';
 import { SujetProjetService } from '../../../core/services/sujet-projet.service';
-import { ValidationSujetCard } from '../../components/sujets/validation-sujet-card/validation-sujet-card';
 import { ValidationSujetListRow } from '../../components/sujets/validation-sujet-list-row/validation-sujet-list-row';
 import { FilterDropdown } from '../../components/sujets/filter-dropdown/filter-dropdown';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
+import { FrontofficeEmptyState } from '../../components/frontoffice-empty-state/frontoffice-empty-state';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../constants/sujet-projet.constants';
 
 const VALIDATION_STATUTS: StatutSujet[] = ['SOUMIS_EN_VALIDATION', 'EN_ATTENTE'];
 
-export type ValidationViewMode = 'cards' | 'list';
-
 @Component({
   selector: 'app-validation-sujets',
-  imports: [FormsModule, ValidationSujetCard, ValidationSujetListRow, FilterDropdown, ConfirmDialog],
+  imports: [FormsModule, ValidationSujetListRow, FilterDropdown, ConfirmDialog, FrontofficeEmptyState],
   templateUrl: './validation-sujets.html',
   styleUrl: './validation-sujets.css',
 })
@@ -29,7 +27,6 @@ export class ValidationSujets implements OnInit {
   selectedCategorie = '';
   selectedStatut = '';
   sortOrder = 'recent';
-  viewMode: ValidationViewMode = 'cards';
 
   validateConfirmOpen = false;
   rejectDialogOpen = false;
@@ -52,6 +49,17 @@ export class ValidationSujets implements OnInit {
     { value: 'recent', label: 'Plus récents' },
     { value: 'ancien', label: 'Plus anciens' },
   ];
+
+  get summary(): { total: number; enAttente: number; pfe: number; stage: number } {
+    return {
+      total: this.sujets.length,
+      enAttente: this.sujets.filter(
+        (s) => s.statut === 'SOUMIS_EN_VALIDATION' || s.statut === 'EN_ATTENTE',
+      ).length,
+      pfe: this.sujets.filter((s) => s.categorie === 'PFE').length,
+      stage: this.sujets.filter((s) => s.categorie === 'STAGE_INGENIEUR').length,
+    };
+  }
 
   ngOnInit(): void {
     this.loadSujets();
@@ -95,10 +103,6 @@ export class ValidationSujets implements OnInit {
 
   onSearchChange(): void {
     this.applyFilters();
-  }
-
-  setViewMode(mode: ValidationViewMode): void {
-    this.viewMode = mode;
   }
 
   openValidateConfirm(sujet: SujetProjet): void {

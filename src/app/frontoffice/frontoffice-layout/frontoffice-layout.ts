@@ -8,7 +8,15 @@ import { AuthService } from '../../core/services/auth.service';
 import { AffiliationService } from '../../core/services/affiliation.service';
 import { EquipeService } from '../../core/services/equipe.service';
 
-type NavIcon = 'layers' | 'document' | 'validation';
+type NavIcon =
+  | 'layers'
+  | 'document'
+  | 'validation'
+  | 'catalogue'
+  | 'projects'
+  | 'team'
+  | 'requests'
+  | 'teams';
 
 interface NavLink {
   label: string;
@@ -120,7 +128,6 @@ export class FrontofficeLayout implements OnInit {
   // Routes disponibles
   private readonly allLinks = {
     accueil: { label: 'Accueil', path: '/frontoffice/accueil' },
-    tableauDeBord: { label: 'Tableau de bord', path: '/frontoffice/tableau-de-bord' },
     catalogueSimple: { label: 'Catalogue', path: '/frontoffice/catalogue' },
     sujets: {
       label: 'Sujets',
@@ -135,17 +142,17 @@ export class FrontofficeLayout implements OnInit {
       label: 'Équipes de recherche',
       path: '/frontoffice/equipes-recherche/equipes',
       children: [
-        { label: 'Équipes', path: '/frontoffice/equipes-recherche/equipes' },
-        { label: 'Mes demandes', path: '/frontoffice/equipes-recherche/mes-demandes' },
+        { label: 'Équipes', path: '/frontoffice/equipes-recherche/equipes', icon: 'team' as NavIcon },
+        { label: 'Mes demandes', path: '/frontoffice/equipes-recherche/mes-demandes', icon: 'requests' as NavIcon },
       ]
     },
     equipesRechercheChef: {
       label: 'Équipes de recherche',
       path: '/frontoffice/equipes-recherche/mon-equipe',
       children: [
-        { label: 'Mon équipe', path: '/frontoffice/equipes-recherche/mon-equipe' },
-        { label: 'Demandes d\'affiliation', path: '/frontoffice/equipes-recherche/demandes' },
-        { label: 'Toutes les équipes', path: '/frontoffice/equipes-recherche/toutes-les-equipes' },
+        { label: 'Mon équipe', path: '/frontoffice/equipes-recherche/mon-equipe', icon: 'team' as NavIcon },
+        { label: 'Demandes d\'affiliation', path: '/frontoffice/equipes-recherche/demandes', icon: 'requests' as NavIcon },
+        { label: 'Toutes les équipes', path: '/frontoffice/equipes-recherche/toutes-les-equipes', icon: 'teams' as NavIcon },
       ]
     },
     mesCandidatures: { label: 'Mes candidatures', path: '/frontoffice/mes-candidatures' },
@@ -192,9 +199,11 @@ export class FrontofficeLayout implements OnInit {
    * l'enseignant est affilié (affiliation acceptée à une équipe de recherche).
    */
   private catalogueEnseignant(): NavLink {
-    const children: NavLink[] = [{ label: 'Catalogue', path: '/frontoffice/catalogue' }];
+    const children: NavLink[] = [
+      { label: 'Catalogue', path: '/frontoffice/catalogue', icon: 'catalogue' },
+    ];
     if (this.authService.isAffilieToEquipe()) {
-      children.push({ label: 'Mes projets', path: '/frontoffice/mes-projets' });
+      children.push({ label: 'Mes projets', path: '/frontoffice/mes-projets', icon: 'projects' });
     }
     return { label: 'Catalogue', path: '/frontoffice/catalogue', children };
   }
@@ -205,8 +214,8 @@ export class FrontofficeLayout implements OnInit {
       label: 'Catalogue',
       path: '/frontoffice/catalogue',
       children: [
-        { label: 'Catalogue', path: '/frontoffice/catalogue' },
-        { label: 'Validation projets', path: '/frontoffice/validation-projets' }
+        { label: 'Catalogue', path: '/frontoffice/catalogue', icon: 'catalogue' },
+        { label: 'Validation projets', path: '/frontoffice/validation-projets', icon: 'validation' },
       ]
     };
   }
@@ -231,7 +240,6 @@ export class FrontofficeLayout implements OnInit {
       case 'ROLE_CHEF_EQUIPE':
         return [
           this.allLinks.accueil,
-          this.allLinks.tableauDeBord,
           this.catalogueChef(),
           this.sujetsChef(),
           this.allLinks.demandesIndustrialisation,
@@ -240,7 +248,6 @@ export class FrontofficeLayout implements OnInit {
       case 'ROLE_CI':
         return [
           this.allLinks.accueil,
-          this.allLinks.tableauDeBord,
           this.allLinks.espaceCiIndustrialisation,
           this.allLinks.catalogueSimple,
           this.allLinks.sujetsDisponibles

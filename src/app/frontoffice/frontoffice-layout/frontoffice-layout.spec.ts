@@ -89,6 +89,7 @@ describe('FrontofficeLayout', () => {
     expect(labels[0]).toBe('Accueil');
     expect(labels).toContain('Sujets');
     expect(labels).not.toContain('Sujets disponibles');
+    expect(labels).not.toContain('Tableau de bord');
 
     const sujetsNode = component.navLinks().find((l) => l.label === 'Sujets');
     expect(sujetsNode?.children?.map((c) => c.label)).toEqual([
@@ -97,13 +98,14 @@ describe('FrontofficeLayout', () => {
       'Validation des sujets',
     ]);
     expect(sujetsNode?.path).toBe('/frontoffice/validation-sujets');
-    expect(component.navLinks().length).toBe(6);
+    expect(component.navLinks().length).toBe(5);
   });
 
   it('should build the CI navigation', () => {
     currentUser.set(userWith('ROLE_CI'));
     expect(component.navLinks()[0].label).toBe('Accueil');
-    expect(component.navLinks().length).toBe(5);
+    expect(component.navLinks().length).toBe(4);
+    expect(component.navLinks().map((l) => l.label)).not.toContain('Tableau de bord');
   });
 
   it('should toggle the profile dropdown', () => {

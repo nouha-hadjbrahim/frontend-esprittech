@@ -4,7 +4,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ProjetDetails } from '../../../core/models/projet-catalogue.model';
 import { ProjetCatalogueService } from '../../../core/services/projet-catalogue.service';
-import { TYPE_PROJET_LABELS } from '../../constants/projet-catalogue.constants';
+import { TYPE_PROJET_LABELS, DEFAULT_PROJET_COVER_IMAGE } from '../../constants/projet-catalogue.constants';
 import { HistoriqueService } from '../../../core/services/historique.service';
 import { HistoriqueResponse, ACTION_LABEL } from '../../../core/models/historique.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -27,6 +27,7 @@ export class ProjetDetailCatalogue implements OnInit {
 
   readonly typeLabels = TYPE_PROJET_LABELS;
   readonly actionLabels = ACTION_LABEL;
+  readonly defaultCoverImage = DEFAULT_PROJET_COVER_IMAGE;
   readonly canViewHistorique = HISTORIQUE_ROLES.includes(this.authService.getRole() ?? '');
 
   projet?: ProjetDetails;
@@ -36,11 +37,40 @@ export class ProjetDetailCatalogue implements OnInit {
   historique: HistoriqueResponse[] = [];
   isHistoriqueLoading = false;
   historiqueError = '';
-  /** Passe à true si le serveur refuse l'accès (ex : enseignant hors encadrement du projet) : section masquée sans alerte. */
   historiqueForbidden = false;
 
+  get coverImage(): string {
+    return this.projet?.coverImage || this.defaultCoverImage;
+  }
+
+  get objectifLines(): string[] {
+    if (!this.projet?.objectifs) return [];
+    const lines = this.projet.objectifs.split('\n').map((l) => l.trim()).filter(Boolean);
+    return lines.length > 0 ? lines : [this.projet.objectifs];
+  }
+
+  get encadrantInitials(): string {
+    const name = this.projet?.encadrantNom?.trim() ?? '';
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+
+  /** Alias conservé pour les tests existants. */
   get encadrantInitiale(): string {
-    return this.projet?.encadrantNom?.trim().charAt(0).toUpperCase() ?? '?';
+    return this.encadrantInitials.charAt(0);
+  }
+
+  get periodeLabel(): string {
+    if (!this.projet) return '—';
+    const debut = this.projet.dateDebut
+      ? new Date(this.projet.dateDebut).toLocaleDateString('fr-FR')
+      : '—';
+    const fin = this.projet.dateFin
+      ? new Date(this.projet.dateFin).toLocaleDateString('fr-FR')
+      : '—';
+    return `${debut} → ${fin}`;
   }
 
   ngOnInit(): void {

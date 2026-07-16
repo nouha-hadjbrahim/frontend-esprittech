@@ -116,11 +116,6 @@ export const frontofficeRoutes: Routes = [
                 loadComponent: () => import('./pages/mes-candidatures/mes-candidatures').then(m => m.MesCandidatures)
             },
             {
-                path: 'tableau-de-bord',
-                canActivate: [roleGuard(['ROLE_CHEF_EQUIPE', 'ROLE_CI'])],
-                loadComponent: () => import('./pages/tableau-de-bord/tableau-de-bord').then(m => m.TableauDeBord)
-            },
-            {
                 path: 'validation-sujets',
                 canActivate: [roleGuard(['ROLE_CHEF_EQUIPE'])],
                 loadComponent: () => import('./pages/validation-sujets/validation-sujets').then(m => m.ValidationSujets)

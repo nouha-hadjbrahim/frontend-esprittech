@@ -1,5 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AccueilStats } from '../../../core/models/accueil-stats.model';
+import { AccueilService } from '../../../core/services/accueil.service';
 import { AuthService } from '../../../core/services/auth.service';
 
 interface UniversCard {
@@ -17,8 +19,11 @@ interface UniversCard {
   templateUrl: './accueil.html',
   styleUrl: './accueil.css',
 })
-export class Accueil {
+export class Accueil implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly accueilService = inject(AccueilService);
+
+  readonly stats = signal<AccueilStats | null>(null);
 
   readonly partners = [
     'ESPRIT',
@@ -36,9 +41,9 @@ export class Accueil {
       icon: 'flash' as const,
     },
     {
-      title: 'Matching intelligent',
-      description: 'Étudiants et sujets rapprochés par compétences et capacité d’accueil.',
-      icon: 'target' as const,
+      title: 'Équipes de recherche',
+      description: 'Encadrants et laboratoires organisés par domaine et gouvernance d’équipe.',
+      icon: 'team' as const,
     },
     {
       title: 'Catalogue public unifié',
@@ -51,6 +56,19 @@ export class Accueil {
       icon: 'cycle' as const,
     },
   ];
+
+  ngOnInit(): void {
+    this.accueilService.getStats().subscribe({
+      next: (stats) => this.stats.set(stats),
+    });
+  }
+
+  formatStat(value: number | null | undefined, withPlus: boolean): string {
+    if (value == null) {
+      return '—';
+    }
+    return withPlus ? `${value}+` : String(value);
+  }
 
   get showUnivers(): boolean {
     return this.auth.getRole() !== 'ROLE_ETUDIANT';

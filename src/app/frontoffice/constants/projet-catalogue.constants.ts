@@ -1,5 +1,8 @@
 import { StatutProjet, TypeProjet } from '../../core/models/projet-catalogue.model';
 
+/** Image de couverture par défaut des projets sans visuel. */
+export const DEFAULT_PROJET_COVER_IMAGE = '/assets/images/catalogue-default-cover.png';
+
 /** Options de type pour les boutons de filtre et le formulaire. */
 export const TYPE_PROJET_OPTIONS: { value: TypeProjet; label: string }[] = [
   { value: 'PFE', label: 'PFE' },

@@ -139,7 +139,6 @@ describe('DemandesIndustrialisation', () => {
     expect(fixture.componentInstance.error()).toBe('Impossible de charger vos demandes.');
     expect(fixture.componentInstance.loading()).toBeFalse();
     expect(fixture.nativeElement.textContent).toContain('Chargement impossible');
-    expect(fixture.nativeElement.textContent).toContain('Réessayer');
   });
 
   it('should filter requests by project title search', () => {

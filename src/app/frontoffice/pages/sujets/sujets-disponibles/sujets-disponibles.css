@@ -166,7 +166,7 @@
 
 .sujets-disponibles__grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   align-items: stretch;
 }
@@ -174,6 +174,8 @@
 .sujets-disponibles__grid > app-sujet-disponible-card {
   display: block;
   height: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 0;
 }
 
@@ -215,7 +217,7 @@
 
 @media (max-width: 1100px) {
   .sujets-disponibles__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

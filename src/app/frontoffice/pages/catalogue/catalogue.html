@@ -27,31 +27,39 @@
     </div>
 
     <div class="catalogue__filters">
-      <select class="catalogue__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
-        @for (opt of statutOptions; track opt.value) {
-          <option [value]="opt.value">{{ opt.label }}</option>
-        }
-      </select>
+      <app-filter-dropdown
+        class="catalogue__filter"
+        label="Statut"
+        [options]="statutFilterOptions"
+        [value]="selectedStatut"
+        (valueChange)="onStatutChange($event)"
+      />
 
-      <select class="catalogue__select" [(ngModel)]="selectedDomaine" (ngModelChange)="onFilterChange()">
-        <option value="">Tous les domaines</option>
-        @for (d of domaineOptions; track d) {
-          <option [value]="d">{{ d }}</option>
-        }
-      </select>
+      <app-filter-dropdown
+        class="catalogue__filter"
+        label="Domaine"
+        [options]="domaineFilterOptions"
+        [value]="selectedDomaine"
+        (valueChange)="onDomaineChange($event)"
+      />
 
-      <select class="catalogue__select" [(ngModel)]="selectedAnnee" (ngModelChange)="onFilterChange()">
-        <option value="">Toutes les années</option>
-        @for (a of anneeOptions; track a) {
-          <option [value]="a">{{ a }}</option>
-        }
-      </select>
+      <app-filter-dropdown
+        class="catalogue__filter"
+        label="Année"
+        [options]="anneeFilterOptions"
+        [value]="selectedAnnee"
+        (valueChange)="onAnneeChange($event)"
+      />
 
-      <select class="catalogue__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
-        @for (opt of sortOptions; track opt.value) {
-          <option [value]="opt.value">{{ opt.label }}</option>
-        }
-      </select>
+      <app-filter-dropdown
+        class="catalogue__filter catalogue__filter--sort"
+        label="Plus récents"
+        [options]="sortOptions"
+        [value]="sortOrder"
+        defaultValue="recent"
+        [showSortIcon]="true"
+        (valueChange)="onSortChange($event)"
+      />
     </div>
   </div>
 
@@ -76,48 +84,116 @@
   @if (isLoading) {
     <div class="catalogue__loading">Chargement...</div>
   } @else if (filtered.length === 0) {
-    <div class="catalogue__empty">
-      <div class="catalogue__empty-icon" aria-hidden="true">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <h2 class="catalogue__empty-title">Aucun projet disponible</h2>
-      <p class="catalogue__empty-text">Aucun projet ne correspond à votre recherche.</p>
-    </div>
+    <app-frontoffice-empty-state
+      icon="catalogue"
+      title="Aucun projet disponible"
+      message="Aucun projet ne correspond à votre recherche."
+    />
   } @else {
     <div class="catalogue__grid">
       @for (projet of filtered; track projet.id) {
-        <div class="projet-card">
-          <div class="projet-card__cover">
-            @if (projet.coverImage) {
-              <img [src]="projet.coverImage" [alt]="'Couverture de ' + projet.titre" loading="lazy" />
-            }
-            <span class="badge projet-card__cover-type" [class]="typeLabels[projet.typeProjet].cssClass">
+        <article class="catalogue-card">
+          <div
+            class="catalogue-card__cover"
+            [class.catalogue-card__cover--fallback]="!projet.coverImage"
+          >
+            <img
+              [src]="projet.coverImage || defaultCoverImage"
+              [alt]="'Couverture de ' + projet.titre"
+              loading="lazy"
+            />
+            <span class="catalogue-card__cover-type badge" [class]="typeLabels[projet.typeProjet].cssClass">
               {{ typeLabels[projet.typeProjet].label }}
             </span>
-            <div class="score-note" [title]="'Score : ' + projet.score">
-              <span class="score-note__value">{{ projet.score }}</span><span class="score-note__max">/100</span>
+            <div class="catalogue-card__score" [title]="'Score : ' + projet.score">
+              <span class="catalogue-card__score-value">{{ projet.score }}</span>
+              <span class="catalogue-card__score-max">/100</span>
             </div>
           </div>
 
-          <h3 class="projet-card__title">{{ projet.titre }}</h3>
-          <p class="projet-card__description">{{ projet.description }}</p>
-          <p class="projet-card__meta">Encadrant : {{ projet.encadrantNom }}</p>
-          @if (projet.equipeNom) {
-            <p class="projet-card__meta">Équipe : {{ projet.equipeNom }}</p>
-          }
-
-          @if (projet.technologies.length) {
-            <div class="tags">
-              @for (t of projet.technologies; track t) { <span class="tag">{{ t }}</span> }
+          <div class="catalogue-card__body">
+            <div class="catalogue-card__tags">
+              <span class="catalogue-card__statut" [class]="statutLabels[projet.statut].cssClass">
+                <span class="catalogue-card__statut-dot" aria-hidden="true"></span>
+                {{ statutLabels[projet.statut].label }}
+              </span>
             </div>
-          }
 
-          <a class="details-link" [routerLink]="['/frontoffice/catalogue', projet.id]">Voir détails →</a>
-        </div>
+            @if (projet.domaines.length) {
+              <div class="catalogue-card__domains">
+                @for (domaine of projet.domaines; track domaine) {
+                  <span class="catalogue-card__domain-badge">
+                    <span class="catalogue-card__domain-dot" aria-hidden="true"></span>
+                    {{ domaine }}
+                  </span>
+                }
+              </div>
+            }
+
+            <h3 class="catalogue-card__title">{{ projet.titre }}</h3>
+            <p class="catalogue-card__description">{{ projet.description }}</p>
+
+            @if (projet.technologies.length) {
+              <div class="catalogue-card__techs">
+                @for (tech of visibleTechnologies(projet.technologies); track tech) {
+                  <span class="catalogue-card__tech">
+                    <span class="catalogue-card__tech-dot" aria-hidden="true"></span>
+                    {{ tech }}
+                  </span>
+                }
+                @if (extraTechCount(projet.technologies) > 0) {
+                  <span class="catalogue-card__tech">+{{ extraTechCount(projet.technologies) }}</span>
+                }
+              </div>
+            }
+
+            <div class="catalogue-card__mentor">
+              <span class="catalogue-card__avatar">{{ initiales(projet.encadrantNom) }}</span>
+              <div class="catalogue-card__mentor-info">
+                <p class="catalogue-card__mentor-name">{{ projet.encadrantNom }}</p>
+                <p class="catalogue-card__mentor-role">Encadrant · {{ primaryDomaine(projet) }}</p>
+              </div>
+            </div>
+
+            @if (projet.equipeNom) {
+              <div class="catalogue-card__team">
+                <span class="catalogue-card__team-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="6" cy="5.5" r="2.2" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M2.5 13.5C3.2 10.8 4.8 9.5 6 9.5C7.2 9.5 8.8 10.8 9.5 13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                    <circle cx="11.5" cy="6" r="1.8" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M10.2 13.5C10.7 11.6 11.7 10.8 12.8 10.8C13.7 10.8 14.5 11.4 15 13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <div class="catalogue-card__team-info">
+                  <p class="catalogue-card__team-name">{{ projet.equipeNom }}</p>
+                  <p class="catalogue-card__team-role">Équipe de recherche · {{ primaryDomaine(projet) }}</p>
+                </div>
+              </div>
+            }
+
+            <div class="catalogue-card__meta">
+              <span class="catalogue-card__meta-item">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <rect x="1.5" y="2.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M1.5 5.5H12.5" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M4.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <path d="M9.5 1V3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                {{ formatPeriode(projet) }}
+              </span>
+            </div>
+
+            <footer class="catalogue-card__footer">
+              <a class="catalogue-card__link" [routerLink]="['/frontoffice/catalogue', projet.id]">
+                Voir détails
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M3 7H11M8 4L11 7L8 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+            </footer>
+          </div>
+        </article>
       }
     </div>
   }

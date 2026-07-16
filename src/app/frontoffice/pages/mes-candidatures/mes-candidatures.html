@@ -87,27 +87,13 @@
   } @else if (loadError) {
     <div class="mes-candidatures__error">{{ loadError }}</div>
   } @else if (filteredCandidatures.length === 0) {
-    <div class="mes-candidatures__empty">
-      <div class="mes-candidatures__empty-icon" aria-hidden="true">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <rect x="10" y="8" width="28" height="34" rx="4" stroke="#fecaca" stroke-width="2"/>
-          <path d="M18 18H30M18 24H26M18 30H22" stroke="#fecaca" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="34" cy="14" r="9" fill="#fef2f2" stroke="#E23E3E" stroke-width="1.5"/>
-          <path d="M34 10V18M30 14H38" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <h2 class="mes-candidatures__empty-title">Aucune candidature trouvée</h2>
-      <p class="mes-candidatures__empty-text">
-        @if (candidatures.length === 0) {
-          Vous n'avez pas encore postulé à un sujet.
-        } @else {
-          Aucun résultat ne correspond à vos filtres.
-        }
-      </p>
-      <a routerLink="/frontoffice/sujets/disponibles" class="mes-candidatures__empty-btn">
-        Voir les sujets disponibles
-      </a>
-    </div>
+    <app-frontoffice-empty-state
+      icon="candidature"
+      title="Aucune candidature trouvée"
+      [message]="emptyMessage"
+      actionLabel="Voir les sujets disponibles"
+      actionLink="/frontoffice/sujets/disponibles"
+    />
   } @else {
     <p class="mes-candidatures__count">
       {{ filteredCandidatures.length }} candidature(s) affichée(s) sur {{ candidatures.length }}

@@ -128,31 +128,13 @@
   @if (isLoading) {
     <div class="mes-sujets__loading">Chargement des sujets...</div>
   } @else if (filteredSujets.length === 0) {
-    <div class="mes-sujets__empty">
-      <div class="mes-sujets__empty-icon" aria-hidden="true">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <rect x="8" y="12" width="32" height="28" rx="4" stroke="#e5e7eb" stroke-width="2"/>
-          <path d="M16 20H32M16 26H28M16 32H24" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="36" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
-          <path d="M33 14H39M36 11V17" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <h2 class="mes-sujets__empty-title">Aucun sujet trouvé</h2>
-      <p class="mes-sujets__empty-text">
-        @if (isChefEquipe && sujetScope === 'equipe') {
-          Aucun sujet déposé par les membres de votre équipe ne correspond à vos filtres.
-        } @else if (canDeposerSujet) {
-          Vous n'avez pas encore déposé de sujet ou aucun résultat ne correspond à vos filtres.
-        } @else {
-          Aucun résultat ne correspond à vos filtres.
-        }
-      </p>
-      @if (canDeposerSujet && (!isChefEquipe || sujetScope === 'mes')) {
-        <button type="button" class="mes-sujets__empty-btn" (click)="openModal()">
-          Déposer votre premier sujet
-        </button>
-      }
-    </div>
+    <app-frontoffice-empty-state
+      icon="sujet"
+      title="Aucun sujet trouvé"
+      [message]="emptyMessage"
+      [actionLabel]="emptyActionLabel"
+      (action)="openModal()"
+    />
   } @else if (viewMode === 'list') {
     <div class="mes-sujets__list">
       @for (sujet of pagedSujets; track sujet.id) {

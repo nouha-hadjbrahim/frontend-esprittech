@@ -173,7 +173,7 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     }
     items.push(
       { label: 'Livrables', icon: 'livrables' },
-      { label: 'Industrialisation', icon: 'progression' },
+      { label: 'Industrialisation', icon: 'industrialisation' },
     );
     return items;
   }
@@ -1072,6 +1072,27 @@ ngOnDestroy(): void {
 
   downloadLivrable(livrable: Livrable): string {
     return this.livrableService.downloadUrl(livrable.id);
+  }
+
+  livrableDisplayName(livrable: Livrable): string {
+    return livrable.originalFileName?.trim() || livrable.nom;
+  }
+
+  livrableDateLabel(livrable: Livrable): string {
+    if (!livrable.dateDepot) return '—';
+    return new Date(livrable.dateDepot).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  }
+
+  livrableSizeLabel(livrable: Livrable): string | null {
+    if (livrable.size == null || livrable.size <= 0) return null;
+    const bytes = livrable.size;
+    if (bytes < 1024) return `${bytes} o`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   noteResultDisplay(resultat: ResultatCritereResponse): string {

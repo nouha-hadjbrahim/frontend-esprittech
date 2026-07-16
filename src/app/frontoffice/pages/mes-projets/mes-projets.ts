@@ -4,7 +4,10 @@ import { RouterModule } from '@angular/router';
 import { ProjetCard, StatutProjet, TypeProjet } from '../../../core/models/projet-catalogue.model';
 import { ProjetCatalogueService } from '../../../core/services/projet-catalogue.service';
 import { AjouterProjetModal } from '../../components/projets/ajouter-projet-modal/ajouter-projet-modal';
+import { FrontofficeEmptyState } from '../../components/frontoffice-empty-state/frontoffice-empty-state';
+import { FilterDropdown } from '../../components/sujets/filter-dropdown/filter-dropdown';
 import {
+  DEFAULT_PROJET_COVER_IMAGE,
   STATUT_PROJET_LABELS,
   TYPE_PROJET_LABELS,
   TYPE_PROJET_OPTIONS,
@@ -13,7 +16,7 @@ import {
 /** Page « Mes projets » de l'enseignant : liste de ses projets déposés au catalogue. */
 @Component({
   selector: 'app-mes-projets',
-  imports: [FormsModule, RouterModule, AjouterProjetModal],
+  imports: [FormsModule, RouterModule, AjouterProjetModal, FrontofficeEmptyState, FilterDropdown],
   templateUrl: './mes-projets.html',
   styleUrl: './mes-projets.css',
 })
@@ -34,16 +37,26 @@ export class MesProjets implements OnInit {
 
   readonly typeLabels = TYPE_PROJET_LABELS;
   readonly statutLabels = STATUT_PROJET_LABELS;
+  readonly defaultCoverImage = DEFAULT_PROJET_COVER_IMAGE;
 
-  readonly typeOptions = [{ value: '', label: 'Tous les types' }, ...TYPE_PROJET_OPTIONS];
-  readonly statutOptions = [
-    { value: '', label: 'Tous les statuts' },
+  readonly typeFilterOptions = [
+    { value: '', label: 'Type' },
+    ...TYPE_PROJET_OPTIONS,
+  ];
+  readonly statutFilterOptions = [
+    { value: '', label: 'Statut' },
     ...Object.entries(STATUT_PROJET_LABELS).map(([value, info]) => ({ value, label: info.label })),
   ];
   readonly sortOptions = [
     { value: 'recent', label: 'Plus récents' },
     { value: 'ancien', label: 'Plus anciens' },
   ];
+
+  get emptyMessage(): string {
+    return this.projets.length === 0
+      ? "Vous n'avez encore soumis aucun projet."
+      : 'Aucun projet ne correspond a votre recherche.';
+  }
 
   ngOnInit(): void {
     this.load();
@@ -86,6 +99,22 @@ export class MesProjets implements OnInit {
     this.applyFilters();
   }
 
+  onTypeChange(value: string): void {
+    this.selectedType = value;
+    this.applyFilters();
+  }
+
+  onStatutChange(value: string): void {
+    this.selectedStatut = value;
+    this.applyFilters();
+  }
+
+  onSortChange(value: string): void {
+    this.sortOrder = value;
+    this.applyFilters();
+  }
+
+  /** Conservé pour les tests et appels internes. */
   onFilterChange(): void {
     this.applyFilters();
   }
@@ -119,5 +148,32 @@ export class MesProjets implements OnInit {
     });
 
     this.filtered = result;
+  }
+
+  initiales(nom: string): string {
+    return nom
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
+  }
+
+  primaryDomaine(projet: ProjetCard): string {
+    return projet.domaines[0] ?? 'Non renseigné';
+  }
+
+  visibleTechnologies(technologies: string[]): string[] {
+    return technologies.slice(0, 3);
+  }
+
+  extraTechCount(technologies: string[]): number {
+    return Math.max(0, technologies.length - 3);
+  }
+
+  formatPeriode(projet: ProjetCard): string {
+    const debut = new Date(projet.dateDebut).toLocaleDateString('fr-FR');
+    const fin = new Date(projet.dateFin).toLocaleDateString('fr-FR');
+    return `${debut} → ${fin}`;
   }
 }
