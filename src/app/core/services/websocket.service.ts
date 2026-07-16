@@ -78,10 +78,10 @@ export class WebSocketService {
         this.subscription = null;
         this.scheduleReconnect();
       },
-      onStompError: (frame) => {
+      onStompError: (frame: { headers: Record<string, string>; body?: string }) => {
         console.error('[WS] STOMP error:', frame.headers['message'], frame.headers, frame.body);
       },
-      onWebSocketError: (event) => {
+      onWebSocketError: (event: Event) => {
         console.error('[WS] WebSocket error:', event);
       },
     });
