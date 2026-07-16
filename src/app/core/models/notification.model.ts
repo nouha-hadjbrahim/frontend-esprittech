@@ -9,14 +9,14 @@ export type NotificationType =
   | 'AFFILIATION_REJETEE'
   | 'PROJET_VALIDE'
   | 'PROJET_REJETE'
+  | 'SUJET_DEMANDE'
   | 'SUJET_VALIDE'
   | 'SUJET_REJETE'
   | 'EVALUATION_CALCULEE'
   | 'EVALUATION_TERMINEE'
   | 'CI_DEMANDE_SOUMISE'
   | 'CI_DEMANDE_APPOUVEE'
-  | 'CI_DEMANDE_REJETEE'
-  | 'LIVRABLE_TELECHARGE';
+  | 'CI_DEMANDE_REJETEE';
 
 export interface Notification {
   id: number;

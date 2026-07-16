@@ -15,6 +15,7 @@ const NOTIFICATION_CONFIG: Record<NotificationType, { icon: string; color: strin
   AFFILIATION_REJETEE:   { icon: '❌', color: '#dc2626' },
   PROJET_VALIDE:         { icon: '✅', color: '#16a34a' },
   PROJET_REJETE:         { icon: '❌', color: '#dc2626' },
+  SUJET_DEMANDE:         { icon: '📝', color: '#f59e0b' },
   SUJET_VALIDE:          { icon: '✅', color: '#16a34a' },
   SUJET_REJETE:          { icon: '❌', color: '#dc2626' },
   EVALUATION_CALCULEE:   { icon: '📊', color: '#8b5cf6' },
@@ -22,7 +23,6 @@ const NOTIFICATION_CONFIG: Record<NotificationType, { icon: string; color: strin
   CI_DEMANDE_SOUMISE:    { icon: '📋', color: '#f59e0b' },
   CI_DEMANDE_APPOUVEE:   { icon: '✅', color: '#16a34a' },
   CI_DEMANDE_REJETEE:    { icon: '❌', color: '#dc2626' },
-  LIVRABLE_TELECHARGE:   { icon: '📎', color: '#3b82f6' },
 };
 
 @Component({
