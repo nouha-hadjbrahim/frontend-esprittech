@@ -13,24 +13,17 @@ export interface MessageResponse {
 }
 
 /**
- * Opérations réservées à l'administrateur : import du référentiel CSV,
- * création d'équipes et assignation des chefs.
+ * Opérations réservées à l'administrateur : gestion des utilisateurs, des
+ * sujets, création d'équipes et assignation des chefs.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/admin`;
 
-  /** Importe le référentiel à partir d'un fichier CSV (multipart, champ `file`). */
-  importCsv(file: File): Observable<MessageResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<MessageResponse>(`${this.baseUrl}/import-referentiel`, formData);
-  }
-
   // ----- Gestion des utilisateurs -----
 
-  /** Crée directement un utilisateur (action admin, sans référentiel). */
+  /** Crée directement un utilisateur (action admin). */
   createUser(request: CreateUserRequest): Observable<User> {
     return this.http.post<User>(`${this.baseUrl}/users`, request);
   }

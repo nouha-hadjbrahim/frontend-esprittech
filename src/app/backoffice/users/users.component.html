@@ -14,24 +14,6 @@
         </button>
     </div>
 
-    <!-- Import du référentiel CSV (source de vérité des inscriptions) -->
-    <div class="import-card">
-        <div class="import-head">
-            <h2>Importer le référentiel</h2>
-            <p>Fichier CSV : <code>nom,prenom,email,identifiant,type,telephone</code></p>
-        </div>
-        <div class="import-actions">
-            <label for="csv-import" class="sr-only">Importer un fichier CSV</label>
-            <input id="csv-import" type="file" accept=".csv" (change)="onFileSelected($event)">
-            <button class="add-btn" type="button" [disabled]="!selectedFile() || importing()"
-                (click)="importReferentiel()">
-                {{ importing() ? 'Import en cours…' : 'Importer le CSV' }}
-            </button>
-        </div>
-        <p *ngIf="importMessage()" class="import-success">{{ importMessage() }}</p>
-        <p *ngIf="importError()" class="import-error">{{ importError() }}</p>
-    </div>
-
     <div class="table-container">
         <div class="table-actions">
             <div class="search-field">
@@ -247,7 +229,7 @@
             <div class="modal-header">
                 <div class="modal-title-group">
                     <h2>Ajouter un utilisateur</h2>
-                    <p>Crée directement un compte (sans passer par le référentiel).</p>
+                    <p>Crée directement un compte (sans vérification Azure).</p>
                 </div>
                 <button class="close-btn" (click)="closeCreateModal()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
