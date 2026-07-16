@@ -88,19 +88,11 @@
   @if (isLoading) {
     <div class="sujets-disponibles__loading">Chargement des sujets...</div>
   } @else if (filteredSujets.length === 0) {
-    <div class="sujets-disponibles__empty">
-      <div class="sujets-disponibles__empty-icon" aria-hidden="true">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <h2 class="sujets-disponibles__empty-title">Aucun sujet disponible</h2>
-      <p class="sujets-disponibles__empty-text">
-        Aucun sujet ne correspond à votre recherche pour le moment.
-      </p>
-    </div>
+    <app-frontoffice-empty-state
+      icon="sujet"
+      title="Aucun sujet disponible"
+      message="Aucun sujet ne correspond à votre recherche pour le moment."
+    />
   } @else {
     <div class="sujets-disponibles__grid">
       @for (sujet of pagedSujets; track sujet.id) {

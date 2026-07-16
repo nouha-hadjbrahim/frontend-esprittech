@@ -10,6 +10,7 @@ import { PostulerModal } from '../../../components/sujets/postuler-modal/postule
 import { SujetDisponibleCard } from '../../../components/sujets/sujet-disponible-card/sujet-disponible-card';
 import { SujetsPagination } from '../../../components/sujets/sujets-pagination/sujets-pagination';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { FrontofficeEmptyState } from '../../../components/frontoffice-empty-state/frontoffice-empty-state';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 const CATALOGUE_STATUTS: StatutSujet[] = ['VALIDE', 'CANDIDATURE_OUVERTE'];
@@ -24,6 +25,7 @@ const PAGE_SIZE = 9;
     FilterDropdown,
     PostulerModal,
     ConfirmDialog,
+    FrontofficeEmptyState,
     SujetsPagination,
   ],
   templateUrl: './sujets-disponibles.html',

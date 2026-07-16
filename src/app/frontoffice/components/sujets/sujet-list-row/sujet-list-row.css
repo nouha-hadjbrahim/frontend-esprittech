@@ -77,11 +77,23 @@
 }
 
 .sujet-list-row__type {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #111827;
+  color: #374151;
+}
+
+.sujet-list-row__meta-sep {
+  color: #d1d5db;
+  font-size: 13px;
+  line-height: 1;
 }
 
 .sujet-list-row__statut {

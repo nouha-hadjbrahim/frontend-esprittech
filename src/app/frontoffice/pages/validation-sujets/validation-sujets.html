@@ -1,9 +1,38 @@
 <div class="validation-sujets">
-  <header class="validation-sujets__header">
-    <h1 class="validation-sujets__title">Validation des sujets</h1>
-    <p class="validation-sujets__subtitle">
-      Sujets soumis par les enseignants de votre équipe, en attente de décision.
-    </p>
+  <header class="validation-hero-banner">
+    <div class="validation-hero-banner__main">
+      <span class="validation-hero-banner__icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M14 3v4h4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8.5 12.5 10.5 14.5 15 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <div class="validation-hero-banner__copy">
+        <span class="validation-hero-banner__eyebrow">ESPRITTECH · ÉQUIPES RDI</span>
+        <h1>Validation des sujets</h1>
+        <p>Sujets soumis par les enseignants de votre équipe, en attente de décision.</p>
+      </div>
+    </div>
+
+    <div class="validation-hero-banner__stats" aria-label="Synthèse des demandes">
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>Total</span></div>
+        <strong>{{ summary.total }}</strong>
+      </article>
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>En attente</span></div>
+        <strong>{{ summary.enAttente }}</strong>
+      </article>
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>PFE</span></div>
+        <strong>{{ summary.pfe }}</strong>
+      </article>
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>Stage</span></div>
+        <strong>{{ summary.stage }}</strong>
+      </article>
+    </div>
   </header>
 
   <div class="validation-sujets__toolbar">
@@ -47,27 +76,6 @@
         [showSortIcon]="true"
         (valueChange)="onSortChange($event)"
       />
-
-      <div class="validation-sujets__view-toggle" role="group" aria-label="Mode d'affichage">
-        <button
-          type="button"
-          class="validation-sujets__view-btn"
-          [class.validation-sujets__view-btn--active]="viewMode === 'cards'"
-          (click)="setViewMode('cards')"
-          [attr.aria-pressed]="viewMode === 'cards'"
-        >
-          Cartes
-        </button>
-        <button
-          type="button"
-          class="validation-sujets__view-btn"
-          [class.validation-sujets__view-btn--active]="viewMode === 'list'"
-          (click)="setViewMode('list')"
-          [attr.aria-pressed]="viewMode === 'list'"
-        >
-          Liste
-        </button>
-      </div>
     </div>
   </div>
 
@@ -75,36 +83,22 @@
     <div class="alert">{{ loadError }}</div>
   }
 
-  @if (!isLoading) {
+  @if (!isLoading && filteredSujets.length > 0) {
     <p class="validation-sujets__count">{{ filteredSujets.length }} demande(s)</p>
   }
 
   @if (isLoading) {
     <div class="validation-sujets__loading">Chargement des demandes...</div>
   } @else if (filteredSujets.length === 0) {
-    <div class="validation-sujets__empty">
-      <h2 class="validation-sujets__empty-title">Aucune demande en attente</h2>
-      <p class="validation-sujets__empty-text">
-        Aucun sujet ne correspond à vos filtres pour le moment.
-      </p>
-      <button type="button" class="validation-sujets__retry-btn" (click)="loadSujets()">Réessayer</button>
-    </div>
-  } @else if (viewMode === 'list') {
+    <app-frontoffice-empty-state
+      icon="sujet"
+      title="Aucune demande en attente"
+      message="Aucun sujet ne correspond à vos filtres pour le moment."
+    />
+  } @else {
     <div class="validation-sujets__list">
       @for (sujet of filteredSujets; track sujet.id) {
         <app-validation-sujet-list-row
-          [sujet]="sujet"
-          [validating]="isActionLoading(sujet)"
-          [rejecting]="isActionLoading(sujet)"
-          (validate)="openValidateConfirm(sujet)"
-          (reject)="openRejectDialog(sujet)"
-        />
-      }
-    </div>
-  } @else {
-    <div class="validation-sujets__grid">
-      @for (sujet of filteredSujets; track sujet.id) {
-        <app-validation-sujet-card
           [sujet]="sujet"
           [validating]="isActionLoading(sujet)"
           [rejecting]="isActionLoading(sujet)"

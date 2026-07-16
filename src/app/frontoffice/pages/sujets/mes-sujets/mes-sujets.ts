@@ -10,6 +10,7 @@ import { SujetListRow } from '../../../components/sujets/sujet-list-row/sujet-li
 import { SujetsPagination } from '../../../components/sujets/sujets-pagination/sujets-pagination';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { GererCandidaturesModal } from '../../../components/sujets/gerer-candidatures-modal/gerer-candidatures-modal';
+import { FrontofficeEmptyState } from '../../../components/frontoffice-empty-state/frontoffice-empty-state';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
 
 export type ViewMode = 'cards' | 'list';
@@ -27,6 +28,7 @@ const PAGE_SIZE = 9;
     FilterDropdown,
     ConfirmDialog,
     GererCandidaturesModal,
+    FrontofficeEmptyState,
     SujetsPagination,
   ],
   templateUrl: './mes-sujets.html',
@@ -84,6 +86,22 @@ export class MesSujets implements OnInit {
 
   get canDeposerSujet(): boolean {
     return this.isEnseignant || this.isChefEquipe;
+  }
+
+  get emptyMessage(): string {
+    if (this.isChefEquipe && this.sujetScope === 'equipe') {
+      return 'Aucun sujet depose par les membres de votre equipe ne correspond a vos filtres.';
+    }
+    if (this.canDeposerSujet) {
+      return "Vous n'avez pas encore depose de sujet ou aucun resultat ne correspond a vos filtres.";
+    }
+    return 'Aucun resultat ne correspond a vos filtres.';
+  }
+
+  get emptyActionLabel(): string | undefined {
+    return this.canDeposerSujet && (!this.isChefEquipe || this.sujetScope === 'mes')
+      ? 'Deposer votre premier sujet'
+      : undefined;
   }
 
   get pageTitle(): string {

@@ -12,22 +12,22 @@
   <div class="sujet-list-row__content">
     <div class="sujet-list-row__tags">
       <span class="sujet-list-row__domain">{{ primaryDomaine }}</span>
-      <span class="sujet-list-row__type">{{ categorieShortLabel }}</span>
-      <span class="sujet-list-row__statut" [class]="statutListClass">
-        <span class="sujet-list-row__statut-dot" [class]="statusDotClass" aria-hidden="true"></span>
+      <span class="sujet-list-row__type">{{ typeShortLabel }}</span>
+      <span class="sujet-list-row__statut" [class]="statutBadge.listClass">
+        <span class="sujet-list-row__statut-dot" [class]="statutBadge.dotClass" aria-hidden="true"></span>
         {{ statutBadge.label }}
       </span>
     </div>
 
-    <h3 class="sujet-list-row__title">{{ sujet.titre }}</h3>
+    <h3 class="sujet-list-row__title">{{ projet.titre }}</h3>
     <p class="sujet-list-row__description">{{ shortDescription }}</p>
 
     <div class="sujet-list-row__meta">
       <span class="sujet-list-row__avatar" aria-hidden="true">{{ initials }}</span>
-      <span class="sujet-list-row__author">{{ sujet.encadrantNom || 'Encadrant' }}</span>
-      @if (sujet.encadrantEmail) {
+      <span class="sujet-list-row__author">{{ projet.encadrantNom || 'Encadrant' }}</span>
+      @if (projet.equipeNom) {
         <span class="sujet-list-row__meta-sep">·</span>
-        <span class="sujet-list-row__meta-item">{{ sujet.encadrantEmail }}</span>
+        <span class="sujet-list-row__meta-item">{{ projet.equipeNom }}</span>
       }
       <span class="sujet-list-row__meta-sep">·</span>
       <span class="sujet-list-row__meta-item">
@@ -51,7 +51,7 @@
 
   <div class="sujet-list-row__actions">
     <a
-      [routerLink]="['/frontoffice/sujets', sujet.id]"
+      [routerLink]="['/frontoffice/validation-projets', projet.id]"
       class="sujet-list-row__btn"
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">

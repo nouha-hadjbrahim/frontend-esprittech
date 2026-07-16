@@ -1,6 +1,75 @@
-<div class="page-container">
-  <h1>Validation projets</h1>
-  <p class="page-subtitle">Projets soumis par les enseignants de votre équipe, en attente de décision.</p>
+<div class="validation-projets">
+  <header class="validation-hero-banner">
+    <div class="validation-hero-banner__main">
+      <span class="validation-hero-banner__icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M14 3v4h4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8.5 12.5 10.5 14.5 15 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <div class="validation-hero-banner__copy">
+        <span class="validation-hero-banner__eyebrow">ESPRITTECH · ÉQUIPES RDI</span>
+        <h1>Validation des projets</h1>
+        <p>Projets soumis par les enseignants de votre équipe, en attente de décision.</p>
+      </div>
+    </div>
+
+    <div class="validation-hero-banner__stats" aria-label="Synthèse des demandes">
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>Total</span></div>
+        <strong>{{ summary.total }}</strong>
+      </article>
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>En attente</span></div>
+        <strong>{{ summary.enAttente }}</strong>
+      </article>
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>PFE</span></div>
+        <strong>{{ summary.pfe }}</strong>
+      </article>
+      <article class="validation-hero-stat">
+        <div class="validation-hero-stat__top"><span>Stage</span></div>
+        <strong>{{ summary.stage }}</strong>
+      </article>
+    </div>
+  </header>
+
+  <div class="validation-projets__toolbar">
+    <div class="validation-projets__search-box">
+      <svg class="validation-projets__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="validation-projets__search-input"
+        placeholder="Rechercher une demande..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="validation-projets__filters">
+      <app-filter-dropdown
+        class="validation-projets__filter"
+        label="Type"
+        [options]="typeFilterOptions"
+        [value]="selectedType"
+        (valueChange)="onTypeChange($event)"
+      />
+
+      <app-filter-dropdown
+        class="validation-projets__filter validation-projets__filter--sort"
+        label="Plus récents"
+        [options]="sortOptions"
+        [value]="sortOrder"
+        defaultValue="recent"
+        [showSortIcon]="true"
+        (valueChange)="onSortChange($event)"
+      />
+    </div>
+  </div>
 
   @if (successMessage) {
     <div class="alert alert--success">{{ successMessage }}</div>
@@ -9,60 +78,28 @@
     <div class="alert alert--error">{{ errorMessage }}</div>
   }
 
+  @if (!isLoading && filtered.length > 0) {
+    <p class="validation-projets__count">{{ filtered.length }} demande(s)</p>
+  }
+
   @if (isLoading) {
-    <p class="hint">Chargement...</p>
-  } @else if (projets.length === 0) {
-    <div class="empty-card">Aucun projet en attente de validation pour le moment.</div>
+    <div class="validation-projets__loading">Chargement des demandes...</div>
+  } @else if (filtered.length === 0) {
+    <app-frontoffice-empty-state
+      icon="catalogue"
+      title="Aucun projet en attente"
+      message="Aucun projet ne correspond à vos filtres pour le moment."
+    />
   } @else {
-    <div class="cards">
-      @for (projet of projets; track projet.id) {
-        <div class="projet-card">
-          <div class="projet-card__header">
-            <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">
-              {{ typeLabels[projet.typeProjet].label }}
-            </span>
-            <span class="badge badge--soumis">Soumis en validation</span>
-          </div>
-
-          <h3 class="projet-card__title">{{ projet.titre }}</h3>
-          <p class="projet-card__meta">Encadrant : {{ projet.encadrantNom }}</p>
-          <p class="projet-card__description">{{ projet.description }}</p>
-
-          @if (projet.domaines.length) {
-            <p class="projet-card__meta">Domaines : {{ projet.domaines.join(', ') }}</p>
-          }
-          @if (projet.technologies.length) {
-            <p class="projet-card__meta">Technologies : {{ projet.technologies.join(', ') }}</p>
-          }
-
-          @if (motifTargetId === projet.id) {
-            <div class="motif-form">
-              <textarea
-                class="textarea"
-                rows="2"
-                placeholder="Motif du refus (5 caractères minimum)..."
-                [(ngModel)]="motifText"
-              ></textarea>
-              <div class="motif-actions">
-                <button type="button" class="btn btn--ghost" (click)="annulerMotif()">Annuler</button>
-                <button
-                  type="button"
-                  class="btn btn--danger"
-                  [disabled]="motifInvalide || actionLoadingId === projet.id"
-                  (click)="confirmerRefus()"
-                >Confirmer le refus</button>
-              </div>
-            </div>
-          } @else {
-            <div class="projet-card__actions">
-              <button type="button" class="btn btn--success"
-                      [disabled]="actionLoadingId === projet.id" (click)="demanderValidation(projet)">Valider</button>
-              <button type="button" class="btn btn--danger"
-                      [disabled]="actionLoadingId === projet.id" (click)="ouvrirMotif(projet)">Refuser</button>
-              <a class="btn btn--ghost" [routerLink]="['/frontoffice/validation-projets', projet.id]">Voir détails</a>
-            </div>
-          }
-        </div>
+    <div class="validation-projets__list">
+      @for (projet of filtered; track projet.id) {
+        <app-validation-projet-list-row
+          [projet]="projet"
+          [validating]="isActionLoading(projet) && validerTarget?.id === projet.id"
+          [rejecting]="isActionLoading(projet) && motifTargetId === projet.id"
+          (validate)="demanderValidation(projet)"
+          (reject)="ouvrirMotif(projet)"
+        />
       }
     </div>
   }
@@ -73,8 +110,48 @@
   title="Valider le projet"
   [message]="validerTarget ? 'Confirmez-vous la validation de « ' + validerTarget.titre + ' » ? Il sera publié au catalogue.' : ''"
   confirmLabel="Valider"
+  cancelLabel="Annuler"
   [showIcon]="false"
   [loading]="actionLoadingId !== null"
   (confirmed)="confirmerValidation()"
   (cancelled)="annulerValidation()"
-></app-confirm-dialog>
+/>
+
+@if (motifTargetId !== null) {
+  <div class="reject-overlay" (click)="annulerMotif()">
+    <div class="reject-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3 class="reject-dialog__title">Refuser le projet</h3>
+      <p class="reject-dialog__message">
+        Indiquez le motif de refus pour « {{ projetEnRefus?.titre }} ». Ce motif sera enregistré (5 caractères minimum).
+      </p>
+      <textarea
+        class="reject-dialog__textarea"
+        rows="4"
+        placeholder="Motif du refus..."
+        [(ngModel)]="motifText"
+        [disabled]="actionLoadingId !== null"
+      ></textarea>
+      @if (rejectError) {
+        <p class="reject-dialog__error">{{ rejectError }}</p>
+      }
+      <div class="reject-dialog__actions">
+        <button
+          type="button"
+          class="reject-dialog__btn reject-dialog__btn--cancel"
+          [disabled]="actionLoadingId !== null"
+          (click)="annulerMotif()"
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="reject-dialog__btn reject-dialog__btn--confirm"
+          [disabled]="actionLoadingId !== null"
+          (click)="confirmerRefus()"
+        >
+          {{ actionLoadingId !== null ? 'Traitement…' : 'Refuser' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

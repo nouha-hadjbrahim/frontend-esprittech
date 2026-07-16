@@ -16,6 +16,7 @@ import { ModifierEquipeModal } from './modifier-equipe-modal/modifier-equipe-mod
 import { AjouterMembreModal } from './ajouter-membre-modal/ajouter-membre-modal';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { FilterDropdown } from '../../components/sujets/filter-dropdown/filter-dropdown';
+import { FrontofficeEmptyState } from '../../components/frontoffice-empty-state/frontoffice-empty-state';
 
 @Component({
   selector: 'app-equipes-recherche',
@@ -28,6 +29,7 @@ import { FilterDropdown } from '../../components/sujets/filter-dropdown/filter-d
     AjouterMembreModal,
     ConfirmDialog,
     FilterDropdown,
+    FrontofficeEmptyState,
   ],
   templateUrl: './equipes-recherche.html',
   styleUrl: './equipes-recherche.scss',
@@ -182,9 +184,11 @@ export class EquipesRecherche implements OnInit {
     return this.affiliations().filter((r) => r.equipeId === team.id);
   });
 
-  chefPendingCount = computed(() =>
-    this.myTeamAffiliations().filter((r) => r.statut === 'EN_ATTENTE').length,
+  myTeamPendingAffiliations = computed(() =>
+    this.myTeamAffiliations().filter((r) => r.statut === 'EN_ATTENTE'),
   );
+
+  chefPendingCount = computed(() => this.myTeamPendingAffiliations().length);
 
   myDemandes = computed(() => {
     const user = this.currentUser();
@@ -197,11 +201,11 @@ export class EquipesRecherche implements OnInit {
   );
 
   affiliationSource = computed(() =>
-    this.isChef() ? this.myTeamAffiliations() : this.myDemandes(),
+    this.isChef() ? this.myTeamPendingAffiliations() : this.myDemandes(),
   );
 
   affiliationSummary = computed(() => {
-    const list = this.affiliationSource();
+    const list = this.isChef() ? this.myTeamAffiliations() : this.myDemandes();
     return {
       total: list.length,
       enAttente: list.filter((r) => r.statut === 'EN_ATTENTE').length,

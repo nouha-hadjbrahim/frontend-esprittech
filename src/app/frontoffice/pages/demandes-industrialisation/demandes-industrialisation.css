@@ -2,15 +2,16 @@
   display: block;
   min-height: calc(100vh - 80px);
   margin: -2rem;
-  padding: 2rem 1.5rem 3rem;
+  padding: 2rem;
   background: #ffffff;
   color: #0f172a;
   font-family: Inter, "Segoe UI", sans-serif;
 }
 
 .industrialisation-page {
-  width: min(100%, 1180px);
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 h1,
@@ -759,7 +760,7 @@ small {
 @media (max-width: 640px) {
   :host {
     margin: -1rem;
-    padding: 1rem 0.85rem 2rem;
+    padding: 1.5rem 1rem;
   }
 
   .hero-banner__stats {

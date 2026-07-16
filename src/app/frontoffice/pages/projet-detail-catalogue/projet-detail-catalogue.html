@@ -1,4 +1,4 @@
-<div class="page-container">
+<div class="projet-detail">
   <a class="back-link" routerLink="/frontoffice/catalogue">← Retour au catalogue</a>
 
   @if (isLoading) {
@@ -6,21 +6,28 @@
   } @else if (errorMessage) {
     <div class="alert alert--error">{{ errorMessage }}</div>
   } @else if (projet) {
-    <!-- Hero : bandeau avec image de couverture + score final -->
-    <section class="project-hero" [class.project-hero--has-cover]="projet.coverImage">
-      @if (projet.coverImage) {
-        <img class="project-hero__bg" [src]="projet.coverImage" alt="" aria-hidden="true" />
-      }
+    <section class="project-hero" aria-label="Résumé du projet">
+      <img
+        class="project-hero__bg"
+        [src]="coverImage"
+        [alt]="'Couverture de ' + projet.titre"
+      />
       <div class="hero-content">
         <div class="hero-badges">
-          <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">{{ typeLabels[projet.typeProjet].label }}</span>
+          <span class="badge" [class]="typeLabels[projet.typeProjet].cssClass">
+            {{ typeLabels[projet.typeProjet].label }}
+          </span>
         </div>
         <h1>{{ projet.titre }}</h1>
         <p>{{ projet.description }}</p>
         @if (projet.domaines.length || projet.technologies.length) {
           <div class="hero-tags">
-            @for (d of projet.domaines; track d) { <span>{{ d }}</span> }
-            @for (t of projet.technologies; track t) { <span>{{ t }}</span> }
+            @for (d of projet.domaines; track d) {
+              <span class="hero-tags__domain">{{ d }}</span>
+            }
+            @for (t of projet.technologies; track t) {
+              <span>{{ t }}</span>
+            }
           </div>
         }
       </div>
@@ -32,100 +39,134 @@
       </aside>
     </section>
 
-    <!-- Identification + Équipe -->
     <div class="detail-grid">
-      <section class="panel identification-card">
-        <header class="section-header">
+      <article class="panel-card">
+        <header class="panel-card__header">
+          <span class="panel-card__icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1.8L8.1 5H11.5L8.85 7.1L9.85 10.4L7 8.4L4.15 10.4L5.15 7.1L2.5 5H5.9L7 1.8Z" fill="#ffffff"/>
+            </svg>
+          </span>
           <div>
-            <span class="section-kicker">Identification</span>
-            <h3>Détails du projet</h3>
+            <span class="panel-card__kicker">Identification</span>
+            <h2 class="panel-card__title">Détails du projet</h2>
           </div>
         </header>
 
-        <div class="info-grid">
-          <div>
-            <span>Type</span>
-            <strong>{{ typeLabels[projet.typeProjet].label }}</strong>
+        <div class="meta-row">
+          <div class="meta-box">
+            <span class="meta-box__label">Type</span>
+            <strong class="meta-box__value">{{ typeLabels[projet.typeProjet].label }}</strong>
           </div>
-          <div>
-            <span>Période</span>
-            <strong>{{ projet.dateDebut | date:'dd/MM/yyyy' }} → {{ projet.dateFin | date:'dd/MM/yyyy' }}</strong>
+          <div class="meta-box">
+            <span class="meta-box__label">Période</span>
+            <strong class="meta-box__value">{{ periodeLabel }}</strong>
           </div>
-          <div>
-            <span>Domaines</span>
+          <div class="meta-box">
+            <span class="meta-box__label">Domaines</span>
             @if (projet.domaines.length) {
-              <div class="chip-row">@for (d of projet.domaines; track d) { <span class="chip">{{ d }}</span> }</div>
-            } @else { <strong>—</strong> }
+              <div class="pill-row">
+                @for (d of projet.domaines; track d) {
+                  <span class="pill">{{ d }}</span>
+                }
+              </div>
+            } @else {
+              <strong class="meta-box__value">—</strong>
+            }
           </div>
         </div>
 
-        <div class="section-note">
-          <span class="section-note__label">Objectifs</span>
-          <p>{{ projet.objectifs || '—' }}</p>
+        <div class="objectifs-box">
+          <div class="objectifs-box__head">
+            <span class="objectifs-box__dot" aria-hidden="true"></span>
+            <span class="objectifs-box__label">Objectifs</span>
+          </div>
+          <p class="objectifs-box__text">{{ projet.objectifs || '—' }}</p>
         </div>
-      </section>
+      </article>
 
-      <section class="panel team-card">
-        <header class="section-header">
+      <article class="panel-card">
+        <header class="panel-card__header">
+          <span class="panel-card__icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="5" r="2.2" stroke="#ffffff" stroke-width="1.3"/>
+              <path d="M2.8 12C3.5 9.5 5 8.3 7 8.3C9 8.3 10.5 9.5 11.2 12" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </span>
           <div>
-            <span class="section-kicker">Équipe</span>
-            <h3>Porteurs</h3>
+            <span class="panel-card__kicker">Équipe</span>
+            <h2 class="panel-card__title">Porteurs</h2>
           </div>
         </header>
 
-        <div class="person-row">
-          <span class="person-avatar">{{ encadrantInitiale }}</span>
+        <div class="person-box">
+          <span class="person-box__avatar" aria-hidden="true">{{ encadrantInitiale }}</span>
           <div>
-            <strong>{{ projet.encadrantNom }}</strong>
-            <span>Porteurs</span>
+            <strong class="person-box__name">{{ projet.encadrantNom }}</strong>
+            <span class="person-box__role">Porteurs</span>
           </div>
         </div>
 
         @if (projet.equipeNom) {
-          <div class="info-grid info-grid--compact">
-            <div>
-              <span>Équipe de recherche</span>
-              <strong>{{ projet.equipeNom }}</strong>
+          <div class="meta-row meta-row--2">
+            <div class="meta-box">
+              <span class="meta-box__label">Équipe de recherche</span>
+              <strong class="meta-box__value">{{ projet.equipeNom }}</strong>
             </div>
             @if (projet.chefEquipeNom) {
-              <div>
-                <span>Chef d'équipe</span>
-                <strong>{{ projet.chefEquipeNom }}</strong>
+              <div class="meta-box">
+                <span class="meta-box__label">Chef d'équipe</span>
+                <strong class="meta-box__value">{{ projet.chefEquipeNom }}</strong>
               </div>
             }
           </div>
         }
-      </section>
+      </article>
     </div>
 
-    <!-- Prérequis / Classes cibles : carte à part entière, sous Identification + Équipe -->
-    <section class="panel prerequisites-card">
-      <header class="section-header">
+    <article class="panel-card panel-card--full">
+      <header class="panel-card__header">
+        <span class="panel-card__icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="5" cy="5" r="2.2" stroke="#ffffff" stroke-width="1.2"/>
+            <circle cx="9.2" cy="5.5" r="1.8" stroke="#ffffff" stroke-width="1.2"/>
+            <path d="M1.8 12C1.8 9.8 3.2 8.5 5 8.5M12.2 12C12.2 10.2 11 9 9.2 9" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </span>
         <div>
-          <span class="section-kicker">Accessibilité</span>
-          <h3>Prérequis / Classes cibles</h3>
+          <span class="panel-card__kicker">Accessibilité</span>
+          <h2 class="panel-card__title">Prérequis / Classes cibles</h2>
         </div>
       </header>
 
       @if (projet.prerequis.length) {
-        <div class="chip-row">@for (p of projet.prerequis; track p) { <span class="chip">{{ p }}</span> }</div>
+        <div class="pill-row">
+          @for (p of projet.prerequis; track p) {
+            <span class="pill">{{ p }}</span>
+          }
+        </div>
       } @else {
-        <p class="section-note__empty">Aucun prérequis renseigné.</p>
+        <p class="panel-card__empty">Aucun prérequis renseigné.</p>
       }
-    </section>
+    </article>
 
-    <!-- Historique : timeline chronologique des actions sur le projet -->
     @if (canViewHistorique && !historiqueForbidden) {
-      <section class="panel history-card">
-        <header class="section-header">
+      <article class="panel-card panel-card--full">
+        <header class="panel-card__header">
+          <span class="panel-card__icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5" stroke="#ffffff" stroke-width="1.3"/>
+              <path d="M7 4.2V7.2L9 8.4" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </span>
           <div>
-            <span class="section-kicker">Historique</span>
-            <h3>Suivi du projet</h3>
+            <span class="panel-card__kicker">Historique</span>
+            <h2 class="panel-card__title">Suivi du projet</h2>
           </div>
         </header>
 
         @if (isHistoriqueLoading) {
-          <p class="hint">Chargement de l'historique...</p>
+          <p class="panel-card__empty">Chargement de l'historique...</p>
         } @else if (historiqueError) {
           <div class="alert alert--error">{{ historiqueError }}</div>
         } @else if (historique.length) {
@@ -142,9 +183,9 @@
             }
           </ol>
         } @else {
-          <p class="section-note__empty">Aucun historique disponible pour ce projet.</p>
+          <p class="panel-card__empty">Aucun historique disponible pour ce projet.</p>
         }
-      </section>
+      </article>
     }
   }
 </div>

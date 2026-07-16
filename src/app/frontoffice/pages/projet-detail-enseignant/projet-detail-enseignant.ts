@@ -30,7 +30,7 @@ import { ACTION_LABEL, HistoriqueResponse } from '../../../core/models/historiqu
 import { IndustrialisationService } from '../../../core/services/industrialisation.service';
 import { ProjetCatalogueService } from '../../../core/services/projet-catalogue.service';
 import { SujetProjetService } from '../../../core/services/sujet-projet.service';
-import { STATUT_PROJET_LABELS, TYPE_PROJET_LABELS } from '../../constants/projet-catalogue.constants';
+import { STATUT_PROJET_LABELS, TYPE_PROJET_LABELS, DEFAULT_PROJET_COVER_IMAGE } from '../../constants/projet-catalogue.constants';
 
 type DetailTab = 'infos' | 'livrables' | 'industrialisation' | 'historique';
 
@@ -68,6 +68,7 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
 
   readonly typeLabels = TYPE_PROJET_LABELS;
   readonly statutLabels = STATUT_PROJET_LABELS;
+  readonly defaultCoverImage = DEFAULT_PROJET_COVER_IMAGE;
   readonly typeLivrableOptions = TYPE_LIVRABLE_OPTIONS;
   readonly livrableLabels = TYPE_LIVRABLE_LABELS;
   readonly actionLabels = ACTION_LABEL;
@@ -131,6 +132,23 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   eliminatoryWarningConfirmation: EliminatoryWarningsConfirmation | null = null;
   pendingIndustrialisationAction: 'create' | 'submit' | null = null;
   answers: Record<number, ReponseIndustrialisationRequest> = {};
+
+  get coverImage(): string {
+    return this.projet?.coverImage || this.defaultCoverImage;
+  }
+
+  get objectifLines(): string[] {
+    if (!this.projet?.objectifs) return [];
+    const lines = this.projet.objectifs.split('\n').map((l) => l.trim()).filter(Boolean);
+    return lines.length > 0 ? lines : [this.projet.objectifs];
+  }
+
+  get keywordTags(): string[] {
+    if (this.projet?.technologies.length) {
+      return this.projet.technologies.slice(0, 4);
+    }
+    return this.projet?.domaines.slice(0, 4) ?? [];
+  }
 
   ngOnInit(): void {
     if (this.router.url.includes('backoffice/catalog')) {

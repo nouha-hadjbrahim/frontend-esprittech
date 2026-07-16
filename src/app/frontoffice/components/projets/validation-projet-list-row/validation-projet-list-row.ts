@@ -1,53 +1,44 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { SujetProjet } from '../../../../core/models/sujet-projet.model';
-import { MES_SUJETS_STATUT_STYLES, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
+import { ProjetCard } from '../../../../core/models/projet-catalogue.model';
+import { STATUT_PROJET_LABELS } from '../../../constants/projet-catalogue.constants';
 
 @Component({
-  selector: 'app-validation-sujet-list-row',
+  selector: 'app-validation-projet-list-row',
   imports: [RouterLink],
-  templateUrl: './validation-sujet-list-row.html',
-  styleUrl: './validation-sujet-list-row.css',
+  templateUrl: './validation-projet-list-row.html',
+  styleUrl: './validation-projet-list-row.css',
 })
-export class ValidationSujetListRow {
-  @Input({ required: true }) sujet!: SujetProjet;
+export class ValidationProjetListRow {
+  @Input({ required: true }) projet!: ProjetCard;
   @Input() validating = false;
   @Input() rejecting = false;
   @Output() validate = new EventEmitter<void>();
   @Output() reject = new EventEmitter<void>();
 
   get primaryDomaine(): string {
-    return this.sujet.domaines[0] ?? '—';
+    return this.projet.domaines[0] ?? '—';
   }
 
-  get categorieShortLabel(): string {
+  get typeShortLabel(): string {
     const map: Record<string, string> = {
       PFE: 'PFE',
       RDI: 'RDI',
       STAGE_INGENIEUR: 'STAGE',
     };
-    return map[this.sujet.categorie] ?? 'PFE';
+    return map[this.projet.typeProjet] ?? 'PFE';
   }
 
   get statutBadge() {
-    if (this.sujet.statut === 'SOUMIS_EN_VALIDATION' || this.sujet.statut === 'EN_ATTENTE') {
-      return { label: 'En attente', cssClass: 'badge--progress' };
+    if (this.projet.statut === 'SOUMIS_EN_VALIDATION') {
+      return { label: 'En attente', listClass: 'badge--statut-soumis', dotClass: 'dot--soumis' };
     }
-    return STATUT_LABELS[this.sujet.statut] ?? { label: 'En attente', cssClass: 'badge--progress' };
-  }
-
-  get statutListClass(): string {
-    return MES_SUJETS_STATUT_STYLES[this.sujet.statut]?.listClass ?? 'badge--statut-attente';
-  }
-
-  get statusDotClass(): string {
-    const map: Record<string, string> = {
-      SOUMIS_EN_VALIDATION: 'dot--soumis',
-      EN_ATTENTE: 'dot--attente',
-      INVALIDE: 'dot--invalide',
-      VALIDE: 'dot--valide',
+    const info = STATUT_PROJET_LABELS[this.projet.statut];
+    return {
+      label: info?.label ?? 'En attente',
+      listClass: 'badge--statut-attente',
+      dotClass: 'dot--attente',
     };
-    return map[this.sujet.statut] ?? 'dot--attente';
   }
 
   get accentClass(): string {
@@ -56,19 +47,18 @@ export class ValidationSujetListRow {
       STAGE_INGENIEUR: 'accent--stage',
       RDI: 'accent--rdi',
     };
-    return map[this.sujet.categorie] ?? 'accent--pfe';
+    return map[this.projet.typeProjet] ?? 'accent--pfe';
   }
 
   get shortDescription(): string {
-    const text = this.sujet.description?.trim() ?? '';
+    const text = this.projet.description?.trim() ?? '';
     if (!text) return '—';
     return text.length > 110 ? `${text.slice(0, 107)}...` : text;
   }
 
   get formattedDate(): string {
-    const dateStr = this.sujet.dateSoumission || this.sujet.dateCreation;
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
+    if (!this.projet.dateCreation) return '—';
+    return new Date(this.projet.dateCreation).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -76,7 +66,7 @@ export class ValidationSujetListRow {
   }
 
   get initials(): string {
-    const name = this.sujet.encadrantNom || '';
+    const name = this.projet.encadrantNom || '';
     const parts = name.trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return '?';
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
@@ -84,11 +74,9 @@ export class ValidationSujetListRow {
   }
 
   get timeAgo(): string {
-    const dateStr = this.sujet.dateSoumission || this.sujet.dateCreation;
-    if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    const diffMs = Date.now() - date.getTime();
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (!this.projet.dateCreation) return '—';
+    const date = new Date(this.projet.dateCreation);
+    const days = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
     if (days <= 0) return "Aujourd'hui";
     if (days === 1) return 'Il y a 1 jour';
     if (days < 7) return `Il y a ${days} jours`;

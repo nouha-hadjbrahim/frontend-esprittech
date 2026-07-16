@@ -89,14 +89,13 @@
       <span class="state-card__icon" aria-hidden="true">!</span>
       <h2>Chargement impossible</h2>
       <p>{{ error() }}</p>
-      <button type="button" class="secondary-action" (click)="loadDemandes()">Réessayer</button>
     </section>
   } @else if (demandes().length === 0) {
-    <section class="state-card">
-      <span class="state-card__icon" aria-hidden="true">CI</span>
-      <h2>Aucune demande d'industrialisation.</h2>
-      <p>Démarrez une demande depuis le détail d'un projet terminé pour suivre son instruction CI.</p>
-    </section>
+    <app-frontoffice-empty-state
+      icon="industrialisation"
+      title="Aucune demande d'industrialisation"
+      message="Démarrez une demande depuis le détail d'un projet terminé pour suivre son instruction CI."
+    />
   } @else {
     <div class="industrialisation-toolbar" aria-label="Recherche et filtres des demandes">
       <div class="industrialisation-toolbar__search-box">
@@ -136,12 +135,13 @@
     </p>
 
     @if (filteredDemandes().length === 0) {
-      <section class="state-card">
-        <span class="state-card__icon" aria-hidden="true">0</span>
-        <h2>Aucune demande ne correspond aux filtres sélectionnés.</h2>
-        <p>Modifiez votre recherche ou réinitialisez les filtres pour revoir toutes les demandes.</p>
-        <button type="button" class="secondary-action" (click)="resetFilters()">Réinitialiser les filtres</button>
-      </section>
+      <app-frontoffice-empty-state
+        icon="search"
+        title="Aucune demande ne correspond aux filtres sélectionnés"
+        message="Modifiez votre recherche ou réinitialisez les filtres pour revoir toutes les demandes."
+        actionLabel="Réinitialiser les filtres"
+        (action)="resetFilters()"
+      />
     } @else {
       <section class="requests-list" aria-label="Liste des demandes d'industrialisation">
         @for (demande of filteredDemandes(); track demande.id) {

@@ -442,11 +442,12 @@
   text-transform: none;
 }
 
-/* ── Affiliation page width (match demandes industrialisation) ── */
+/* ── Affiliation page width (même largeur que validation des sujets) ── */
 
 .affil-page {
-  width: min(100%, 1180px);
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
 }
 
 /* ── Affiliation hero banner (same style as demandes industrialisation) ── */
@@ -1051,6 +1052,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid #e8eaed;
   border-radius: 14px;
   overflow: hidden;
@@ -1123,6 +1126,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
   padding: 16px 16px 14px;
 }
 
@@ -1141,6 +1145,14 @@
   font-weight: 800;
   color: #111827;
   line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+  min-height: 2.3em;
 }
 
 .equipes-recherche__card-desc {

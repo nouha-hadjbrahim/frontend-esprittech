@@ -7,6 +7,7 @@ import { CategorieSujet } from '../../../core/models/sujet-projet.model';
 import { CandidatureService } from '../../../core/services/candidature.service';
 import { FilterDropdown } from '../../components/sujets/filter-dropdown/filter-dropdown';
 import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
+import { FrontofficeEmptyState } from '../../components/frontoffice-empty-state/frontoffice-empty-state';
 import {
   CATEGORIE_LABELS,
   CATEGORIE_OPTIONS,
@@ -17,7 +18,7 @@ type StatusTone = 'attente' | 'acceptee' | 'refusee' | 'neutral';
 
 @Component({
   selector: 'app-mes-candidatures',
-  imports: [FormsModule, RouterLink, FilterDropdown, ConfirmDialog],
+  imports: [FormsModule, RouterLink, FilterDropdown, ConfirmDialog, FrontofficeEmptyState],
   templateUrl: './mes-candidatures.html',
   styleUrl: './mes-candidatures.css',
 })
@@ -66,6 +67,12 @@ export class MesCandidatures implements OnInit {
       acceptees: list.filter((c) => c.statut === 'ACCEPTEE').length,
       refusees: list.filter((c) => c.statut === 'REFUSEE').length,
     };
+  }
+
+  get emptyMessage(): string {
+    return this.candidatures.length === 0
+      ? "Vous n'avez pas encore postule a un sujet."
+      : 'Aucun resultat ne correspond a vos filtres.';
   }
 
   ngOnInit(): void {

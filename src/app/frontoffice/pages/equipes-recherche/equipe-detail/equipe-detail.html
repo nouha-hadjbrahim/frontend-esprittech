@@ -224,39 +224,30 @@
               }
             </h2>
             <p class="equipe-detail__members-subtitle">
-              {{ teamAffiliations().length }} demande{{ teamAffiliations().length > 1 ? 's' : '' }}
+              {{ pendingAffiliations().length }} demande{{ pendingAffiliations().length > 1 ? 's' : '' }} à traiter
             </p>
           </div>
         </header>
 
-        @if (teamAffiliations().length === 0) {
-          <div class="equipe-detail__empty">Aucune demande pour cette équipe.</div>
+        @if (pendingAffiliations().length === 0) {
+          <div class="equipe-detail__empty">Aucune demande en attente pour cette équipe.</div>
         } @else {
           <div class="equipe-detail__request-list">
-            @for (r of teamAffiliations(); track r.id) {
+            @for (r of pendingAffiliations(); track r.id) {
               <div class="equipe-detail__request-row">
                 <div class="equipe-detail__request-avatar">{{ initiales(r.enseignant.prenom + ' ' + r.enseignant.nom) }}</div>
                 <div class="equipe-detail__request-info">
                   <div class="equipe-detail__request-name">{{ r.enseignant.prenom }} {{ r.enseignant.nom }}</div>
                   <div class="equipe-detail__request-date">{{ formatDate(r.dateDemande) }}</div>
-                  @if (r.motifDecision) {
-                    <p class="equipe-detail__request-msg">Motif : {{ r.motifDecision }}</p>
-                  }
                 </div>
-                @if (r.statut === 'EN_ATTENTE') {
-                  <div class="equipe-detail__request-actions">
-                    <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id, r.enseignant.prenom + ' ' + r.enseignant.nom)">
-                      Accepter
-                    </button>
-                    <button type="button" class="btn btn--danger btn--sm" (click)="ouvrirRefus(r.id)">
-                      Refuser
-                    </button>
-                  </div>
-                } @else {
-                  <span class="equipe-detail__status-badge" [class]="statutClass(r.statut)">
-                    {{ statutLabel(r.statut) }}
-                  </span>
-                }
+                <div class="equipe-detail__request-actions">
+                  <button type="button" class="btn btn--success btn--sm" (click)="accepterDemande(r.id, r.enseignant.prenom + ' ' + r.enseignant.nom)">
+                    Accepter
+                  </button>
+                  <button type="button" class="btn btn--danger btn--sm" (click)="ouvrirRefus(r.id)">
+                    Refuser
+                  </button>
+                </div>
               </div>
             }
           </div>

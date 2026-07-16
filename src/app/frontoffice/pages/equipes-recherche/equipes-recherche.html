@@ -211,10 +211,11 @@
       />
 
     } @else {
-      <div class="equipes-recherche__empty">
-        <h3 class="equipes-recherche__empty-title">Aucune équipe assignée</h3>
-        <p class="equipes-recherche__empty-text">Vous n'êtes pas encore chef d'une équipe de recherche.</p>
-      </div>
+      <app-frontoffice-empty-state
+        icon="equipe"
+        title="Aucune équipe assignée"
+        message="Vous n'êtes pas encore chef d'une équipe de recherche."
+      />
     }
   }
 
@@ -234,7 +235,7 @@
         <div class="affil-hero-banner__copy">
           <span class="affil-hero-banner__eyebrow">ESPRITTECH · ÉQUIPES RDI</span>
           <h1>Demandes d'affiliation</h1>
-          <p>Consultez et traitez les demandes d'affiliation adressées à votre équipe.</p>
+          <p>Traitez les demandes d'affiliation en attente de validation pour votre équipe.</p>
         </div>
       </div>
       <div class="affil-hero-banner__stats" aria-label="Synthèse des demandes">
@@ -274,14 +275,6 @@
 
       <div class="equipes-recherche__filters">
         <app-filter-dropdown
-          class="equipes-recherche__filter"
-          label="Statut"
-          [options]="affilStatutOptions"
-          [value]="affilSelectedStatut()"
-          (valueChange)="affilSelectedStatut.set($event)"
-        />
-
-        <app-filter-dropdown
           class="equipes-recherche__filter equipes-recherche__filter--sort"
           label="Plus récents"
           [options]="affilSortOptions"
@@ -294,26 +287,17 @@
     </div>
 
     @if (affiliationSource().length === 0) {
-      <div class="equipes-recherche__empty">
-        <div class="equipes-recherche__empty-icon" aria-hidden="true">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2 class="equipes-recherche__empty-title">Aucune demande d'affiliation</h2>
-        <p class="equipes-recherche__empty-text">
-          Aucune demande d'affiliation pour votre équipe pour le moment.
-        </p>
-      </div>
+      <app-frontoffice-empty-state
+        icon="equipe"
+        title="Aucune demande en attente"
+        message="Toutes les demandes d'affiliation ont été traitées pour le moment."
+      />
     } @else if (filteredAffiliations().length === 0) {
-      <div class="equipes-recherche__empty">
-        <h2 class="equipes-recherche__empty-title">Aucun résultat</h2>
-        <p class="equipes-recherche__empty-text">
-          Aucune demande ne correspond à votre recherche ou aux filtres sélectionnés.
-        </p>
-      </div>
+      <app-frontoffice-empty-state
+        icon="search"
+        title="Aucun résultat"
+        message="Aucune demande ne correspond à votre recherche ou aux filtres sélectionnés."
+      />
     } @else {
       <p class="equipes-recherche__count">
         {{ filteredAffiliations().length }} demande(s) affichée(s) sur {{ affiliationSource().length }}
@@ -462,18 +446,11 @@
     } @else {
       @let teamsSource = isChef() ? filteredTeams() : allTeamsUnified();
       @if (teamsSource.length === 0) {
-        <div class="equipes-recherche__empty">
-          <div class="equipes-recherche__empty-icon" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-              <circle cx="34" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
-              <path d="M34 11V17M31 14H37" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <h3 class="equipes-recherche__empty-title">Aucune équipe trouvée</h3>
-          <p class="equipes-recherche__empty-text">Aucune équipe ne correspond à votre recherche.</p>
-        </div>
+        <app-frontoffice-empty-state
+          icon="equipe"
+          title="Aucune équipe trouvée"
+          message="Aucune équipe ne correspond à votre recherche."
+        />
       } @else {
         <div class="equipes-recherche__grid">
           @for (t of teamsSource; track t.id) {
@@ -653,26 +630,17 @@
     </div>
 
     @if (affiliationSource().length === 0) {
-      <div class="equipes-recherche__empty">
-        <div class="equipes-recherche__empty-icon" aria-hidden="true">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2 class="equipes-recherche__empty-title">Aucune demande</h2>
-        <p class="equipes-recherche__empty-text">
-          Vous n'avez pas encore de demande d'affiliation en cours.
-        </p>
-      </div>
+      <app-frontoffice-empty-state
+        icon="candidature"
+        title="Aucune demande"
+        message="Vous n'avez pas encore de demande d'affiliation en cours."
+      />
     } @else if (filteredAffiliations().length === 0) {
-      <div class="equipes-recherche__empty">
-        <h2 class="equipes-recherche__empty-title">Aucun résultat</h2>
-        <p class="equipes-recherche__empty-text">
-          Aucune demande ne correspond à votre recherche ou aux filtres sélectionnés.
-        </p>
-      </div>
+      <app-frontoffice-empty-state
+        icon="search"
+        title="Aucun résultat"
+        message="Aucune demande ne correspond à votre recherche ou aux filtres sélectionnés."
+      />
     } @else {
       <p class="equipes-recherche__count">
         {{ filteredAffiliations().length }} demande(s) affichée(s) sur {{ affiliationSource().length }}

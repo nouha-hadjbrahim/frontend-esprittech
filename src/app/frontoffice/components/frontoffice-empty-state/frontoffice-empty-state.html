@@ -1,0 +1,69 @@
+<section class="frontoffice-empty-state">
+  <div class="frontoffice-empty-state__icon" aria-hidden="true">
+    @switch (icon) {
+      @case ('sujet') {
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="8" y="12" width="32" height="28" rx="4" stroke="#e5e7eb" stroke-width="2"/>
+          <path d="M16 20H32M16 26H28M16 32H24" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="36" cy="14" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
+          <path d="M33 14H39M36 11V17" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      }
+      @case ('candidature') {
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="10" y="8" width="28" height="34" rx="4" stroke="#fecaca" stroke-width="2"/>
+          <path d="M18 18H30M18 24H26M18 30H22" stroke="#fecaca" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="34" cy="14" r="9" fill="#fef2f2" stroke="#E23E3E" stroke-width="1.5"/>
+          <path d="M34 10V18M30 14H38" stroke="#E23E3E" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      }
+      @case ('catalogue') {
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      }
+      @case ('equipe') {
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle cx="18" cy="18" r="6" stroke="#E23E3E" stroke-width="2"/>
+          <circle cx="31" cy="20" r="5" stroke="#fecaca" stroke-width="2"/>
+          <path d="M8 36C9.5 29.8 13.6 26.5 18 26.5C22.4 26.5 26.5 29.8 28 36" stroke="#E23E3E" stroke-width="2" stroke-linecap="round"/>
+          <path d="M24.5 36C25.6 31.9 28.2 29.5 31.7 29.5C34.5 29.5 36.7 31.1 38 36" stroke="#fecaca" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      }
+      @case ('industrialisation') {
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <rect x="10" y="12" width="20" height="24" rx="4" stroke="#e5e7eb" stroke-width="2"/>
+          <path d="M16 18H24M16 24H24M16 30H21" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="34" cy="28" r="8" fill="#fff5f5" stroke="#fecaca" stroke-width="1.5"/>
+          <path d="M34 24.5V31.5M30.5 28H37.5" stroke="#E23E3E" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      }
+      @default {
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle cx="22" cy="22" r="10" stroke="#e5e7eb" stroke-width="2"/>
+          <path d="M29 29L37 37" stroke="#fecaca" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M18 22H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      }
+    }
+  </div>
+
+  <h2 class="frontoffice-empty-state__title">{{ title }}</h2>
+  <p class="frontoffice-empty-state__text">{{ message }}</p>
+
+  @if (actionLabel) {
+    <div class="frontoffice-empty-state__actions">
+      @if (actionLink) {
+        <a class="frontoffice-empty-state__action" [routerLink]="actionLink">
+          {{ actionLabel }}
+        </a>
+      } @else {
+        <button type="button" class="frontoffice-empty-state__action" (click)="onAction()">
+          {{ actionLabel }}
+        </button>
+      }
+    </div>
+  }
+</section>
