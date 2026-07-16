@@ -108,7 +108,7 @@ export class EquipeDetail implements OnInit {
     if (!req) return '';
     if (req.statut === 'EN_ATTENTE') return 'Demande envoyée';
     if (req.statut === 'ACCEPTEE') return 'Acceptée';
-    return 'Refusée';
+    return '';
   });
 
   ngOnInit(): void {

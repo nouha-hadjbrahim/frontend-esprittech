@@ -75,6 +75,15 @@ export class EvaluationService {
     );
   }
 
+  /** Historique des evaluations d'un projet du catalogue. */
+  getProjetCatalogueEvaluationHistory(
+    projetId: number,
+  ): Observable<EvaluationResponse[]> {
+    return this.http.get<EvaluationResponse[]>(
+      `${this.catalogueBaseUrl}/${projetId}/evaluations`,
+    );
+  }
+
   isScoreCalculationRunning(projetId: number): boolean {
     return this.inFlightCalculations.has(projetId);
   }

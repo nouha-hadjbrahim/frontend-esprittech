@@ -373,9 +373,13 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   private setCurrentEvaluation(evaluation: EvaluationResponse): void {
     this.evalResult.set(evaluation);
     this.overrideScore.set(evaluation.finalValidatedScore ?? evaluation.scoreFinal ?? null);
+    const evaluationProjectId = evaluation.sujetProjetId;
+    if (evaluationProjectId == null) {
+      return;
+    }
     this.projects.update((projects) =>
       projects.map((project) =>
-        project.id === evaluation.sujetProjetId
+        project.id === evaluationProjectId
           ? {
               ...project,
               scoreFinal: this.scoreFor(evaluation),
@@ -386,9 +390,10 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
           : project
       )
     );
-    if (this.selectedProject?.id === evaluation.sujetProjetId) {
+    const selectedProject = this.selectedProject;
+    if (selectedProject?.id === evaluationProjectId) {
       this.selectedProject = {
-        ...this.selectedProject,
+        ...selectedProject,
         scoreFinal: this.scoreFor(evaluation),
         eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
         bloqueParEliminatoire: evaluation.bloqueParEliminatoire,
