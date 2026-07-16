@@ -35,9 +35,15 @@ export class SignUpComponent {
   // Partie locale en classe négative ([^@\s]+) plutôt que `.+` : supprime l'ambiguïté de
   // backtracking signalée par Sonar (S5852, ReDoS) et rejette correctement les e-mails malformés.
   private static readonly ESPRIT_EMAIL_PATTERN = /^[^@\s]+@esprit\.tn$/;
+  private static readonly CODE_PATTERN = /^\d{6}$/;
 
+  /** 'form' : saisie des infos ; 'verify' : saisie du code reçu par email. */
+  readonly step = signal<'form' | 'verify'>('form');
   readonly loading = signal(false);
   readonly serverError = signal<string | null>(null);
+  readonly infoMessage = signal<string | null>(null);
+  /** Email en cours de vérification (affiché à l'étape 2). */
+  readonly pendingEmail = signal<string>('');
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -56,10 +62,19 @@ export class SignUpComponent {
     { validators: passwordsMatch },
   );
 
+  readonly codeForm = this.fb.nonNullable.group({
+    code: ['', [Validators.required, Validators.pattern(SignUpComponent.CODE_PATTERN)]],
+  });
+
   get f() {
     return this.form.controls;
   }
 
+  get c() {
+    return this.codeForm.controls;
+  }
+
+  /** Étape 1 : envoie le code de vérification à l'email saisi. */
   onSubmit(): void {
     this.serverError.set(null);
     if (this.form.invalid) {
@@ -69,10 +84,33 @@ export class SignUpComponent {
 
     const { nom, prenom, email, password } = this.form.getRawValue();
     this.loading.set(true);
-    this.authService.register({ nom, prenom, email, password }).subscribe({
+    this.authService.startRegister({ nom, prenom, email, password }).subscribe({
       next: () => {
         this.loading.set(false);
-        // Le compte est créé et connecté : on dirige selon le rôle (étudiant/enseignant)
+        this.pendingEmail.set(email);
+        this.infoMessage.set(`Un code de vérification a été envoyé à ${email}.`);
+        this.codeForm.reset();
+        this.step.set('verify');
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.applyServerErrors(err);
+      },
+    });
+  }
+
+  /** Étape 2 : valide le code, crée le compte et connecte l'utilisateur. */
+  onVerify(): void {
+    this.serverError.set(null);
+    if (this.codeForm.invalid) {
+      this.codeForm.markAllAsTouched();
+      return;
+    }
+
+    this.loading.set(true);
+    this.authService.verifyEmail(this.pendingEmail(), this.codeForm.getRawValue().code).subscribe({
+      next: () => {
+        this.loading.set(false);
         void this.router.navigateByUrl(this.authService.landingRoute());
       },
       error: (err: HttpErrorResponse) => {
@@ -82,15 +120,41 @@ export class SignUpComponent {
     });
   }
 
-  /** Mappe les erreurs backend (référentiel, doublon, validation) vers l'UI. */
+  /** Renvoie un nouveau code de vérification. */
+  onResend(): void {
+    this.serverError.set(null);
+    this.infoMessage.set(null);
+    this.loading.set(true);
+    this.authService.resendCode(this.pendingEmail()).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.infoMessage.set(`Un nouveau code a été envoyé à ${this.pendingEmail()}.`);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.applyServerErrors(err);
+      },
+    });
+  }
+
+  /** Revient au formulaire pour corriger l'email. */
+  backToForm(): void {
+    this.serverError.set(null);
+    this.infoMessage.set(null);
+    this.step.set('form');
+  }
+
+  /** Mappe les erreurs backend (organisation Azure, code OTP, doublon, validation) vers l'UI. */
   private applyServerErrors(err: HttpErrorResponse): void {
     if (err.status === 0) {
       this.serverError.set('Serveur injoignable. Vérifiez que le backend est démarré.');
       return;
     }
     if (err.status === 404) {
+      // L'email n'appartient pas à l'organisation ESPRIT (aucun compte Azure correspondant).
       this.serverError.set(
-        err.error?.detail ?? 'Utilisateur non trouvé dans le référentiel. Vérifiez votre email.',
+        err.error?.detail ??
+          "Cet email n'appartient pas à l'organisation ESPRIT. Impossible de créer un compte.",
       );
       return;
     }
@@ -98,9 +162,17 @@ export class SignUpComponent {
       this.serverError.set(err.error?.detail ?? 'Cet email est déjà utilisé.');
       return;
     }
-    // 400 : erreurs de validation champ par champ
+    if (err.status === 503) {
+      // Vérification Azure / envoi d'email temporairement indisponible.
+      this.serverError.set(
+        err.error?.detail ??
+          'Le service est momentanément indisponible. Veuillez réessayer plus tard.',
+      );
+      return;
+    }
+    // 400 : code OTP invalide/expiré (étape 2) ou erreurs de validation champ par champ (étape 1)
     const fieldErrors = err.error?.errors as Record<string, string> | undefined;
-    if (fieldErrors) {
+    if (fieldErrors && this.step() === 'form') {
       Object.entries(fieldErrors).forEach(([field, message]) => {
         this.form.get(field)?.setErrors({ server: message });
       });

@@ -20,7 +20,9 @@ describe('SignUpComponent', () => {
   };
 
   beforeEach(() => {
-    authService = jasmine.createSpyObj<AuthService>('AuthService', ['register', 'landingRoute']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', [
+      'startRegister', 'verifyEmail', 'resendCode', 'landingRoute',
+    ]);
     router = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
     authService.landingRoute.and.returnValue('/frontoffice/accueil');
 
@@ -39,6 +41,7 @@ describe('SignUpComponent', () => {
     expect(component).toBeTruthy();
     expect(component.form.invalid).toBeTrue();
     expect(component.f.email).toBeDefined();
+    expect(component.step()).toBe('form');
   });
 
   it('should flag mismatched passwords at group level', () => {
@@ -61,53 +64,109 @@ describe('SignUpComponent', () => {
     expect(component.f.email.errors?.['pattern']).toBeTruthy();
   });
 
-  it('should not register when the form is invalid', () => {
+  it('should not start registration when the form is invalid', () => {
     component.onSubmit();
-    expect(authService.register).not.toHaveBeenCalled();
+    expect(authService.startRegister).not.toHaveBeenCalled();
     expect(component.form.touched).toBeTrue();
   });
 
-  it('should register and redirect on success', () => {
+  it('should send the code and move to the verify step on success', () => {
     component.form.setValue(validValues);
-    authService.register.and.returnValue(of({} as User));
+    authService.startRegister.and.returnValue(of(undefined));
     component.onSubmit();
-    expect(authService.register).toHaveBeenCalledWith({
+    expect(authService.startRegister).toHaveBeenCalledWith({
       nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn', password: 'Passw0rd',
     });
+    expect(component.step()).toBe('verify');
+    expect(component.pendingEmail()).toBe('jean@esprit.tn');
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+    expect(component.loading()).toBeFalse();
+  });
+
+  it('should verify the code and redirect on success', () => {
+    component.step.set('verify');
+    component.pendingEmail.set('jean@esprit.tn');
+    component.codeForm.setValue({ code: '123456' });
+    authService.verifyEmail.and.returnValue(of({} as User));
+
+    component.onVerify();
+
+    expect(authService.verifyEmail).toHaveBeenCalledWith('jean@esprit.tn', '123456');
     expect(router.navigateByUrl).toHaveBeenCalledWith('/frontoffice/accueil');
     expect(component.loading()).toBeFalse();
   });
 
+  it('should not verify when the code form is invalid', () => {
+    component.step.set('verify');
+    component.pendingEmail.set('jean@esprit.tn');
+    component.codeForm.setValue({ code: '12' });
+    component.onVerify();
+    expect(authService.verifyEmail).not.toHaveBeenCalled();
+  });
+
+  it('should map an invalid code (400) to the server message on the verify step', () => {
+    component.step.set('verify');
+    component.pendingEmail.set('jean@esprit.tn');
+    component.codeForm.setValue({ code: '000000' });
+    authService.verifyEmail.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 400, error: { detail: 'Code invalide.' } })),
+    );
+    component.onVerify();
+    expect(component.serverError()).toBe('Code invalide.');
+  });
+
+  it('should resend a code and show an info message', () => {
+    component.step.set('verify');
+    component.pendingEmail.set('jean@esprit.tn');
+    authService.resendCode.and.returnValue(of(undefined));
+    component.onResend();
+    expect(authService.resendCode).toHaveBeenCalledWith('jean@esprit.tn');
+    expect(component.infoMessage()).toContain('nouveau code');
+  });
+
+  it('should return to the form step', () => {
+    component.step.set('verify');
+    component.backToForm();
+    expect(component.step()).toBe('form');
+  });
+
   it('should show an unreachable-server error on status 0', () => {
     component.form.setValue(validValues);
-    authService.register.and.returnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
+    authService.startRegister.and.returnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
     component.onSubmit();
     expect(component.serverError()).toContain('Serveur injoignable');
   });
 
-  it('should map a 404 to a referential message (with and without detail)', () => {
+  it('should map a 404 to an organization message (with and without detail)', () => {
     component.form.setValue(validValues);
-    authService.register.and.returnValue(
+    authService.startRegister.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 404, error: { detail: 'Introuvable' } })),
     );
     component.onSubmit();
     expect(component.serverError()).toBe('Introuvable');
 
-    authService.register.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    authService.startRegister.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
     component.onSubmit();
-    expect(component.serverError()).toContain('référentiel');
+    expect(component.serverError()).toContain('organisation ESPRIT');
+  });
+
+  it('should map a 503 to an unavailable-service message', () => {
+    component.form.setValue(validValues);
+    authService.startRegister.and.returnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+    component.onSubmit();
+    expect(component.serverError()).toContain('momentanément indisponible');
   });
 
   it('should map a 409 to a duplicate message', () => {
     component.form.setValue(validValues);
-    authService.register.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+    authService.startRegister.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
     component.onSubmit();
     expect(component.serverError()).toContain('déjà utilisé');
   });
 
-  it('should apply field errors from a 400 response', () => {
+  it('should apply field errors from a 400 response on the form step', () => {
     component.form.setValue(validValues);
-    authService.register.and.returnValue(
+    authService.startRegister.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 400, error: { errors: { email: 'Email invalide' } } })),
     );
     component.onSubmit();
@@ -117,7 +176,7 @@ describe('SignUpComponent', () => {
 
   it('should fall back to a generic message for unmapped errors', () => {
     component.form.setValue(validValues);
-    authService.register.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    authService.startRegister.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
     component.onSubmit();
     expect(component.serverError()).toContain('Une erreur est survenue');
   });
