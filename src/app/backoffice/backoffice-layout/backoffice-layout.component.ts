@@ -5,6 +5,8 @@ import { filter } from 'rxjs';
 import { Role } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { AffiliationService } from '../../core/services/affiliation.service';
+import { NotificationService } from '../../core/services/notification.service';
+import { NotificationBellComponent } from '../../shared/components/notification-bell/notification-bell.component';
 
 interface NavChild {
     label: string;
@@ -21,7 +23,7 @@ interface NavItem {
 @Component({
     selector: 'app-backoffice-layout',
     standalone: true,
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, NotificationBellComponent],
     templateUrl: './backoffice-layout.component.html',
     styleUrl: './backoffice-layout.component.css'
 })
@@ -29,6 +31,7 @@ export class BackofficeLayoutComponent {
     private readonly authService = inject(AuthService);
     private readonly router = inject(Router);
     private readonly affiliationSvc = inject(AffiliationService);
+    private readonly notificationService = inject(NotificationService);
 
     readonly pendingDemandesCount = signal(0);
 
@@ -106,6 +109,7 @@ export class BackofficeLayoutComponent {
     constructor() {
         this.expandActiveGroups();
         this.loadPendingDemandes();
+        this.notificationService.initialize();
 
         this.router.events
             .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))

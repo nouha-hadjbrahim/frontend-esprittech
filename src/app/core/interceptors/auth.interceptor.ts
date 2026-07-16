@@ -7,14 +7,14 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject, catchError, finalize, switchMap, take, throwError } from 'rxjs';
+import { Observable, ReplaySubject, catchError, finalize, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 /** Endpoints publics qui ne doivent jamais déclencher un refresh automatique. */
 const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
 
 let isRefreshing = false;
-const refreshResult$ = new Subject<boolean>();
+const refreshResult$ = new ReplaySubject<boolean>(1);
 
 /**
  * Ajoute credentials + Bearer token (mémoire) sur chaque requête API.
