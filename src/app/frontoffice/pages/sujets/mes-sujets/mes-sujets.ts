@@ -7,6 +7,7 @@ import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-moda
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
 import { SujetCard } from '../../../components/sujets/sujet-card/sujet-card';
 import { SujetListRow } from '../../../components/sujets/sujet-list-row/sujet-list-row';
+import { SujetsPagination } from '../../../components/sujets/sujets-pagination/sujets-pagination';
 import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import { GererCandidaturesModal } from '../../../components/sujets/gerer-candidatures-modal/gerer-candidatures-modal';
 import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-projet.constants';
@@ -14,9 +15,20 @@ import { CATEGORIE_OPTIONS, STATUT_LABELS } from '../../../constants/sujet-proje
 export type ViewMode = 'cards' | 'list';
 export type SujetScope = 'mes' | 'equipe';
 
+const PAGE_SIZE = 9;
+
 @Component({
   selector: 'app-mes-sujets',
-  imports: [FormsModule, DeposerSujetModal, SujetCard, SujetListRow, FilterDropdown, ConfirmDialog, GererCandidaturesModal],
+  imports: [
+    FormsModule,
+    DeposerSujetModal,
+    SujetCard,
+    SujetListRow,
+    FilterDropdown,
+    ConfirmDialog,
+    GererCandidaturesModal,
+    SujetsPagination,
+  ],
   templateUrl: './mes-sujets.html',
   styleUrl: './mes-sujets.css',
 })
@@ -26,6 +38,7 @@ export class MesSujets implements OnInit {
 
   sujets: SujetProjet[] = [];
   filteredSujets: SujetProjet[] = [];
+  pagedSujets: SujetProjet[] = [];
   isLoading = true;
   loadError = '';
   isModalOpen = false;
@@ -36,6 +49,8 @@ export class MesSujets implements OnInit {
   sortOrder = 'recent';
   viewMode: ViewMode = 'cards';
   sujetScope: SujetScope = 'mes';
+  currentPage = 1;
+  readonly pageSize = PAGE_SIZE;
 
   candidaturesModalOpen = false;
   sujetCandidatures?: SujetProjet;
@@ -124,6 +139,7 @@ export class MesSujets implements OnInit {
       error: () => {
         this.sujets = [];
         this.filteredSujets = [];
+        this.pagedSujets = [];
         this.isLoading = false;
         this.loadError =
           this.isChefEquipe && this.sujetScope === 'equipe'
@@ -131,6 +147,16 @@ export class MesSujets implements OnInit {
             : 'Impossible de charger vos sujets. Vérifiez que le backend est démarré.';
       },
     });
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredSujets.length / this.pageSize));
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = page;
+    this.updatePagedSujets();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   openModal(): void {
@@ -293,5 +319,16 @@ export class MesSujets implements OnInit {
     });
 
     this.filteredSujets = result;
+    this.currentPage = 1;
+    this.updatePagedSujets();
+  }
+
+  private updatePagedSujets(): void {
+    const total = this.totalPages;
+    if (this.currentPage > total) {
+      this.currentPage = total;
+    }
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.pagedSujets = this.filteredSujets.slice(start, start + this.pageSize);
   }
 }

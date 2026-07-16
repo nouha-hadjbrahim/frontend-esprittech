@@ -134,17 +134,12 @@ export class AuthService {
       case 'ROLE_ADMIN':
         return '/backoffice/users';
       case 'ROLE_ENSEIGNANT':
-        return this.isAffilieToEquipe()
-          ? '/frontoffice/sujets/mes-sujets'
-          : '/frontoffice/catalogue';
       case 'ROLE_ETUDIANT':
-        return '/frontoffice/sujets/disponibles';
-      case 'ROLE_CI':
-        return '/ci/industrialisation';
       case 'ROLE_CHEF_EQUIPE':
-        return '/frontoffice/tableau-de-bord';
+      case 'ROLE_CI':
+        return '/frontoffice/accueil';
       default:
-        return '/frontoffice/sujets/disponibles';
+        return '/frontoffice/accueil';
     }
   }
 

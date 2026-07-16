@@ -1,0 +1,49 @@
+@if (totalPages > 1) {
+  <nav class="sujets-pagination" aria-label="Pagination des sujets">
+    <p class="sujets-pagination__info">
+      {{ rangeFrom }}–{{ rangeTo }} sur {{ totalItems }}
+    </p>
+
+    <div class="sujets-pagination__controls">
+      <button
+        type="button"
+        class="sujets-pagination__nav"
+        [disabled]="currentPage <= 1"
+        (click)="previous()"
+        aria-label="Page précédente"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      @for (page of visiblePages; track $index) {
+        @if (page === 'ellipsis') {
+          <span class="sujets-pagination__ellipsis" aria-hidden="true">…</span>
+        } @else {
+          <button
+            type="button"
+            class="sujets-pagination__page"
+            [class.sujets-pagination__page--active]="page === currentPage"
+            [attr.aria-current]="page === currentPage ? 'page' : null"
+            (click)="goTo(page)"
+          >
+            {{ page }}
+          </button>
+        }
+      }
+
+      <button
+        type="button"
+        class="sujets-pagination__nav"
+        [disabled]="currentPage >= totalPages"
+        (click)="next()"
+        aria-label="Page suivante"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+}

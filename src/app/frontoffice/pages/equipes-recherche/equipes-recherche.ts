@@ -50,6 +50,9 @@ export class EquipesRecherche implements OnInit {
   selectedDomaine = signal('');
   selectedStatut = signal('');
   sortOrder = signal('recent');
+  affilSearchQuery = signal('');
+  affilSelectedStatut = signal('');
+  affilSortOrder = signal('recent');
   newMemberName = '';
 
   readonly statutOptions = [
@@ -63,6 +66,19 @@ export class EquipesRecherche implements OnInit {
     { value: 'ancien', label: 'Plus anciens' },
     { value: 'nom', label: 'Nom A–Z' },
     { value: 'membres', label: 'Plus de membres' },
+  ];
+
+  readonly affilStatutOptions = [
+    { value: '', label: 'Tous les statuts' },
+    { value: 'EN_ATTENTE', label: 'En attente' },
+    { value: 'ACCEPTEE', label: 'Acceptée' },
+    { value: 'REFUSEE', label: 'Refusée' },
+  ];
+
+  readonly affilSortOptions = [
+    { value: 'recent', label: 'Plus récents' },
+    { value: 'ancien', label: 'Plus anciens' },
+    { value: 'nom', label: 'Nom A–Z' },
   ];
 
   editModalOpen = false;
@@ -179,6 +195,62 @@ export class EquipesRecherche implements OnInit {
   myDemandesPendingCount = computed(() =>
     this.myDemandes().filter((r) => r.statut === 'EN_ATTENTE').length,
   );
+
+  affiliationSource = computed(() =>
+    this.isChef() ? this.myTeamAffiliations() : this.myDemandes(),
+  );
+
+  affiliationSummary = computed(() => {
+    const list = this.affiliationSource();
+    return {
+      total: list.length,
+      enAttente: list.filter((r) => r.statut === 'EN_ATTENTE').length,
+      acceptees: list.filter((r) => r.statut === 'ACCEPTEE').length,
+      refusees: list.filter((r) => r.statut === 'REFUSEE').length,
+    };
+  });
+
+  filteredAffiliations = computed(() => {
+    const q = this.affilSearchQuery().toLowerCase().trim();
+    const statut = this.affilSelectedStatut();
+    const sort = this.affilSortOrder();
+    const isChefView = this.isChef();
+
+    let result = this.affiliationSource().filter((r) => {
+      if (statut && r.statut !== statut) return false;
+      if (!q) return true;
+      const enseignant = `${r.enseignant.prenom} ${r.enseignant.nom}`.toLowerCase();
+      const email = (r.enseignant.email ?? '').toLowerCase();
+      const equipe = (r.equipeNom ?? '').toLowerCase();
+      const domaine = this.equipeDomaine(r.equipeId).toLowerCase();
+      const motif = (r.motifDecision ?? '').toLowerCase();
+      return (
+        enseignant.includes(q)
+        || email.includes(q)
+        || equipe.includes(q)
+        || domaine.includes(q)
+        || motif.includes(q)
+      );
+    });
+
+    result = [...result].sort((a, b) => {
+      if (sort === 'nom') {
+        const nameA = isChefView
+          ? `${a.enseignant.prenom} ${a.enseignant.nom}`
+          : (a.equipeNom || '');
+        const nameB = isChefView
+          ? `${b.enseignant.prenom} ${b.enseignant.nom}`
+          : (b.equipeNom || '');
+        return nameA.localeCompare(nameB, 'fr');
+      }
+      const da = new Date(a.dateDemande).getTime();
+      const db = new Date(b.dateDemande).getTime();
+      if (sort === 'ancien') return da - db;
+      return db - da;
+    });
+
+    return result;
+  });
 
   ngOnInit(): void {
     const tab = this.route.snapshot.data['tab'];
@@ -448,6 +520,17 @@ export class EquipesRecherche implements OnInit {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  formatDateLong(date: string): string {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   }
 
   formatDateYmd(date: string): string {

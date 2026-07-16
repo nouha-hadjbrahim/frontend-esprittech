@@ -155,7 +155,7 @@
     </div>
   } @else if (viewMode === 'list') {
     <div class="mes-sujets__list">
-      @for (sujet of filteredSujets; track sujet.id) {
+      @for (sujet of pagedSujets; track sujet.id) {
         <app-sujet-list-row
           [sujet]="sujet"
           [isOwner]="isOwner(sujet)"
@@ -167,7 +167,7 @@
     </div>
   } @else {
     <div class="mes-sujets__grid">
-      @for (sujet of filteredSujets; track sujet.id) {
+      @for (sujet of pagedSujets; track sujet.id) {
         <app-sujet-card
           [sujet]="sujet"
           [isOwner]="isOwner(sujet)"
@@ -177,6 +177,16 @@
         />
       }
     </div>
+  }
+
+  @if (!isLoading && !loadError && filteredSujets.length > 0) {
+    <app-sujets-pagination
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalItems]="filteredSujets.length"
+      [pageSize]="pageSize"
+      (pageChange)="goToPage($event)"
+    />
   }
 </div>
 

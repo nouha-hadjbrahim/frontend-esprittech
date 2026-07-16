@@ -9,8 +9,8 @@ describe('frontoffice routes', () => {
     expect(children.find((c) => c.path === 'catalogue')?.canActivate?.length).toBe(1);
   });
 
-  it('should redirect the empty child path to available subjects', () => {
-    expect(children.find((c) => c.path === '')?.redirectTo).toBe('sujets/disponibles');
+  it('should redirect the empty child path to accueil', () => {
+    expect(children.find((c) => c.path === '')?.redirectTo).toBe('accueil');
   });
 
   it('should declare the clean subject route structure', () => {

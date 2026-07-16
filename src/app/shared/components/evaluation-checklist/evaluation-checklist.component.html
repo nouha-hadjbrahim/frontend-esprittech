@@ -1,7 +1,14 @@
 <section class="evaluation-checklist">
   <header class="evaluation-checklist__header">
-    <div>
-      <h3>Évaluation ML - contenu des livrables</h3>
+    <div class="evaluation-checklist__intro">
+      <span class="evaluation-checklist__kicker">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6" fill="currentColor"/>
+          <path d="M5.5 8h5M8 5.5v5" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Machine learning
+      </span>
+      <h3>Évaluation ML — contenu des livrables</h3>
       <p *ngIf="projectTitle">{{ projectTitle }}</p>
     </div>
     <span class="decision-badge" [ngClass]="statusClass">
@@ -19,16 +26,16 @@
       <strong>{{ officialScoreLabel }}</strong>
     </article>
     <article>
+      <span>Validation</span>
+      <strong class="score-overview__pill">{{ validationLabel }}</strong>
+    </article>
+    <article>
       <span>Score validé</span>
       <strong>{{ validatedScoreLabel }}</strong>
     </article>
     <article>
-      <span>Validation</span>
-      <strong>{{ validationLabel }}</strong>
-    </article>
-    <article>
       <span>Confiance</span>
-      <strong>{{ confidencePercent(evaluation.mlGlobalConfidence) ?? '-' }}<ng-container *ngIf="confidencePercent(evaluation.mlGlobalConfidence) !== null">%</ng-container></strong>
+      <strong>{{ confidencePercent(evaluation.mlGlobalConfidence) ?? '—' }}<ng-container *ngIf="confidencePercent(evaluation.mlGlobalConfidence) !== null">%</ng-container></strong>
     </article>
   </div>
 
@@ -51,12 +58,14 @@
     </div>
     <details class="technical-details">
       <summary>Détails techniques</summary>
-      <span *ngIf="evaluation.engineType">Moteur : {{ evaluation.engineType }}</span>
-      <span *ngIf="modelDisplayName">Modèle : {{ modelDisplayName }}</span>
-      <span *ngIf="evaluation.mlModelVersion">Version modèle : {{ evaluation.mlModelVersion }}</span>
-      <span *ngIf="evaluation.pipelineVersion">Pipeline : {{ evaluation.pipelineVersion }}</span>
-      <span *ngIf="evaluation.criteriaVersion">Critères : {{ evaluation.criteriaVersion }}</span>
-      <span *ngIf="evaluation.correlationId">Corrélation : {{ evaluation.correlationId }}</span>
+      <div class="technical-details__body">
+        <span *ngIf="evaluation.engineType">Moteur : {{ evaluation.engineType }}</span>
+        <span *ngIf="modelDisplayName">Modèle : {{ modelDisplayName }}</span>
+        <span *ngIf="evaluation.mlModelVersion">Version modèle : {{ evaluation.mlModelVersion }}</span>
+        <span *ngIf="evaluation.pipelineVersion">Pipeline : {{ evaluation.pipelineVersion }}</span>
+        <span *ngIf="evaluation.criteriaVersion">Critères : {{ evaluation.criteriaVersion }}</span>
+        <span *ngIf="evaluation.correlationId">Corrélation : {{ evaluation.correlationId }}</span>
+      </div>
     </details>
   </div>
 

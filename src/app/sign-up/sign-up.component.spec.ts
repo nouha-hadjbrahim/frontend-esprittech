@@ -22,7 +22,7 @@ describe('SignUpComponent', () => {
   beforeEach(() => {
     authService = jasmine.createSpyObj<AuthService>('AuthService', ['register', 'landingRoute']);
     router = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
-    authService.landingRoute.and.returnValue('/frontoffice/sujets/disponibles');
+    authService.landingRoute.and.returnValue('/frontoffice/accueil');
 
     TestBed.configureTestingModule({
       imports: [SignUpComponent],
@@ -74,7 +74,7 @@ describe('SignUpComponent', () => {
     expect(authService.register).toHaveBeenCalledWith({
       nom: 'Dupont', prenom: 'Jean', email: 'jean@esprit.tn', password: 'Passw0rd',
     });
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/frontoffice/sujets/disponibles');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/frontoffice/accueil');
     expect(component.loading()).toBeFalse();
   });
 
