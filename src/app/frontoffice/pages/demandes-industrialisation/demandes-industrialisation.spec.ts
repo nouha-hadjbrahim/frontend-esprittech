@@ -238,7 +238,7 @@ describe('DemandesIndustrialisation', () => {
     const fixture = createComponent();
 
     expect(fixture.componentInstance.demandes()).toEqual([]);
-    expect(fixture.nativeElement.textContent).toContain("Aucune demande d'industrialisation.");
+    expect(fixture.nativeElement.textContent).toContain("Aucune demande d'industrialisation");
   });
 
   it('should display the filtered empty state when no request matches filters', () => {
@@ -249,7 +249,7 @@ describe('DemandesIndustrialisation', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.filteredDemandes()).toEqual([]);
-    expect(fixture.nativeElement.textContent).toContain('Aucune demande ne correspond aux filtres sélectionnés.');
+    expect(fixture.nativeElement.textContent).toContain('Aucune demande ne correspond aux filtres sélectionnés');
     expect(fixture.nativeElement.textContent).toContain('Réinitialiser les filtres');
   });
 

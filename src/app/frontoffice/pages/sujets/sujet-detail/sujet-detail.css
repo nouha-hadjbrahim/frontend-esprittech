@@ -1,4 +1,4 @@
-﻿:host {
+app-sujet-detail {
   display: block;
   background: #ffffff;
   min-height: calc(100vh - 72px);
@@ -1669,7 +1669,7 @@
 }
 
 @media (max-width: 768px) {
-  :host {
+  app-sujet-detail {
     margin: -2rem -1rem;
     padding: 1.5rem 1rem;
   }

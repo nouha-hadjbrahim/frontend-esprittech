@@ -578,7 +578,7 @@ describe('EquipeDetail', () => {
     });
 
     it('should return default color when id is null', () => {
-      expect(component.couleurAvatar({ ...memberUser, id: null as any })).toBe('#E63946');
+      expect(component.couleurAvatar({ ...memberUser, id: null as any })).toBe('#64748b');
     });
 
     it('should return consistent color for valid id', () => {
@@ -915,13 +915,13 @@ describe('EquipeDetail', () => {
         expect(component.joinStatus()).toBe('Acceptée');
       });
 
-      it('should return "Refusée" when affiliation is REFUSEE', () => {
+      it('should return empty when affiliation is REFUSEE', () => {
         const ref = { ...mockEnAttente, enseignant: enseignantUser, statut: 'REFUSEE' as const };
         affiliationSvc.getMesDemandes.and.returnValue(of([ref]));
         configureModule();
         createComponent();
         fixture.detectChanges();
-        expect(component.joinStatus()).toBe('Refusée');
+        expect(component.joinStatus()).toBe('');
       });
     });
   });

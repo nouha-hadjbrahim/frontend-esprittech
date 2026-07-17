@@ -1,8 +1,12 @@
 import { WritableSignal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { AffiliationService } from '../../core/services/affiliation.service';
 import { Role, User } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
+import { EquipeService } from '../../core/services/equipe.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { FrontofficeLayout } from './frontoffice-layout';
 
 function userWith(role: Role): User {
@@ -17,10 +21,27 @@ describe('FrontofficeLayout', () => {
   let component: FrontofficeLayout;
   let currentUser: WritableSignal<User | null>;
   let logout: jasmine.Spy;
+  let affiliationService: jasmine.SpyObj<AffiliationService>;
+  let equipeService: jasmine.SpyObj<EquipeService>;
+  let notificationService: jasmine.SpyObj<NotificationService>;
 
   beforeEach(() => {
     currentUser = signal<User | null>(null);
     logout = jasmine.createSpy('logout');
+    affiliationService = jasmine.createSpyObj<AffiliationService>('AffiliationService', ['getByEquipe']);
+    affiliationService.getByEquipe.and.returnValue(of([]));
+    equipeService = jasmine.createSpyObj<EquipeService>('EquipeService', ['getAll']);
+    equipeService.getAll.and.returnValue(of([]));
+    notificationService = jasmine.createSpyObj<NotificationService>(
+      'NotificationService',
+      ['initialize', 'marquerCommeLu', 'marquerToutCommeLu', 'loadMore'],
+      {
+        notifications: signal([]),
+        unreadCount: signal(0),
+        loading: signal(false),
+        hasMore: signal(false),
+      },
+    );
     TestBed.configureTestingModule({
       imports: [FrontofficeLayout],
       providers: [
@@ -30,11 +51,15 @@ describe('FrontofficeLayout', () => {
           useValue: {
             currentUser,
             logout,
+            getRole: () => currentUser()?.role ?? null,
             isAffilieToEquipe: () => currentUser()?.isAffilieToEquipe ?? false,
             equipeId: () => currentUser()?.equipeId ?? null,
             equipeNom: () => currentUser()?.equipeNom ?? null,
           },
         },
+        { provide: AffiliationService, useValue: affiliationService },
+        { provide: EquipeService, useValue: equipeService },
+        { provide: NotificationService, useValue: notificationService },
       ],
     });
     component = TestBed.createComponent(FrontofficeLayout).componentInstance;

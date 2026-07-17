@@ -4,13 +4,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ProjetCard } from '../../../core/models/projet-catalogue.model';
 import { Catalogue } from './catalogue';
+import { environment } from '../../../../environments/environment';
 
 describe('Catalogue', () => {
   let fixture: ComponentFixture<Catalogue>;
   let component: Catalogue;
   let httpTesting: HttpTestingController;
 
-  const API = 'http://localhost:8080/api';
+  const API = environment.apiUrl;
 
   const mockCards: ProjetCard[] = [
     {

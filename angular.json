@@ -33,7 +33,11 @@
             ],
             "styles": [
               "src/custom-theme.scss",
-              "src/styles.css"
+              "src/styles.css",
+              "src/app/ci/industrialisation/ci-industrialisation.component.css",
+              "src/app/frontoffice/styles/projet-detail-shared.css",
+              "src/app/frontoffice/pages/sujets/sujet-detail/sujet-detail.css",
+              "src/app/frontoffice/pages/equipes-recherche/equipes-recherche.scss"
             ],
             "scripts": []
           },

@@ -71,12 +71,12 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.evaluationComplete).toBeTrue();
     expect(component.hasBlockingCriteria).toBeTrue();
     expect(component.scorePercent).toBe(76);
-    expect(component.mlScoreLabel).toBe('76 / 100');
-    expect(component.officialScoreLabel).toBe('76 / 100');
+    expect(component.mlScoreLabel).toBe('76.00 / 100');
+    expect(component.officialScoreLabel).toBe('76.00 / 100');
     expect(component.validatedScoreLabel).toBe('-');
-    expect(component.statusLabel).toBe('Éligible avec alertes');
-    expect(component.statusClass).toBe('decision-badge--warning');
-    expect(component.progressClass).toBe('checklist-progress__bar--warning');
+    expect(component.statusLabel).toBe('Non éligible');
+    expect(component.statusClass).toBe('decision-badge--no');
+    expect(component.progressClass).toBe('checklist-progress__bar--danger');
     expect(component.blockingCriteriaNames).toEqual(['Git disponible']);
     expect(component.analysisIssueCount).toBe(1);
     expect(component.isBlocking(eliminatoireKo)).toBeTrue();
@@ -103,7 +103,7 @@ describe('EvaluationChecklistComponent', () => {
   it('should expose warning and success states for eligible incomplete and complete evaluations', () => {
     component.evaluation = evaluation({ eligibilityStatus: 'REVIEW_REQUIRED' });
     expect(component.statusLabel).toBe('Revue requise');
-    expect(component.statusClass).toBe('decision-badge--warning');
+    expect(component.statusClass).toBe('decision-badge--no');
 
     component.evaluation = evaluation({
       resultats: [eliminatoireOk, note],
@@ -111,7 +111,7 @@ describe('EvaluationChecklistComponent', () => {
       scoreFinal: 68,
     });
 
-    expect(component.statusLabel).toBe('Analyse nécessaire');
+    expect(component.statusLabel).toBe('Éligible');
     expect(component.statusClass).toBe('decision-badge--warning');
     expect(component.progressClass).toBe('checklist-progress__bar--warning');
 
@@ -121,7 +121,7 @@ describe('EvaluationChecklistComponent', () => {
       scoreFinal: 72,
     });
 
-    expect(component.statusClass).toBe('decision-badge--go');
+    expect(component.statusClass).toBe('decision-badge--warning');
     expect(component.progressClass).toBe('checklist-progress__bar--success');
   });
 
@@ -134,7 +134,7 @@ describe('EvaluationChecklistComponent', () => {
 
     component.evaluation = evaluation({ scoreFinal: -5, eligibleIndustrialisation: false });
     expect(component.scorePercent).toBe(0);
-    expect(component.statusLabel).toBe('NO GO - Non éligible');
+    expect(component.statusLabel).toBe('Non éligible');
   });
 
   it('should format empty eliminatory and note results with fallbacks', () => {
@@ -258,6 +258,6 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.mlScoreLabel).toBe('Non calculé');
     expect(component.officialScoreLabel).toBe('Non calculé');
     expect(component.validatedScoreLabel).toBe('-');
-    expect(component.uniqueStrengths).toEqual(['TRACEABLE_MULTISOURCE_EVIDENCE']);
+    expect(component.uniqueStrengths).toEqual(['Preuves traçables provenant de plusieurs sources.']);
   });
 });

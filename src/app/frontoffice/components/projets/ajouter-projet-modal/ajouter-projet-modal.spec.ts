@@ -3,13 +3,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AjouterProjetModal } from './ajouter-projet-modal';
+import { environment } from '../../../../../environments/environment';
 
 describe('AjouterProjetModal', () => {
   let fixture: ComponentFixture<AjouterProjetModal>;
   let component: AjouterProjetModal;
   let httpTesting: HttpTestingController;
 
-  const API = 'http://localhost:8080/api';
+  const API = environment.apiUrl;
 
   beforeEach(() => {
     TestBed.configureTestingModule({

@@ -3,11 +3,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { ProjetCatalogueService } from './projet-catalogue.service';
 import { ProjetCard, ProjetCatalogue, ProjetDetails } from '../models/projet-catalogue.model';
+import { environment } from '../../../environments/environment';
 
 describe('ProjetCatalogueService', () => {
   let service: ProjetCatalogueService;
   let httpTesting: HttpTestingController;
-  const API = 'http://localhost:8080/api';
+  const API = environment.apiUrl;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -33,7 +34,12 @@ describe('ProjetCatalogueService', () => {
     prerequis: [],
   };
 
-  const mockDetails: ProjetDetails = { ...mockCatalogue, encadrantEmail: 'jean@esprit.tn', chefEquipeNom: 'Alice Martin' };
+  const mockDetails: ProjetDetails = {
+    ...mockCatalogue,
+    sujetId: null,
+    encadrantEmail: 'jean@esprit.tn',
+    chefEquipeNom: 'Alice Martin',
+  };
 
   // ── Enseignant ────────────────────────────────────────────────────
 

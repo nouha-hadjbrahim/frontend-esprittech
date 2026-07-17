@@ -14,7 +14,7 @@ import { AuthService } from '../services/auth.service';
 const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
 
 let isRefreshing = false;
-const refreshResult$ = new ReplaySubject<boolean>(1);
+let refreshResult$ = new ReplaySubject<boolean>(1);
 
 /**
  * Ajoute credentials + Bearer token (mémoire) sur chaque requête API.
@@ -63,6 +63,7 @@ function handle401(
   }
 
   isRefreshing = true;
+  refreshResult$ = new ReplaySubject<boolean>(1);
 
   return authService.refreshToken().pipe(
     switchMap(() => {

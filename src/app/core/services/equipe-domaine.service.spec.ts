@@ -4,8 +4,9 @@ import { TestBed } from '@angular/core/testing';
 import { EquipeDomaine } from '../models/equipe-domaine.model';
 import { Page } from '../models/page.model';
 import { EquipeDomaineService } from './equipe-domaine.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080/api/equipes/admin/domaines';
+const API = `${environment.apiUrl}/equipes/admin/domaines`;
 
 describe('EquipeDomaineService', () => {
   let service: EquipeDomaineService;
