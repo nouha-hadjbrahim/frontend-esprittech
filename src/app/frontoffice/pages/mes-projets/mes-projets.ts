@@ -6,6 +6,7 @@ import { ProjetCatalogueService } from '../../../core/services/projet-catalogue.
 import { AjouterProjetModal } from '../../components/projets/ajouter-projet-modal/ajouter-projet-modal';
 import { FrontofficeEmptyState } from '../../components/frontoffice-empty-state/frontoffice-empty-state';
 import { FilterDropdown } from '../../components/sujets/filter-dropdown/filter-dropdown';
+import { ConfirmDialog } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import {
   DEFAULT_PROJET_COVER_IMAGE,
   STATUT_PROJET_LABELS,
@@ -16,7 +17,7 @@ import {
 /** Page « Mes projets » de l'enseignant : liste de ses projets déposés au catalogue. */
 @Component({
   selector: 'app-mes-projets',
-  imports: [FormsModule, RouterModule, AjouterProjetModal, FrontofficeEmptyState, FilterDropdown],
+  imports: [FormsModule, RouterModule, AjouterProjetModal, FrontofficeEmptyState, FilterDropdown, ConfirmDialog],
   templateUrl: './mes-projets.html',
   styleUrl: './mes-projets.css',
 })
@@ -29,6 +30,12 @@ export class MesProjets implements OnInit {
   errorMessage = '';
   successMessage = '';
   isModalOpen = false;
+
+  /** Popup d'information affiché après la soumission d'un projet (rappel dépôt des livrables). */
+  infoDialogOpen = false;
+  readonly infoDialogMessage =
+    'Votre projet a été soumis pour validation. Pour améliorer la note de votre projet, ' +
+    'pensez à déposer vos livrables dans la section Livrables.';
 
   searchQuery = '';
   selectedType = '';
@@ -90,9 +97,12 @@ export class MesProjets implements OnInit {
 
   onProjetSaved(): void {
     this.isModalOpen = false;
-    this.successMessage = 'Projet soumis pour validation';
+    this.infoDialogOpen = true;
     this.load();
-    setTimeout(() => (this.successMessage = ''), 4000);
+  }
+
+  closeInfoDialog(): void {
+    this.infoDialogOpen = false;
   }
 
   onSearchChange(): void {

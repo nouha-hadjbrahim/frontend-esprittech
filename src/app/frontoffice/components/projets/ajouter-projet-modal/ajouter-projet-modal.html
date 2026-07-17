@@ -139,9 +139,9 @@
             </div>
 
             <!-- Domaines -->
-            <div class="form-field">
+            <div class="form-field" [class.form-field--error]="isDomainesInvalid">
               <label class="form-label">Domaines <span class="form-hint">(au moins 1)</span></label>
-              <div class="chip-add">
+              <div class="tech-add">
                 <input
                   #domaineInput
                   type="text"
@@ -149,27 +149,30 @@
                   placeholder="Ajouter un domaine..."
                   (keydown.enter)="$event.preventDefault(); addDomaine(domaineInput)"
                 />
-                <button type="button" class="chip-add__btn" (click)="addDomaine(domaineInput)"
-                        [disabled]="addingReference" aria-label="Ajouter un domaine">+</button>
+                <button type="button" class="tech-add__btn" (click)="addDomaine(domaineInput)"
+                        [disabled]="addingReference">Ajouter</button>
               </div>
-              @if (domaines.length === 0) {
-                <span class="form-hint">Aucun domaine disponible.</span>
+              @if (domaines.length > 0) {
+                <div class="ref-list">
+                  @for (d of domaines; track d.id) {
+                    <label class="ref-item">
+                      <input type="checkbox" [checked]="selectedDomaines.has(d.id)" (change)="toggleDomaine(d.id)" />
+                      <span>{{ d.nom }}</span>
+                    </label>
+                  }
+                </div>
+              } @else {
+                <p class="ref-empty">Aucun domaine disponible. Ajoutez-en un ci-dessus.</p>
               }
-              <div class="chips">
-                @for (d of domaines; track d.id) {
-                  <button type="button" class="chip" [class.chip--active]="selectedDomaines.has(d.id)"
-                          (click)="toggleDomaine(d.id)">{{ d.nom }}</button>
-                }
-              </div>
               @if (isDomainesInvalid) {
                 <span class="form-error">Sélectionnez au moins un domaine.</span>
               }
             </div>
 
             <!-- Technologies -->
-            <div class="form-field">
+            <div class="form-field" [class.form-field--error]="isTechnologiesInvalid">
               <label class="form-label">Technologies <span class="form-hint">(au moins 1)</span></label>
-              <div class="chip-add">
+              <div class="tech-add">
                 <input
                   #technologieInput
                   type="text"
@@ -177,18 +180,21 @@
                   placeholder="Ajouter une technologie..."
                   (keydown.enter)="$event.preventDefault(); addTechnologie(technologieInput)"
                 />
-                <button type="button" class="chip-add__btn" (click)="addTechnologie(technologieInput)"
-                        [disabled]="addingReference" aria-label="Ajouter une technologie">+</button>
+                <button type="button" class="tech-add__btn" (click)="addTechnologie(technologieInput)"
+                        [disabled]="addingReference">Ajouter</button>
               </div>
-              @if (technologies.length === 0) {
-                <span class="form-hint">Aucune technologie disponible.</span>
+              @if (technologies.length > 0) {
+                <div class="tech-grid">
+                  @for (t of technologies; track t.id) {
+                    <label class="tech-checkbox">
+                      <input type="checkbox" [checked]="selectedTechnologies.has(t.id)" (change)="toggleTechnologie(t.id)" />
+                      <span class="tech-checkbox__label">{{ t.nom }}</span>
+                    </label>
+                  }
+                </div>
+              } @else {
+                <p class="ref-empty">Aucune technologie disponible. Ajoutez-en une ci-dessus.</p>
               }
-              <div class="chips">
-                @for (t of technologies; track t.id) {
-                  <button type="button" class="chip" [class.chip--active]="selectedTechnologies.has(t.id)"
-                          (click)="toggleTechnologie(t.id)">{{ t.nom }}</button>
-                }
-              </div>
               @if (isTechnologiesInvalid) {
                 <span class="form-error">Sélectionnez au moins une technologie.</span>
               }
@@ -197,7 +203,7 @@
             <!-- Prérequis -->
             <div class="form-field">
               <label class="form-label">Prérequis <span class="form-hint">(optionnel)</span></label>
-              <div class="chip-add">
+              <div class="tech-add">
                 <input
                   #prerequisInput
                   type="text"
@@ -205,18 +211,21 @@
                   placeholder="Ajouter un prérequis..."
                   (keydown.enter)="$event.preventDefault(); addPrerequis(prerequisInput)"
                 />
-                <button type="button" class="chip-add__btn" (click)="addPrerequis(prerequisInput)"
-                        [disabled]="addingReference" aria-label="Ajouter un prérequis">+</button>
+                <button type="button" class="tech-add__btn" (click)="addPrerequis(prerequisInput)"
+                        [disabled]="addingReference">Ajouter</button>
               </div>
-              @if (prerequis.length === 0) {
-                <span class="form-hint">Aucun prérequis disponible.</span>
+              @if (prerequis.length > 0) {
+                <div class="ref-list">
+                  @for (p of prerequis; track p.id) {
+                    <label class="ref-item">
+                      <input type="checkbox" [checked]="selectedPrerequis.has(p.id)" (change)="togglePrerequis(p.id)" />
+                      <span>{{ p.nom }}</span>
+                    </label>
+                  }
+                </div>
+              } @else {
+                <p class="ref-empty">Aucun prérequis disponible. Ajoutez-en un ci-dessus.</p>
               }
-              <div class="chips">
-                @for (p of prerequis; track p.id) {
-                  <button type="button" class="chip" [class.chip--active]="selectedPrerequis.has(p.id)"
-                          (click)="togglePrerequis(p.id)">{{ p.nom }}</button>
-                }
-              </div>
             </div>
           </div>
         </div>
