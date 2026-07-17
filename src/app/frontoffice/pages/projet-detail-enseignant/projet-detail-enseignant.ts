@@ -22,7 +22,9 @@ import {
   TypeIndustrialisation,
 } from '../../../core/models/industrialisation.model';
 import { SujetProjet } from '../../../core/models/sujet-projet.model';
+import { Affectation } from '../../../core/models/candidature.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { CandidatureService } from '../../../core/services/candidature.service';
 import { CatalogueLivrableService } from '../../../core/services/catalogue-livrable.service';
 import { EvaluationService } from '../../../core/services/evaluation.service';
 import { HistoriqueService } from '../../../core/services/historique.service';
@@ -33,7 +35,7 @@ import { SujetProjetService } from '../../../core/services/sujet-projet.service'
 import { STATUT_PROJET_LABELS, TYPE_PROJET_LABELS, DEFAULT_PROJET_COVER_IMAGE } from '../../constants/projet-catalogue.constants';
 import { EvaluationChecklistComponent } from '../../../shared/components/evaluation-checklist/evaluation-checklist.component';
 
-type DetailTab = 'infos' | 'livrables' | 'industrialisation' | 'historique';
+type DetailTab = 'infos' | 'membres' | 'livrables' | 'industrialisation' | 'historique';
 
 /** Statuts pour lesquels un projet est publié au catalogue (dépôt de livrables autorisé). */
 const STATUTS_CATALOGUE = new Set<StatutProjet>([
@@ -61,6 +63,7 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly projetService = inject(ProjetCatalogueService);
   private readonly authService = inject(AuthService);
+  private readonly candidatureService = inject(CandidatureService);
   private readonly livrableService = inject(CatalogueLivrableService);
   private readonly historiqueService = inject(HistoriqueService);
   private readonly sujetProjetService = inject(SujetProjetService);
@@ -89,6 +92,10 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   historiqueError = '';
   /** Passe à true si le serveur refuse l'accès (projet dont l'utilisateur n'est pas l'encadrant) : section masquée sans alerte. */
   historiqueForbidden = false;
+
+  membres: Affectation[] = [];
+  membresLoading = false;
+  membresError = '';
 
   livrables: LivrableCatalogue[] = [];
   livrablesLoading = false;
@@ -179,6 +186,7 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
         this.projet = projet;
         this.isLoading = false;
         this.loadLivrables();
+        this.loadMembres();
         this.loadSujetProjet();
         this.loadEvaluation();
         this.loadHistorique(id);
@@ -229,6 +237,39 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
         this.historiqueLoading = false;
       },
     });
+  }
+
+  /** Membres issus du sujet d'origine (affectations actives), si le projet catalogue en provient. */
+  loadMembres(): void {
+    if (!this.projet?.sujetId) {
+      this.membres = [];
+      this.membresLoading = false;
+      this.membresError = '';
+      return;
+    }
+    this.membresLoading = true;
+    this.membresError = '';
+    this.candidatureService.getAffectationsParSujet(this.projet.sujetId).subscribe({
+      next: (membres) => {
+        this.membres = membres.filter((m) => m.statut === 'ACTIVE');
+        this.membresLoading = false;
+      },
+      error: () => {
+        this.membres = [];
+        this.membresError = 'Impossible de charger les membres du projet.';
+        this.membresLoading = false;
+      },
+    });
+  }
+
+  memberFullName(membre: Affectation): string {
+    return `${membre.etudiantPrenom} ${membre.etudiantNom}`.trim();
+  }
+
+  memberInitials(membre: Affectation): string {
+    const prenom = membre.etudiantPrenom?.trim().charAt(0) ?? '';
+    const nom = membre.etudiantNom?.trim().charAt(0) ?? '';
+    return `${prenom}${nom}`.toUpperCase() || '?';
   }
 
   /** Charge le sujet d'origine (SujetProjet), si ce projet catalogue en provient, pour enrichir l'affichage score/éligibilité. */
@@ -463,6 +504,27 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
 
   downloadLivrable(livrable: LivrableCatalogue): string {
     return this.livrableService.downloadUrl(livrable.id);
+  }
+
+  livrableDisplayName(livrable: LivrableCatalogue): string {
+    return livrable.originalFileName?.trim() || livrable.nom;
+  }
+
+  livrableDateLabel(livrable: LivrableCatalogue): string {
+    if (!livrable.dateDepot) return '—';
+    return new Date(livrable.dateDepot).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+  }
+
+  livrableSizeLabel(livrable: LivrableCatalogue): string | null {
+    if (livrable.size == null || livrable.size <= 0) return null;
+    const bytes = livrable.size;
+    if (bytes < 1024) return `${bytes} o`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   // ── Industrialisation ───────────────────────────────────────────────

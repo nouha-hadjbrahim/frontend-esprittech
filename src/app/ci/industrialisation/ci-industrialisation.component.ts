@@ -283,12 +283,19 @@ export class CiIndustrialisationComponent implements OnInit {
     if (latest?.finalValidatedScore != null) {
       return latest.finalValidatedScore;
     }
-    return latest?.scoreFinal ?? candidature.scoreEvaluationProjet ?? null;
+    if (latest?.scoreFinal != null) {
+      return latest.scoreFinal;
+    }
+    // Score projet à 0 sans évaluation réelle → considéré non calculé
+    if (candidature.scoreEvaluationProjet == null || candidature.scoreEvaluationProjet === 0) {
+      return null;
+    }
+    return candidature.scoreEvaluationProjet;
   }
 
   scoreDisplay(candidature: CandidatureIndustrialisation): string {
     const score = this.scoreValue(candidature);
-    return score == null ? 'Non calculé' : String(score);
+    return score == null ? '-' : String(score);
   }
 
   scoreTitle(candidature: CandidatureIndustrialisation): string {
@@ -324,6 +331,9 @@ export class CiIndustrialisationComponent implements OnInit {
   }
 
   scoreClass(candidature: CandidatureIndustrialisation): string {
+    if (this.scoreValue(candidature) == null) {
+      return 'score-card--warning';
+    }
     if (candidature.latestEvaluation?.eligibilityStatus === 'NON_ELIGIBLE_EN_L_ETAT'
       || candidature.latestEvaluation?.eligibilityStatus === 'NOT_EVALUABLE') {
       return 'score-card--danger';
@@ -473,7 +483,7 @@ export class CiIndustrialisationComponent implements OnInit {
   }
 
   currentScoreCardSuffix(candidature: CandidatureIndustrialisation): string {
-    return this.scoreValue(candidature) == null ? '' : '/100';
+    return '/100';
   }
 
   currentDecisionOrEligibility(candidature: CandidatureIndustrialisation): string {
@@ -516,6 +526,17 @@ export class CiIndustrialisationComponent implements OnInit {
     if (decision === 'GO') return 'status-pill--go';
     if (decision === 'NO_GO') return 'status-pill--nogo';
     return 'status-pill--instruction';
+  }
+
+  /** Ton visuel de la carte « Aide à la décision CI » selon la reco. */
+  decisionHelperTone(candidature: CandidatureIndustrialisation): 'go' | 'nogo' | 'neutral' {
+    const decision = this.backendIndustrialisationScore(candidature)?.decisionRecommandee;
+    if (decision === 'GO') return 'go';
+    if (decision === 'NO_GO') return 'nogo';
+    const reco = this.recommendation(candidature);
+    if (reco.startsWith('GO')) return 'go';
+    if (reco.startsWith('NO GO')) return 'nogo';
+    return 'neutral';
   }
 
   manualReviewCount(score: IndustrialisationScore | null): number {

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -9,6 +9,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { AccueilStats } from '../core/models/accueil-stats.model';
+import { AccueilService } from '../core/services/accueil.service';
 import { AuthService } from '../core/services/auth.service';
 
 /** Vérifie que password et confirmPassword sont identiques (validateur de groupe). */
@@ -23,11 +25,12 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   standalone: true,
   imports: [CommonModule, RouterLink, ReactiveFormsModule],
   templateUrl: './sign-up.component.html',
-  styleUrl: './sign-up.component.css'
+  styleUrls: ['./sign-up.component.css', '../sign-in/sign-in.component.css']
 })
-export class SignUpComponent {
+export class SignUpComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly accueilService = inject(AccueilService);
   private readonly router = inject(Router);
 
   // Doit rester aligné avec les contraintes du backend (RegisterRequest)
@@ -44,6 +47,20 @@ export class SignUpComponent {
   readonly infoMessage = signal<string | null>(null);
   /** Email en cours de vérification (affiché à l'étape 2). */
   readonly pendingEmail = signal<string>('');
+  readonly stats = signal<AccueilStats | null>(null);
+
+  ngOnInit(): void {
+    this.accueilService.getStats().subscribe({
+      next: (s) => this.stats.set(s),
+      error: () => this.stats.set(null),
+    });
+  }
+
+  formatStat(value: number | null | undefined, withPlus = false): string {
+    if (value == null) return '—';
+    const formatted = new Intl.NumberFormat('fr-FR').format(value);
+    return withPlus ? `${formatted}+` : formatted;
+  }
 
   readonly form = this.fb.nonNullable.group(
     {
