@@ -4,8 +4,9 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Role, User } from '../models/user.model';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080/api/auth';
+const API = `${environment.apiUrl}/auth`;
 
 function userWith(role: Role): User {
   return {

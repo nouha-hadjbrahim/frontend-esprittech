@@ -4,13 +4,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ProjetCard } from '../../../core/models/projet-catalogue.model';
 import { MesProjets } from './mes-projets';
+import { environment } from '../../../../environments/environment';
 
 describe('MesProjets', () => {
   let fixture: ComponentFixture<MesProjets>;
   let component: MesProjets;
   let httpTesting: HttpTestingController;
 
-  const API = 'http://localhost:8080/api';
+  const API = environment.apiUrl;
 
   const mockCards: ProjetCard[] = [
     {
@@ -128,7 +129,7 @@ describe('MesProjets', () => {
     component.isModalOpen = true;
     component.onProjetSaved();
     expect(component.isModalOpen).toBe(false);
-    expect(component.successMessage).toBeTruthy();
+    expect(component.infoDialogOpen).toBeTrue();
     flushInitRequests();
   });
 

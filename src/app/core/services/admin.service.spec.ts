@@ -4,8 +4,9 @@ import { TestBed } from '@angular/core/testing';
 import { Page } from '../models/page.model';
 import { User } from '../models/user.model';
 import { AdminService, MessageResponse } from './admin.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080/api/admin';
+const API = `${environment.apiUrl}/admin`;
 
 const USER: User = {
   id: 5,

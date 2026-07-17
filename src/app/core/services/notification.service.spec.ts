@@ -3,8 +3,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Notification, NotificationPage } from '../models/notification.model';
 import { NotificationService } from './notification.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080/api/notifications';
+const API = `${environment.apiUrl}/notifications`;
 
 function makeNotification(overrides: Partial<Notification> = {}): Notification {
   return {

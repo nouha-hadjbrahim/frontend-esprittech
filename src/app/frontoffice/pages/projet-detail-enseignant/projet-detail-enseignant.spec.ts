@@ -7,13 +7,14 @@ import { EvaluationResponse } from '../../../core/models/evaluation.model';
 import { ProjetDetails } from '../../../core/models/projet-catalogue.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ProjetDetailEnseignant } from './projet-detail-enseignant';
+import { environment } from '../../../../environments/environment';
 
 describe('ProjetDetailEnseignant', () => {
   let fixture: ComponentFixture<ProjetDetailEnseignant>;
   let component: ProjetDetailEnseignant;
   let httpTesting: HttpTestingController;
 
-  const API = 'http://localhost:8080/api';
+  const API = environment.apiUrl;
 
   const mockDetails: ProjetDetails = {
     id: 1, typeProjet: 'RDI', titre: 'Projet IA', description: 'Desc',

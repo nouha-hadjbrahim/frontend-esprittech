@@ -6,8 +6,9 @@ import { Subject, of, throwError } from 'rxjs';
 import { User } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
 import { authInterceptor } from './auth.interceptor';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080/api';
+const API = environment.apiUrl;
 
 describe('authInterceptor', () => {
   let http: HttpClient;

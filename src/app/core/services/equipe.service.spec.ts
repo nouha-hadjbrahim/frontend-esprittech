@@ -5,8 +5,9 @@ import { CreateEquipePayload, CreateEquipeRequest, Equipe } from '../models/equi
 import { Page } from '../models/page.model';
 import { User } from '../models/user.model';
 import { EquipeService } from './equipe.service';
+import { environment } from '../../../environments/environment';
 
-const API = 'http://localhost:8080/api/equipes';
+const API = `${environment.apiUrl}/equipes`;
 
 describe('EquipeService', () => {
   let service: EquipeService;

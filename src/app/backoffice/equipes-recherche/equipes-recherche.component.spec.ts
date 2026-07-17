@@ -91,9 +91,9 @@ describe('EquipesRechercheComponent', () => {
   });
 
   it('should toggle view between grille and liste', () => {
-    expect(component.vue).toBe('grille');
-    component.vue = 'liste';
     expect(component.vue).toBe('liste');
+    component.vue = 'grille';
+    expect(component.vue).toBe('grille');
   });
 
   it('should compute stats correctly', () => {
