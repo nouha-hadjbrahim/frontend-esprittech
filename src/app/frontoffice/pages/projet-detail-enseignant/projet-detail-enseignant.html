@@ -177,6 +177,39 @@
                     <span class="summary-card__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</span>
                   </div>
                 </div>
+
+                <app-evaluation-checklist
+                  [evaluation]="evaluation"
+                  [projectTitle]="projet.titre"
+                ></app-evaluation-checklist>
+
+                @if (evaluation.resultats?.length) {
+                  <div class="evaluation-results">
+                    @for (resultat of evaluation.resultats; track resultat.id) {
+                      <div class="evaluation-result-row">
+                        <div>
+                          <strong>{{ resultat.critereLibelle }}</strong>
+
+                          @if (resultat.critereDomaine) {
+                            <span> · {{ resultat.critereDomaine }}</span>
+                          }
+
+                          @if (resultat.commentaire) {
+                            <p>{{ resultat.commentaire }}</p>
+                          }
+                        </div>
+
+                        <strong>
+                          @if (resultat.typeCritere === 'ELIMINATOIRE') {
+                            {{ resultat.reponseEliminatoire }}
+                          } @else {
+                            {{ noteResultDisplay(resultat) }}
+                          }
+                        </strong>
+                      </div>
+                    }
+                  </div>
+                }
               }
             </article>
 

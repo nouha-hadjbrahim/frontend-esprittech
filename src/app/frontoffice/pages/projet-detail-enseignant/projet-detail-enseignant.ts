@@ -11,7 +11,7 @@ import {
   TypeLivrable,
 } from '../../../core/models/livrable.model';
 import { ReponseEliminatoire } from '../../../core/models/critere.model';
-import { EvaluationResponse } from '../../../core/models/evaluation.model';
+import { EvaluationResponse, ResultatCritereResponse } from '../../../core/models/evaluation.model';
 import {
   CandidatureIndustrialisation,
   EliminatoryWarningsConfirmation,
@@ -31,6 +31,7 @@ import { IndustrialisationService } from '../../../core/services/industrialisati
 import { ProjetCatalogueService } from '../../../core/services/projet-catalogue.service';
 import { SujetProjetService } from '../../../core/services/sujet-projet.service';
 import { STATUT_PROJET_LABELS, TYPE_PROJET_LABELS, DEFAULT_PROJET_COVER_IMAGE } from '../../constants/projet-catalogue.constants';
+import { EvaluationChecklistComponent } from '../../../shared/components/evaluation-checklist/evaluation-checklist.component';
 
 type DetailTab = 'infos' | 'livrables' | 'industrialisation' | 'historique';
 
@@ -51,7 +52,7 @@ const STATUTS_CATALOGUE = new Set<StatutProjet>([
  */
 @Component({
   selector: 'app-projet-detail-enseignant',
-  imports: [RouterModule, FormsModule, DatePipe],
+  imports: [RouterModule, FormsModule, DatePipe, EvaluationChecklistComponent],
   templateUrl: './projet-detail-enseignant.html',
   styleUrl: './projet-detail-enseignant.css',
 })
@@ -279,6 +280,20 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
         this.evaluationLoading = false;
       },
     });
+  }
+
+  /** Formate l'affichage de la note d'un critère (identique à la page sujet). */
+  noteResultDisplay(resultat: ResultatCritereResponse): string {
+    if (resultat.mlScore != null && resultat.mlMaxScore != null) {
+      const normalized = resultat.normalizedScore != null ? ` - ${Math.round(resultat.normalizedScore * 100)}/100` : '';
+      return `${resultat.mlScore}/${resultat.mlMaxScore}${normalized}`;
+    }
+    const note = resultat.noteValue ?? resultat.noteObtenue ?? 0;
+    const scale = resultat.bareme && resultat.bareme > 0 ? resultat.bareme : null;
+    if (scale) {
+      return resultat.noteLabel ? `${note}/${scale} - ${resultat.noteLabel}` : `${note}/${scale}`;
+    }
+    return resultat.noteLabel ? resultat.noteLabel : String(note);
   }
 
   get scoreCooldownActive(): boolean {

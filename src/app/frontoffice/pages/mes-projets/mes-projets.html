@@ -188,3 +188,11 @@
   (closed)="closeModal()"
   (saved)="onProjetSaved()"
 ></app-ajouter-projet-modal>
+
+<app-confirm-dialog
+  [isOpen]="infoDialogOpen"
+  title="Projet soumis pour validation"
+  [message]="infoDialogMessage"
+  [alertOnly]="true"
+  (cancelled)="closeInfoDialog()"
+/>

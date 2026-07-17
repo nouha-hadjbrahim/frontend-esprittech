@@ -13,6 +13,7 @@ const NOTIFICATION_CONFIG: Record<NotificationType, { icon: string; color: strin
   AFFILIATION_DEMANDE:   { icon: '📨', color: '#f59e0b' },
   AFFILIATION_ACCEPTEE:  { icon: '✅', color: '#16a34a' },
   AFFILIATION_REJETEE:   { icon: '❌', color: '#dc2626' },
+  PROJET_SOUMIS:         { icon: '📝', color: '#f59e0b' },
   PROJET_VALIDE:         { icon: '✅', color: '#16a34a' },
   PROJET_REJETE:         { icon: '❌', color: '#dc2626' },
   SUJET_DEMANDE:         { icon: '📝', color: '#f59e0b' },
