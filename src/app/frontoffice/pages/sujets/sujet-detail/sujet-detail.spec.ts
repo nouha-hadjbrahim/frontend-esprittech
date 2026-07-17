@@ -1,11 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { Affectation } from '../../../../core/models/candidature.model';
 import { ReponseEliminatoire } from '../../../../core/models/critere.model';
 import { CandidatureIndustrialisation, IndustrialisationFormResponse, QuestionIndustrialisation } from '../../../../core/models/industrialisation.model';
 import { SujetProjet } from '../../../../core/models/sujet-projet.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CandidatureService } from '../../../../core/services/candidature.service';
 import { EvaluationService } from '../../../../core/services/evaluation.service';
+import { HistoriqueService } from '../../../../core/services/historique.service';
 import { IndustrialisationService } from '../../../../core/services/industrialisation.service';
 import { LivrableService } from '../../../../core/services/livrable.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
@@ -19,6 +22,8 @@ describe('SujetDetail industrialisation warnings', () => {
   let evaluationService: jasmine.SpyObj<EvaluationService>;
   let livrableService: jasmine.SpyObj<LivrableService>;
   let industrialisationService: jasmine.SpyObj<IndustrialisationService>;
+  let candidatureService: jasmine.SpyObj<CandidatureService>;
+  let historiqueService: jasmine.SpyObj<HistoriqueService>;
 
   const sujet: SujetProjet = {
     id: 42,
@@ -99,6 +104,12 @@ describe('SujetDetail industrialisation warnings', () => {
     authService = jasmine.createSpyObj<AuthService>('AuthService', ['getRole', 'currentUser', 'equipeNom']);
     evaluationService = jasmine.createSpyObj<EvaluationService>('EvaluationService', ['getLatestEvaluation', 'calculateScore']);
     livrableService = jasmine.createSpyObj<LivrableService>('LivrableService', ['findByProjet', 'downloadUrl']);
+    candidatureService = jasmine.createSpyObj<CandidatureService>('CandidatureService', [
+      'getCandidaturesParSujet',
+      'getAffectationsParSujet',
+      'retirerEtudiant',
+    ]);
+    historiqueService = jasmine.createSpyObj<HistoriqueService>('HistoriqueService', ['getBySujet']);
     industrialisationService = jasmine.createSpyObj<IndustrialisationService>('IndustrialisationService', [
       'create',
       'getFormulaire',
@@ -114,6 +125,20 @@ describe('SujetDetail industrialisation warnings', () => {
     evaluationService.getLatestEvaluation.and.returnValue(throwError(() => ({ status: 404 })));
     livrableService.findByProjet.and.returnValue(of([]));
     livrableService.downloadUrl.and.returnValue('http://download/1');
+    candidatureService.getCandidaturesParSujet.and.returnValue(of([]));
+    candidatureService.getAffectationsParSujet.and.returnValue(of([]));
+    candidatureService.retirerEtudiant.and.returnValue(of({
+      id: 1,
+      sujetId: 42,
+      etudiantId: 1,
+      etudiantNom: 'Test',
+      etudiantPrenom: 'User',
+      statut: 'RETIREE_ARCHIVEE',
+      dateDebut: '2026-01-01T00:00:00Z',
+      dateRetrait: '2026-01-02T00:00:00Z',
+      motifRetrait: 'test',
+    } as Affectation));
+    historiqueService.getBySujet.and.returnValue(of([]));
     industrialisationService.saveReponses.and.returnValue(of(candidature));
     industrialisationService.soumettre.and.returnValues(
       throwError(() => ({
@@ -137,6 +162,8 @@ describe('SujetDetail industrialisation warnings', () => {
         { provide: EvaluationService, useValue: evaluationService },
         { provide: LivrableService, useValue: livrableService },
         { provide: IndustrialisationService, useValue: industrialisationService },
+        { provide: CandidatureService, useValue: candidatureService },
+        { provide: HistoriqueService, useValue: historiqueService },
       ],
     }).compileComponents();
 

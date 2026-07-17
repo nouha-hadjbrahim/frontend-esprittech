@@ -1,8 +1,11 @@
 import { WritableSignal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { Role, User } from '../../core/models/user.model';
+import { AffiliationService } from '../../core/services/affiliation.service';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { BackofficeLayoutComponent } from './backoffice-layout.component';
 
 function userWith(role: Role): User {
@@ -17,15 +20,31 @@ describe('BackofficeLayoutComponent', () => {
   let component: BackofficeLayoutComponent;
   let currentUser: WritableSignal<User | null>;
   let logout: jasmine.Spy;
+  let affiliationService: jasmine.SpyObj<AffiliationService>;
+  let notificationService: jasmine.SpyObj<NotificationService>;
 
   beforeEach(() => {
     currentUser = signal<User | null>(null);
     logout = jasmine.createSpy('logout');
+    affiliationService = jasmine.createSpyObj<AffiliationService>('AffiliationService', ['getAll']);
+    affiliationService.getAll.and.returnValue(of([]));
+    notificationService = jasmine.createSpyObj<NotificationService>(
+      'NotificationService',
+      ['initialize', 'marquerCommeLu', 'marquerToutCommeLu', 'loadMore'],
+      {
+        notifications: signal([]),
+        unreadCount: signal(0),
+        loading: signal(false),
+        hasMore: signal(false),
+      },
+    );
     TestBed.configureTestingModule({
       imports: [BackofficeLayoutComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: { currentUser, logout } },
+        { provide: AffiliationService, useValue: affiliationService },
+        { provide: NotificationService, useValue: notificationService },
       ],
     });
     component = TestBed.createComponent(BackofficeLayoutComponent).componentInstance;
@@ -33,7 +52,7 @@ describe('BackofficeLayoutComponent', () => {
 
   it('should create with the full navigation', () => {
     expect(component).toBeTruthy();
-    expect(component.navItems.length).toBe(11);
+    expect(component.navItems.length).toBe(10);
   });
 
   it('should group evaluation links under the evaluations parent menu', () => {

@@ -1,21 +1,32 @@
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG =~ /^v/'
     - when: never
 
 stages:
   - validate
   - test
+  - coverage
   - dependency-scan
+  - secret-scan
   - sonarqube
   - build
-  # - docker-build-push
+  - docker-build
+  - image-scan
+  - publish
 
 variables:
   NODE_VERSION: "20"
   GIT_DEPTH: "0"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.trivycache"
+  TRIVY_NO_PROGRESS: "true"
+  IMAGE_TAR: "image.tar"
+
+default:
+  interruptible: true
 
 cache:
   key: "${CI_PROJECT_NAME}-npm"
@@ -30,129 +41,222 @@ cache:
     - npm --version
     - npm ci
 
+.kaniko-job:
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - printf '{"auths":{"%s":{"username":"%s","password":"%s"}}}' "$CI_REGISTRY" "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" > /kaniko/.docker/config.json
+
 validate-frontend:
   stage: validate
   extends: .node-job
   script:
-    - npm run lint --if-present
-    - npm run format:check --if-present
+    - node -e "const pkg=require('./package.json'); if(!pkg.scripts || !pkg.scripts['test:ci']) throw new Error('Missing test:ci script'); console.log('test:ci script present')"
+    - node -e "const pkg=require('./package.json'); if(!pkg.scripts?.lint){ console.log('lint script is not configured; lint is explicitly not executed.'); process.exit(0) }"
+    - if node -e "process.exit(require('./package.json').scripts?.lint ? 0 : 1)"; then npm run lint; fi
+    - node -e "const pkg=require('./package.json'); if(!pkg.scripts?.['format:check']){ console.log('format:check script is not configured; formatting check is explicitly not executed.'); process.exit(0) }"
+    - if node -e "process.exit(require('./package.json').scripts?.['format:check'] ? 0 : 1)"; then npm run format:check; fi
 
 test-frontend:
   stage: test
-  extends: .node-job
+  image: node:20-bookworm
+  cache:
+    key: "${CI_PROJECT_NAME}-npm"
+    policy: pull-push
+    paths:
+      - .npm/
   before_script:
     - apt-get update
-    - apt-get install -y chromium
+    - apt-get install -y --no-install-recommends chromium
     - export CHROME_BIN=/usr/bin/chromium
     - node --version
     - npm --version
     - npm ci
   script:
-    - echo "Cleaning previous coverage output"
     - rm -rf coverage
-    - echo "Running Angular tests with LCOV coverage enabled"
     - npm run test:ci
-    - echo "Coverage output after tests:"
-    - ls -la coverage
-    - echo "Verifying normalized LCOV report at coverage/lcov.info"
+    - LCOV_PATH="$(find coverage -type f -name lcov.info -print -quit)"
+    - test -n "$LCOV_PATH"
+    - mkdir -p coverage
+    - if [ "$LCOV_PATH" != "coverage/lcov.info" ]; then cp "$LCOV_PATH" coverage/lcov.info; fi
     - test -f coverage/lcov.info
-    - ls -la coverage/lcov.info
   artifacts:
     when: always
     expire_in: 1 week
     paths:
       - coverage/
 
+coverage-report:
+  stage: coverage
+  extends: .node-job
+  needs:
+    - job: test-frontend
+      artifacts: true
+  script:
+    - test -f coverage/lcov.info
+    - |
+      node <<'JS'
+      const fs = require('fs');
+      const lcov = fs.readFileSync('coverage/lcov.info', 'utf8');
+      let found = false;
+      for (const line of lcov.split(/\r?\n/)) {
+        if (line.startsWith('LF:')) found = true;
+      }
+      if (!found) throw new Error('coverage/lcov.info has no LF records');
+      console.log('LCOV report verified at coverage/lcov.info');
+      JS
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - coverage/lcov.info
+
 dependency-scan-trivy:
   stage: dependency-scan
   image:
     name: aquasec/trivy:latest
     entrypoint: [""]
-  variables:
-    TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.trivycache"
-    TRIVY_NO_PROGRESS: "true"
   cache:
     key: "${CI_PROJECT_NAME}-trivy"
     policy: pull-push
     paths:
       - .trivycache/
-  before_script:
+  script:
     - mkdir -p target/trivy
     - trivy --version
-  script:
     - trivy fs --scanners vuln --severity HIGH,CRITICAL --format table --output target/trivy/dependency-scan.txt .
-    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress .
+    - trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .
   artifacts:
     when: always
     expire_in: 1 week
     paths:
-      - target/trivy/
+      - target/trivy/dependency-scan.txt
+
+secret-scan-trivy:
+  stage: secret-scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  cache:
+    key: "${CI_PROJECT_NAME}-trivy"
+    policy: pull-push
+    paths:
+      - .trivycache/
+  script:
+    - mkdir -p target/trivy
+    - trivy --version
+    - trivy fs --scanners secret --format table --output target/trivy/secret-scan.txt --exit-code 1 .
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - target/trivy/secret-scan.txt
 
 sonarqube-analysis:
   stage: sonarqube
   image:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
+  needs:
+    - job: test-frontend
+      artifacts: true
+    - job: coverage-report
+      artifacts: true
   cache:
     key: "${CI_PROJECT_NAME}-sonar"
     policy: pull-push
     paths:
-      - .sonar/cache
-  dependencies:
-    - test-frontend
+      - .sonar/cache/
   script:
     - |
-      echo "Checking coverage artifact downloaded from test-frontend"
-      ls -la
-
-      if [ ! -d coverage ]; then
-        echo "ERROR: coverage directory was not downloaded from test-frontend artifacts."
-        exit 1
-      fi
-
-      echo "Coverage directory contents:"
-      ls -la coverage
-
-      if [ ! -f coverage/lcov.info ]; then
-        echo "ERROR: coverage/lcov.info is missing. Failing before SonarCloud so analysis does not run without coverage."
-        exit 1
-      fi
-
-      echo "Using coverage report: coverage/lcov.info"
-      ls -la coverage/lcov.info
-
-      sonar-scanner \
-        -Dsonar.host.url="$SONAR_HOST_URL" \
-        -Dsonar.token="$SONAR_TOKEN" \
-        -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
-        -Dsonar.organization="$SONAR_ORGANIZATION" \
-        -Dsonar.sources=src \
-        -Dsonar.tests=src \
-        -Dsonar.test.inclusions="**/*.spec.ts" \
-        -Dsonar.exclusions="src/assets/**,**/node_modules/**,**/dist/**" \
-        -Dsonar.coverage.exclusions="src/main.ts,src/environments/**,src/**/*.model.ts,src/**/*.routes.ts,src/app/app.config.ts" \
-        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-        -Dsonar.qualitygate.wait=true
+      for variable_name in SONAR_HOST_URL SONAR_TOKEN SONAR_PROJECT_KEY SONAR_ORGANIZATION; do
+        eval "variable_value=\${$variable_name:-}"
+        if [ -z "$variable_value" ]; then
+          echo "$variable_name is not configured. Add it as a protected masked GitLab CI/CD variable."
+          exit 1
+        fi
+      done
+    - test -f coverage/lcov.info
+    - >
+      sonar-scanner
+      -Dsonar.host.url="$SONAR_HOST_URL"
+      -Dsonar.token="$SONAR_TOKEN"
+      -Dsonar.projectKey="$SONAR_PROJECT_KEY"
+      -Dsonar.organization="$SONAR_ORGANIZATION"
+      -Dsonar.sources=src
+      -Dsonar.tests=src
+      -Dsonar.test.inclusions="**/*.spec.ts"
+      -Dsonar.exclusions="src/assets/**,**/node_modules/**,**/dist/**"
+      -Dsonar.coverage.exclusions="src/main.ts,src/environments/**,src/**/*.model.ts,src/**/*.routes.ts,src/app/app.config.ts"
+      -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+      -Dsonar.qualitygate.wait=true
 
 build-frontend:
   stage: build
   extends: .node-job
   script:
     - npm run build -- --configuration production
+    - test -f dist/esprittech-frontend/browser/index.html
+    - if grep -R "localhost:8080/api" dist/esprittech-frontend src/environments/environment.ts; then exit 1; fi
   artifacts:
     expire_in: 1 week
     paths:
       - dist/
 
-# docker-build-push:
-#   stage: docker-build-push
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: "/certs"
-#   script:
-#     - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" .
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-#doc
+docker-build-validate:
+  stage: docker-build
+  extends: .kaniko-job
+  needs:
+    - job: build-frontend
+      artifacts: true
+  script:
+    - export IMAGE_TAG="${CI_COMMIT_TAG:-$CI_COMMIT_SHA}"
+    - /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile "$CI_PROJECT_DIR/Dockerfile" --destination "$CI_REGISTRY_IMAGE:$IMAGE_TAG" --no-push --tar-path "$IMAGE_TAR"
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - image.tar
+
+image-scan-trivy:
+  stage: image-scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  needs:
+    - job: docker-build-validate
+      artifacts: true
+  cache:
+    key: "${CI_PROJECT_NAME}-trivy"
+    policy: pull-push
+    paths:
+      - .trivycache/
+  script:
+    - mkdir -p target/trivy
+    - trivy image --input "$IMAGE_TAR" --severity HIGH,CRITICAL --format table --output target/trivy/image-scan.txt
+    - trivy image --input "$IMAGE_TAR" --severity HIGH,CRITICAL --exit-code 1
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - target/trivy/image-scan.txt
+
+publish-image:
+  stage: publish
+  extends: .kaniko-job
+  needs:
+    - job: build-frontend
+      artifacts: true
+    - job: image-scan-trivy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG =~ /^v/'
+    - when: never
+  script:
+    - |
+      DESTINATIONS="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        DESTINATIONS="$DESTINATIONS --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+      fi
+      /kaniko/executor --context "$CI_PROJECT_DIR" --dockerfile "$CI_PROJECT_DIR/Dockerfile" $DESTINATIONS

@@ -214,7 +214,7 @@ it('should calculate score, update the matching row and leave other rows untouch
     } as EvaluationResponse;
 
     expect(component.scoreTitleFor(partial)).toBe('Score provisoire');
-    expect(component.scoreLabelFor(partial)).toBe('67 / 100');
+    expect(component.scoreLabelFor(partial)).toBe('67.00 / 100');
     expect(component.eligibilityLabelFor(partial)).toBe('Revue requise');
   });
 

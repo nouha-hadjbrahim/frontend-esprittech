@@ -32,7 +32,6 @@ import { FrontofficeEmptyState } from '../../components/frontoffice-empty-state/
     FrontofficeEmptyState,
   ],
   templateUrl: './equipes-recherche.html',
-  styleUrl: './equipes-recherche.scss',
 })
 export class EquipesRecherche implements OnInit {
   private readonly equipeSvc = inject(EquipeService);

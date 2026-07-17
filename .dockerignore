@@ -1,0 +1,36 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*credential*
+*credentials*
+*secret*
+*.pem
+*.key
+*.p12
+
+# VCS and local tooling
+.git/
+.gitignore
+.vscode/
+.idea/
+.claude/
+
+# Dependencies, builds and caches
+node_modules/
+dist/
+.angular/
+coverage/
+.scannerwork/
+.sonar/
+.trivycache/
+
+# Logs and local runtime state
+*.log
+npm-debug.log
+yarn-error.log
+docker-compose*.yml
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

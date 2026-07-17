@@ -31,7 +31,6 @@ import { CATEGORIE_LABELS, STATUT_CANDIDATURE_LABELS, STATUT_LABELS } from '../.
   selector: 'app-sujet-detail',
   imports: [RouterLink, DatePipe, FormsModule, EvaluationChecklistComponent],
   templateUrl: './sujet-detail.html',
-  styleUrl: './sujet-detail.css',
 })
 export class SujetDetail implements OnInit,OnDestroy  {
   private readonly route = inject(ActivatedRoute);
@@ -987,13 +986,12 @@ ngOnDestroy(): void {
           eligibleIndustrialisation: evaluation.eligibleIndustrialisation,
           hasEliminatoryWarnings: evaluation.hasEliminatoryWarnings,
         };
+        this.loadEvaluation();
       } else {
         this.evaluationError = evaluation?.commentaire
           ?? 'Le recalcul n’a pas produit une évaluation exploitable.';
         this.evaluationMessage = '';
       }
-
-      this.loadEvaluation();
     },
     error: (err) => {
       const retryAfterSeconds =

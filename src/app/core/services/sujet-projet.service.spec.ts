@@ -2,12 +2,13 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { SujetProjetService } from './sujet-projet.service';
+import { environment } from '../../../environments/environment';
 
 describe('SujetProjetService', () => {
   let service: SujetProjetService;
   let httpMock: HttpTestingController;
 
-  const BASE = 'http://localhost:8080/api/sujet-projets';
+  const BASE = `${environment.apiUrl}/sujet-projets`;
 
   const mockSujet: any = {
     id: 1, titre: 'Sujet IA', categorie: 'STAGE_INGENIEUR',

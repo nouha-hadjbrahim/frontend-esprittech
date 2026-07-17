@@ -5,16 +5,17 @@ import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { ProjetDetails } from '../../../core/models/projet-catalogue.model';
 import { ProjetDetailCatalogue } from './projet-detail-catalogue';
+import { environment } from '../../../../environments/environment';
 
 describe('ProjetDetailCatalogue', () => {
   let fixture: ComponentFixture<ProjetDetailCatalogue>;
   let component: ProjetDetailCatalogue;
   let httpTesting: HttpTestingController;
 
-  const API = 'http://localhost:8080/api';
+  const API = environment.apiUrl;
 
   const mockDetails: ProjetDetails = {
-    id: 1, typeProjet: 'RDI', titre: 'Projet IA', description: 'Desc',
+    id: 1, sujetId: null, typeProjet: 'RDI', titre: 'Projet IA', description: 'Desc',
     objectifs: 'Objectifs', dateDebut: '2026-01-01', dateFin: '2026-12-31',
     statut: 'VALIDE', score: 85, encadrantId: 1,
     encadrantNom: 'Jean Dupont', encadrantEmail: 'jean@esprit.tn',

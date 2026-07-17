@@ -25,7 +25,6 @@ import { FilterDropdown, FilterOption } from '../../frontoffice/components/sujet
   standalone: true,
   imports: [CommonModule, FormsModule, EvaluationChecklistComponent, FilterDropdown],
   templateUrl: './ci-industrialisation.component.html',
-  styleUrl: './ci-industrialisation.component.css',
 })
 export class CiIndustrialisationComponent implements OnInit {
   private readonly service = inject(IndustrialisationService);
