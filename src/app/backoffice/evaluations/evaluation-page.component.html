@@ -1,217 +1,349 @@
-<div class="evaluations-container">
-  <header class="page-header">
-    <div>
-      <h1>Evaluations</h1>
-      <p class="subtitle">Analyse ML du contenu des livrables, validation et historique des scores projet.</p>
+<div class="evaluations-page">
+  <div class="page-header">
+    <div class="header-text">
+      <h1>Évaluations</h1>
+      <p>Analyse ML du contenu des livrables, validation et historique des scores projet.</p>
     </div>
-  </header>
+  </div>
 
-  <section class="kpi-grid">
-    <article class="kpi-card">
-      <span>Projets termines</span>
-      <strong>{{ projects().length }}</strong>
-    </article>
-    <article class="kpi-card">
-      <span>Evalues</span>
-      <strong>{{ evaluatedCount }}</strong>
-    </article>
-    <article class="kpi-card">
-      <span>Éligibles</span>
-      <strong>{{ eligibleCount }}</strong>
-    </article>
-    <article class="kpi-card">
-      <span>Non éligibles</span>
-      <strong>{{ nonEligibleCount }}</strong>
-    </article>
-  </section>
-
-  <section class="card projects-section">
-    <div class="section-header">
-      <div>
-        <h2>Projets termines</h2>
-        <p>Selectionnez un projet pour consulter ou relancer son evaluation ML.</p>
-      </div>
-      <label class="search-field" for="evaluation-project-search">
-        <span class="search-icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+  <div class="stats-grid">
+    @for (s of statsCards(); track s.label) {
+      <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">
+          @if (s.icon === 'total') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          } @else if (s.icon === 'evaluated') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          } @else if (s.icon === 'eligible') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          }
         </span>
+        <div class="stat-text">
+          <div class="stat-val">{{ s.value }}</div>
+          <div class="stat-lbl">{{ s.label }}</div>
+        </div>
+      </article>
+    }
+  </div>
+
+  <div class="table-container">
+    <div class="table-actions">
+      <div class="search-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0a8a8" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <label for="evaluation-project-search" class="sr-only">Rechercher un projet</label>
         <input
           id="evaluation-project-search"
-          type="search"
-          placeholder="Rechercher un projet..."
-          [value]="projectSearch()"
-          (input)="updateProjectSearch($any($event.target).value)"
+          class="search-field__input"
+          type="text"
+          placeholder="Titre, statut, score…"
+          [ngModel]="projectSearch()"
+          (ngModelChange)="updateProjectSearch($event)"
         />
-      </label>
+      </div>
+
+      <div class="filters-group">
+        <div class="filter-dropdown" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--open]="openFilter() === 'eligibilite'"
+            (click)="toggleFilter('eligibilite', $event)"
+          >
+            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="8" y1="12" x2="20" y2="12"></line>
+              <line x1="12" y1="18" x2="20" y2="18"></line>
+              <circle cx="6" cy="12" r="2"></circle>
+              <circle cx="10" cy="18" r="2"></circle>
+            </svg>
+            <span class="filter-pill__label">{{ eligibiliteFilterLabel }}</span>
+            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          @if (openFilter() === 'eligibilite') {
+            <div class="filter-menu" role="listbox">
+              @for (opt of eligibiliteOptions; track opt.value) {
+                <button
+                  type="button"
+                  class="filter-option"
+                  [class.filter-option--active]="selectedEligibilite() === opt.value"
+                  (click)="selectEligibiliteFilter(opt.value)"
+                >
+                  <span>{{ opt.label }}</span>
+                  @if (selectedEligibilite() === opt.value) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
     </div>
 
-    <div *ngIf="loadingProjects()" class="loading">Chargement des evaluations...</div>
-    <div *ngIf="projectsError() && !loadingProjects()" class="alert alert-error">{{ projectsError() }}</div>
-    <div *ngIf="!loadingProjects() && !projectsError() && projects().length === 0" class="empty-state">
-      Aucun projet termine a evaluer.
-    </div>
-    <div *ngIf="!loadingProjects() && projects().length > 0 && filteredProjects().length === 0" class="empty-state">
-      Aucun projet ne correspond a la recherche.
-    </div>
-
-    <div *ngIf="!loadingProjects() && filteredProjects().length > 0" class="table-responsive">
-      <table class="projects-table">
+    @if (loadingProjects()) {
+      <div class="empty-row">Chargement des évaluations…</div>
+    } @else if (projectsError() && projects().length === 0) {
+      <div class="empty-row error">{{ projectsError() }}</div>
+    } @else if (projects().length === 0) {
+      <div class="empty-row">Aucun projet terminé à évaluer.</div>
+    } @else if (filteredProjects().length === 0) {
+      <div class="empty-row">Aucun projet ne correspond à la recherche.</div>
+    } @else {
+      <table class="subjects-table">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Projet</th>
             <th>Statut</th>
             <th>Score</th>
             <th>Éligibilité</th>
-            <th>Actions</th>
+            <th class="text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let p of filteredProjects()" [class.selected]="selectedProject?.id === p.id">
-            <td>#{{ p.id }}</td>
-            <td><strong>{{ p.titre }}</strong></td>
-            <td><span class="status-chip">{{ statusLabel(p.statut) }}</span></td>
-            <td>
-              <span class="score-chip">{{ projectScoreLabel(p) }}</span>
-            </td>
-            <td>
-              <span class="badge"
-                [ngClass]="projectEligibilityClass(p)">
-                {{ projectEligibilityLabel(p) }}
-              </span>
-            </td>
-            <td class="actions-cell">
-              <button class="btn btn-secondary" type="button" (click)="selectProject(p)">Voir detail</button>
-              <button
-                class="btn btn-primary"
-                type="button"
-                [disabled]="savingProjectId() === p.id || isProjectCoolingDown(p.id)"
-                (click)="calculate(p)"
-              >
-                @if (savingProjectId() === p.id) {
-                  Analyse...
-                } @else if (isProjectCoolingDown(p.id)) {
-                  Recalcul dans {{ cooldownLabel(p.id) }}
-                } @else {
-                  {{ p.scoreFinal == null ? 'Analyser contenu' : 'Réanalyser' }}
+          @for (p of pagedProjects(); track p.id) {
+            <tr [class.selected]="selectedProject?.id === p.id">
+              <td>
+                <div class="subject-cell">
+                  <div class="subject-avatar">{{ getInitial(p.titre) }}</div>
+                  <div class="subject-info">
+                    <span class="subject-title">{{ p.titre }}</span>
+                    <span class="subject-meta">#{{ p.id }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="statusBadgeClass(p.statut)">
+                  <span class="status-dot dot-terminee" aria-hidden="true"></span>
+                  {{ statusLabel(p.statut) }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="projectScoreClass(p)">
+                  {{ projectScoreLabel(p) }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="projectEligibilityClass(p)">
+                  <span class="status-dot" [ngClass]="eligibilityDotClass(p)" aria-hidden="true"></span>
+                  {{ projectEligibilityLabel(p) }}
+                </span>
+              </td>
+              <td class="text-right">
+                <div class="actions-group">
+                  <button type="button" class="icon-btn-action view" title="Voir le détail" (click)="selectProject(p)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-btn-action analyze"
+                    [class.cooldown]="isProjectCoolingDown(p.id)"
+                    [class.loading]="savingProjectId() === p.id"
+                    [disabled]="savingProjectId() === p.id || isProjectCoolingDown(p.id)"
+                    [title]="analyzeButtonTitle(p)"
+                    (click)="calculate(p)"
+                  >
+                    @if (savingProjectId() === p.id) {
+                      <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M21 12a9 9 0 1 1-6.22-8.56"></path>
+                      </svg>
+                    } @else if (isProjectCoolingDown(p.id)) {
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                    } @else if (p.scoreFinal == null) {
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 2v4"></path>
+                        <path d="M12 18v4"></path>
+                        <path d="M4.93 4.93l2.83 2.83"></path>
+                        <path d="M16.24 16.24l2.83 2.83"></path>
+                        <path d="M2 12h4"></path>
+                        <path d="M18 12h4"></path>
+                        <path d="M4.93 19.07l2.83-2.83"></path>
+                        <path d="M16.24 7.76l2.83-2.83"></path>
+                      </svg>
+                    } @else {
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                      </svg>
+                    }
+                  </button>
+                </div>
+                @if (isProjectCoolingDown(p.id)) {
+                  <small class="cooldown-message">Recalcul dans {{ cooldownLabel(p.id) }}</small>
                 }
-              </button>
-              @if (isProjectCoolingDown(p.id)) {
-                <small class="cooldown-message">Veuillez patienter avant un nouveau recalcul.</small>
-              }
-            </td>
-          </tr>
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
-    </div>
-  </section>
 
-  <section *ngIf="selectedProject" class="card result-card">
-    <div class="section-header">
-      <div>
-        <h2>Evaluation du projet</h2>
-        <p>{{ selectedProject.titre }}</p>
-      </div>
-      <button class="btn btn-secondary" type="button" (click)="loadEvaluationHistory(selectedProject.id)" [disabled]="loadingHistory()">Rafraichir historique</button>
-    </div>
-
-    <div *ngIf="evalError()" class="alert alert-error">{{ evalError() }}</div>
-
-    <ng-container *ngIf="evalResult(); else noEvaluation">
-      <div class="summary-grid">
-        <article class="metric">
-          <span>Score ML</span>
-          <strong>{{ mlScoreLabelFor(evalResult()) }}</strong>
-        </article>
-        <article class="metric">
-          <span>{{ scoreTitleFor(evalResult()) }}</span>
-          <strong>{{ scoreLabelFor(evalResult()) }}</strong>
-        </article>
-        <article class="metric">
-          <span>Éligibilité</span>
-          <strong>{{ eligibilityLabelFor(evalResult()) }}</strong>
-        </article>
-        <article class="metric">
-          <span>Etat ML</span>
-          <strong>{{ evalResult()!.mlStatus || 'COMPLETED' }}</strong>
-        </article>
-        <article class="metric">
-          <span>Validation</span>
-          <strong>{{ validationStatusLabel(evalResult()!.validationStatus) }}</strong>
-        </article>
-        <article class="metric">
-          <span>Confiance</span>
-          <strong>{{ confidencePercent(evalResult()!.mlGlobalConfidence) }}</strong>
-        </article>
-        <article class="metric">
-          <span>Traitement</span>
-          <strong>{{ evalResult()!.processingStatus || evalResult()!.mlStatus || '-' }}</strong>
-        </article>
-        <article class="metric">
-          <span>Calcule le</span>
-          <strong>{{ evalResult()!.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</strong>
-        </article>
-        <article class="metric">
-          <span>Calcule par</span>
-          <strong>{{ evalResult()!.calculatedBy || 'SYSTEM' }}</strong>
-        </article>
-        <article class="metric">
-          <span>Motif</span>
-          <strong>{{ evalResult()!.recalculationReason || 'Calcul initial' }}</strong>
-        </article>
-      </div>
-
-      <section *ngIf="canValidateEvaluation() || canOverrideEvaluation()" class="evaluation-actions">
-        <label>
-          Commentaire validation
-          <textarea rows="3" [ngModel]="validationComment()" (ngModelChange)="updateValidationComment($event)"></textarea>
-        </label>
-        <div class="action-buttons" *ngIf="canValidateEvaluation()">
-          <button class="btn btn-primary" type="button" [disabled]="actionInProgress()" (click)="validateSelectedEvaluation()">Valider</button>
-          <button class="btn btn-secondary" type="button" [disabled]="actionInProgress()" (click)="rejectSelectedEvaluation()">Rejeter</button>
-        </div>
-        <div class="override-controls" *ngIf="canOverrideEvaluation()">
-          <label>
-            Score override
-            <input type="number" min="0" max="100" [ngModel]="overrideScore()" (ngModelChange)="updateOverrideScore($event)" />
-          </label>
-          <label>
-            Motif override
-            <input type="text" [ngModel]="overrideReason()" (ngModelChange)="updateOverrideReason($event)" />
-          </label>
-          <button class="btn btn-primary" type="button" [disabled]="actionInProgress()" (click)="overrideSelectedEvaluation()">Appliquer override</button>
-        </div>
-      </section>
-
-      <app-evaluation-checklist [evaluation]="evalResult()!" [projectTitle]="selectedProject.titre"></app-evaluation-checklist>
-    </ng-container>
-
-    <ng-template #noEvaluation>
-      <p class="empty-state">Aucune evaluation enregistree pour ce projet.</p>
-    </ng-template>
-
-    <section class="history-section">
-      <div class="section-header section-header--compact">
-        <div>
-          <h2>Historique des evaluations</h2>
-          <p>{{ evalHistory().length }} evaluation(s)</p>
-        </div>
-      </div>
-      <div *ngIf="loadingHistory()" class="loading">Chargement de l'historique...</div>
-      <div *ngIf="!loadingHistory() && evalHistory().length === 0" class="empty-state">Aucun historique disponible.</div>
-      <div *ngIf="!loadingHistory() && evalHistory().length > 0" class="history-list">
-        <article *ngFor="let item of evalHistory()" class="history-row">
-          <div>
-            <strong>{{ scoreLabelFor(item) }}</strong>
-            <span>{{ item.dateCalcul | date:'yyyy-MM-dd HH:mm' }} - {{ validationStatusLabel(item.validationStatus) }}</span>
+      @if (totalElements() > 0) {
+        <div class="pagination">
+          <span class="pagination-info">
+            Affichage de <strong>{{ pageDisplayCount() }}</strong> sur <strong>{{ totalElements() }}</strong> projets
+          </span>
+          <div class="pagination-controls">
+            <button type="button" class="page-btn" [disabled]="first()" (click)="prevPage()">Précédent</button>
+            @for (p of pageNumbers(); track p) {
+              <button
+                type="button"
+                class="page-num"
+                [class.page-num--active]="p === page + 1"
+                (click)="goToPage(p - 1)"
+                [attr.aria-current]="p === page + 1 ? 'page' : null"
+              >{{ p }}</button>
+            }
+            <button type="button" class="page-btn" [disabled]="last()" (click)="nextPage()">Suivant</button>
           </div>
-          <span>{{ item.processingStatus || item.mlStatus || 'Statut non renseigne' }}</span>
-        </article>
+        </div>
+      }
+    }
+  </div>
+
+  @if (selectedProject) {
+    <section class="detail-card">
+      <div class="detail-header">
+        <div>
+          <h2>Évaluation du projet</h2>
+          <p>{{ selectedProject.titre }}</p>
+        </div>
+        <button class="btn-refresh" type="button" (click)="loadEvaluationHistory(selectedProject.id)" [disabled]="loadingHistory()">
+          Rafraîchir historique
+        </button>
       </div>
+
+      @if (evalError()) {
+        <div class="alert alert-error">{{ evalError() }}</div>
+      }
+
+      @if (evalResult(); as result) {
+        <div class="summary-grid">
+          <article class="metric">
+            <span>Score ML</span>
+            <strong>{{ mlScoreLabelFor(result) }}</strong>
+          </article>
+          <article class="metric">
+            <span>{{ scoreTitleFor(result) }}</span>
+            <strong>{{ scoreLabelFor(result) }}</strong>
+          </article>
+          <article class="metric">
+            <span>Éligibilité</span>
+            <strong>{{ eligibilityLabelFor(result) }}</strong>
+          </article>
+          <article class="metric">
+            <span>État ML</span>
+            <strong>{{ result.mlStatus || 'COMPLETED' }}</strong>
+          </article>
+          <article class="metric">
+            <span>Validation</span>
+            <strong>{{ validationStatusLabel(result.validationStatus) }}</strong>
+          </article>
+          <article class="metric">
+            <span>Confiance</span>
+            <strong>{{ confidencePercent(result.mlGlobalConfidence) }}</strong>
+          </article>
+          <article class="metric">
+            <span>Traitement</span>
+            <strong>{{ result.processingStatus || result.mlStatus || '—' }}</strong>
+          </article>
+          <article class="metric">
+            <span>Calculé le</span>
+            <strong>{{ result.dateCalcul | date:'dd/MM/yyyy HH:mm' }}</strong>
+          </article>
+          <article class="metric">
+            <span>Calculé par</span>
+            <strong>{{ result.calculatedBy || 'SYSTEM' }}</strong>
+          </article>
+          <article class="metric">
+            <span>Motif</span>
+            <strong>{{ result.recalculationReason || 'Calcul initial' }}</strong>
+          </article>
+        </div>
+
+        @if (canValidateEvaluation() || canOverrideEvaluation()) {
+          <section class="evaluation-actions">
+            <label>
+              Commentaire validation
+              <textarea rows="3" [ngModel]="validationComment()" (ngModelChange)="updateValidationComment($event)"></textarea>
+            </label>
+            @if (canValidateEvaluation()) {
+              <div class="action-buttons">
+                <button class="btn-primary" type="button" [disabled]="actionInProgress()" (click)="validateSelectedEvaluation()">Valider</button>
+                <button class="btn-secondary" type="button" [disabled]="actionInProgress()" (click)="rejectSelectedEvaluation()">Rejeter</button>
+              </div>
+            }
+            @if (canOverrideEvaluation()) {
+              <div class="override-controls">
+                <label>
+                  Score override
+                  <input type="number" min="0" max="100" [ngModel]="overrideScore()" (ngModelChange)="updateOverrideScore($event)" />
+                </label>
+                <label>
+                  Motif override
+                  <input type="text" [ngModel]="overrideReason()" (ngModelChange)="updateOverrideReason($event)" />
+                </label>
+                <button class="btn-primary" type="button" [disabled]="actionInProgress()" (click)="overrideSelectedEvaluation()">Appliquer override</button>
+              </div>
+            }
+          </section>
+        }
+
+        <app-evaluation-checklist [evaluation]="result" [projectTitle]="selectedProject.titre"></app-evaluation-checklist>
+      } @else {
+        <p class="empty-row">Aucune évaluation enregistrée pour ce projet.</p>
+      }
+
+      <section class="history-section">
+        <div class="detail-header detail-header--compact">
+          <div>
+            <h2>Historique des évaluations</h2>
+            <p>{{ evalHistory().length }} évaluation(s)</p>
+          </div>
+        </div>
+        @if (loadingHistory()) {
+          <div class="empty-row">Chargement de l'historique…</div>
+        } @else if (evalHistory().length === 0) {
+          <div class="empty-row">Aucun historique disponible.</div>
+        } @else {
+          <div class="history-list">
+            @for (item of evalHistory(); track item.id ?? $index) {
+              <article class="history-row">
+                <div>
+                  <strong>{{ scoreLabelFor(item) }}</strong>
+                  <span>{{ item.dateCalcul | date:'dd/MM/yyyy HH:mm' }} — {{ validationStatusLabel(item.validationStatus) }}</span>
+                </div>
+                <span>{{ item.processingStatus || item.mlStatus || 'Statut non renseigné' }}</span>
+              </article>
+            }
+          </div>
+        }
+      </section>
     </section>
-  </section>
+  }
 </div>

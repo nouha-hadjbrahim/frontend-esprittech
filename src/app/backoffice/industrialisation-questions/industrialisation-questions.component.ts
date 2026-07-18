@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   QuestionIndustrialisation,
   QuestionIndustrialisationRequest,
@@ -11,6 +11,9 @@ import {
 import { IndustrialisationService } from '../../core/services/industrialisation.service';
 
 type DropdownKey = 'typeReponse' | 'typeCritere';
+type FilterKey = 'statut' | 'critere';
+type StatutFilter = '' | 'actif' | 'inactif';
+type CritereFilter = '' | TypeCritere;
 
 interface SelectOption<T extends string> {
   value: T;
@@ -21,7 +24,7 @@ interface SelectOption<T extends string> {
 @Component({
   selector: 'app-industrialisation-questions',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './industrialisation-questions.component.html',
   styleUrl: './industrialisation-questions.component.css',
 })
@@ -36,15 +39,36 @@ export class IndustrialisationQuestionsComponent implements OnInit {
   error = signal<string | null>(null);
   editingId = signal<number | null>(null);
   openDropdown = signal<DropdownKey | null>(null);
+  openFilter = signal<FilterKey | null>(null);
   questionSearch = signal('');
+  selectedStatut = signal<StatutFilter>('');
+  selectedCritere = signal<CritereFilter>('');
+
+  readonly pageSize = 8;
+  currentPage = signal(1);
+
+  readonly statutOptions: { value: StatutFilter; label: string }[] = [
+    { value: '', label: 'Tous les statuts' },
+    { value: 'actif', label: 'Actif' },
+    { value: 'inactif', label: 'Inactif' },
+  ];
+
+  readonly critereFilterOptions: { value: CritereFilter; label: string }[] = [
+    { value: '', label: 'Tous les critères' },
+    { value: 'NOTE', label: 'Note' },
+    { value: 'ELIMINATOIRE', label: 'Éliminatoire' },
+  ];
 
   filteredQuestions = computed(() => {
     const query = this.normalize(this.questionSearch());
-    if (!query) {
-      return this.questions();
-    }
-    return this.questions().filter((question) =>
-      this.normalize([
+    const statut = this.selectedStatut();
+    const critere = this.selectedCritere();
+    return this.questions().filter((question) => {
+      const matchStatut = !statut || (statut === 'actif' ? question.actif : !question.actif);
+      const matchCritere = !critere || question.typeCritere === critere;
+      if (!matchStatut || !matchCritere) return false;
+      if (!query) return true;
+      return this.normalize([
         question.ordre,
         question.libelle,
         question.description,
@@ -54,9 +78,40 @@ export class IndustrialisationQuestionsComponent implements OnInit {
         this.typeCritereLabel(question.typeCritere),
         question.obligatoire ? 'obligatoire oui' : 'facultatif non',
         question.actif ? 'actif' : 'inactif',
-      ].join(' ')).includes(query)
-    );
+      ].join(' ')).includes(query);
+    });
   });
+
+  readonly statsCards = computed(() => {
+    const all = this.questions();
+    return [
+      { label: 'Total questions', value: all.length, icon: 'total' as const },
+      { label: 'Actives', value: all.filter((q) => q.actif).length, icon: 'active' as const },
+      { label: 'Notées', value: all.filter((q) => q.typeCritere === 'NOTE').length, icon: 'note' as const },
+      { label: 'Éliminatoires', value: all.filter((q) => q.typeCritere === 'ELIMINATOIRE').length, icon: 'elim' as const },
+    ];
+  });
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredQuestions().length / this.pageSize));
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get visibleQuestions(): QuestionIndustrialisation[] {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredQuestions().slice(start, start + this.pageSize);
+  }
+
+  get statutFilterLabel(): string {
+    return this.statutOptions.find((o) => o.value === this.selectedStatut())?.label ?? 'Tous les statuts';
+  }
+
+  get critereFilterLabel(): string {
+    return this.critereFilterOptions.find((o) => o.value === this.selectedCritere())?.label ?? 'Tous les critères';
+  }
 
   readonly typeReponses: SelectOption<TypeReponseIndustrialisation>[] = [
     { value: 'TEXTE', label: 'Texte', description: 'Champ libre pour une reponse detaillee.' },
@@ -101,8 +156,31 @@ export class IndustrialisationQuestionsComponent implements OnInit {
   }
 
   @HostListener('document:click')
-  closeDropdown(): void {
+  closeOverlays(): void {
     this.openDropdown.set(null);
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openDropdown.set(null);
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectStatutFilter(value: StatutFilter): void {
+    this.selectedStatut.set(value);
+    this.openFilter.set(null);
+    this.currentPage.set(1);
+  }
+
+  selectCritereFilter(value: CritereFilter): void {
+    this.selectedCritere.set(value);
+    this.openFilter.set(null);
+    this.currentPage.set(1);
+  }
+
+  goToPage(page: number): void {
+    this.currentPage.set(Math.min(Math.max(page, 1), this.totalPages));
   }
 
   load(): void {
@@ -201,6 +279,7 @@ export class IndustrialisationQuestionsComponent implements OnInit {
 
   toggleDropdown(dropdown: DropdownKey, event: Event): void {
     event.stopPropagation();
+    this.openFilter.set(null);
     this.openDropdown.update((current) => current === dropdown ? null : dropdown);
   }
 
@@ -258,6 +337,7 @@ export class IndustrialisationQuestionsComponent implements OnInit {
 
   updateQuestionSearch(value: string): void {
     this.questionSearch.set(value);
+    this.currentPage.set(1);
   }
 
   private applyTypeCritereRules(value: TypeCritere | null): void {

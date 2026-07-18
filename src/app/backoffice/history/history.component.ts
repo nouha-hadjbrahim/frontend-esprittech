@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -33,6 +33,8 @@ interface LogEntry {
   metadataRaw: Record<string, unknown> | null;
 }
 
+type FilterKey = 'module';
+
 @Component({
   selector: 'app-history',
   standalone: true,
@@ -51,15 +53,23 @@ export class HistoryComponent implements OnInit, OnDestroy {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly allLogs = signal<LogEntry[]>([]);
-  readonly page = signal(0);
+  readonly apiPage = signal(0);
   readonly hasMore = signal(true);
   readonly pageSize = 100;
+  readonly viewPage = signal(0);
+  readonly viewPageSize = 8;
   readonly selectedLog = signal<LogEntry | null>(null);
   readonly selectedLogOldKeys = signal<Array<{ key: string; value: string }>>([]);
   readonly selectedLogNewKeys = signal<Array<{ key: string; value: string }>>([]);
   readonly selectedLogMetaKeys = signal<Array<{ key: string; value: string }>>([]);
+  readonly openFilter = signal<FilterKey | null>(null);
 
   readonly modules = MODULE_NAMES;
+
+  readonly moduleOptions = [
+    { value: 'all', label: 'Tous les modules' },
+    ...MODULE_NAMES.map((m) => ({ value: m, label: m })),
+  ];
 
   readonly filteredLogs = computed(() => {
     const q = this.searchTerm().toLowerCase();
@@ -76,9 +86,30 @@ export class HistoryComponent implements OnInit, OnDestroy {
     });
   });
 
+  readonly totalElements = computed(() => this.filteredLogs().length);
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.totalElements() / this.viewPageSize)),
+  );
+
+  readonly pageDisplayCount = computed(() => this.pagedLogs().length);
+
+  readonly pageNumbers = computed(() =>
+    Array.from({ length: this.totalPages() }, (_, i) => i + 1),
+  );
+
+  readonly first = computed(() => this.viewPage() <= 0);
+
+  readonly last = computed(() => this.viewPage() >= this.totalPages() - 1);
+
+  readonly pagedLogs = computed(() => {
+    const start = this.viewPage() * this.viewPageSize;
+    return this.filteredLogs().slice(start, start + this.viewPageSize);
+  });
+
   readonly groupedLogs = computed(() => {
     const map = new Map<string, LogEntry[]>();
-    this.filteredLogs().forEach((l) => {
+    this.pagedLogs().forEach((l) => {
       const arr = map.get(l.date) ?? [];
       arr.push(l);
       map.set(l.date, arr);
@@ -97,6 +128,33 @@ export class HistoryComponent implements OnInit, OnDestroy {
     };
   });
 
+  readonly statsCards = computed(() => [
+    { label: 'Actions totales', value: this.stats().total, icon: 'total' as const },
+    { label: "Aujourd'hui", value: this.stats().today, icon: 'today' as const },
+    { label: 'Modules actifs', value: this.stats().modules, icon: 'modules' as const },
+    { label: 'Utilisateurs actifs', value: this.stats().users, icon: 'users' as const },
+  ]);
+
+  get moduleFilterLabel(): string {
+    return this.moduleOptions.find((o) => o.value === this.selectedModule())?.label ?? 'Tous les modules';
+  }
+
+  @HostListener('document:click')
+  closeFiltersOnOutsideClick(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectModuleFilter(value: string): void {
+    this.selectedModule.set(value);
+    this.openFilter.set(null);
+    this.viewPage.set(0);
+  }
+
   ngOnInit(): void {
     this.loadLogs();
   }
@@ -110,7 +168,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
     this.historiqueService
-      .search({}, this.page(), this.pageSize)
+      .search({}, this.apiPage(), this.pageSize)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading.set(false)),
@@ -131,10 +189,30 @@ export class HistoryComponent implements OnInit, OnDestroy {
 
   onSearch(value: string): void {
     this.searchTerm.set(value);
+    this.viewPage.set(0);
   }
 
   onModuleChange(mod: string): void {
-    this.selectedModule.set(mod);
+    this.selectModuleFilter(mod);
+  }
+
+  prevPage(): void {
+    if (!this.first()) this.viewPage.update((p) => p - 1);
+  }
+
+  nextPage(): void {
+    if (!this.last()) {
+      this.viewPage.update((p) => p + 1);
+      return;
+    }
+    if (this.hasMore() && !this.loading()) {
+      this.loadMore();
+    }
+  }
+
+  goToPage(newPage: number): void {
+    if (newPage < 0 || newPage >= this.totalPages() || newPage === this.viewPage()) return;
+    this.viewPage.set(newPage);
   }
 
   openDetails(log: LogEntry): void {
@@ -157,7 +235,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
   }
 
   loadMore(): void {
-    this.page.update((p) => p + 1);
+    this.apiPage.update((p) => p + 1);
     this.loadLogs();
   }
 

@@ -72,7 +72,6 @@ export class BackofficeLayoutComponent {
             ],
         },
         { label: 'Catalogue applicatif', icon: 'layers', route: '/backoffice/catalog' },
-        { label: 'Candidatures', icon: 'file-text', route: '/backoffice/applications' },
         {
             label: 'Équipes de recherche',
             icon: 'users',
@@ -82,7 +81,6 @@ export class BackofficeLayoutComponent {
                 { label: 'Demandes', route: '/backoffice/equipes-recherche/demandes' },
             ],
         },
-        { label: 'Encadrants', icon: 'award', route: '/backoffice/supervisors' },
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
         { label: 'Paramètres', icon: 'settings', route: '/backoffice/settings' },
@@ -135,21 +133,32 @@ export class BackofficeLayoutComponent {
     }
 
     isNavGroupActive(item: NavItem): boolean {
-        const baseRoute = this.groupBaseRoutes[item.label];
-        if (baseRoute) {
-            return this.router.url.startsWith(baseRoute);
+        if (item.children?.some((child) => this.isChildActive(child.route))) {
+            return true;
         }
-        return item.children?.some((child) => this.isChildActive(child.route)) ?? false;
+        const baseRoute = this.groupBaseRoutes[item.label];
+        return baseRoute ? this.router.url.startsWith(baseRoute) : false;
     }
 
     isChildActive(route: string): boolean {
+        const url = this.router.url.split('?')[0];
         if (route === '/backoffice/subjects') {
-            return this.router.url === '/backoffice/subjects';
+            return url === '/backoffice/subjects';
         }
         if (route === '/backoffice/subjects/formulaires') {
-            return this.router.url.startsWith('/backoffice/subjects/formulaires');
+            return url.startsWith('/backoffice/subjects/formulaires');
         }
-        return this.router.url === route || this.router.url.startsWith(route + '?');
+        // Exact match for parent "Équipes" so /domaines and /demandes don't also highlight it
+        if (route === '/backoffice/equipes-recherche') {
+            return url === '/backoffice/equipes-recherche';
+        }
+        if (route === '/backoffice/equipes-recherche/domaines') {
+            return url.startsWith('/backoffice/equipes-recherche/domaines');
+        }
+        if (route === '/backoffice/equipes-recherche/demandes') {
+            return url.startsWith('/backoffice/equipes-recherche/demandes');
+        }
+        return url === route || url.startsWith(route + '/');
     }
 
     isNavItemActive(item: NavItem): boolean {
@@ -160,8 +169,11 @@ export class BackofficeLayoutComponent {
     }
 
     private expandActiveGroups(): void {
-        for (const label of Object.keys(this.groupBaseRoutes)) {
-            this.expandedGroups[label] = this.router.url.startsWith(this.groupBaseRoutes[label]);
+        for (const item of this.navItems) {
+            if (!item.children?.length) {
+                continue;
+            }
+            this.expandedGroups[item.label] = this.isNavGroupActive(item);
         }
     }
 

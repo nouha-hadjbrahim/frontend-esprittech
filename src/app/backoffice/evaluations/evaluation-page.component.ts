@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, HostListener, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { EvaluationResponse, ProjetEvaluable } from '../../core/models/evaluation.model';
@@ -30,10 +30,22 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   readonly loadingHistory = signal(false);
   readonly evalError = signal<string | null>(null);
   readonly projectSearch = signal('');
+  readonly selectedEligibilite = signal('');
+  readonly openFilter = signal<'eligibilite' | null>(null);
   readonly actionInProgress = signal(false);
   readonly validationComment = signal('');
   readonly overrideScore = signal<number | null>(null);
   readonly overrideReason = signal('');
+  page = 0;
+  readonly pageSize = 8;
+
+  readonly eligibiliteOptions = [
+    { value: '', label: 'Toutes les éligibilités' },
+    { value: 'ELIGIBLE', label: 'Éligible' },
+    { value: 'NON_ELIGIBLE', label: 'Non éligible' },
+    { value: 'PENDING', label: 'En attente' },
+    { value: 'REVIEW_REQUIRED', label: 'Revue requise' },
+  ];
 
   private readonly COOLDOWN_SECONDS = 120;
   cooldowns = signal<Record<number, number>>({});
@@ -41,32 +53,51 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
 
   readonly filteredProjects = computed(() => {
     const query = this.normalize(this.projectSearch());
-    if (!query) {
-      return this.projects();
-    }
-    if (query === 'eligible') {
-      return this.projects().filter((project) => project.eligibleIndustrialisation === true);
-    }
-    if (query === 'non eligible' || query === 'noneligible') {
-      return this.projects().filter((project) => project.eligibleIndustrialisation === false);
-    }
-    if (query === 'en attente' || query === 'attente') {
-      return this.projects().filter((project) => project.eligibleIndustrialisation == null);
-    }
-    return this.projects().filter((project) =>
-      this.normalize([
+    const elig = this.selectedEligibilite();
+    return this.projects().filter((project) => {
+      const status = this.projectEligibilityStatus(project);
+      const matchElig =
+        !elig ||
+        (elig === 'NON_ELIGIBLE'
+          ? ['NON_ELIGIBLE', 'NON_ELIGIBLE_EN_L_ETAT', 'NOT_EVALUABLE', 'NOT_EVALUABLE_NO_DELIVERABLE'].includes(status)
+          : elig === 'PENDING'
+            ? status === 'PENDING' || !status
+            : status === elig);
+      if (!matchElig) return false;
+      if (!query) return true;
+      return this.normalize([
         project.id,
         project.titre,
         project.statut,
         project.scoreFinal,
-        project.eligibleIndustrialisation == null
-          ? 'en attente'
-          : project.eligibleIndustrialisation ? 'eligible' : 'non eligible',
-      ].join(' ')).includes(query)
-    );
+        this.projectEligibilityLabel(project),
+      ].join(' ')).includes(query);
+    });
   });
 
+  readonly totalElements = computed(() => this.filteredProjects().length);
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalElements() / this.pageSize)));
+  readonly first = computed(() => this.page <= 0);
+  readonly last = computed(() => this.page >= this.totalPages() - 1);
+  readonly pageNumbers = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+  readonly pageDisplayCount = computed(() => this.pagedProjects().length);
+  readonly pagedProjects = computed(() => {
+    const start = this.page * this.pageSize;
+    return this.filteredProjects().slice(start, start + this.pageSize);
+  });
+
+  readonly statsCards = computed(() => [
+    { label: 'Projets terminés', value: this.projects().length, icon: 'total' as const },
+    { label: 'Évalués', value: this.evaluatedCount, icon: 'evaluated' as const },
+    { label: 'Éligibles', value: this.eligibleCount, icon: 'eligible' as const },
+    { label: 'Non éligibles', value: this.nonEligibleCount, icon: 'rejected' as const },
+  ]);
+
   selectedProject: ProjetEvaluable | null = null;
+
+  get eligibiliteFilterLabel(): string {
+    return this.eligibiliteOptions.find((o) => o.value === this.selectedEligibilite())?.label ?? 'Toutes les éligibilités';
+  }
 
   get evaluatedCount(): number {
     return this.projects().filter((project) => project.scoreFinal != null).length;
@@ -222,11 +253,75 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
   }
 
   statusLabel(status: string): string {
-    return status === 'REALISATION_TERMINEE' ? 'Realisation terminee' : status;
+    return status === 'REALISATION_TERMINEE' ? 'Réalisation terminée' : status;
+  }
+
+  statusBadgeClass(status: string): string {
+    return status === 'REALISATION_TERMINEE' ? 'badge--statut-terminee' : 'badge--neutral';
+  }
+
+  analyzeButtonTitle(project: ProjetEvaluable): string {
+    if (this.savingProjectId() === project.id) {
+      return 'Analyse en cours…';
+    }
+    if (this.isProjectCoolingDown(project.id)) {
+      return `Recalcul disponible dans ${this.cooldownLabel(project.id)}`;
+    }
+    return project.scoreFinal == null ? 'Analyser le contenu' : 'Réanalyser';
+  }
+
+  projectScoreClass(project: ProjetEvaluable): string {
+    const score = project.latestEvaluation
+      ? this.scoreFor(project.latestEvaluation)
+      : project.scoreFinal ?? null;
+    if (score == null) {
+      return 'badge--score-pending';
+    }
+    if (score >= 75) {
+      return 'badge--score-high';
+    }
+    if (score >= 50) {
+      return 'badge--score-mid';
+    }
+    return 'badge--score-low';
   }
 
   updateProjectSearch(value: string): void {
     this.projectSearch.set(value);
+    this.page = 0;
+  }
+
+  @HostListener('document:click')
+  closeFiltersOnOutsideClick(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: 'eligibilite', event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectEligibiliteFilter(value: string): void {
+    this.selectedEligibilite.set(value);
+    this.openFilter.set(null);
+    this.page = 0;
+  }
+
+  prevPage(): void {
+    if (!this.first()) this.page--;
+  }
+
+  nextPage(): void {
+    if (!this.last()) this.page++;
+  }
+
+  goToPage(newPage: number): void {
+    if (newPage < 0 || newPage >= this.totalPages() || newPage === this.page) return;
+    this.page = newPage;
+  }
+
+  getInitial(titre: string): string {
+    return (titre?.trim()?.charAt(0) || '?').toUpperCase();
   }
 
   updateValidationComment(value: string): void {
@@ -431,16 +526,29 @@ export class EvaluationPageComponent implements OnInit, OnDestroy {
 
   projectEligibilityClass(project: ProjetEvaluable): string {
     const status = this.projectEligibilityStatus(project);
-    if (status === 'ELIGIBLE') {
-      return 'badge-success';
+    switch (status) {
+      case 'ELIGIBLE':
+        return 'badge--eligible';
+      case 'REVIEW_REQUIRED':
+        return 'badge--review';
+      case 'NON_ELIGIBLE':
+      case 'NON_ELIGIBLE_EN_L_ETAT':
+        return 'badge--non-eligible';
+      case 'NOT_EVALUABLE':
+      case 'NOT_EVALUABLE_NO_DELIVERABLE':
+        return 'badge--not-evaluable';
+      default:
+        return 'badge--pending';
     }
-    if (status === 'REVIEW_REQUIRED') {
-      return 'badge-secondary';
-    }
-    if (['NON_ELIGIBLE', 'NON_ELIGIBLE_EN_L_ETAT', 'NOT_EVALUABLE'].includes(status)) {
-      return 'badge-danger';
-    }
-    return 'badge-secondary';
+  }
+
+  eligibilityDotClass(project: ProjetEvaluable): string {
+    const status = this.projectEligibilityStatus(project);
+    if (status === 'ELIGIBLE') return 'dot-eligible';
+    if (status === 'REVIEW_REQUIRED') return 'dot-review';
+    if (['NON_ELIGIBLE', 'NON_ELIGIBLE_EN_L_ETAT'].includes(status)) return 'dot-non-eligible';
+    if (['NOT_EVALUABLE', 'NOT_EVALUABLE_NO_DELIVERABLE'].includes(status)) return 'dot-not-evaluable';
+    return 'dot-pending';
   }
 
   private normalize(value: unknown): string {

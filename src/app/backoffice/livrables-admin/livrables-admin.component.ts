@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Livrable, LivrableUpdateRequest, TYPE_LIVRABLE_LABELS, TYPE_LIVRABLE_OPTIONS, TypeLivrable } from '../../core/models/livrable.model';
 import { LivrableService } from '../../core/services/livrable.service';
+
+type FilterKey = 'type';
+type TypeFilter = '' | TypeLivrable;
 
 @Component({
   selector: 'app-livrables-admin',
@@ -19,11 +22,20 @@ export class LivrablesAdminComponent implements OnInit {
   error = signal<string | null>(null);
   message = signal<string | null>(null);
   query = signal('');
-  selectedType = signal('');
+  selectedType = signal<TypeFilter>('');
+  openFilter = signal<FilterKey | null>(null);
   selectedLivrable = signal<Livrable | null>(null);
+
+  readonly pageSize = 8;
+  currentPage = signal(1);
 
   readonly typeOptions = TYPE_LIVRABLE_OPTIONS;
   readonly labels = TYPE_LIVRABLE_LABELS;
+
+  readonly typeFilterOptions: { value: TypeFilter; label: string }[] = [
+    { value: '', label: 'Tous les types' },
+    ...TYPE_LIVRABLE_OPTIONS,
+  ];
 
   editForm = {
     typeLivrable: 'DOCUMENTATION' as TypeLivrable,
@@ -46,8 +58,60 @@ export class LivrablesAdminComponent implements OnInit {
     });
   });
 
+  readonly statsCards = computed(() => {
+    const all = this.livrables();
+    return [
+      { label: 'Total livrables', value: all.length, icon: 'total' as const },
+      { label: 'Actifs', value: all.filter((l) => l.actif).length, icon: 'active' as const },
+      { label: 'Fichiers', value: all.filter((l) => !!l.objectName).length, icon: 'file' as const },
+      { label: 'Liens externes', value: all.filter((l) => !!l.lienExterne && !l.objectName).length, icon: 'link' as const },
+    ];
+  });
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredLivrables().length / this.pageSize));
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get visibleLivrables(): Livrable[] {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredLivrables().slice(start, start + this.pageSize);
+  }
+
+  get typeFilterLabel(): string {
+    return this.typeFilterOptions.find((o) => o.value === this.selectedType())?.label ?? 'Tous les types';
+  }
+
   ngOnInit(): void {
     this.load();
+  }
+
+  @HostListener('document:click')
+  closeFiltersOnOutsideClick(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectTypeFilter(value: TypeFilter): void {
+    this.selectedType.set(value);
+    this.openFilter.set(null);
+    this.currentPage.set(1);
+  }
+
+  updateSearch(value: string): void {
+    this.query.set(value);
+    this.currentPage.set(1);
+  }
+
+  goToPage(page: number): void {
+    this.currentPage.set(Math.min(Math.max(page, 1), this.totalPages));
   }
 
   load(): void {
@@ -122,5 +186,47 @@ export class LivrablesAdminComponent implements OnInit {
     if (!size) return '-';
     if (size < 1024 * 1024) return `${Math.round(size / 1024)} Ko`;
     return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
+  }
+
+  typeBadgeClass(type: TypeLivrable): string {
+    switch (type) {
+      case 'DOCUMENTATION':
+        return 'badge--doc';
+      case 'CODE_SOURCE':
+        return 'badge--code';
+      case 'LIEN_GIT':
+        return 'badge--git';
+      case 'RAPPORT':
+        return 'badge--rapport';
+      case 'PRESENTATION':
+        return 'badge--presentation';
+      case 'IMAGE':
+        return 'badge--image';
+      case 'FICHIER_TXT':
+        return 'badge--txt';
+      default:
+        return 'badge--autre';
+    }
+  }
+
+  typeDotClass(type: TypeLivrable): string {
+    switch (type) {
+      case 'DOCUMENTATION':
+        return 'dot-doc';
+      case 'CODE_SOURCE':
+        return 'dot-code';
+      case 'LIEN_GIT':
+        return 'dot-git';
+      case 'RAPPORT':
+        return 'dot-rapport';
+      case 'PRESENTATION':
+        return 'dot-presentation';
+      case 'IMAGE':
+        return 'dot-image';
+      case 'FICHIER_TXT':
+        return 'dot-txt';
+      default:
+        return 'dot-autre';
+    }
   }
 }

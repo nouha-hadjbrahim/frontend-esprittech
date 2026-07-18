@@ -126,14 +126,26 @@
       </div>
     }
 
-    <div class="card-footer" *ngIf="!loading && !loadError && totalElements > 0">
-      <span class="footer-count">{{ items.length }} sur {{ totalElements }} {{ activeTab.plural }}</span>
-      <div class="pagination" *ngIf="totalPages > 1">
-        <button type="button" class="page-btn" [disabled]="first" (click)="goToPage(page - 1)">Précédent</button>
-        <span class="page-info">Page {{ page + 1 }} / {{ totalPages }}</span>
-        <button type="button" class="page-btn" [disabled]="last" (click)="goToPage(page + 1)">Suivant</button>
+    @if (!loading && !loadError && totalElements > 0) {
+      <div class="pagination">
+        <span class="pagination-info">
+          Affichage de <strong>{{ items.length }}</strong> sur <strong>{{ totalElements }}</strong> {{ activeTab.plural }}
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-btn" [disabled]="first" (click)="goToPage(page - 1)">Précédent</button>
+          @for (p of pageNumbers; track p) {
+            <button
+              type="button"
+              class="page-num"
+              [class.page-num--active]="p === page + 1"
+              (click)="goToPage(p - 1)"
+              [attr.aria-current]="p === page + 1 ? 'page' : null"
+            >{{ p }}</button>
+          }
+          <button type="button" class="page-btn" [disabled]="last" (click)="goToPage(page + 1)">Suivant</button>
+        </div>
       </div>
-    </div>
+    }
   </div>
 </div>
 

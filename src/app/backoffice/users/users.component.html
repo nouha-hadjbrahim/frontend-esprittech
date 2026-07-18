@@ -104,10 +104,18 @@
         <!-- Pagination -->
         <div class="pagination" *ngIf="!loading() && !loadError() && totalElements > 0">
             <span class="pagination-info">
-                {{ totalElements }} utilisateur(s) — page {{ page + 1 }} / {{ totalPages }}
+                Affichage de <strong>{{ pageDisplayCount }}</strong> sur <strong>{{ totalElements }}</strong> utilisateurs
             </span>
             <div class="pagination-controls">
                 <button type="button" class="page-btn" [disabled]="first" (click)="prevPage()">Précédent</button>
+                <button
+                    type="button"
+                    class="page-num"
+                    *ngFor="let p of pageNumbers"
+                    [class.page-num--active]="p === page + 1"
+                    (click)="goToPage(p - 1)"
+                    [attr.aria-current]="p === page + 1 ? 'page' : null"
+                >{{ p }}</button>
                 <button type="button" class="page-btn" [disabled]="last" (click)="nextPage()">Suivant</button>
             </div>
         </div>

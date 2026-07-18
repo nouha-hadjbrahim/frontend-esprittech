@@ -1,81 +1,97 @@
-/* Types de sujet */
+/* Types de sujet — pastels fins avec bordure légère */
 .badge--pfe {
-  background: #fff5f5;
-  color: #E23E3E;
+  background: #fff1f5;
+  color: #be185d;
+  border: 1px solid #fbcfe8;
 }
 
 .badge--stage {
   background: #fffbeb;
-  color: #d97706;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 
 .badge--rdi {
   background: #eff6ff;
-  color: #2563eb;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
 }
 
-/* Statuts — couleurs distinctes (alignées sur Mes sujets) */
+/* Statuts — pastels fins + bordure assortie */
 .badge--statut-soumis {
-  background: #fef3c7;
+  background: #fffbeb;
   color: #92400e;
+  border: 1px solid #fde68a;
 }
 
 .badge--statut-attente {
-  background: #ede9fe;
+  background: #f5f3ff;
   color: #5b21b6;
+  border: 1px solid #ddd6fe;
 }
 
 .badge--statut-invalide {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #fff1f2;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
 }
 
 .badge--statut-valide {
-  background: #dbeafe;
+  background: #eff6ff;
   color: #1e40af;
+  border: 1px solid #bfdbfe;
 }
 
 .badge--statut-cand-ouverte {
-  background: #dcfce7;
+  background: #f0fdf4;
   color: #166534;
+  border: 1px solid #bbf7d0;
 }
 
 .badge--statut-cand-fermee {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .badge--statut-realisation {
-  background: #ffefe5;
-  color: #c2410c;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border: 1px solid #bfdbfe;
 }
 
 .badge--statut-terminee {
-  background: #ccfbf1;
-  color: #115e59;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .badge--statut-indust-interne {
-  background: #f3e8ff;
+  background: #faf5ff;
   color: #6b21a8;
+  border: 1px solid #e9d5ff;
 }
 
 .badge--statut-indust-externe {
-  background: #ede9fe;
+  background: #f5f3ff;
   color: #5b21b6;
+  border: 1px solid #ddd6fe;
 }
 
 .badge--statut-indus-dsi {
-  background: #d1fae5;
+  background: #ecfdf5;
   color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .badge--statut-indus-externe {
-  background: #f3e8ff;
+  background: #faf5ff;
   color: #6b21a8;
+  border: 1px solid #e9d5ff;
 }
 
 .badge--neutral {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
 }

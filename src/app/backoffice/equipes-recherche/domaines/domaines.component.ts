@@ -33,6 +33,10 @@ export class DomainesComponent implements OnInit {
   readonly domainsSearch$ = new Subject<string>();
   domainsCount = 0;
 
+  get domainPageNumbers(): number[] {
+    return Array.from({ length: Math.max(this.domainsTotalPages, 1) }, (_, i) => i + 1);
+  }
+
   isDomainModalOpen = false;
   editingDomaine: EquipeDomaine | null = null;
   domainModalNom = '';

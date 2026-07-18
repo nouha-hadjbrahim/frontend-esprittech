@@ -1,3 +1,5 @@
+@import '../../../shared/styles/pagination.shared.css';
+
 .formulaires-page {
   display: flex;
   flex-direction: column;
@@ -238,46 +240,9 @@
 }
 
 .card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #f3f4f6;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.footer-count {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
-
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.page-btn {
-  padding: 6px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #374151;
-  cursor: pointer;
-}
-
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-info {
-  font-size: 0.85rem;
-  color: #6b7280;
+  margin-top: 0;
+  padding: 0;
+  border-top: none;
 }
 
 .modal-overlay {

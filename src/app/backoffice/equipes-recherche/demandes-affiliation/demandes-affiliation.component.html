@@ -1,0 +1,259 @@
+<div class="demandes-page">
+  <div class="page-header">
+    <div class="header-text">
+      <h1>Demandes d'affiliation</h1>
+      <p>Traitez les demandes des enseignants aux équipes de recherche.</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    @for (s of stats(); track s.label) {
+      <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">
+          @if (s.icon === 'pending') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          } @else if (s.icon === 'accepted') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          }
+        </span>
+        <div class="stat-text">
+          <div class="stat-val">{{ s.value }}</div>
+          <div class="stat-lbl">{{ s.label }}</div>
+        </div>
+      </article>
+    }
+  </div>
+
+  <div class="table-container">
+    <div class="table-actions">
+      <div class="search-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0a8a8" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <label for="demande-search" class="sr-only">Rechercher une demande</label>
+        <input
+          id="demande-search"
+          class="search-field__input"
+          type="text"
+          placeholder="Enseignant, email, équipe…"
+          [(ngModel)]="query"
+          (ngModelChange)="appliquerFiltre()"
+        />
+      </div>
+
+      <div class="filters-group">
+        <div class="filter-dropdown" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--open]="openFilter() === 'statut'"
+            (click)="toggleFilter('statut', $event)"
+          >
+            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="8" y1="12" x2="20" y2="12"></line>
+              <line x1="12" y1="18" x2="20" y2="18"></line>
+              <circle cx="6" cy="12" r="2"></circle>
+              <circle cx="10" cy="18" r="2"></circle>
+            </svg>
+            <span class="filter-pill__label">{{ statutFilterLabel }}</span>
+            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          @if (openFilter() === 'statut') {
+            <div class="filter-menu" role="listbox">
+              @for (opt of statutOptions; track opt.value) {
+                <button
+                  type="button"
+                  class="filter-option"
+                  [class.filter-option--active]="selectedStatut === opt.value"
+                  (click)="selectStatutFilter(opt.value)"
+                >
+                  <span>{{ opt.label }}</span>
+                  @if (selectedStatut === opt.value) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="filter-dropdown" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--open]="openFilter() === 'equipe'"
+            (click)="toggleFilter('equipe', $event)"
+          >
+            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="filter-pill__label">{{ equipeFilterLabel }}</span>
+            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          @if (openFilter() === 'equipe') {
+            <div class="filter-menu" role="listbox">
+              @for (opt of equipeOptions; track opt.value) {
+                <button
+                  type="button"
+                  class="filter-option"
+                  [class.filter-option--active]="selectedEquipeId === opt.value"
+                  (click)="selectEquipeFilter(opt.value)"
+                >
+                  <span>{{ opt.label }}</span>
+                  @if (selectedEquipeId === opt.value) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <table class="subjects-table">
+      <thead>
+        <tr>
+          <th>Enseignant</th>
+          <th>Équipe</th>
+          <th>Date</th>
+          <th>Statut</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (chargement) {
+          <tr>
+            <td colspan="5" class="empty-row">Chargement…</td>
+          </tr>
+        } @else if (filtered.length === 0) {
+          <tr>
+            <td colspan="5" class="empty-row">Aucune demande trouvée.</td>
+          </tr>
+        } @else {
+          @for (d of pagedItems; track d.id) {
+            <tr>
+              <td>
+                <div class="subject-cell">
+                  <div class="subject-avatar">{{ getInitial(d.enseignant.prenom, d.enseignant.nom) }}</div>
+                  <div class="subject-info">
+                    <span class="subject-title">{{ d.enseignant.prenom }} {{ d.enseignant.nom }}</span>
+                    <span class="subject-meta">{{ d.enseignant.email }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="equipe-badge">{{ d.equipeNom }}</span>
+              </td>
+              <td>
+                <span class="date-text">{{ formatDate(d.dateDemande) }}</span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="statutBadgeClass(d.statut)">
+                  <span class="status-dot" [ngClass]="statutDotClass(d.statut)" aria-hidden="true"></span>
+                  {{ statutLabel(d.statut) }}
+                </span>
+              </td>
+              <td class="text-right">
+                @if (d.statut === 'EN_ATTENTE') {
+                  <div class="action-btns">
+                    <button type="button" class="affil-btn affil-btn--accept" (click)="accepter(d)">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      Accepter
+                    </button>
+                    <button type="button" class="affil-btn affil-btn--reject" (click)="ouvrirRefus(d)">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M3.5 3.5L10.5 10.5M10.5 3.5L3.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                      Refuser
+                    </button>
+                  </div>
+                } @else {
+                  <span class="actions-done">—</span>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    @if (!chargement && totalElements > 0) {
+      <div class="pagination">
+        <span class="pagination-info">
+          Affichage de <strong>{{ pageDisplayCount }}</strong> sur <strong>{{ totalElements }}</strong> demandes
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-btn" [disabled]="first" (click)="prevPage()">Précédent</button>
+          @for (p of pageNumbers; track p) {
+            <button
+              type="button"
+              class="page-num"
+              [class.page-num--active]="p === page + 1"
+              (click)="goToPage(p - 1)"
+              [attr.aria-current]="p === page + 1 ? 'page' : null"
+            >{{ p }}</button>
+          }
+          <button type="button" class="page-btn" [disabled]="last" (click)="nextPage()">Suivant</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (motifDialogOpen) {
+  <div class="motif-overlay" (click)="annulerRefus()">
+    <div class="motif-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="motif-dialog__header">
+        <h3 class="motif-dialog__title">Motif du refus</h3>
+        <button type="button" class="motif-dialog__close" aria-label="Fermer" (click)="annulerRefus()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <p class="motif-dialog__subtitle">
+        Refuser la demande de <strong>{{ motifEnseignant }}</strong>
+        pour l'équipe <strong>{{ motifEquipe }}</strong>
+      </p>
+      <textarea
+        class="motif-dialog__input"
+        [(ngModel)]="motifText"
+        placeholder="Saisissez le motif du refus…"
+        rows="4"
+      ></textarea>
+      <div class="motif-dialog__actions">
+        <button type="button" class="btn-cancel" (click)="annulerRefus()">Annuler</button>
+        <button type="button" class="btn-refuse" (click)="confirmerRefus()">Confirmer le refus</button>
+      </div>
+    </div>
+  </div>
+}

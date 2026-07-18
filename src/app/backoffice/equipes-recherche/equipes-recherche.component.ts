@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,15 +12,13 @@ import { AffiliationService } from '../../core/services/affiliation.service';
 import { CreateEquipePayload, Equipe } from '../../core/models/equipe.model';
 import { AffiliationEnseignantResponse } from '../../core/models/affiliation-request.model';
 
-import { ButtonComponent } from '../../ui/button/button.component';
-import { BadgeComponent } from '../../ui/badge/badge.component';
-import { CardComponent } from '../../ui/card/card.component';
 import { DialogueCreerEquipeComponent } from './dialogue-creer-equipe/dialogue-creer-equipe.component';
 import { DialogueModifierEquipeComponent } from './dialogue-modifier-equipe/dialogue-modifier-equipe.component';
 import { DialogueDetailsEquipeComponent } from './dialogue-details-equipe/dialogue-details-equipe.component';
 import { DialogueAssignerChefComponent } from './dialogue-assigner-chef/dialogue-assigner-chef.component';
 import { DialogueConfirmationComponent } from '../../ui/dialogue-confirmation/dialogue-confirmation.component';
 
+type FilterKey = 'statut';
 
 @Component({
   selector: 'app-equipes-recherche',
@@ -28,8 +26,6 @@ import { DialogueConfirmationComponent } from '../../ui/dialogue-confirmation/di
   imports: [
     CommonModule, FormsModule,
     MatIconModule, MatTooltipModule,
-    ButtonComponent, BadgeComponent,
-    CardComponent,
   ],
   templateUrl: './equipes-recherche.component.html',
   styleUrl: './equipes-recherche.component.css',
@@ -44,8 +40,20 @@ export class EquipesRechercheComponent implements OnInit {
   readonly affiliations      = signal<AffiliationEnseignantResponse[]>([]);
   filtered: Equipe[]         = [];
   query   = '';
+  selectedStatut = '';
   vue: 'grille' | 'liste' = 'liste';
   chargement = true;
+  page = 0;
+  readonly pageSize = 8;
+  readonly openFilter = signal<FilterKey | null>(null);
+
+  readonly statutOptions = [
+    { value: '', label: 'Tous les statuts' },
+    { value: 'Actif', label: 'Actif' },
+    { value: 'Inactif', label: 'Inactif' },
+  ];
+
+  private readonly domaineColors = ['badge--pfe', 'badge--stage', 'badge--rdi', 'badge--domaine-teal', 'badge--domaine-violet'];
 
   readonly pendingCountByEquipeId = computed(() => {
     const map = new Map<number, number>();
@@ -62,22 +70,80 @@ export class EquipesRechercheComponent implements OnInit {
   readonly nbChefs = computed(() => this.equipes().filter((e) => !!e.chef).length);
 
   stats = computed(() => [
-    { label: 'Équipes actives', value: this.nbActives(), color: 'vert', icon: 'groups' },
-    { label: 'Membres totaux', value: this.totalMembres(), color: 'bleu', icon: 'groups' },
-    { label: 'Chefs désignés', value: this.nbChefs(), color: 'rouge', icon: 'star' },
+    { label: 'Équipes actives', value: this.nbActives(), icon: 'teams' as const },
+    { label: 'Membres totaux', value: this.totalMembres(), icon: 'members' as const },
+    { label: 'Chefs désignés', value: this.nbChefs(), icon: 'chefs' as const },
   ]);
+
+  get statutFilterLabel(): string {
+    return this.statutOptions.find((o) => o.value === this.selectedStatut)?.label ?? 'Tous les statuts';
+  }
+
+  get totalElements(): number {
+    return this.filtered.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+
+  get first(): boolean {
+    return this.page <= 0;
+  }
+
+  get last(): boolean {
+    return this.page >= this.totalPages - 1;
+  }
+
+  get pagedItems(): Equipe[] {
+    const start = this.page * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  get pageDisplayCount(): number {
+    return this.pagedItems.length;
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
 
   getInitial(nom: string): string {
     return (nom?.trim()?.charAt(0) || '?').toUpperCase();
   }
 
+  domaineBadgeClass(domaine: string): string {
+    const key = (domaine || '').toLowerCase();
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+      hash = (hash + key.charCodeAt(i) * (i + 1)) % this.domaineColors.length;
+    }
+    return this.domaineColors[hash];
+  }
+
+  statutBadgeClass(statut: string): string {
+    return statut === 'Actif' ? 'badge--statut-actif' : 'badge--statut-inactif';
+  }
+
+  @HostListener('document:click')
+  closeFiltersOnOutsideClick(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectStatutFilter(value: string): void {
+    this.selectedStatut = value;
+    this.openFilter.set(null);
+    this.appliquerFiltre();
+  }
+
   ngOnInit() {
     this.charger();
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // Equipes tab
-  // ═══════════════════════════════════════════════════════════════
 
   charger() {
     this.chargement = true;
@@ -95,14 +161,34 @@ export class EquipesRechercheComponent implements OnInit {
 
   appliquerFiltre() {
     const q = this.query.toLowerCase().trim();
-    this.filtered = !q
-      ? this.equipes()
-      : this.equipes().filter(
-          (e) =>
-            e.nom.toLowerCase().includes(q) ||
-            (e.chef ? `${e.chef.prenom} ${e.chef.nom}`.toLowerCase().includes(q) : false) ||
-            e.domaine.toLowerCase().includes(q),
-        );
+    this.filtered = this.equipes().filter((e) => {
+      const matchStatut = !this.selectedStatut || e.statut === this.selectedStatut;
+      const matchQuery = !q
+        || e.nom.toLowerCase().includes(q)
+        || (e.chef ? `${e.chef.prenom} ${e.chef.nom}`.toLowerCase().includes(q) : false)
+        || e.domaine.toLowerCase().includes(q);
+      return matchStatut && matchQuery;
+    });
+    this.page = 0;
+  }
+
+  prevPage(): void {
+    if (!this.first) this.page--;
+  }
+
+  nextPage(): void {
+    if (!this.last) this.page++;
+  }
+
+  goToPage(newPage: number): void {
+    if (newPage < 0 || newPage >= this.totalPages) return;
+    this.page = newPage;
+  }
+
+  private clampPage(): void {
+    if (this.page > this.totalPages - 1) {
+      this.page = Math.max(0, this.totalPages - 1);
+    }
   }
 
   ouvrirCreation() {
@@ -164,6 +250,7 @@ export class EquipesRechercheComponent implements OnInit {
         next: () => {
           this.equipes.update((arr) => arr.filter((e) => e.id !== equipe.id));
           this.appliquerFiltre();
+          this.clampPage();
           this.toast('Équipe supprimée', 'succes');
         },
         error: (err) => {

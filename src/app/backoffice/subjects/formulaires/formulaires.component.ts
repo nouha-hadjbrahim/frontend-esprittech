@@ -85,6 +85,10 @@ export class FormulairesComponent implements OnInit, OnDestroy {
     return this.tabs.find((t) => t.type === this.activeType) ?? this.tabs[0];
   }
 
+  get pageNumbers(): number[] {
+    return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i + 1);
+  }
+
   get countForActiveTab(): number {
     if (this.activeType === 'domaines') return this.counts.domaines;
     if (this.activeType === 'prerequis') return this.counts.prerequis;
