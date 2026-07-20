@@ -140,6 +140,16 @@ export class ProjetDetailCatalogue implements OnInit {
     );
   }
 
+  trackLivrable(livrable: LivrableCatalogue): string {
+    if (livrable.objectName?.trim()) {
+      return `object:${livrable.objectName.trim()}`;
+    }
+    if (livrable.lienExterne?.trim()) {
+      return `link:${livrable.lienExterne.trim().toLowerCase()}`;
+    }
+    return `${livrable.fromSujet ? 'sujet' : 'catalogue'}:${livrable.id}`;
+  }
+
   livrableDisplayName(livrable: LivrableCatalogue): string {
     return livrable.originalFileName?.trim() || livrable.nom;
   }
@@ -167,7 +177,8 @@ export class ProjetDetailCatalogue implements OnInit {
     this.livrableError = '';
     this.livrableService.findPublishedByProjet(id).subscribe({
       next: (livrables) => {
-        this.livrables = livrables;
+        this.livrables = this.dedupeLivrables(livrables);
+        this.livrableError = '';
         this.livrablesLoading = false;
       },
       error: () => {
@@ -192,6 +203,18 @@ export class ProjetDetailCatalogue implements OnInit {
         }
         this.isHistoriqueLoading = false;
       },
+    });
+  }
+
+  private dedupeLivrables(livrables: LivrableCatalogue[]): LivrableCatalogue[] {
+    const seen = new Set<string>();
+    return livrables.filter((livrable) => {
+      const key = this.trackLivrable(livrable);
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
     });
   }
 }

@@ -539,7 +539,7 @@ describe('ProjetDetailEnseignant', () => {
     createComponent();
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
     flushHistorique();
     fixture.detectChanges();
@@ -556,7 +556,7 @@ describe('ProjetDetailEnseignant', () => {
     httpTesting.expectOne(`${API}/projets/1`).flush({
       ...validDetails, statut: 'CANDIDAT_INDUSTRIALISATION_INTERNE', score: 82,
     });
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
     flushHistorique();
     fixture.detectChanges();
@@ -573,7 +573,7 @@ describe('ProjetDetailEnseignant', () => {
     httpTesting.expectOne(`${API}/projets/1`).flush({
       ...validDetails, statut: 'INDUSTRIALISE_DSI', score: 0,
     });
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
       { message: 'Aucune evaluation trouvee' }, { status: 404, statusText: 'Not Found' },
     );

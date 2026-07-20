@@ -219,6 +219,7 @@ export class EquipeDetail implements OnInit {
         this.reloadEquipe();
         this.loadAffiliations(eq.id);
       },
+      error: () => {},
     });
   }
 
@@ -238,6 +239,7 @@ export class EquipeDetail implements OnInit {
         this.pendingRefuseId = null;
         this.loadAffiliations(eq.id);
       },
+      error: () => {},
     });
   }
 
@@ -253,6 +255,7 @@ export class EquipeDetail implements OnInit {
       next: () => {
         this.reloadEquipe();
       },
+      error: () => {},
     });
   }
 
@@ -264,6 +267,7 @@ export class EquipeDetail implements OnInit {
         this.equipe.set(data);
         this.loadMembres(data.id);
       },
+      error: () => {},
     });
   }
 

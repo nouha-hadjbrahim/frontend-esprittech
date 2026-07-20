@@ -18,12 +18,13 @@
 
 # Dependencies, builds and caches
 node_modules/
-dist/
 .angular/
 coverage/
 .scannerwork/
 .sonar/
 .trivycache/
+image.oci.tar
+image.env
 
 # Logs and local runtime state
 *.log

@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { ProjetDetails } from '../../../core/models/projet-catalogue.model';
 import { EvaluationResponse } from '../../../core/models/evaluation.model';
+import { LivrableCatalogue } from '../../../core/models/livrable-catalogue.model';
 import { ProjetDetailCatalogue } from './projet-detail-catalogue';
 import { environment } from '../../../../environments/environment';
 
@@ -39,6 +40,44 @@ describe('ProjetDetailCatalogue', () => {
     commentaire: 'ok',
   };
 
+  const inheritedLivrable: LivrableCatalogue = {
+    id: 99,
+    projetId: 1,
+    projetTitre: 'Projet IA',
+    typeLivrable: 'RAPPORT',
+    nom: 'Rapport final',
+    description: null,
+    originalFileName: 'rapport.pdf',
+    objectName: 'livrables/42/rapport.pdf',
+    contentType: 'application/pdf',
+    size: 10,
+    lienExterne: null,
+    deposantId: 1,
+    deposantNom: 'Jean Dupont',
+    dateDepot: '2026-02-01T10:00:00',
+    actif: true,
+    fromSujet: true,
+  };
+
+  const directLivrable: LivrableCatalogue = {
+    id: 12,
+    projetId: 1,
+    projetTitre: 'Projet IA',
+    typeLivrable: 'DOCUMENTATION',
+    nom: 'Documentation projet',
+    description: null,
+    originalFileName: 'doc.pdf',
+    objectName: 'livrables-catalogue/1/doc.pdf',
+    contentType: 'application/pdf',
+    size: 20,
+    lienExterne: null,
+    deposantId: 1,
+    deposantNom: 'Jean Dupont',
+    dateDepot: '2026-03-01T10:00:00',
+    actif: true,
+    fromSujet: false,
+  };
+
   function createComponent(id: string = '1'): void {
     TestBed.configureTestingModule({
       imports: [ProjetDetailCatalogue],
@@ -57,31 +96,15 @@ describe('ProjetDetailCatalogue', () => {
     httpTesting = TestBed.inject(HttpTestingController);
   }
 
-  function flushDetailExtras(evaluation: EvaluationResponse | null = mockEvaluation): void {
+  function flushDetailExtras(
+    evaluation: EvaluationResponse | null = mockEvaluation,
+    livrables = [inheritedLivrable],
+  ): void {
     httpTesting.expectOne(`${API}/catalogue/1/evaluation`).flush(
       evaluation ?? {},
       evaluation ? { status: 200, statusText: 'OK' } : { status: 404, statusText: 'Not Found' },
     );
-    httpTesting.expectOne(`${API}/catalogue/1/livrables`).flush([
-      {
-        id: 99,
-        projetId: 1,
-        projetTitre: 'Projet IA',
-        typeLivrable: 'RAPPORT',
-        nom: 'Rapport final',
-        description: null,
-        originalFileName: 'rapport.pdf',
-        objectName: 'obj',
-        contentType: 'application/pdf',
-        size: 10,
-        lienExterne: null,
-        deposantId: 1,
-        deposantNom: 'Jean Dupont',
-        dateDepot: '2026-02-01T10:00:00',
-        actif: true,
-        fromSujet: true,
-      },
-    ]);
+    httpTesting.expectOne(`${API}/catalogue/1/livrables`).flush(livrables);
   }
 
   afterEach(() => httpTesting.verify());
@@ -116,6 +139,57 @@ describe('ProjetDetailCatalogue', () => {
     httpTesting.expectOne(`${API}/catalogue/1/livrables`).flush([]);
     expect(component.evaluation).toBeNull();
     expect(component.displayedScore).toBe('Non calculé');
+  });
+
+  it('displays inherited and direct project deliverables together', () => {
+    createComponent();
+    fixture.detectChanges();
+    httpTesting.expectOne(`${API}/catalogue/1`).flush(mockDetails);
+    flushDetailExtras(mockEvaluation, [directLivrable, inheritedLivrable]);
+    component.setTab('livrables');
+    fixture.detectChanges();
+
+    expect(component.livrables.length).toBe(2);
+    expect(fixture.nativeElement.textContent).toContain('doc.pdf');
+    expect(fixture.nativeElement.textContent).toContain('rapport.pdf');
+  });
+
+  it('does not require a sujetProjet on the detail payload to show project deliverables', () => {
+    createComponent();
+    fixture.detectChanges();
+    httpTesting.expectOne(`${API}/catalogue/1`).flush({ ...mockDetails, sujetId: null });
+    flushDetailExtras(mockEvaluation, [directLivrable]);
+    fixture.detectChanges();
+
+    expect(component.errorMessage).toBe('');
+    expect(component.livrables.length).toBe(1);
+    expect(component.livrables[0].fromSujet).toBeFalse();
+  });
+
+  it('renders duplicate deliverables only once', () => {
+    createComponent();
+    fixture.detectChanges();
+    httpTesting.expectOne(`${API}/catalogue/1`).flush(mockDetails);
+    flushDetailExtras(mockEvaluation, [
+      directLivrable,
+      { ...inheritedLivrable, objectName: directLivrable.objectName, nom: 'Doublon' },
+    ]);
+    component.setTab('livrables');
+    fixture.detectChanges();
+
+    expect(component.livrables.length).toBe(1);
+    expect(fixture.nativeElement.querySelectorAll('.livrable-list__item').length).toBe(1);
+    expect(component.livrables[0].nom).toBe('Documentation projet');
+  });
+
+  it('uses the published download endpoint with the original deliverable id and source flag', () => {
+    createComponent();
+    component.projet = mockDetails;
+
+    expect(component.downloadLivrable(inheritedLivrable))
+      .toBe(`${API}/catalogue/1/livrables/99/download?fromSujet=true`);
+    expect(component.downloadLivrable(directLivrable))
+      .toBe(`${API}/catalogue/1/livrables/12/download`);
   });
 
   it('handles invalid id', () => {
