@@ -76,11 +76,16 @@ validate-frontend:
   stage: validate
   extends: .node-job
   script:
-    - node -e "const pkg=require('./package.json'); if(!pkg.scripts || !pkg.scripts['test:ci']) throw new Error('Missing test:ci script'); console.log('test:ci script present')"
-    - node -e "const pkg=require('./package.json'); if(!pkg.scripts?.lint){ console.log('lint script is not configured; lint is explicitly not executed.'); process.exit(0) }"
-    - if node -e "process.exit(require('./package.json').scripts?.lint ? 0 : 1)"; then npm run lint; fi
-    - node -e "const pkg=require('./package.json'); if(!pkg.scripts?.['format:check']){ console.log('format:check script is not configured; formatting check is explicitly not executed.'); process.exit(0) }"
-    - if node -e "process.exit(require('./package.json').scripts?.['format:check'] ? 0 : 1)"; then npm run format:check; fi
+    - |
+      node -e "const pkg=require('./package.json'); if(!pkg.scripts || !pkg.scripts['test:ci']) throw new Error('Missing test:ci script'); console.log('test:ci script present')"
+    - |
+      node -e "const pkg=require('./package.json'); if(!pkg.scripts?.lint){ console.log('lint script is not configured; lint is explicitly not executed.'); process.exit(0) }"
+    - |
+      if node -e "process.exit(require('./package.json').scripts?.lint ? 0 : 1)"; then npm run lint; fi
+    - |
+      node -e "const pkg=require('./package.json'); if(!pkg.scripts?.['format:check']){ console.log('format:check script is not configured; formatting check is explicitly not executed.'); process.exit(0) }"
+    - |
+      if node -e "process.exit(require('./package.json').scripts?.['format:check'] ? 0 : 1)"; then npm run format:check; fi
 
 test-frontend:
   stage: test
