@@ -1,0 +1,187 @@
+<div class="dashboard">
+  <header class="dashboard__header">
+    <div class="dashboard__intro">
+      <span class="dashboard__badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2l2.4 7.2H22l-6 4.4 2.3 7.2L12 16.8 5.7 20.8 8 13.6 2 9.2h7.6L12 2z"/>
+        </svg>
+        Vue d'ensemble
+      </span>
+      <h1 class="dashboard__title">
+        Bonjour{{ greetingName() ? ', ' + greetingName() : '' }}
+        <span class="dashboard__wave" aria-hidden="true">👋</span>
+      </h1>
+      <p class="dashboard__subtitle">Voici un aperçu de l'activité de la plateforme.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="dashboard__state">Chargement du tableau de bord…</div>
+  } @else if (error()) {
+    <div class="dashboard__state dashboard__state--error">
+      Impossible de charger les statistiques.
+      <button type="button" class="dashboard__retry" (click)="load()">Réessayer</button>
+    </div>
+  } @else {
+    <section class="kpi-grid" aria-label="Indicateurs clés">
+      @for (card of cards(); track card.key) {
+        <article class="kpi-card">
+          <div class="kpi-card__top">
+            <span class="kpi-card__icon" aria-hidden="true">
+              @switch (card.icon) {
+                @case ('projets') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                  </svg>
+                }
+                @case ('sujets') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                }
+                @case ('enseignants') {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                }
+                @default {
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                }
+              }
+            </span>
+          </div>
+
+          <p class="kpi-card__label">{{ card.label }}</p>
+          <p class="kpi-card__value">{{ card.value }}</p>
+          <p class="kpi-card__hint">{{ card.hint }}</p>
+        </article>
+      }
+    </section>
+
+    <section class="charts-row" aria-label="Graphiques">
+      <article class="chart-panel chart-panel--wide">
+        <div class="chart-panel__header">
+          <div>
+            <h2 class="chart-panel__title">Évolution</h2>
+            <p class="chart-panel__subtitle">Candidatures et demandes d'industrialisation sur 9 mois</p>
+          </div>
+          <div class="chart-legend">
+            <span class="chart-legend__item">
+              <i class="chart-legend__dot chart-legend__dot--red"></i>
+              Candidatures
+            </span>
+            <span class="chart-legend__item">
+              <i class="chart-legend__dot chart-legend__dot--amber"></i>
+              Industrialisation
+            </span>
+          </div>
+        </div>
+        <div class="chart-panel__body chart-panel__body--area">
+          <canvas
+            baseChart
+            [type]="'line'"
+            [data]="areaChartData"
+            [options]="areaChartOptions"
+          ></canvas>
+        </div>
+      </article>
+
+      <article class="chart-panel chart-panel--side">
+        <div class="chart-panel__header">
+          <div>
+            <h2 class="chart-panel__title">Répartition</h2>
+            <p class="chart-panel__subtitle">PFE, Stage et RDI</p>
+          </div>
+        </div>
+        <div class="chart-panel__body chart-panel__body--donut">
+          <div class="donut-chart-wrap">
+            <canvas
+              baseChart
+              [type]="'doughnut'"
+              [data]="donutChartData"
+              [options]="donutChartOptions"
+              [plugins]="[donutCenterPlugin]"
+            ></canvas>
+          </div>
+        </div>
+        <ul class="donut-legend">
+          @for (item of categorieLegend(); track item.name) {
+            <li class="donut-legend__item">
+              <span class="donut-legend__left">
+                <i class="donut-legend__dot" [style.background]="item.color"></i>
+                {{ item.name }}
+              </span>
+              <strong>{{ item.percent }}%</strong>
+            </li>
+          }
+        </ul>
+      </article>
+    </section>
+
+    <section class="charts-row charts-row--secondary" aria-label="Domaines et activité">
+      <article class="chart-panel chart-panel--wide">
+        <div class="chart-panel__header">
+          <div>
+            <h2 class="chart-panel__title">Top domaines</h2>
+            <p class="chart-panel__subtitle">Nombre de sujets par domaine</p>
+          </div>
+        </div>
+        <div class="domains-scroll" [class.domains-scroll--active]="domainsNeedsScroll()">
+          <div
+            class="domains-scroll__inner"
+            [style.min-width]="domainsNeedsScroll() ? domainsChartMinWidth() + 'px' : null"
+          >
+            <div class="chart-panel__body chart-panel__body--bars">
+              <canvas
+                baseChart
+                [type]="'bar'"
+                [data]="domainsChartData"
+                [options]="domainsChartOptions"
+              ></canvas>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="chart-panel chart-panel--activity">
+        <div class="chart-panel__header">
+          <div>
+            <h2 class="chart-panel__title">Activité récente</h2>
+            <p class="chart-panel__subtitle">Dernières actions</p>
+          </div>
+          <a routerLink="/backoffice/history" class="chart-link">Tout voir</a>
+        </div>
+
+        @if (activityItems().length === 0) {
+          <p class="activity-empty">Aucune activité récente pour le moment.</p>
+        } @else {
+          <ul class="activity-timeline">
+            @for (item of activityItems(); track item.id) {
+              <li class="activity-timeline__item">
+                <span class="activity-timeline__avatar activity-timeline__avatar--{{ item.tone }}" aria-hidden="true">
+                  {{ item.initials }}
+                </span>
+                <div class="activity-timeline__content">
+                  <p class="activity-timeline__text">
+                    <strong>{{ item.actor }}</strong>
+                    <span>{{ item.message }}</span>
+                  </p>
+                  <time class="activity-timeline__time">{{ item.time }}</time>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    </section>
+  }
+</div>

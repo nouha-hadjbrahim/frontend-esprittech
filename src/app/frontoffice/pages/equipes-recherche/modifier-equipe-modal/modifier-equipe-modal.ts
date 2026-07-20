@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Equipe } from '../../../../core/models/equipe.model';
 import { EquipeService } from '../../../../core/services/equipe.service';
 import { EquipeDomaine } from '../../../../core/models/equipe-domaine.model';
@@ -18,7 +17,6 @@ export class ModifierEquipeModal implements OnChanges {
   private readonly fb = inject(FormBuilder);
   private readonly equipeSvc = inject(EquipeService);
   private readonly domaineSvc = inject(EquipeDomaineService);
-  private readonly snack = inject(MatSnackBar);
 
   @Input() isOpen = false;
   @Input() equipe!: Equipe;
@@ -60,7 +58,6 @@ export class ModifierEquipeModal implements OnChanges {
       next: (data) => (this.domaines = data),
       error: () => {
         this.errorMessage = 'Erreur lors du chargement des domaines.';
-        this.snack.open('Erreur lors du chargement des domaines', '✕', { duration: 3500, panelClass: ['snack-error'] });
       },
     });
   }
@@ -95,13 +92,11 @@ export class ModifierEquipeModal implements OnChanges {
     this.equipeSvc.modifier(this.equipe.id, payload).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.snack.open('Équipe mise à jour', '✕', { duration: 3500, panelClass: ['snack-success'] });
         this.saved.emit();
       },
       error: () => {
         this.isSubmitting = false;
         this.errorMessage = 'Erreur lors de la modification. Vérifiez que le backend est démarré.';
-        this.snack.open('Erreur lors de la modification', '✕', { duration: 3500, panelClass: ['snack-error'] });
       },
     });
   }

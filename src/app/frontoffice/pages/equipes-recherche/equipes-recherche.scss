@@ -1,4 +1,4 @@
-app-equipes-recherche {
+:host {
   display: block;
   background: #ffffff;
   min-height: calc(100vh - 80px);
@@ -1481,18 +1481,22 @@ app-equipes-recherche {
 }
 
 .btn--add {
-  background: #E23E3E;
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
   color: #fff;
-  border-color: #E23E3E;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  border-radius: 8px;
+  border: none;
+  padding: 11px 22px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.32);
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn--add:hover:not(:disabled) {
-  background: #c93434;
-  border-color: #c93434;
+  filter: brightness(0.96);
+  box-shadow: 0 10px 22px rgba(185, 28, 28, 0.38);
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
+  border: none;
 }
 
 .btn--success {
@@ -1600,7 +1604,7 @@ app-equipes-recherche {
 }
 
 @media (max-width: 768px) {
-  app-equipes-recherche {
+  :host {
     margin: -2rem -1rem;
     padding: 1.5rem 1rem;
   }

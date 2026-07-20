@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,10 +8,14 @@ import { ProjetCard, StatutProjet, TypeProjet } from '../../core/models/projet-c
 import { ProjetCatalogueService } from '../../core/services/projet-catalogue.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import {
+  DEFAULT_PROJET_COVER_IMAGE,
   STATUT_PROJET_LABELS,
   TYPE_PROJET_LABELS,
   TYPE_PROJET_OPTIONS,
 } from '../../frontoffice/constants/projet-catalogue.constants';
+
+type FilterKey = 'statut' | 'domaine' | 'annee' | 'tri';
+type VueMode = 'grille' | 'liste';
 
 @Component({
   selector: 'app-catalog',
@@ -24,6 +28,7 @@ export class CatalogComponent implements OnInit {
   private readonly projetService = inject(ProjetCatalogueService);
   private readonly searchSubject = new Subject<void>();
 
+  readonly defaultCover = DEFAULT_PROJET_COVER_IMAGE;
   readonly typeLabels = TYPE_PROJET_LABELS;
   readonly statutLabels = STATUT_PROJET_LABELS;
   readonly typeButtons = [{ value: '' as const, label: 'Tous' }, ...TYPE_PROJET_OPTIONS];
@@ -50,9 +55,15 @@ export class CatalogComponent implements OnInit {
   selectedDomaine = '';
   selectedAnnee = '';
   sortOrder = 'recent';
+  vue: VueMode = 'grille';
 
   domaineOptions: string[] = [];
   anneeOptions: number[] = [];
+
+  readonly openFilter = signal<FilterKey | null>(null);
+
+  page = 0;
+  readonly pageSize = 9;
 
   deleteConfirmOpen = false;
   deleting = false;
@@ -60,7 +71,10 @@ export class CatalogComponent implements OnInit {
   projetToDelete: ProjetCard | null = null;
 
   ngOnInit(): void {
-    this.searchSubject.pipe(debounceTime(300)).subscribe(() => this.applyFilters());
+    this.searchSubject.pipe(debounceTime(300)).subscribe(() => {
+      this.page = 0;
+      this.applyFilters();
+    });
     this.load();
   }
 
@@ -98,6 +112,7 @@ export class CatalogComponent implements OnInit {
 
   selectType(type: '' | TypeProjet): void {
     this.selectedType = type;
+    this.page = 0;
     this.applyFilters();
   }
 
@@ -105,8 +120,58 @@ export class CatalogComponent implements OnInit {
     this.searchSubject.next();
   }
 
-  onFilterChange(): void {
+  @HostListener('document:click')
+  closeFilters(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectStatutFilter(value: '' | StatutProjet): void {
+    this.selectedStatut = value;
+    this.openFilter.set(null);
+    this.page = 0;
     this.applyFilters();
+  }
+
+  selectDomaineFilter(value: string): void {
+    this.selectedDomaine = value;
+    this.openFilter.set(null);
+    this.page = 0;
+    this.applyFilters();
+  }
+
+  selectAnneeFilter(value: string): void {
+    this.selectedAnnee = value;
+    this.openFilter.set(null);
+    this.page = 0;
+    this.applyFilters();
+  }
+
+  selectSortFilter(value: string): void {
+    this.sortOrder = value;
+    this.openFilter.set(null);
+    this.page = 0;
+    this.applyFilters();
+  }
+
+  get statutFilterLabel(): string {
+    return this.statutOptions.find((o) => o.value === this.selectedStatut)?.label ?? 'Tous les statuts';
+  }
+
+  get domaineFilterLabel(): string {
+    return this.selectedDomaine || 'Tous les domaines';
+  }
+
+  get anneeFilterLabel(): string {
+    return this.selectedAnnee || 'Toutes les années';
+  }
+
+  get sortFilterLabel(): string {
+    return this.sortOptions.find((o) => o.value === this.sortOrder)?.label ?? 'Plus récents';
   }
 
   private applyFilters(): void {
@@ -146,6 +211,94 @@ export class CatalogComponent implements OnInit {
     });
 
     this.filtered = result;
+    if (this.page > this.totalPages - 1) {
+      this.page = Math.max(0, this.totalPages - 1);
+    }
+  }
+
+  get totalElements(): number {
+    return this.filtered.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+
+  get first(): boolean {
+    return this.page <= 0;
+  }
+
+  get last(): boolean {
+    return this.page >= this.totalPages - 1;
+  }
+
+  get pagedItems(): ProjetCard[] {
+    const start = this.page * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  get pageDisplayCount(): number {
+    return this.pagedItems.length;
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  prevPage(): void {
+    if (!this.first) this.page--;
+  }
+
+  nextPage(): void {
+    if (!this.last) this.page++;
+  }
+
+  goToPage(newPage: number): void {
+    if (newPage < 0 || newPage >= this.totalPages || newPage === this.page) return;
+    this.page = newPage;
+  }
+
+  setVue(mode: VueMode): void {
+    this.vue = mode;
+  }
+
+  primaryDomaine(projet: ProjetCard): string {
+    return projet.domaines[0] || '—';
+  }
+
+  projetYear(projet: ProjetCard): string {
+    if (!projet.dateDebut) return '—';
+    return String(new Date(projet.dateDebut).getFullYear());
+  }
+
+  coverOf(projet: ProjetCard): string {
+    return projet.coverImage || this.defaultCover;
+  }
+
+  initiales(nom: string): string {
+    const parts = nom.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return nom.slice(0, 2).toUpperCase();
+  }
+
+  statutDotClass(statut: StatutProjet): string {
+    switch (statut) {
+      case 'VALIDE':
+      case 'INDUSTRIALISE_DSI':
+      case 'INDUSTRIALISE_EXTERNE':
+        return 'dot-valide';
+      case 'CANDIDAT_INDUSTRIALISATION_INTERNE':
+      case 'CANDIDAT_INDUSTRIALISATION_EXTERNE':
+        return 'dot-cand';
+      case 'SOUMIS_EN_VALIDATION':
+        return 'dot-soumis';
+      case 'INVALIDE':
+        return 'dot-invalide';
+      default:
+        return 'dot-neutral';
+    }
   }
 
   askDelete(projet: ProjetCard): void {
