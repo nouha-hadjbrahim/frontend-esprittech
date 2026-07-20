@@ -202,7 +202,7 @@ sonarqube-analysis:
       -Dsonar.sources=src
       -Dsonar.tests=src
       -Dsonar.test.inclusions="**/*.spec.ts"
-      -Dsonar.exclusions="src/assets/**,**/node_modules/**,**/dist/**"
+      -Dsonar.exclusions="src/assets/**,**/*.html,**/*.css,**/*.scss,**/node_modules/**,**/dist/**"
       -Dsonar.coverage.exclusions="src/main.ts,src/environments/**,src/**/*.model.ts,src/**/*.routes.ts,src/app/app.config.ts"
       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
       -Dsonar.qualitygate.wait=true
