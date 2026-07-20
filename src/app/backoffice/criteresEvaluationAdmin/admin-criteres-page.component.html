@@ -437,10 +437,8 @@
       }
     </div>
   </section>
-</div>
 
-@if (isModalOpen()) {
-  <div class="modal-overlay" (click)="closeModal()">
+  <div *ngIf="isModalOpen()" class="modal-overlay" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>{{ modalMode === 'create' ? 'Ajouter' : 'Modifier' }} {{ modalType === 'eliminatoire' ? 'un critère éliminatoire' : 'un critère note' }}</h3>
@@ -524,10 +522,8 @@
       </div>
     </div>
   </div>
-}
 
-@if (isNoteLevelModalOpen()) {
-  <div class="modal-overlay" (click)="closeNoteLevelModal()">
+  <div *ngIf="isNoteLevelModalOpen()" class="modal-overlay" (click)="closeNoteLevelModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>{{ noteLevelModalMode === 'create' ? 'Ajouter' : 'Modifier' }} un niveau</h3>
