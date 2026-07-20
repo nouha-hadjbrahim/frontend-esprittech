@@ -33,6 +33,12 @@ describe('ProjetDetailEnseignant', () => {
     statut: 'VALIDE',
   };
 
+  const candidateDetails: ProjetDetails = {
+    ...mockDetails,
+    statut: 'CANDIDAT_INDUSTRIALISATION_INTERNE',
+    score: 82,
+  };
+
   const evaluation: EvaluationResponse = {
     id: 10,
     sujetProjetId: null,
@@ -50,6 +56,27 @@ describe('ProjetDetailEnseignant', () => {
     mlGlobalConfidence: 0.7975,
     processingStatus: 'PROCESSED',
     eligibilityStatus: 'ELIGIBLE',
+  };
+
+  const evaluationWithDetails: EvaluationResponse = {
+    ...evaluation,
+    resultats: [
+      {
+        id: 101,
+        critereId: 20,
+        critereLibelle: 'Qualite technique',
+        typeCritere: 'NOTE',
+        noteObtenue: 4.1,
+        scorePondere: 16.4,
+        poids: 4,
+        commentaire: 'Architecture et tests couverts',
+        evidenceSummary: 'Rapport technique et depot Git',
+        confidence: 0.88,
+        criterionStatus: 'SCORED',
+        recommendations: ['Ajouter une preuve de deploiement'],
+        ruleConfigured: true,
+      },
+    ],
   };
 
   function createComponent(id: string = '1', url: string = '/frontoffice/mes-projets/1'): void {
@@ -97,8 +124,8 @@ describe('ProjetDetailEnseignant', () => {
     httpTesting.expectOne(`${API}/historique/projet/${id}`).flush([]);
   }
 
-  function flushValidProjectWithNoEvaluation(): void {
-    httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
+  function flushProjectWithNoEvaluation(details: ProjetDetails = validDetails): void {
+    httpTesting.expectOne(`${API}/projets/1`).flush(details);
     flushLivrables();
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
       { message: 'Aucune evaluation trouvee' },
@@ -113,6 +140,10 @@ describe('ProjetDetailEnseignant', () => {
     const req = httpTesting.expectOne(`${API}/projets/1`);
     req.flush(mockDetails);
     flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
+      { message: 'Aucune evaluation trouvee' },
+      { status: 404, statusText: 'Not Found' },
+    );
     flushHistorique();
     expect(component.projet).toBeTruthy();
     expect(component.projet!.titre).toBe('Projet IA');
@@ -149,6 +180,10 @@ describe('ProjetDetailEnseignant', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/projets/1`).flush(mockDetails);
     flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
+      { message: 'Aucune evaluation trouvee' },
+      { status: 404, statusText: 'Not Found' },
+    );
     flushHistorique();
     expect(component.backLink).toBe('/frontoffice/mes-projets');
     expect(component.backLabel).toBe('Mes projets');
@@ -159,6 +194,10 @@ describe('ProjetDetailEnseignant', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/projets/1`).flush(mockDetails);
     flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
+      { message: 'Aucune evaluation trouvee' },
+      { status: 404, statusText: 'Not Found' },
+    );
     flushHistorique();
     expect(component.activeTab).toBe('infos');
     component.setTab('livrables');
@@ -169,7 +208,7 @@ describe('ProjetDetailEnseignant', () => {
     createComponent();
     fixture.detectChanges();
 
-    flushValidProjectWithNoEvaluation();
+    flushProjectWithNoEvaluation();
     fixture.detectChanges();
 
     expect(component.evaluation).toBeNull();
@@ -177,10 +216,80 @@ describe('ProjetDetailEnseignant', () => {
     expect(fixture.nativeElement.textContent).toContain('Aucune évaluation enregistrée');
   });
 
+  it('shows score and criterion details for a VALIDE project with an evaluation', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluationWithDetails);
+    flushHistorique();
+    fixture.detectChanges();
+
+    expect(component.evaluation).toEqual(evaluationWithDetails);
+    expect(fixture.nativeElement.textContent).toContain('82 / 100');
+    expect(fixture.nativeElement.textContent).toContain('Qualite technique');
+    expect(fixture.nativeElement.textContent).toContain('Rapport technique et depot Git');
+  });
+
+  it('shows persisted score and criterion details for a non-VALIDE project with an evaluation', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    httpTesting.expectOne(`${API}/projets/1`).flush(candidateDetails);
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluationWithDetails);
+    flushHistorique();
+    fixture.detectChanges();
+
+    expect(component.projet?.statut).toBe('CANDIDAT_INDUSTRIALISATION_INTERNE');
+    expect(component.canRecalculateScore).toBeFalse();
+    expect(component.evaluation).toEqual(evaluationWithDetails);
+    expect(fixture.nativeElement.textContent).toContain('82 / 100');
+    expect(fixture.nativeElement.textContent).toContain('Qualite technique');
+  });
+
+  it('shows non calculated for a non-VALIDE project without an evaluation', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    flushProjectWithNoEvaluation(candidateDetails);
+    fixture.detectChanges();
+
+    expect(component.projet?.statut).toBe('CANDIDAT_INDUSTRIALISATION_INTERNE');
+    expect(component.evaluation).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Non calculé');
+  });
+
+  it('keeps score and details visible after a status refresh changes VALIDE to another status', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluationWithDetails);
+    flushHistorique();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Qualite technique');
+
+    (component as any).refreshProjetStatut();
+    httpTesting.expectOne(`${API}/projets/1`).flush(candidateDetails);
+    expect(component.evaluation).toEqual(evaluationWithDetails);
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluationWithDetails);
+    flushHistorique();
+    fixture.detectChanges();
+
+    expect(component.projet?.statut).toBe('CANDIDAT_INDUSTRIALISATION_INTERNE');
+    expect(component.evaluation).toEqual(evaluationWithDetails);
+    expect(fixture.nativeElement.textContent).toContain('82 / 100');
+    expect(fixture.nativeElement.textContent).toContain('Qualite technique');
+  });
+
   it('successful recalculation refreshes evaluation and starts one cooldown', fakeAsync(() => {
     createComponent();
     fixture.detectChanges();
-    flushValidProjectWithNoEvaluation();
+    flushProjectWithNoEvaluation();
 
     component.recalculateScore();
     const post = httpTesting.expectOne(`${API}/projets-catalogue/1/calculer-score`);
@@ -204,7 +313,7 @@ describe('ProjetDetailEnseignant', () => {
   it('failed recalculation restores the button and does not start cooldown', () => {
     createComponent();
     fixture.detectChanges();
-    flushValidProjectWithNoEvaluation();
+    flushProjectWithNoEvaluation();
 
     component.recalculateScore();
     const post = httpTesting.expectOne(`${API}/projets-catalogue/1/calculer-score`);
@@ -227,7 +336,7 @@ describe('ProjetDetailEnseignant', () => {
   it('does not render duplicate cooldown alerts when already cooling down', () => {
     createComponent();
     fixture.detectChanges();
-    flushValidProjectWithNoEvaluation();
+    flushProjectWithNoEvaluation();
 
     (component as any).startScoreCooldown(120);
     component.recalculateScore();

@@ -305,8 +305,9 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
 
   /** Charge la dernière évaluation du projet catalogue (indexée par l'identifiant de projet). */
   loadEvaluation(): void {
-    if (!this.projet || !this.isEvaluable) {
+    if (!this.projet) {
       this.evaluation = null;
+      this.evaluationLoading = false;
       return;
     }
     this.evaluationLoading = true;
