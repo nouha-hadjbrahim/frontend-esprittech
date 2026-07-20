@@ -122,10 +122,17 @@ describe('UsersComponent', () => {
 
   describe('getStatusClass', () => {
     it('should map statuses to css classes', () => {
-      expect(component.getStatusClass('Actif')).toBe('status-active');
-      expect(component.getStatusClass('Suspendu')).toBe('status-suspended');
-      expect(component.getStatusClass('En attente')).toBe('status-pending');
-      expect(component.getStatusClass('Inconnu')).toBe('');
+      expect(component.getStatusClass('Actif')).toBe('badge--statut-actif');
+      expect(component.getStatusClass('Suspendu')).toBe('badge--statut-suspendu');
+      expect(component.getStatusClass('Inconnu')).toBe('badge--statut-neutral');
+    });
+  });
+
+  describe('getRoleClass', () => {
+    it('should map roles to css classes', () => {
+      expect(component.getRoleClass('Étudiant')).toBe('badge--role-etudiant');
+      expect(component.getRoleClass('Administrateur')).toBe('badge--role-admin');
+      expect(component.getRoleClass('Autre')).toBe('badge--role-default');
     });
   });
 

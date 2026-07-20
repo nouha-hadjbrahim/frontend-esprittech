@@ -42,7 +42,7 @@
 
       <aside class="score-card">
         <span>Score final</span>
-        <strong>{{ projet.score }}</strong>
+        <strong>{{ displayedScore }}</strong>
         <small>/100</small>
       </aside>
     </section>
@@ -134,9 +134,9 @@
 
               <p class="info-card__text">
                 @if (!isEvaluable) {
-                  Le recalcul du score est disponible lorsque le projet est validé.
+                  L'évaluation est disponible lorsque le projet est publié au catalogue.
                 } @else if (evaluation) {
-                  Dernière évaluation disponible pour ce projet validé.
+                  Dernière évaluation ML disponible (projet catalogue ou sujet d'origine).
                 } @else {
                   Aucune évaluation enregistrée pour ce projet. Cliquez sur « Recalculer score » pour lancer l'évaluation automatique.
                 }
@@ -519,7 +519,7 @@
               <p class="livrables-panel__empty">Aucun livrable déposé.</p>
             } @else {
               <div class="livrables-panel__list">
-                @for (livrable of livrables; track livrable.id) {
+                @for (livrable of livrables; track livrableTrackId(livrable)) {
                   <article class="livrable-item">
                     <span
                       class="livrable-item__icon"
@@ -543,6 +543,10 @@
                       <strong class="livrable-item__name">{{ livrableDisplayName(livrable) }}</strong>
                       <span class="livrable-item__meta">
                         {{ livrableDateLabel(livrable) }}
+                        @if (livrable.fromSujet) {
+                          <span aria-hidden="true">·</span>
+                          Sujet d'origine
+                        }
                         @if (livrableSizeLabel(livrable); as sizeLabel) {
                           <span aria-hidden="true">·</span>
                           {{ sizeLabel }}
@@ -583,7 +587,7 @@
                           </svg>
                         </a>
                       }
-                      @if (canManageLivrables) {
+                      @if (canManageLivrables && !livrable.fromSujet) {
                         <button
                           type="button"
                           class="livrable-item__action livrable-item__action--danger"
