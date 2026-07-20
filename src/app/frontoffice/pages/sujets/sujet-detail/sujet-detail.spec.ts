@@ -615,7 +615,7 @@ describe('SujetDetail', () => {
       expect(sujetProjetServiceMock.declarerTerminaison).toHaveBeenCalledWith(1, {});
       expect(component.terminaisonLoading).toBeFalse();
       expect(component.terminaisonConfirmOpen).toBeFalse();
-      expect(component.sujet.statut).toBe('REALISATION_TERMINEE');
+      expect(component.sujet!.statut).toBe('REALISATION_TERMINEE');
       expect(component.recalculateScore).toHaveBeenCalled();
     });
 
@@ -1993,7 +1993,7 @@ describe('SujetDetail', () => {
 
       component.industrialisationForm = baseForm();
       expect(component.isQuestionAnswered(questionFichier)).toBeFalse();
-      component.industrialisationForm!.candidature.reponses = [{ questionId: 5, preuveObjectName: 'x' }];
+      component.industrialisationForm!.candidature.reponses = [{ questionId: 5, preuveObjectName: 'x' } as any];
       expect(component.isQuestionAnswered(questionFichier)).toBeTrue();
 
       component.answers[3] = { questionId: 3, valeurTexte: '' } as any;
@@ -2026,11 +2026,11 @@ describe('SujetDetail', () => {
       component.industrialisationForm = baseForm();
       expect(component.hasUploadedProof(questionFichier)).toBeFalse();
 
-      component.industrialisationForm!.reponses = [{ questionId: 5, preuveObjectName: 'x' }];
+      component.industrialisationForm!.reponses = [{ questionId: 5, preuveObjectName: 'x' } as any];
       expect(component.hasUploadedProof(questionFichier)).toBeTrue();
 
       component.industrialisationForm!.reponses = [];
-      component.industrialisationForm!.candidature.reponses = [{ questionId: 5, preuveOriginalFileName: 'x.pdf' }];
+      component.industrialisationForm!.candidature.reponses = [{ questionId: 5, preuveOriginalFileName: 'x.pdf' } as any];
       expect(component.hasUploadedProof(questionFichier)).toBeTrue();
     });
 
