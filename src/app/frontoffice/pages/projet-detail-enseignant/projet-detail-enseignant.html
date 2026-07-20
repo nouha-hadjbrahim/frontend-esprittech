@@ -42,7 +42,7 @@
 
       <aside class="score-card">
         <span>Score final</span>
-        <strong>{{ displayedScore }}</strong>
+        <strong>{{ projet.score }}</strong>
         <small>/100</small>
       </aside>
     </section>
@@ -519,7 +519,7 @@
               <p class="livrables-panel__empty">Aucun livrable déposé.</p>
             } @else {
               <div class="livrables-panel__list">
-                @for (livrable of livrables; track livrableTrackId(livrable)) {
+                @for (livrable of livrables; track livrable.id) {
                   <article class="livrable-item">
                     <span
                       class="livrable-item__icon"
@@ -543,10 +543,6 @@
                       <strong class="livrable-item__name">{{ livrableDisplayName(livrable) }}</strong>
                       <span class="livrable-item__meta">
                         {{ livrableDateLabel(livrable) }}
-                        @if (livrable.fromSujet) {
-                          <span aria-hidden="true">·</span>
-                          Sujet d'origine
-                        }
                         @if (livrableSizeLabel(livrable); as sizeLabel) {
                           <span aria-hidden="true">·</span>
                           {{ sizeLabel }}
@@ -587,7 +583,7 @@
                           </svg>
                         </a>
                       }
-                      @if (canManageLivrables && !livrable.fromSujet) {
+                      @if (canManageLivrables) {
                         <button
                           type="button"
                           class="livrable-item__action livrable-item__action--danger"

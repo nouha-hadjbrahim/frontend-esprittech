@@ -1,28 +1,65 @@
-<div class="catalogue-page">
+<div class="catalogue">
   <div class="page-header">
-    <div class="header-text">
-      <h1>Catalogue des projets</h1>
-      <p>Galerie de tous les projets de l'école d'ingénieurs.</p>
-    </div>
-    <button class="add-btn" type="button" (click)="openCreateModal()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      Ajouter
-    </button>
+    <h1>Catalogue des projets</h1>
+    <p>Galerie de tous les projets de l'école d'ingénieurs.</p>
   </div>
 
   @if (errorMessage) {
     <div class="alert alert--error">{{ errorMessage }}</div>
   }
 
-  <div class="type-pills">
+  <!-- Barre d'outils : recherche + filtres -->
+  <div class="catalogue__toolbar">
+    <div class="catalogue__search-box">
+      <svg class="catalogue__search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 11L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="text"
+        class="catalogue__search-input"
+        placeholder="Rechercher un projet..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <div class="catalogue__filters">
+      <select class="catalogue__select" [(ngModel)]="selectedStatut" (ngModelChange)="onFilterChange()">
+        @for (opt of statutOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="selectedDomaine" (ngModelChange)="onFilterChange()">
+        <option value="">Tous les domaines</option>
+        @for (d of domaineOptions; track d) {
+          <option [value]="d">{{ d }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="selectedAnnee" (ngModelChange)="onFilterChange()">
+        <option value="">Toutes les années</option>
+        @for (a of anneeOptions; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+
+      <select class="catalogue__select" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
+        @for (opt of sortOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Pastilles de type -->
+  <div class="catalogue__type-pills">
     @for (t of typeButtons; track t.value) {
       <button
         type="button"
-        class="type-pill"
-        [class.type-pill--active]="selectedType === t.value"
+        class="catalogue__type-pill"
+        [class.catalogue__type-pill--active]="selectedType === t.value"
         (click)="selectType(t.value)"
       >
         {{ t.label }}
@@ -30,374 +67,62 @@
     }
   </div>
 
-  <div class="table-container">
-    <div class="table-actions">
-      <div class="search-field">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0a8a8" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  @if (!isLoading) {
+    <p class="catalogue__count">{{ filtered.length }} projet(s)</p>
+  }
+
+  @if (isLoading) {
+    <div class="catalogue__loading">Chargement...</div>
+  } @else if (filtered.length === 0) {
+    <div class="catalogue__empty">
+      <div class="catalogue__empty-icon" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M14 10H28L34 16V36C34 37.1 33.1 38 32 38H14C12.9 38 12 37.1 12 36V12C12 10.9 12.9 10 14 10Z" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M28 10V16H34" stroke="#fecaca" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M18 22H28M18 28H26" stroke="#e5e7eb" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <label for="catalog-search" class="sr-only">Rechercher un projet</label>
-        <input
-          id="catalog-search"
-          type="text"
-          placeholder="Titre, encadrant, technologie…"
-          [(ngModel)]="searchQuery"
-          (ngModelChange)="onSearchChange()"
-        />
       </div>
-
-      <div class="filters-group">
-        <div class="filter-dropdown" (click)="$event.stopPropagation()">
-          <button
-            type="button"
-            class="filter-pill"
-            [class.filter-pill--open]="openFilter() === 'statut'"
-            (click)="toggleFilter('statut', $event)"
-          >
-            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="8" y1="12" x2="20" y2="12"></line>
-              <line x1="12" y1="18" x2="20" y2="18"></line>
-              <circle cx="6" cy="12" r="2"></circle>
-              <circle cx="10" cy="18" r="2"></circle>
-            </svg>
-            <span class="filter-pill__label">{{ statutFilterLabel }}</span>
-            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          @if (openFilter() === 'statut') {
-            <div class="filter-menu" role="listbox">
-              @for (opt of statutOptions; track opt.value) {
-                <button
-                  type="button"
-                  class="filter-option"
-                  [class.filter-option--active]="selectedStatut === opt.value"
-                  (click)="selectStatutFilter(opt.value)"
-                >
-                  <span>{{ opt.label }}</span>
-                  @if (selectedStatut === opt.value) {
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  }
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="filter-dropdown" (click)="$event.stopPropagation()">
-          <button
-            type="button"
-            class="filter-pill"
-            [class.filter-pill--open]="openFilter() === 'domaine'"
-            (click)="toggleFilter('domaine', $event)"
-          >
-            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="8" y1="12" x2="20" y2="12"></line>
-              <line x1="12" y1="18" x2="20" y2="18"></line>
-              <circle cx="6" cy="12" r="2"></circle>
-              <circle cx="10" cy="18" r="2"></circle>
-            </svg>
-            <span class="filter-pill__label">{{ domaineFilterLabel }}</span>
-            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          @if (openFilter() === 'domaine') {
-            <div class="filter-menu" role="listbox">
-              <button type="button" class="filter-option" [class.filter-option--active]="!selectedDomaine" (click)="selectDomaineFilter('')">
-                <span>Tous les domaines</span>
-                @if (!selectedDomaine) {
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                }
-              </button>
-              @for (d of domaineOptions; track d) {
-                <button type="button" class="filter-option" [class.filter-option--active]="selectedDomaine === d" (click)="selectDomaineFilter(d)">
-                  <span>{{ d }}</span>
-                  @if (selectedDomaine === d) {
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  }
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="filter-dropdown" (click)="$event.stopPropagation()">
-          <button
-            type="button"
-            class="filter-pill"
-            [class.filter-pill--open]="openFilter() === 'annee'"
-            (click)="toggleFilter('annee', $event)"
-          >
-            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="8" y1="12" x2="20" y2="12"></line>
-              <line x1="12" y1="18" x2="20" y2="18"></line>
-              <circle cx="6" cy="12" r="2"></circle>
-              <circle cx="10" cy="18" r="2"></circle>
-            </svg>
-            <span class="filter-pill__label">{{ anneeFilterLabel }}</span>
-            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          @if (openFilter() === 'annee') {
-            <div class="filter-menu" role="listbox">
-              <button type="button" class="filter-option" [class.filter-option--active]="!selectedAnnee" (click)="selectAnneeFilter('')">
-                <span>Toutes les années</span>
-                @if (!selectedAnnee) {
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                }
-              </button>
-              @for (a of anneeOptions; track a) {
-                <button type="button" class="filter-option" [class.filter-option--active]="selectedAnnee === '' + a" (click)="selectAnneeFilter('' + a)">
-                  <span>{{ a }}</span>
-                  @if (selectedAnnee === '' + a) {
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  }
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="filter-dropdown" (click)="$event.stopPropagation()">
-          <button
-            type="button"
-            class="filter-pill"
-            [class.filter-pill--open]="openFilter() === 'sort'"
-            (click)="toggleFilter('sort', $event)"
-          >
-            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="8" y1="12" x2="20" y2="12"></line>
-              <line x1="12" y1="18" x2="20" y2="18"></line>
-              <circle cx="6" cy="12" r="2"></circle>
-              <circle cx="10" cy="18" r="2"></circle>
-            </svg>
-            <span class="filter-pill__label">{{ sortFilterLabel }}</span>
-            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          @if (openFilter() === 'sort') {
-            <div class="filter-menu" role="listbox">
-              @for (opt of sortOptions; track opt.value) {
-                <button
-                  type="button"
-                  class="filter-option"
-                  [class.filter-option--active]="sortOrder === opt.value"
-                  (click)="selectSortFilter(opt.value)"
-                >
-                  <span>{{ opt.label }}</span>
-                  @if (sortOrder === opt.value) {
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  }
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="view-toggle">
-          <button type="button" class="view-btn" [class.active]="vue === 'liste'" (click)="setVue('liste')" title="Liste">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
-          </button>
-          <button type="button" class="view-btn" [class.active]="vue === 'grille'" (click)="setVue('grille')" title="Cartes">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-          </button>
-        </div>
-      </div>
+      <h2 class="catalogue__empty-title">Aucun projet disponible</h2>
+      <p class="catalogue__empty-text">Aucun projet ne correspond à votre recherche.</p>
     </div>
+  } @else {
+    <div class="catalogue__grid">
+      @for (projet of filtered; track projet.id) {
+        <div class="projet-card">
+          <div class="projet-card__cover">
+            @if (projet.coverImage) {
+              <img [src]="projet.coverImage" [alt]="'Couverture de ' + projet.titre" loading="lazy" />
+            }
+            <span class="badge projet-card__cover-type" [class]="typeLabels[projet.typeProjet].cssClass">
+              {{ typeLabels[projet.typeProjet].label }}
+            </span>
+            <div class="score-note" [title]="'Score : ' + projet.score">
+              <span class="score-note__value">{{ projet.score }}</span><span class="score-note__max">/100</span>
+            </div>
+          </div>
 
-    @if (isLoading) {
-      <div class="empty-state">Chargement…</div>
-    } @else if (filtered.length === 0) {
-      <div class="empty-state">
-        <p class="empty-state__title">Aucun projet disponible</p>
-        <p class="empty-state__text">Aucun projet ne correspond à votre recherche.</p>
-      </div>
-    } @else if (vue === 'liste') {
-      <table class="catalog-table">
-        <thead>
-          <tr>
-            <th>Projet</th>
-            <th>Encadrant</th>
-            <th>Type</th>
-            <th>Statut</th>
-            <th>Équipe</th>
-            <th>Note</th>
-            <th class="text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (projet of pagedProjets; track projet.id) {
-            <tr>
-              <td>
-                <div class="project-cell">
-                  <div class="project-thumb" [class.project-thumb--fallback]="!projet.coverImage">
-                    <img [src]="projet.coverImage || defaultCoverImage" [alt]="" loading="lazy" />
-                  </div>
-                  <div class="project-info">
-                    <span class="project-title">{{ projet.titre }}</span>
-                    <span class="project-meta">{{ primaryDomaine(projet) }}</span>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="encadrant-name">{{ projet.encadrantNom }}</span>
-              </td>
-              <td>
-                <span class="type-badge" [class]="typeLabels[projet.typeProjet].cssClass">
-                  {{ typeLabels[projet.typeProjet].label }}
-                </span>
-              </td>
-              <td>
-                <span class="status-badge" [class]="statutLabels[projet.statut].cssClass">
-                  <span class="status-dot" aria-hidden="true"></span>
-                  {{ statutLabels[projet.statut].label }}
-                </span>
-              </td>
-              <td>
-                <span class="equipe-text">{{ projet.equipeNom || '—' }}</span>
-              </td>
-              <td>
-                <span class="score-badge" [title]="'Score : ' + projet.score">
-                  <span class="score-badge__value">{{ projet.score }}</span><span class="score-badge__max">/100</span>
-                </span>
-              </td>
-              <td class="text-right">
-                <div class="actions-group">
-                  <a class="icon-btn-action view" [routerLink]="['/backoffice/catalog', projet.id]" title="Voir détails">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </a>
-                  <button type="button" class="icon-btn-action delete" title="Supprimer" (click)="askDelete(projet)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
+          <span class="badge statut-badge" [class]="statutLabels[projet.statut].cssClass">
+            {{ statutLabels[projet.statut].label }}
+          </span>
+
+          <h3 class="projet-card__title">{{ projet.titre }}</h3>
+          <p class="projet-card__description">{{ projet.description }}</p>
+          <p class="projet-card__meta">{{ projet.encadrantNom }} • {{ projet.equipeNom ?? '—' }}</p>
+
+          @if (projet.technologies.length) {
+            <div class="tags">
+              @for (t of projet.technologies; track t) { <span class="tag">{{ t }}</span> }
+            </div>
           }
-        </tbody>
-      </table>
-    } @else {
-      <div class="catalog-grid">
-        @for (projet of pagedProjets; track projet.id) {
-          <article class="projet-card">
-            <div class="projet-card__cover" [class.projet-card__cover--fallback]="!projet.coverImage">
-              <img [src]="projet.coverImage || defaultCoverImage" [alt]="'Couverture de ' + projet.titre" loading="lazy" />
 
-              <div class="projet-card__cover-badges">
-                <span class="type-badge" [class]="typeLabels[projet.typeProjet].cssClass">
-                  {{ typeLabels[projet.typeProjet].label }}
-                </span>
-                <span class="status-badge" [class]="statutLabels[projet.statut].cssClass">
-                  <span class="status-dot" aria-hidden="true"></span>
-                  {{ statutLabels[projet.statut].label }}
-                </span>
-              </div>
-
-              <div class="score-note" [title]="'Score : ' + projet.score">
-                <span class="score-note__value">{{ projet.score }}</span><span class="score-note__max">/100</span>
-              </div>
-
-              <div class="projet-card__cover-meta">
-                <span class="cover-chip">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                  {{ yearOf(projet) }}
-                </span>
-              </div>
-            </div>
-
-            <div class="projet-card__body">
-              <span class="projet-card__domain">{{ primaryDomaine(projet) }}</span>
-              <h3 class="projet-card__title">{{ projet.titre }}</h3>
-            </div>
-
-            <div class="projet-card__footer">
-              <div class="projet-card__author">
-                <span class="projet-card__author-name">{{ projet.encadrantNom }}</span>
-                <span class="projet-card__author-meta">{{ projet.equipeNom || '—' }}</span>
-              </div>
-              <div class="actions-group">
-                <a class="icon-btn-action view" [routerLink]="['/backoffice/catalog', projet.id]" title="Voir détails">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </a>
-                <button type="button" class="icon-btn-action delete" title="Supprimer" (click)="askDelete(projet)">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </article>
-        }
-      </div>
-    }
-
-    @if (!isLoading && totalElements > 0) {
-      <div class="pagination">
-        <span class="pagination-info">
-          Affichage de <strong>{{ pageDisplayCount }}</strong> sur <strong>{{ totalElements }}</strong> projets
-        </span>
-        <div class="pagination-controls">
-          <button type="button" class="page-btn" [disabled]="first" (click)="prevPage()">Précédent</button>
-          @for (p of pageNumbers; track p) {
-            <button
-              type="button"
-              class="page-num"
-              [class.page-num--active]="p === page + 1"
-              (click)="goToPage(p - 1)"
-              [attr.aria-current]="p === page + 1 ? 'page' : null"
-            >{{ p }}</button>
-          }
-          <button type="button" class="page-btn" [disabled]="last" (click)="nextPage()">Suivant</button>
+          <div class="card-actions">
+            <a class="details-link" [routerLink]="['/backoffice/catalog', projet.id]">Voir détails →</a>
+            <button type="button" class="delete-btn" (click)="askDelete(projet)">Supprimer</button>
+          </div>
         </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 </div>
 
 <app-confirm-dialog
@@ -409,10 +134,4 @@
   [errorMessage]="deleteError"
   (confirmed)="confirmDelete()"
   (cancelled)="cancelDelete()"
-/>
-
-<app-ajouter-projet-modal
-  [isOpen]="createModalOpen"
-  (closed)="closeCreateModal()"
-  (saved)="onProjetSaved()"
-/>
+></app-confirm-dialog>

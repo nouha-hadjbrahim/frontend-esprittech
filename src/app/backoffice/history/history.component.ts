@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -33,6 +33,8 @@ interface LogEntry {
   metadataRaw: Record<string, unknown> | null;
 }
 
+type FilterKey = 'module';
+
 @Component({
   selector: 'app-history',
   standalone: true,
@@ -60,8 +62,15 @@ export class HistoryComponent implements OnInit, OnDestroy {
   readonly selectedLogOldKeys = signal<Array<{ key: string; value: string }>>([]);
   readonly selectedLogNewKeys = signal<Array<{ key: string; value: string }>>([]);
   readonly selectedLogMetaKeys = signal<Array<{ key: string; value: string }>>([]);
+  readonly openFilter = signal<FilterKey | null>(null);
 
   readonly modules = MODULE_NAMES;
+
+  readonly moduleOptions = [
+    { value: 'all', label: 'Tous les modules' },
+    ...MODULE_NAMES.map((m) => ({ value: m, label: m })),
+  ];
+
   readonly filteredLogs = computed(() => {
     const q = this.searchTerm().toLowerCase();
     const mod = this.selectedModule();
@@ -126,6 +135,26 @@ export class HistoryComponent implements OnInit, OnDestroy {
     { label: 'Utilisateurs actifs', value: this.stats().users, icon: 'users' as const },
   ]);
 
+  get moduleFilterLabel(): string {
+    return this.moduleOptions.find((o) => o.value === this.selectedModule())?.label ?? 'Tous les modules';
+  }
+
+  @HostListener('document:click')
+  closeFiltersOnOutsideClick(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectModuleFilter(value: string): void {
+    this.selectedModule.set(value);
+    this.openFilter.set(null);
+    this.viewPage.set(0);
+  }
+
   ngOnInit(): void {
     this.loadLogs();
   }
@@ -164,8 +193,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
   }
 
   onModuleChange(mod: string): void {
-    this.selectedModule.set(mod);
-    this.viewPage.set(0);
+    this.selectModuleFilter(mod);
   }
 
   prevPage(): void {

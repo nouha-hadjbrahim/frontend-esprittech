@@ -1,6 +1,6 @@
 @import '../../shared/styles/pagination.shared.css';
 
-/* â”€â”€ Page Layout â”€â”€ */
+/* ── Page Layout ── */
 .history-page {
   display: flex;
   flex-direction: column;
@@ -8,7 +8,7 @@
   padding-top: 12px;
 }
 
-/* â”€â”€ Page Header (alignÃ© Sujets) â”€â”€ */
+/* ── Page Header (aligné Sujets) ── */
 .page-header {
   display: flex;
   flex-wrap: wrap;
@@ -61,7 +61,7 @@
   box-shadow: 0 10px 22px rgba(226, 62, 62, 0.32);
 }
 
-/* â”€â”€ Stats Grid â”€â”€ */
+/* ── Stats Grid ── */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -138,7 +138,7 @@
   margin-top: 0;
 }
 
-/* â”€â”€ Content Card â”€â”€ */
+/* ── Content Card ── */
 .content-card {
   padding: 0;
   border-radius: 20px;
@@ -148,7 +148,7 @@
   overflow: visible;
 }
 
-/* â”€â”€ Toolbar (alignÃ© Sujets) â”€â”€ */
+/* ── Toolbar (aligné Sujets) ── */
 .toolbar,
 .table-actions {
   display: flex;
@@ -205,53 +205,99 @@
   color: #a8a0a0;
 }
 
-.chips-row {
+.filters-group {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 0 24px 18px;
-  background: #fffcfc;
-  border-bottom: 1px solid #f3eaea;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.chip {
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 14px;
-  border-radius: 9999px;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
+  height: 44px;
+  padding: 0 14px;
   border: 1px solid #eadfdf;
+  border-radius: 999px;
   background: #ffffff;
   color: #5d3f3f;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.chip:hover {
+.filter-pill:hover,
+.filter-pill--open {
   border-color: #f0b8be;
-  background: #fff8f9;
+  box-shadow: 0 0 0 3px rgba(226, 62, 62, 0.06);
 }
 
-.chip--active {
-  background: linear-gradient(135deg, #ff5a6e 0%, #e23e3e 100%);
-  color: #ffffff;
-  border-color: transparent;
-  box-shadow: 0 6px 14px rgba(226, 62, 62, 0.22);
+.filter-pill__icon,
+.filter-pill__chevron {
+  color: #9e8e8e;
+  flex-shrink: 0;
 }
 
-.chip--active:hover {
-  filter: brightness(0.97);
-  background: linear-gradient(135deg, #ff5a6e 0%, #e23e3e 100%);
+.filter-pill__label {
+  color: #5d3f3f;
+  min-width: 120px;
+  text-align: left;
 }
 
-.chip-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+.filter-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: max-content;
+  min-width: 200px;
+  max-width: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid #f0e6e6;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(93, 63, 63, 0.12);
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #5d3f3f;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-option:hover {
+  background: #fff5f5;
+}
+
+.filter-option--active {
+  background: #fee2e2;
+  color: #7f1d1d;
+  font-weight: 600;
+}
+
+.filter-option--active svg {
+  color: #e23e3e;
   flex-shrink: 0;
 }
 
@@ -267,7 +313,7 @@
   border: 0;
 }
 
-/* â”€â”€ Empty / Loading States â”€â”€ */
+/* ── Empty / Loading States ── */
 .empty-state {
   padding: 64px 24px;
   text-align: center;
@@ -312,7 +358,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* â”€â”€ Timeline â”€â”€ */
+/* ── Timeline ── */
 .timeline {
   display: flex;
   flex-direction: column;
@@ -580,7 +626,7 @@
   border-color: rgba(230, 57, 70, 0.3);
 }
 
-/* â”€â”€ Details Modal â”€â”€ */
+/* ── Details Modal ── */
 .details-overlay {
   position: fixed;
   inset: 0;
@@ -793,7 +839,7 @@
   background: var(--muted);
 }
 
-/* â”€â”€ Modal Scrollbar â”€â”€ */
+/* ── Modal Scrollbar ── */
 .details-modal::-webkit-scrollbar {
   width: 6px;
 }
@@ -811,7 +857,7 @@
   background: var(--muted-foreground);
 }
 
-/* â”€â”€ Load More â”€â”€ */
+/* ── Load More ── */
 .load-more {
   display: flex;
   justify-content: center;
@@ -854,14 +900,27 @@
   .toolbar {
     flex-wrap: wrap;
   }
-  .search-field {
+
+  .search-field,
+  .filter-dropdown,
+  .filter-pill {
     width: 100%;
     max-width: none;
   }
 
-  .chips-row {
-    padding-left: 16px;
-    padding-right: 16px;
+  .filter-pill__label {
+    flex: 1;
+  }
+
+  .filters-group {
+    width: 100%;
+  }
+
+  .filter-menu {
+    left: 0;
+    right: auto;
+    width: 100%;
+    max-width: none;
   }
 }
 

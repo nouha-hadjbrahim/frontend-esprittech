@@ -15,8 +15,6 @@ export class SujetCard {
   @Input() detailsOnly = false;
   @Input() isOwner = false;
   @Input() dejaPostule = false;
-  @Input() isAccepted = false;
-  @Input() estAccepte = false;
   @Output() edit = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
   @Output() gererCandidatures = new EventEmitter<void>();

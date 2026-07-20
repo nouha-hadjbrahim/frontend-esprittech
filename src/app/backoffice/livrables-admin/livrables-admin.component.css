@@ -2,12 +2,9 @@
 
 :host {
   display: block;
-  flex: 0 0 auto;
-  width: 100%;
-  min-height: 0;
-  height: fit-content;
+  height: auto;
+  max-height: none;
   overflow: hidden;
-  background: #fffcfc;
 }
 
 .livrables-page {
@@ -15,8 +12,9 @@
   flex-direction: column;
   gap: 20px;
   padding: 0;
-  padding-bottom: 0;
-  background: #fffcfc;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .page-header {
@@ -137,7 +135,7 @@
   border: 1px solid #f2e8ea;
   padding: 0;
   box-shadow: 0 10px 30px rgba(226, 62, 62, 0.06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .table-actions {

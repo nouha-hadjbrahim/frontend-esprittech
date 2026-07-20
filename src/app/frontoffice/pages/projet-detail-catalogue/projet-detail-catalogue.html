@@ -34,7 +34,7 @@
 
       <aside class="score-card">
         <span>Score final</span>
-        <strong>{{ displayedScore }}</strong>
+        <strong>{{ projet.score }}</strong>
         <small>/100</small>
       </aside>
     </section>
@@ -123,138 +123,6 @@
         }
       </article>
     </div>
-
-    <article class="panel-card panel-card--full">
-      <header class="panel-card__header">
-        <span class="panel-card__icon" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M7 1.8L8.1 5H11.5L8.85 7.1L9.85 10.4L7 8.4L4.15 10.4L5.15 7.1L2.5 5H5.9L7 1.8Z" fill="#ffffff"/>
-          </svg>
-        </span>
-        <div>
-          <span class="panel-card__kicker">Évaluation</span>
-          <h2 class="panel-card__title">Évaluation ML &amp; industrialisation</h2>
-        </div>
-      </header>
-
-      @if (evaluationLoading) {
-        <p class="panel-card__empty">Chargement de l'évaluation...</p>
-      } @else if (evaluation) {
-        <div class="eval-summary">
-          <div class="meta-box">
-            <span class="meta-box__label">Score final</span>
-            <strong class="meta-box__value">
-              @if (evaluation.scoreFinal != null) {
-                {{ evaluation.scoreFinal }} / 100
-              } @else {
-                Non calculé
-              }
-            </strong>
-          </div>
-          <div class="meta-box">
-            <span class="meta-box__label">Éligibilité</span>
-            <strong class="meta-box__value">{{ eligibilityLabel }}</strong>
-          </div>
-          <div class="meta-box">
-            <span class="meta-box__label">Alertes éliminatoires</span>
-            <strong class="meta-box__value">
-              {{ evaluation.eliminatoryWarningsCount ?? (evaluation.hasEliminatoryWarnings ? 1 : 0) }}
-            </strong>
-          </div>
-          <div class="meta-box">
-            <span class="meta-box__label">Calculé le</span>
-            <strong class="meta-box__value">{{ evaluation.dateCalcul | date:'yyyy-MM-dd HH:mm' }}</strong>
-          </div>
-        </div>
-
-        <app-evaluation-checklist
-          [evaluation]="evaluation"
-          [projectTitle]="projet.titre"
-        ></app-evaluation-checklist>
-
-        @if (evaluation.resultats?.length) {
-          <div class="eval-results">
-            @for (resultat of evaluation.resultats; track resultat.id) {
-              <div class="eval-result-row">
-                <div>
-                  <strong>{{ resultat.critereLibelle }}</strong>
-                  @if (resultat.critereDomaine) {
-                    <span> · {{ resultat.critereDomaine }}</span>
-                  }
-                  @if (resultat.commentaire) {
-                    <p>{{ resultat.commentaire }}</p>
-                  }
-                </div>
-                <strong>
-                  @if (resultat.typeCritere === 'ELIMINATOIRE') {
-                    {{ resultat.reponseEliminatoire }}
-                  } @else {
-                    {{ noteResultDisplay(resultat) }}
-                  }
-                </strong>
-              </div>
-            }
-          </div>
-        }
-      } @else {
-        <p class="panel-card__empty">Aucune évaluation enregistrée pour ce projet.</p>
-      }
-    </article>
-
-    <article class="panel-card panel-card--full">
-      <header class="panel-card__header">
-        <span class="panel-card__icon" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M7 1.4 2.2 3.7 7 6 11.8 3.7 7 1.4Z" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/>
-            <path d="M2.2 6.6 7 8.9 11.8 6.6" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/>
-            <path d="M2.2 9.4 7 11.7 11.8 9.4" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        <div>
-          <span class="panel-card__kicker">Livrables</span>
-          <h2 class="panel-card__title">Livrables du projet</h2>
-        </div>
-      </header>
-
-      @if (livrablesLoading) {
-        <p class="panel-card__empty">Chargement des livrables...</p>
-      } @else if (livrables.length === 0) {
-        <p class="panel-card__empty">Aucun livrable déposé.</p>
-      } @else {
-        <div class="livrables-list">
-          @for (livrable of livrables; track livrableTrackId(livrable)) {
-            <article class="livrable-row">
-              <div class="livrable-row__content">
-                <strong>{{ livrableDisplayName(livrable) }}</strong>
-                <span>
-                  {{ livrableDateLabel(livrable) }}
-                  @if (livrable.fromSujet) {
-                    · Sujet d'origine
-                  }
-                </span>
-              </div>
-              <div class="livrable-row__actions">
-                @if (livrable.objectName) {
-                  <a
-                    class="livrable-link"
-                    [href]="downloadLivrable(livrable)"
-                    target="_blank"
-                    rel="noreferrer"
-                  >Télécharger</a>
-                } @else if (livrable.lienExterne) {
-                  <a
-                    class="livrable-link"
-                    [href]="livrable.lienExterne"
-                    target="_blank"
-                    rel="noreferrer"
-                  >Ouvrir</a>
-                }
-              </div>
-            </article>
-          }
-        </div>
-      }
-    </article>
 
     <article class="panel-card panel-card--full">
       <header class="panel-card__header">

@@ -17,7 +17,7 @@
 }
 
 .add-btn {
-  background: linear-gradient(180deg, #ff6b7a 0%, #ff4d5e 100%);
+  background: linear-gradient(135deg, #ff5a6e 0%, #e23e3e 100%);
   color: #ffffff;
   border: none;
   padding: 11px 22px;
@@ -29,14 +29,14 @@
   gap: 8px;
   cursor: pointer;
   transition: filter 0.2s, box-shadow 0.2s;
-  box-shadow: 0 10px 24px rgba(255, 77, 94, 0.38);
+  box-shadow: 0 8px 18px rgba(226, 62, 62, 0.28);
   flex-shrink: 0;
   margin-top: 4px;
 }
 
 .add-btn:hover {
-  filter: brightness(0.97);
-  box-shadow: 0 12px 28px rgba(255, 77, 94, 0.45);
+  filter: brightness(0.96);
+  box-shadow: 0 10px 22px rgba(226, 62, 62, 0.32);
 }
 
 .page-header .header-text h1 {
