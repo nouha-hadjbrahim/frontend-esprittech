@@ -19,7 +19,7 @@ stages:
   - trigger-deployment
 
 variables:
-  NODE_VERSION: "20"
+  NODE_VERSION: "20.19.6"
   GIT_DEPTH: "0"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
   TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.trivycache"
@@ -38,7 +38,7 @@ cache:
     - .npm/
 
 .node-job:
-  image: node:20.18.1-bookworm
+  image: node:20.19.6-bookworm
   before_script:
     - node --version
     - npm --version
@@ -89,7 +89,7 @@ validate-frontend:
 
 test-frontend:
   stage: test
-  image: node:20.18.1-bookworm
+  image: node:20.19.6-bookworm
   cache:
     key: "${CI_PROJECT_NAME}-npm"
     policy: pull-push
