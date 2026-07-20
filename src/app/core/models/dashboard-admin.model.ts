@@ -27,6 +27,12 @@ export interface SujetByStatutItem {
   color: string;
 }
 
+export interface SujetByCategorieItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
 export interface UsersByRoleItem {
   role: string;
   value: number;
@@ -49,10 +55,13 @@ export interface ExtendedDashboardResponse {
   kpis: AdminKpiResponse;
   trendsSujets: TrendItem[];
   trendsCandidatures: TrendItem[];
+  trendsIndustrialisation: TrendItem[];
   trendsEquipes: TrendItem[];
   sujetsByStatut: SujetByStatutItem[];
+  sujetsByCategorie: SujetByCategorieItem[];
   usersByRole: UsersByRoleItem[];
   catalogueByDomain: CatalogueByDomainItem[];
+  sujetsByDomaine: CatalogueByDomainItem[];
   recentActivity: RecentActivityItem[];
 }
 

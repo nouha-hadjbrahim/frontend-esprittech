@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, effect, inject, signal } from '@angular/core';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Notification, NotificationPage } from '../models/notification.model';
 import { AuthService } from './auth.service';
@@ -78,6 +79,13 @@ export class NotificationService {
     });
   }
 
+  /** Notifications non lues d'un type donné (ex. SUJET_VALIDE pour le popup de connexion). */
+  fetchUnreadByType(type: Notification['type']): Observable<Notification[]> {
+    return this.http.get<Notification[]>(`${this.baseUrl}/unread`, {
+      params: { type },
+    });
+  }
+
   marquerCommeLu(id: number): void {
     this.http.patch(`${this.baseUrl}/${id}/read`, {}).subscribe({
       next: () => {
@@ -87,6 +95,23 @@ export class NotificationService {
         this._unreadCount.update((c) => Math.max(0, c - 1));
       },
     });
+  }
+
+  /** Marque plusieurs notifications comme lues (ex. acknowledgement du popup). */
+  marquerPlusieursCommeLu(ids: number[]): void {
+    const uniqueIds = [...new Set(ids.filter((id) => id > 0))];
+    if (uniqueIds.length === 0) return;
+
+    for (const id of uniqueIds) {
+      this.http.patch(`${this.baseUrl}/${id}/read`, {}).subscribe({
+        next: () => {
+          this._notifications.update((list) =>
+            list.map((n) => (n.id === id ? { ...n, read: true } : n)),
+          );
+          this._unreadCount.update((c) => Math.max(0, c - 1));
+        },
+      });
+    }
   }
 
   marquerToutCommeLu(): void {

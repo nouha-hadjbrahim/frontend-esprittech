@@ -131,3 +131,62 @@
         <router-outlet></router-outlet>
     </main>
 </div>
+
+@if (showSujetAcceptedPopup()) {
+  <div class="accept-overlay" role="presentation" (click)="dismissSujetAcceptedPopup()">
+    <div
+      class="accept-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sujet-accepted-title"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        type="button"
+        class="accept-modal__close"
+        aria-label="Fermer"
+        (click)="dismissSujetAcceptedPopup()"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <div class="accept-modal__accent" aria-hidden="true"></div>
+
+      <div class="accept-modal__icon" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8.5 14.2 12.1 17.8 19.5 10.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <span class="accept-modal__eyebrow">Bonne nouvelle</span>
+      <h2 id="sujet-accepted-title" class="accept-modal__title">{{ acceptanceHeadline }}</h2>
+      <p class="accept-modal__text">
+        Vous pouvez ouvrir les candidatures quand vous le souhaitez depuis
+        <strong>Mes sujets</strong>.
+      </p>
+
+      @if (acceptedSujetTitles().length) {
+        <ul class="accept-modal__list">
+          @for (title of acceptedSujetTitles(); track title) {
+            <li>
+              <span class="accept-modal__list-dot" aria-hidden="true"></span>
+              <span>{{ title }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="accept-modal__actions">
+        <button type="button" class="accept-modal__btn accept-modal__btn--ghost" (click)="dismissSujetAcceptedPopup()">
+          Compris
+        </button>
+        <button type="button" class="accept-modal__btn accept-modal__btn--primary" (click)="dismissSujetAcceptedPopup(true)">
+          Voir mes sujets
+        </button>
+      </div>
+    </div>
+  </div>
+}
