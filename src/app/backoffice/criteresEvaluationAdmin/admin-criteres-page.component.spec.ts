@@ -353,13 +353,14 @@ describe('AdminCriteresPageComponent', () => {
   });
 
   it('should show conflict warning when deleting a used note level', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
     noteLevelService.delete.and.returnValue(throwError(() => new HttpErrorResponse({
       status: 409,
       error: { detail: 'Ce niveau de note est deja utilise. Vous pouvez le desactiver au lieu de le supprimer.' },
     })));
 
     component.deleteNoteLevel(levels[0]);
+    expect(component.deleteConfirmOpen).toBeTrue();
+    component.confirmDelete();
 
     expect(noteLevelService.delete).toHaveBeenCalledWith(1);
     expect(component.warningMessage()).toBe('Ce niveau de note est deja utilise. Vous pouvez le desactiver au lieu de le supprimer.');

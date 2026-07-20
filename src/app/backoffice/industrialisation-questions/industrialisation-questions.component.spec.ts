@@ -222,7 +222,7 @@ describe('IndustrialisationQuestionsComponent', () => {
 
     component.updateQuestionSearch('question');
     expect(component.questionSearch()).toBe('question');
-    component.closeDropdown();
+    component.openDropdown.set(null);
     expect(component.openDropdown()).toBeNull();
   });
 

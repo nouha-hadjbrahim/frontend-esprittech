@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
 import {
   CandidatureIndustrialisation,
   DecisionRecommandeeIndustrialisation,
@@ -178,15 +177,15 @@ export class CiIndustrialisationComponent implements OnInit {
   openDetail(id: number): void {
     this.detailLoading.set(true);
     this.score.set(null);
-    forkJoin({
-      detail: this.service.getCiDetail(id),
-      score: this.service.getCiScore(id),
-    }).subscribe({
-      next: ({ detail, score }) => {
+    this.service.getCiDetail(id).subscribe({
+      next: (detail) => {
         this.selected.set(detail);
-        this.score.set(score);
         this.detailLoading.set(false);
         this.closeDecision();
+        this.service.getCiScore(id).subscribe({
+          next: (score) => this.score.set(score),
+          error: () => this.score.set(null),
+        });
       },
       error: () => {
         this.error.set('Impossible de charger le detail.');
@@ -294,7 +293,7 @@ export class CiIndustrialisationComponent implements OnInit {
 
   scoreDisplay(candidature: CandidatureIndustrialisation): string {
     const score = this.scoreValue(candidature);
-    return score == null ? '-' : String(score);
+    return score == null ? 'Non calculé' : String(score);
   }
 
   scoreTitle(candidature: CandidatureIndustrialisation): string {
