@@ -325,9 +325,8 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
    * reprend l'évaluation ML du sujet d'origine (note, critères, éligibilité).
    */
   loadEvaluation(): void {
-    if (!this.projet) {
+    if (!this.projet || !this.isEvaluable) {
       this.evaluation = null;
-      this.evaluationLoading = false;
       return;
     }
     this.evaluationLoading = true;

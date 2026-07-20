@@ -133,12 +133,12 @@
               </div>
 
               <p class="info-card__text">
-                @if (evaluation) {
-                  Dernière évaluation disponible pour ce projet.
-                } @else if (canRecalculateScore) {
-                  Aucune évaluation enregistrée pour ce projet. Cliquez sur « Recalculer score » pour lancer l'évaluation automatique.
+                @if (!isEvaluable) {
+                  L'évaluation est disponible lorsque le projet est publié au catalogue.
+                } @else if (evaluation) {
+                  Dernière évaluation ML disponible (projet catalogue ou sujet d'origine).
                 } @else {
-                  Aucune évaluation enregistrée pour ce projet.
+                  Aucune évaluation enregistrée pour ce projet. Cliquez sur « Recalculer score » pour lancer l'évaluation automatique.
                 }
               </p>
 
@@ -238,8 +238,6 @@
                     }
                   </div>
                 }
-              } @else {
-                <p class="info-card__text">Non calculé</p>
               }
             </article>
 
