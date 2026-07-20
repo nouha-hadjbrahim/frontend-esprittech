@@ -2,6 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { EvaluationResponse } from '../models/evaluation.model';
+import { LivrableCatalogue } from '../models/livrable-catalogue.model';
 import {
   CreateProjetRequest,
   ProjetCard,
@@ -56,6 +58,21 @@ export class ProjetCatalogueService {
   /** Détail vue publique du catalogue (statut public requis). */
   detailsCatalogue(id: number): Observable<ProjetDetails> {
     return this.http.get<ProjetDetails>(`${this.catalogueUrl}/${id}`);
+  }
+
+  /** Évaluation ML d'un projet publié (catalogue ou sujet d'origine). */
+  evaluationCatalogue(id: number): Observable<EvaluationResponse> {
+    return this.http.get<EvaluationResponse>(`${this.catalogueUrl}/${id}/evaluation`);
+  }
+
+  /** Livrables d'un projet publié (catalogue, sinon sujet d'origine). */
+  livrablesCatalogue(id: number): Observable<(LivrableCatalogue & { fromSujet?: boolean })[]> {
+    return this.http.get<(LivrableCatalogue & { fromSujet?: boolean })[]>(`${this.catalogueUrl}/${id}/livrables`);
+  }
+
+  downloadLivrableCatalogueUrl(projetId: number, livrableId: number, fromSujet = false): string {
+    const qs = fromSujet ? '?fromSujet=true' : '';
+    return `${this.catalogueUrl}/${projetId}/livrables/${livrableId}/download${qs}`;
   }
 
   // ── Admin ──────────────────────────────────────────────────────────

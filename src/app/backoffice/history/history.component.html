@@ -65,48 +65,36 @@
           placeholder="Utilisateur, action, motif…"
         />
       </div>
+    </div>
 
-      <div class="filters-group">
-        <div class="filter-dropdown" (click)="$event.stopPropagation()">
-          <button
-            type="button"
-            class="filter-pill"
-            [class.filter-pill--open]="openFilter() === 'module'"
-            (click)="toggleFilter('module', $event)"
-          >
-            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="8" y1="12" x2="20" y2="12"></line>
-              <line x1="12" y1="18" x2="20" y2="18"></line>
-              <circle cx="6" cy="12" r="2"></circle>
-              <circle cx="10" cy="18" r="2"></circle>
-            </svg>
-            <span class="filter-pill__label">{{ moduleFilterLabel }}</span>
-            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          @if (openFilter() === 'module') {
-            <div class="filter-menu" role="listbox">
-              @for (opt of moduleOptions; track opt.value) {
-                <button
-                  type="button"
-                  class="filter-option"
-                  [class.filter-option--active]="selectedModule() === opt.value"
-                  (click)="selectModuleFilter(opt.value)"
-                >
-                  <span>{{ opt.label }}</span>
-                  @if (selectedModule() === opt.value) {
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  }
-                </button>
-              }
-            </div>
-          }
-        </div>
-      </div>
+    <div class="chips-row" role="tablist" aria-label="Filtrer par module">
+      <button
+        type="button"
+        class="chip"
+        role="tab"
+        [class.chip--active]="selectedModule() === 'all'"
+        [attr.aria-selected]="selectedModule() === 'all'"
+        (click)="onModuleChange('all')"
+      >
+        Tous
+      </button>
+      @for (m of modules; track m) {
+        <button
+          type="button"
+          class="chip"
+          role="tab"
+          [class.chip--active]="selectedModule() === m"
+          [attr.aria-selected]="selectedModule() === m"
+          (click)="onModuleChange(m)"
+        >
+          <span
+            class="chip-dot"
+            [style.background]="selectedModule() === m ? '#ffffff' : getModuleDotColor(m)"
+            aria-hidden="true"
+          ></span>
+          {{ m }}
+        </button>
+      }
     </div>
 
     <div class="empty-state" *ngIf="loading() && allLogs().length === 0">

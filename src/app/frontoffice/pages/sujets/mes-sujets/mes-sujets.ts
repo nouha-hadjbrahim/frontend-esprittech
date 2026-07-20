@@ -18,6 +18,15 @@ export type SujetScope = 'mes' | 'equipe';
 
 const PAGE_SIZE = 9;
 
+/** Sujets déjà publiés au catalogue après terminaison — exclus de « Mes sujets ». */
+const STATUTS_HORS_MES_SUJETS = new Set<StatutSujet>([
+  'REALISATION_TERMINEE',
+  'CANDIDAT_INDUSTRIALISATION_INTERNE',
+  'CANDIDAT_INDUSTRIALISATION_EXTERNE',
+  'INDUSTRIALISE_DSI',
+  'INDUSTRIALISE_EXTERNE',
+]);
+
 @Component({
   selector: 'app-mes-sujets',
   imports: [
@@ -64,12 +73,15 @@ export class MesSujets implements OnInit {
   sujetToDelete?: SujetProjet;
 
   readonly categorieOptions = [{ value: '', label: 'Tous les types' }, ...CATEGORIE_OPTIONS];
+  /** Statuts du cycle « sujet » uniquement (les sujets terminés vivent dans le catalogue). */
   readonly statutOptions = [
     { value: '', label: 'Tous les statuts' },
-    ...Object.entries(STATUT_LABELS).map(([value, info]) => ({
-      value,
-      label: info.label,
-    })),
+    ...Object.entries(STATUT_LABELS)
+      .filter(([value]) => !STATUTS_HORS_MES_SUJETS.has(value as StatutSujet))
+      .map(([value, info]) => ({
+        value,
+        label: info.label,
+      })),
   ];
   readonly sortOptions = [
     { value: 'recent', label: 'Plus récents' },
@@ -303,16 +315,18 @@ export class MesSujets implements OnInit {
   }
 
   private filterSujetsForScope(sujets: SujetProjet[]): SujetProjet[] {
+    const actifs = sujets.filter((s) => !STATUTS_HORS_MES_SUJETS.has(s.statut));
+
     if (!this.isChefEquipe) {
-      return sujets;
+      return actifs;
     }
 
     const userId = this.authService.currentUser()?.id;
     if (this.sujetScope === 'mes') {
-      return userId != null ? sujets.filter((s) => s.encadrantId === userId) : sujets;
+      return userId != null ? actifs.filter((s) => s.encadrantId === userId) : actifs;
     }
 
-    return userId != null ? sujets.filter((s) => s.encadrantId !== userId) : sujets;
+    return userId != null ? actifs.filter((s) => s.encadrantId !== userId) : actifs;
   }
 
   private applyFilters(): void {
