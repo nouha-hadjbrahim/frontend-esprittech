@@ -212,7 +212,12 @@ export class EquipesRechercheComponent implements OnInit {
   }
 
   ouvrirDetails(equipe: Equipe) {
-    const ref = this.dialog.open(DialogueDetailsEquipeComponent, { width: '520px', data: equipe });
+    const ref = this.dialog.open(DialogueDetailsEquipeComponent, {
+      width: '560px',
+      data: equipe,
+      panelClass: 'equipe-form-dialog',
+      autoFocus: false,
+    });
     ref.afterClosed().subscribe((r) => {
       if (r === 'edit') this.ouvrirModification(equipe);
       if (r === 'updated') this.charger();
