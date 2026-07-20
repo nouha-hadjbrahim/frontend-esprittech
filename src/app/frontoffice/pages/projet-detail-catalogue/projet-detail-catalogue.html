@@ -271,7 +271,7 @@
         <div class="alert alert--error">{{ livrableError }}</div>
       } @else if (livrables.length) {
         <ul class="livrable-list">
-          @for (livrable of livrables; track livrable.id) {
+          @for (livrable of livrables; track trackLivrable(livrable)) {
             <li class="livrable-list__item">
               <div>
                 <strong>{{ livrableDisplayName(livrable) }}</strong>
