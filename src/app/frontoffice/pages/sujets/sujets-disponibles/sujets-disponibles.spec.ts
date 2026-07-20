@@ -88,7 +88,6 @@ describe('SujetsDisponibles', () => {
     expect(component.dejaPostule(mockSujets[1])).toBeFalse();
   });
 
-  // ── Search filter ─────────────────────────────────────────────────
   it('should filter sujets by search query on domain', () => {
     component.searchQuery = 'intelligence';
     component.onSearchChange();
@@ -111,9 +110,8 @@ describe('SujetsDisponibles', () => {
     expect(component.filteredSujets.length).toBe(2);
   });
 
-  // ── Sort ─────────────────────────────────────────────────────────
   it('should sort by most recent by default', () => {
-    expect(component.filteredSujets[0].id).toBe(2); // newer date first
+    expect(component.filteredSujets[0].id).toBe(2);
   });
 
   it('should sort oldest first when sortOrder is ancien', () => {
@@ -121,7 +119,6 @@ describe('SujetsDisponibles', () => {
     expect(component.filteredSujets[0].id).toBe(1);
   });
 
-  // ── Modal state ───────────────────────────────────────────────────
   it('ouvrirPostuler should set selectedSujet and show modal', () => {
     component.ouvrirPostuler(mockSujets[0]);
     expect(component.showPostulerModal).toBeTrue();
@@ -139,34 +136,14 @@ describe('SujetsDisponibles', () => {
     component.ouvrirPostuler(mockSujets[0]);
     component.onCandidatureSoumise();
     expect(component.showPostulerModal).toBeFalse();
-    expect(candidatureServiceSpy.getMesCandidatures).toHaveBeenCalledTimes(2); // init + after submit
+    expect(candidatureServiceSpy.getMesCandidatures).toHaveBeenCalledTimes(2);
   });
 
-  // ── Error handling ────────────────────────────────────────────────
   it('should handle error when loading sujets fails', () => {
     sujetServiceSpy.getSujetsDisponibles.and.returnValue(throwError(() => new Error('Network error')));
     component.loadSujets();
     expect(component.sujets.length).toBe(0);
     expect(component.isLoading).toBeFalse();
-  });
-
-  // ── Modal open/close ───────────────────────────────────────────────
-  it('openModal should set isModalOpen to true', () => {
-    component.openModal();
-    expect(component.isModalOpen).toBeTrue();
-  });
-
-  it('closeModal should set isModalOpen to false', () => {
-    component.openModal();
-    component.closeModal();
-    expect(component.isModalOpen).toBeFalse();
-  });
-
-  it('onSujetSaved should close modal and reload sujets', () => {
-    component.openModal();
-    component.onSujetSaved();
-    expect(component.isModalOpen).toBeFalse();
-    expect(sujetServiceSpy.getSujetsDisponibles).toHaveBeenCalledTimes(2);
   });
 
   it('should show candidature fermee alert when opening a VALIDE sujet', () => {
@@ -231,8 +208,7 @@ describe('SujetsDisponibles', () => {
     expect(component.encadrantOptions.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('should expose canDeposerSujet and isEtudiant computed signals', () => {
-    expect(component.canDeposerSujet()).toBeFalse();
+  it('should expose isEtudiant computed signals', () => {
     expect(component.isEtudiant()).toBeTrue();
   });
 

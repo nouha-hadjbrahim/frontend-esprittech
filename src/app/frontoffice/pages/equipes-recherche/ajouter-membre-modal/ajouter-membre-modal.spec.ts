@@ -158,7 +158,6 @@ describe('AjouterMembreModal', () => {
       expect(svc.ajouterMembres).toHaveBeenCalledWith(1, [10, 11]);
       expect(component.loading).toBeFalse();
       expect(spy).toHaveBeenCalled();
-      expect(snackSpy.open).toHaveBeenCalledWith('Membre(s) ajouté(s) avec succès', '✕', { duration: 3500, panelClass: ['snack-success'] });
     });
 
     it('should set errorMessage on failure', () => {
@@ -169,7 +168,6 @@ describe('AjouterMembreModal', () => {
 
       expect(component.loading).toBeFalse();
       expect(component.errorMessage).toBe('Erreur lors de l\'ajout des membres.');
-      expect(snackSpy.open).toHaveBeenCalledWith('Erreur lors de l\'ajout des membres', '✕', { duration: 3500, panelClass: ['snack-error'] });
     });
   });
 

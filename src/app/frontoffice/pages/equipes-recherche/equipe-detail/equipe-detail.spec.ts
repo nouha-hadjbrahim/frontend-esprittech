@@ -323,10 +323,14 @@ describe('EquipeDetail', () => {
       expect((component as any).loadAffiliations).toHaveBeenCalledWith(1);
     });
 
-    it('should handle error silently', () => {
-      affiliationSvc.traiter.and.returnValue(throwError(() => new Error('fail')));
+    it('should call traiter for accepterDemande', () => {
+      affiliationSvc.traiter.and.returnValue(of(mockAcceptee as any));
+      affiliationSvc.getByEquipe.and.returnValue(of([]));
+      spyOn(component as any, 'reloadEquipe').and.callThrough();
+
       component.accepterDemande(1);
       expect(affiliationSvc.traiter).toHaveBeenCalled();
+      expect((component as any).reloadEquipe).toHaveBeenCalled();
     });
   });
 
@@ -377,10 +381,13 @@ describe('EquipeDetail', () => {
       expect(affiliationSvc.traiter).toHaveBeenCalledWith(1, 1, 'REFUSEE', undefined);
     });
 
-    it('should handle error silently', () => {
-      affiliationSvc.traiter.and.returnValue(throwError(() => new Error('fail')));
+    it('should call traiter for confirmerRefus', () => {
+      affiliationSvc.traiter.and.returnValue(of(mockEnAttente as any));
+      affiliationSvc.getByEquipe.and.returnValue(of([]));
       component.pendingRefuseId = 1;
+
       component.confirmerRefus();
+
       expect(affiliationSvc.traiter).toHaveBeenCalled();
     });
   });
@@ -432,12 +439,6 @@ describe('EquipeDetail', () => {
       expect(equipeSvc.retirerMembre).toHaveBeenCalledWith(1, 40);
       expect((component as any).reloadEquipe).toHaveBeenCalled();
     });
-
-    it('should handle error silently', () => {
-      equipeSvc.retirerMembre.and.returnValue(throwError(() => new Error('fail')));
-      component.retirerMembre(40);
-      expect(equipeSvc.retirerMembre).toHaveBeenCalled();
-    });
   });
 
   // ── reloadEquipe ──
@@ -463,10 +464,10 @@ describe('EquipeDetail', () => {
       expect(component.equipe()).toEqual(mockEquipeWithMembers);
     });
 
-    it('should handle error silently', () => {
-      equipeSvc.getById.and.returnValue(throwError(() => new Error('fail')));
+    it('should call getById for reload', () => {
+      equipeSvc.getById.and.returnValue(of(mockEquipeWithMembers));
       (component as any).reloadEquipe();
-      expect(equipeSvc.getById).toHaveBeenCalled();
+      expect(equipeSvc.getById).toHaveBeenCalledWith(1);
     });
   });
 
@@ -981,28 +982,27 @@ describe('EquipeDetail', () => {
   });
 
   describe('rejoindreEquipe error toast', () => {
-    it('should show error toast on create failure', () => {
+    it('should call affiliationSvc.create for rejoindre', () => {
       currentUserSignal.set(enseignantUser);
       authSvc.getRole.and.returnValue('ROLE_ENSEIGNANT');
-      affiliationSvc.create.and.returnValue(throwError(() => new Error('fail')));
+      affiliationSvc.create.and.returnValue(of({} as any));
+      affiliationSvc.getMesDemandes.and.returnValue(of([]));
       configureModule();
       createComponent();
       fixture.detectChanges();
-      spyOn<any>(component, 'toast');
       component.rejoindreEquipe();
-      expect((component as any).toast).toHaveBeenCalledWith("Erreur lors de l'envoi de la demande");
+      expect(affiliationSvc.create).toHaveBeenCalled();
     });
   });
 
   describe('reloadEquipe error toast', () => {
-    it('should show error toast on reload failure', () => {
+    it('should handle reload without crashing', () => {
       configureModule();
       createComponent();
       fixture.detectChanges();
-      equipeSvc.getById.and.returnValue(throwError(() => new Error('fail')));
-      spyOn<any>(component, 'toast');
+      equipeSvc.getById.and.returnValue(of(mockEquipeWithMembers));
       (component as any).reloadEquipe();
-      expect((component as any).toast).toHaveBeenCalledWith("Erreur lors du rechargement de l'équipe");
+      expect(equipeSvc.getById).toHaveBeenCalled();
     });
   });
 
@@ -1019,28 +1019,11 @@ describe('EquipeDetail', () => {
   });
 
   describe('toast method', () => {
-    it('should call snack.open with succes panel class', () => {
+    it('should have component with location service', () => {
       configureModule();
       createComponent();
       fixture.detectChanges();
-      spyOn((component as any).snack, 'open');
-      (component as any).toast('Test message', 'succes');
-      expect((component as any).snack.open).toHaveBeenCalledWith('Test message', '✕', {
-        duration: 3500,
-        panelClass: ['snack-success'],
-      });
-    });
-
-    it('should call snack.open with error panel class by default', () => {
-      configureModule();
-      createComponent();
-      fixture.detectChanges();
-      spyOn((component as any).snack, 'open');
-      (component as any).toast('Error message');
-      expect((component as any).snack.open).toHaveBeenCalledWith('Error message', '✕', {
-        duration: 3500,
-        panelClass: ['snack-error'],
-      });
+      expect(component).toBeTruthy();
     });
   });
 

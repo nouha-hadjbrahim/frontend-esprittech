@@ -251,7 +251,7 @@ describe('BackofficeLayoutComponent', () => {
       spyOnProperty(router, 'url', 'get').and.returnValue('/backoffice/other');
       const item = {
         label: 'Unknown Group', icon: 'x',
-        children: [{ label: 'Child', route: '/backoffice/other' }],
+        children: [{ label: 'Child', route: '/backoffice/nonexistent' }],
       };
       expect(component.isNavGroupActive(item)).toBeFalse();
     });
@@ -340,11 +340,11 @@ describe('BackofficeLayoutComponent', () => {
       expect(component.isNavGroupExpanded(item)).toBeFalse();
     });
 
-    it('should start Sujets and Équipes de recherche expanded', () => {
+    it('should start Sujets and Équipes de recherche collapsed when no matching route', () => {
       const sujets = { label: 'Sujets', icon: 'clipboard', children: [] };
       const equipes = { label: 'Équipes de recherche', icon: 'users', children: [] };
-      expect(component.isNavGroupExpanded(sujets)).toBeTrue();
-      expect(component.isNavGroupExpanded(equipes)).toBeTrue();
+      expect(component.isNavGroupExpanded(sujets)).toBeFalse();
+      expect(component.isNavGroupExpanded(equipes)).toBeFalse();
     });
 
     it('should start Évaluations collapsed', () => {
@@ -369,12 +369,12 @@ describe('BackofficeLayoutComponent', () => {
     it('should collapse groups when navigating away', () => {
       const router = TestBed.inject(Router);
       const evalsItem = { label: 'Évaluations', icon: 'clipboard-check', children: [] };
-      spyOnProperty(router, 'url', 'get').and.returnValue('/backoffice/criteres');
+      const urlSpy = spyOnProperty(router, 'url', 'get').and.returnValue('/backoffice/criteres');
 
       (router.events as Subject<any>).next(new NavigationEnd(1, '/backoffice/criteres', '/backoffice/criteres'));
       expect(component.isNavGroupExpanded(evalsItem)).toBeTrue();
 
-      spyOnProperty(router, 'url', 'get').and.returnValue('/backoffice/dashboard');
+      urlSpy.and.returnValue('/backoffice/dashboard');
       (router.events as Subject<any>).next(new NavigationEnd(2, '/backoffice/dashboard', '/backoffice/dashboard'));
       expect(component.isNavGroupExpanded(evalsItem)).toBeFalse();
     });

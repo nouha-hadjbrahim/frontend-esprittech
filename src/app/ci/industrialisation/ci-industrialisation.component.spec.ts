@@ -538,7 +538,7 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.scoreDisplay(candidature)).toBe('80');
     const noScore = { ...candidature, scoreEvaluationProjet: null, latestEvaluation: null };
     component.score.set(null);
-    expect(component.scoreDisplay(noScore)).toBe('-');
+    expect(component.scoreDisplay(noScore)).toBe('Non calculé');
   });
 
   it('should compute currentDecisionOrEligibility', () => {
@@ -595,7 +595,7 @@ describe('CiIndustrialisationComponent', () => {
       ...candidature,
       latestEvaluation: null,
       scoreEvaluationProjet: 40,
-      elimWarningsCount: 1,
+      eliminatoryWarningsCount: 1,
     } as any;
     expect(component.recommendationExplanation(withElimWarning)).toContain('Alerte éliminatoire');
   });

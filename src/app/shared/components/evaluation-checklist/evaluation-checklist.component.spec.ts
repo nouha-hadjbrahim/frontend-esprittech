@@ -132,7 +132,7 @@ describe('EvaluationChecklistComponent', () => {
     expect(component.notes).toEqual([]);
     expect(component.analysisIssueCount).toBe(0);
 
-    component.evaluation = evaluation({ scoreFinal: -5, eligibleIndustrialisation: false });
+    component.evaluation = evaluation({ scoreFinal: -5, eligibleIndustrialisation: false, resultats: [] });
     expect(component.scorePercent).toBe(0);
     expect(component.statusLabel).toBe('Non calculé');
   });
@@ -495,7 +495,7 @@ describe('EvaluationChecklistComponent', () => {
       ...note,
       explanation: 'Eliminatory state derived from validated evidence.',
     };
-    expect(component.criterionExplanation(result)).toContain('L état éliminatoire repose');
+    expect(component.criterionExplanation(result)).toContain("L\u2019état éliminatoire repose");
 
     const result2: ResultatCritereResponse = {
       ...note,
