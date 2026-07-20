@@ -72,84 +72,188 @@
         </div>
       }
 
+      @if (isTermine) {
+        <div class="gcm-banner gcm-banner--done">
+          <p class="gcm-banner__text">
+            <strong>Sujet terminé</strong>
+            <span> · consultation des membres de l’équipe.</span>
+          </p>
+        </div>
+      }
+
       <div class="gcm-body">
         @if (isLoading) {
-          <p class="gcm-empty">Chargement des demandes...</p>
-        } @else if (!showCandidatures) {
-          <p class="gcm-empty">Les candidatures ne sont pas encore ouvertes pour ce sujet.</p>
-        } @else if (demandesCandidatures.length === 0) {
-          <p class="gcm-empty">Aucune demande en attente pour ce sujet.</p>
+          <p class="gcm-empty">Chargement…</p>
         } @else {
-          <ul class="gcm-list">
-            @for (c of demandesCandidatures; track c.id) {
-              <li class="gcm-card">
-                <div class="gcm-card__avatar" aria-hidden="true">{{ getInitials(c) }}</div>
+          @if (canTraiterDemandes) {
+            <section class="gcm-section">
+              <h3 class="gcm-section__title">Demandes en attente</h3>
+              @if (demandesCandidatures.length === 0) {
+                <p class="gcm-empty">Aucune demande en attente pour ce sujet.</p>
+              } @else {
+                <ul class="gcm-list">
+                  @for (c of demandesCandidatures; track c.id) {
+                    <li class="gcm-card">
+                      <div class="gcm-card__avatar" aria-hidden="true">{{ getInitials(c) }}</div>
 
-                <div class="gcm-card__content">
-                  <div class="gcm-card__top">
-                    <div class="gcm-card__identity">
-                      <span class="gcm-card__name">{{ c.etudiantPrenom }} {{ c.etudiantNom }}</span>
-                      <span class="gcm-card__tag">Étudiant</span>
-                      <time class="gcm-card__date" [attr.datetime]="c.dateDepot">
-                        {{ c.dateDepot | date:'yyyy-MM-dd' }}
-                      </time>
-                    </div>
+                      <div class="gcm-card__content">
+                        <div class="gcm-card__top">
+                          <div class="gcm-card__identity">
+                            <span class="gcm-card__name">{{ c.etudiantPrenom }} {{ c.etudiantNom }}</span>
+                            <span class="gcm-card__tag">Étudiant</span>
+                            <time class="gcm-card__date" [attr.datetime]="c.dateDepot">
+                              {{ c.dateDepot | date:'yyyy-MM-dd' }}
+                            </time>
+                          </div>
 
-                    @if (motifTargetId !== c.id) {
-                      <div class="gcm-card__actions">
-                        <button
-                          type="button"
-                          class="gcm-action gcm-action--accept"
-                          [disabled]="actionLoading"
-                          (click)="accepterCandidature(c)"
-                        >
-                          Accepter
-                        </button>
-                        <button
-                          type="button"
-                          class="gcm-action gcm-action--reject"
-                          [disabled]="actionLoading"
-                          (click)="ouvrirMotifRefus(c)"
-                        >
-                          Refuser
-                        </button>
+                          @if (motifTargetId !== c.id) {
+                            <div class="gcm-card__actions">
+                              <button
+                                type="button"
+                                class="gcm-action gcm-action--accept"
+                                [disabled]="actionLoading"
+                                (click)="accepterCandidature(c)"
+                              >
+                                Accepter
+                              </button>
+                              <button
+                                type="button"
+                                class="gcm-action gcm-action--reject"
+                                [disabled]="actionLoading"
+                                (click)="ouvrirMotifRefus(c)"
+                              >
+                                Refuser
+                              </button>
+                            </div>
+                          }
+                        </div>
+
+                        @if (c.messageEtudiant) {
+                          <p class="gcm-card__message">{{ c.messageEtudiant }}</p>
+                        }
+
+                        @if (motifTargetId === c.id) {
+                          <div class="gcm-refus">
+                            <label class="gcm-refus__label" [for]="'motif-' + c.id">Motif du refus</label>
+                            <textarea
+                              [id]="'motif-' + c.id"
+                              class="gcm-refus__input"
+                              rows="2"
+                              placeholder="Indiquez la raison du refus..."
+                              [(ngModel)]="motifText"
+                            ></textarea>
+                            <div class="gcm-refus__actions">
+                              <button type="button" class="gcm-action gcm-action--ghost" (click)="annulerMotif()">
+                                Annuler
+                              </button>
+                              <button
+                                type="button"
+                                class="gcm-action gcm-action--reject"
+                                [disabled]="!motifText.trim() || actionLoading"
+                                (click)="confirmerMotif()"
+                              >
+                                Confirmer le refus
+                              </button>
+                            </div>
+                          </div>
+                        }
                       </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          } @else if (!showAffectations && !canOuvrir) {
+            <p class="gcm-empty">Les candidatures ne sont pas encore ouvertes pour ce sujet.</p>
+          }
+
+          @if (showAffectations) {
+            <section class="gcm-section" [class.gcm-section--spaced]="canTraiterDemandes">
+              <h3 class="gcm-section__title">Membres de l’équipe</h3>
+              @if (affectationsActives.length === 0 && affectationsArchivees.length === 0) {
+                <p class="gcm-empty">Aucun membre affecté pour le moment.</p>
+              } @else {
+                @if (affectationsActives.length > 0) {
+                  <ul class="gcm-list">
+                    @for (a of affectationsActives; track a.id) {
+                      <li class="gcm-card">
+                        <div class="gcm-card__avatar" aria-hidden="true">{{ getInitialsFromName(a.etudiantPrenom, a.etudiantNom) }}</div>
+                        <div class="gcm-card__content">
+                          <div class="gcm-card__top">
+                            <div class="gcm-card__identity">
+                              <span class="gcm-card__name">{{ a.etudiantPrenom }} {{ a.etudiantNom }}</span>
+                              <span class="gcm-card__tag gcm-card__tag--active">Actif</span>
+                              @if (a.etudiantEmail) {
+                                <span class="gcm-card__date">{{ a.etudiantEmail }}</span>
+                              }
+                            </div>
+                            @if (canRetirerMembre && motifTargetId !== a.id) {
+                              <div class="gcm-card__actions">
+                                <button
+                                  type="button"
+                                  class="gcm-action gcm-action--reject"
+                                  [disabled]="actionLoading"
+                                  (click)="ouvrirMotifRetrait(a)"
+                                >
+                                  Retirer
+                                </button>
+                              </div>
+                            }
+                          </div>
+
+                          @if (canRetirerMembre && motifTargetId === a.id) {
+                            <div class="gcm-refus">
+                              <label class="gcm-refus__label" [for]="'retrait-' + a.id">Motif du retrait</label>
+                              <textarea
+                                [id]="'retrait-' + a.id"
+                                class="gcm-refus__input"
+                                rows="2"
+                                placeholder="Indiquez la raison du retrait..."
+                                [(ngModel)]="motifText"
+                              ></textarea>
+                              <div class="gcm-refus__actions">
+                                <button type="button" class="gcm-action gcm-action--ghost" (click)="annulerMotif()">
+                                  Annuler
+                                </button>
+                                <button
+                                  type="button"
+                                  class="gcm-action gcm-action--reject"
+                                  [disabled]="!motifText.trim() || actionLoading"
+                                  (click)="confirmerRetrait()"
+                                >
+                                  Confirmer le retrait
+                                </button>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </li>
                     }
-                  </div>
+                  </ul>
+                }
 
-                  @if (c.messageEtudiant) {
-                    <p class="gcm-card__message">{{ c.messageEtudiant }}</p>
-                  }
-
-                  @if (motifTargetId === c.id) {
-                    <div class="gcm-refus">
-                      <label class="gcm-refus__label" [for]="'motif-' + c.id">Motif du refus</label>
-                      <textarea
-                        [id]="'motif-' + c.id"
-                        class="gcm-refus__input"
-                        rows="2"
-                        placeholder="Indiquez la raison du refus..."
-                        [(ngModel)]="motifText"
-                      ></textarea>
-                      <div class="gcm-refus__actions">
-                        <button type="button" class="gcm-action gcm-action--ghost" (click)="annulerMotif()">
-                          Annuler
-                        </button>
-                        <button
-                          type="button"
-                          class="gcm-action gcm-action--reject"
-                          [disabled]="!motifText.trim() || actionLoading"
-                          (click)="confirmerMotif()"
-                        >
-                          Confirmer le refus
-                        </button>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </li>
-            }
-          </ul>
+                @if (affectationsArchivees.length > 0) {
+                  <h4 class="gcm-section__subtitle">Anciens membres</h4>
+                  <ul class="gcm-list">
+                    @for (a of affectationsArchivees; track a.id) {
+                      <li class="gcm-card gcm-card--muted">
+                        <div class="gcm-card__avatar" aria-hidden="true">{{ getInitialsFromName(a.etudiantPrenom, a.etudiantNom) }}</div>
+                        <div class="gcm-card__content">
+                          <div class="gcm-card__identity">
+                            <span class="gcm-card__name">{{ a.etudiantPrenom }} {{ a.etudiantNom }}</span>
+                            <span class="gcm-card__tag">Retiré</span>
+                          </div>
+                          @if (a.motifRetrait) {
+                            <p class="gcm-card__message">{{ a.motifRetrait }}</p>
+                          }
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              }
+            </section>
+          }
         }
       </div>
     </div>

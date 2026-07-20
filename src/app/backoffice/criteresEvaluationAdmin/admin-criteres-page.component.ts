@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, HostListener, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import {
@@ -15,6 +15,9 @@ import {
 import { CritereEliminatoireService } from '../../core/services/critere-eliminatoire.service';
 import { CritereNoteService } from '../../core/services/critere-note.service';
 import { NoteLevelService } from '../../core/services/note-level.service';
+
+type FilterKey = 'statutElim' | 'statutNote';
+type StatutFilter = '' | 'actif' | 'inactif';
 
 @Component({
   selector: 'app-admin-criteres-page',
@@ -41,10 +44,19 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   errorNotes = signal<string | null>(null);
   eliminatoiresSearch = signal('');
   notesSearch = signal('');
+  selectedStatutElim = signal<StatutFilter>('');
+  selectedStatutNote = signal<StatutFilter>('');
+  readonly openFilter = signal<FilterKey | null>(null);
 
   readonly pageSize = 8;
   eliminatoiresPage = signal(1);
   notesPage = signal(1);
+
+  readonly statutOptions: { value: StatutFilter; label: string }[] = [
+    { value: '', label: 'Tous les statuts' },
+    { value: 'actif', label: 'Actif' },
+    { value: 'inactif', label: 'Inactif' },
+  ];
 
   isModalOpen = signal(false);
   isNoteLevelModalOpen = signal(false);
@@ -69,30 +81,47 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
 
   filteredEliminatoires = computed(() => {
     const query = this.normalize(this.eliminatoiresSearch());
-    if (!query) return this.criteresEliminatoires();
-    return this.criteresEliminatoires().filter((crit) => this.normalize([
-      crit.ordre,
-      crit.libelle,
-      crit.description,
-      crit.domaine,
-      crit.reponseAttendue,
-      crit.actif ? 'actif' : 'inactif',
-    ].join(' ')).includes(query));
+    const statut = this.selectedStatutElim();
+    return this.criteresEliminatoires().filter((crit) => {
+      const matchStatut = !statut || (statut === 'actif' ? crit.actif : !crit.actif);
+      if (!matchStatut) return false;
+      if (!query) return true;
+      return this.normalize([
+        crit.ordre,
+        crit.libelle,
+        crit.description,
+        crit.domaine,
+        crit.reponseAttendue,
+        crit.actif ? 'actif' : 'inactif',
+      ].join(' ')).includes(query);
+    });
   });
 
   filteredNotes = computed(() => {
     const query = this.normalize(this.notesSearch());
-    if (!query) return this.criteresNotes();
-    return this.criteresNotes().filter((crit) => this.normalize([
-      crit.ordre,
-      crit.libelle,
-      crit.description,
-      crit.domaine,
-      crit.poids,
-      crit.defaultNoteValue,
-      crit.actif ? 'actif' : 'inactif',
-    ].join(' ')).includes(query));
+    const statut = this.selectedStatutNote();
+    return this.criteresNotes().filter((crit) => {
+      const matchStatut = !statut || (statut === 'actif' ? crit.actif : !crit.actif);
+      if (!matchStatut) return false;
+      if (!query) return true;
+      return this.normalize([
+        crit.ordre,
+        crit.libelle,
+        crit.description,
+        crit.domaine,
+        crit.poids,
+        crit.defaultNoteValue,
+        crit.actif ? 'actif' : 'inactif',
+      ].join(' ')).includes(query);
+    });
   });
+
+  readonly statsCards = computed(() => [
+    { label: 'Niveaux de note', value: this.noteLevels().length, icon: 'levels' as const },
+    { label: 'Critères éliminatoires', value: this.eliminatoiresCount, icon: 'elim' as const },
+    { label: 'Critères notes', value: this.notesCount, icon: 'notes' as const },
+    { label: 'Critères actifs', value: this.eliminatoiresActiveCount + this.notesActiveCount, icon: 'active' as const },
+  ]);
 
   get eliminatoiresTotalPages(): number {
     return Math.max(1, Math.ceil(this.filteredEliminatoires().length / this.pageSize));
@@ -100,6 +129,14 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
 
   get notesTotalPages(): number {
     return Math.max(1, Math.ceil(this.filteredNotes().length / this.pageSize));
+  }
+
+  get eliminatoiresPageNumbers(): number[] {
+    return Array.from({ length: this.eliminatoiresTotalPages }, (_, i) => i + 1);
+  }
+
+  get notesPageNumbers(): number[] {
+    return Array.from({ length: this.notesTotalPages }, (_, i) => i + 1);
   }
 
   get eliminatoiresCount(): number {
@@ -118,6 +155,14 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     return this.criteresNotes().filter((crit) => crit.actif).length;
   }
 
+  get statutElimFilterLabel(): string {
+    return this.statutOptions.find((o) => o.value === this.selectedStatutElim())?.label ?? 'Tous les statuts';
+  }
+
+  get statutNoteFilterLabel(): string {
+    return this.statutOptions.find((o) => o.value === this.selectedStatutNote())?.label ?? 'Tous les statuts';
+  }
+
   get defaultActiveNoteValue(): number {
     return this.activeNoteLevels()[0]?.value ?? 1;
   }
@@ -134,6 +179,28 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   get visibleNotes(): CritereNote[] {
     const start = (this.notesPage() - 1) * this.pageSize;
     return this.filteredNotes().slice(start, start + this.pageSize);
+  }
+
+  @HostListener('document:click')
+  closeFiltersOnOutsideClick(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectStatutElimFilter(value: StatutFilter): void {
+    this.selectedStatutElim.set(value);
+    this.openFilter.set(null);
+    this.eliminatoiresPage.set(1);
+  }
+
+  selectStatutNoteFilter(value: StatutFilter): void {
+    this.selectedStatutNote.set(value);
+    this.openFilter.set(null);
+    this.notesPage.set(1);
   }
 
   ngOnInit(): void {

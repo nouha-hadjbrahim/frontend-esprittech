@@ -1,3 +1,5 @@
+@import '../../shared/styles/pagination.shared.css';
+
 .users-page {
     display: flex;
     flex-direction: column;
@@ -220,48 +222,6 @@ tr:last-child td {
 
 .empty-row.error {
     color: #d12c2c;
-}
-
-/* Pagination */
-.pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px;
-    border-top: 1px solid #eee;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.pagination-info {
-    font-size: 0.85rem;
-    color: #6b7280;
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 8px;
-}
-
-.page-btn {
-    padding: 8px 14px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background: #fff;
-    color: #374151;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-
-.page-btn:hover:not(:disabled) {
-    background-color: #f9fafb;
-}
-
-.page-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 /* Actions Group */

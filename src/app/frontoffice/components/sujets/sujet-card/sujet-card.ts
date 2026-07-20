@@ -120,7 +120,7 @@ export class SujetCard {
   }
 
   get showCandidaturesAction(): boolean {
-    return this.sujet.statut === 'VALIDE' || this.sujet.statut === 'CANDIDATURE_OUVERTE';
+    return true;
   }
 
   onEditClick(event: Event): void {

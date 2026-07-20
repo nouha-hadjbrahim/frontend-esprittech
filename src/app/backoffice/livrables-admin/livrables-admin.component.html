@@ -1,104 +1,249 @@
-<div class="admin-page">
-  <header class="page-header">
-    <div>
+<div class="livrables-page">
+  <div class="page-header">
+    <div class="header-text">
       <h1>Livrables</h1>
       <p>Gestion globale des fichiers et liens de projet.</p>
     </div>
-  </header>
+  </div>
 
   @if (message()) { <div class="alert alert--success">{{ message() }}</div> }
   @if (error()) { <div class="alert alert--danger">{{ error() }}</div> }
 
-  <section class="panel toolbar">
-    <input type="search" placeholder="Projet, livrable, deposant..." [ngModel]="query()" (ngModelChange)="query.set($event)" />
-    <select [ngModel]="selectedType()" (ngModelChange)="selectedType.set($event)">
-      <option value="">Tous les types</option>
-      @for (type of typeOptions; track type.value) {
-        <option [value]="type.value">{{ type.label }}</option>
-      }
-    </select>
-  </section>
+  <div class="stats-grid">
+    @for (s of statsCards(); track s.label) {
+      <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">
+          @if (s.icon === 'total') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          } @else if (s.icon === 'active') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          } @else if (s.icon === 'file') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          }
+        </span>
+        <div class="stat-text">
+          <div class="stat-val">{{ s.value }}</div>
+          <div class="stat-lbl">{{ s.label }}</div>
+        </div>
+      </article>
+    }
+  </div>
 
-  <section class="panel">
-    <div class="panel-title">
-      <h2>Liste</h2>
-      <span>{{ filteredLivrables().length }} element(s)</span>
-    </div>
-    @if (loading()) {
-      <div class="empty">Chargement...</div>
-    } @else {
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Projet</th>
-              <th>Type</th>
-              <th>Deposant</th>
-              <th>Taille</th>
-              <th>Date</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (livrable of filteredLivrables(); track livrable.id) {
-              <tr>
-                <td>
-                  <strong>{{ livrable.nom }}</strong>
-                  <span>{{ livrable.originalFileName || livrable.lienExterne || 'Metadata' }}</span>
-                </td>
-                <td>{{ livrable.projetTitre }}</td>
-                <td>{{ labels[livrable.typeLivrable] }}</td>
-                <td>{{ livrable.deposantNom }}</td>
-                <td>{{ formatSize(livrable.size) }}</td>
-                <td>{{ livrable.dateDepot | date:'yyyy-MM-dd' }}</td>
-                <td class="actions">
-                  @if (livrable.objectName) {
-                    <a class="btn btn--ghost" [href]="download(livrable)" target="_blank" rel="noreferrer">Telecharger</a>
-                  } @else if (livrable.lienExterne) {
-                    <a class="btn btn--ghost" [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
+  <section class="table-container">
+    <div class="table-actions">
+      <div class="search-field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0a8a8" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <label for="livrables-search" class="sr-only">Rechercher un livrable</label>
+        <input
+          id="livrables-search"
+          class="search-field__input"
+          type="search"
+          placeholder="Projet, livrable, déposant…"
+          [ngModel]="query()"
+          (ngModelChange)="updateSearch($event)"
+        />
+      </div>
+
+      <div class="filters-group">
+        <div class="filter-dropdown" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--open]="openFilter() === 'type'"
+            (click)="toggleFilter('type', $event)"
+          >
+            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="8" y1="12" x2="20" y2="12"></line>
+              <line x1="12" y1="18" x2="20" y2="18"></line>
+              <circle cx="6" cy="12" r="2"></circle>
+              <circle cx="10" cy="18" r="2"></circle>
+            </svg>
+            <span class="filter-pill__label">{{ typeFilterLabel }}</span>
+            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          @if (openFilter() === 'type') {
+            <div class="filter-menu" role="listbox">
+              @for (opt of typeFilterOptions; track opt.value) {
+                <button
+                  type="button"
+                  class="filter-option"
+                  [class.filter-option--active]="selectedType() === opt.value"
+                  (click)="selectTypeFilter(opt.value)"
+                >
+                  <span>{{ opt.label }}</span>
+                  @if (selectedType() === opt.value) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
                   }
-                  <button type="button" class="btn btn--ghost" (click)="openEdit(livrable)">Modifier</button>
-                  <button type="button" class="btn btn--danger" (click)="delete(livrable)">Desactiver</button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="empty-row">Chargement…</div>
+    } @else if (filteredLivrables().length === 0) {
+      <div class="empty-row">Aucun livrable trouvé.</div>
+    } @else {
+      <table class="subjects-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Projet</th>
+            <th>Type</th>
+            <th>Déposant</th>
+            <th>Taille</th>
+            <th>Date</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (livrable of visibleLivrables; track livrable.id) {
+            <tr [class.row-inactive]="!livrable.actif">
+              <td>
+                <div class="subject-info">
+                  <span class="subject-title">{{ livrable.nom }}</span>
+                  <span class="subject-meta">{{ livrable.originalFileName || livrable.lienExterne || 'Métadonnées' }}</span>
+                </div>
+              </td>
+              <td>{{ livrable.projetTitre }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="typeBadgeClass(livrable.typeLivrable)">
+                  <span class="status-dot" [ngClass]="typeDotClass(livrable.typeLivrable)"></span>
+                  {{ labels[livrable.typeLivrable] }}
+                </span>
+              </td>
+              <td>{{ livrable.deposantNom }}</td>
+              <td>{{ formatSize(livrable.size) }}</td>
+              <td>{{ livrable.dateDepot | date:'dd/MM/yyyy' }}</td>
+              <td class="text-right">
+                <div class="actions-group">
+                  @if (livrable.objectName) {
+                    <a
+                      class="icon-btn-action download"
+                      [href]="download(livrable)"
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Télécharger"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                    </a>
+                  } @else if (livrable.lienExterne) {
+                    <a
+                      class="icon-btn-action view"
+                      [href]="livrable.lienExterne"
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Ouvrir le lien"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                      </svg>
+                    </a>
+                  }
+                  <button type="button" class="icon-btn-action edit" title="Modifier" (click)="openEdit(livrable)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                  </button>
+                  <button type="button" class="icon-btn-action delete" title="Désactiver" (click)="delete(livrable)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <span class="pagination-info">
+          Affichage de <strong>{{ visibleLivrables.length }}</strong> sur <strong>{{ filteredLivrables().length }}</strong> livrables
+        </span>
+        <div class="pagination-controls">
+          <button class="page-btn" type="button" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1">Précédent</button>
+          @for (p of pageNumbers; track p) {
+            <button
+              type="button"
+              class="page-num"
+              [class.page-num--active]="p === currentPage()"
+              (click)="goToPage(p)"
+              [attr.aria-current]="p === currentPage() ? 'page' : null"
+            >{{ p }}</button>
+          }
+          <button class="page-btn" type="button" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages">Suivant</button>
+        </div>
       </div>
     }
   </section>
 </div>
 
 @if (selectedLivrable()) {
-  <div class="modal-backdrop" (click)="closeEdit()">
-    <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <h2>Modifier le livrable</h2>
-      <label>
-        Type
-        <select [(ngModel)]="editForm.typeLivrable">
-          @for (type of typeOptions; track type.value) {
-            <option [value]="type.value">{{ type.label }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        Nom
-        <input type="text" [(ngModel)]="editForm.nom" />
-      </label>
-      <label>
-        Description
-        <textarea rows="4" [(ngModel)]="editForm.description"></textarea>
-      </label>
-      <label>
-        Lien externe
-        <input type="url" [(ngModel)]="editForm.lienExterne" />
-      </label>
-      <label class="check-row">
-        <input type="checkbox" [(ngModel)]="editForm.actif" />
-        Actif
-      </label>
-      <div class="form-actions">
+  <div class="modal-overlay" (click)="closeEdit()">
+    <div class="modal-content" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Modifier le livrable</h3>
+        <button type="button" class="close-btn" (click)="closeEdit()" aria-label="Fermer">×</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-field">
+          <span>Type</span>
+          <select [(ngModel)]="editForm.typeLivrable">
+            @for (type of typeOptions; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="form-field">
+          <span>Nom</span>
+          <input type="text" [(ngModel)]="editForm.nom" />
+        </label>
+        <label class="form-field">
+          <span>Description</span>
+          <textarea rows="4" [(ngModel)]="editForm.description"></textarea>
+        </label>
+        <label class="form-field">
+          <span>Lien externe</span>
+          <input type="url" [(ngModel)]="editForm.lienExterne" />
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="editForm.actif" />
+          <span>Actif</span>
+        </label>
+      </div>
+      <div class="modal-footer">
         <button type="button" class="btn btn--ghost" (click)="closeEdit()">Annuler</button>
         <button type="button" class="btn btn--primary" (click)="saveEdit()">Enregistrer</button>
       </div>

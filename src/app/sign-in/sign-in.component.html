@@ -1,62 +1,107 @@
-<div class="auth-page">
-    <div class="auth-background">
-        <div class="dot-pattern"></div>
-        <div class="glow-container">
-            <div class="glow-layer glow-1"></div>
-            <div class="glow-layer glow-2"></div>
-            <div class="glow-layer glow-3"></div>
-        </div>
-    </div>
+<main class="auth-page">
+    <section class="auth-showcase" aria-label="Présentation EspritTECH">
+        <img class="auth-showcase__image" src="assets/images/auth-campus.png" alt="" />
+        <div class="auth-showcase__overlay"></div>
 
-    <div class="auth-card">
-        <div class="logo-container">
-            <img src="assets/images/logo.png" alt="EspritTECH Logo" class="app-logo"
-                style="height: 48px; object-fit: contain;" />
-            <p class="brand">EspritTECH</p>
-        </div>
-
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-            <h1 class="auth-title">Connexion</h1>
-            <p class="auth-subtitle">Accédez à votre espace EspriTECH.</p>
-
-            <div *ngIf="serverError()" class="alert-error" role="alert">
-                <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd"
-                        d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.63-1.516 2.63H3.72c-1.347 0-2.189-1.463-1.516-2.63L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-                        clip-rule="evenodd" />
-                </svg>
-                <span>{{ serverError() }}</span>
+        <div class="auth-showcase__content">
+            <div class="auth-showcase__brand">
+                <span class="auth-showcase__brand-icon" aria-hidden="true">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                        <path d="M7 11v4.2c2.8 2 7.2 2 10 0V11M21 9v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span><strong>EspritTECH &amp; RDI</strong><small>Plateforme officielle</small></span>
             </div>
 
-            <div class="form-group">
-                <label for="email">Adresse e-mail</label>
-                <input type="email" id="email" formControlName="email" placeholder=" ">
-                <small *ngIf="f.email.touched && f.email.errors?.['required']" class="field-error">
-                    L'email est obligatoire.
-                </small>
-                <small *ngIf="f.email.touched && f.email.errors?.['email']" class="field-error">
-                    Format d'email invalide.
-                </small>
+            <div class="auth-showcase__message">
+                <span class="auth-showcase__badge">Console collaborative</span>
+                <h2>Piloter la recherche,<br><em>accélérer l'innovation.</em></h2>
+                <p>Gérez les projets, capitalisez les livrables et industrialisez les meilleures idées — au même endroit.</p>
             </div>
 
-            <div class="form-group">
-                <div class="label-row">
-                    <label for="password">Mot de passe</label>
-                    <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+            <div class="auth-showcase__stats" aria-label="Chiffres clés">
+                <article>
+                    <span class="auth-showcase__stat-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <strong>{{ formatStat(stats()?.projetsActifs, true) }}</strong>
+                    <small>Projets</small>
+                </article>
+                <article>
+                    <span class="auth-showcase__stat-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.6"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <strong>{{ formatStat(stats()?.equipesRdi) }}</strong>
+                    <small>Équipes</small>
+                </article>
+                <article>
+                    <span class="auth-showcase__stat-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <strong>{{ formatStat(stats()?.industrialises) }}</strong>
+                    <small>Industrialisés</small>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="auth-form-side">
+        <div class="auth-card">
+            <div class="auth-card__brand">
+                <img src="assets/images/logo.png" alt="EspritTECH" />
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                <span class="auth-kicker"><span aria-hidden="true"></span> Connexion sécurisée</span>
+                <h1 class="auth-title">Bon retour parmi nous</h1>
+                <p class="auth-subtitle">Accédez à votre espace EspritTECH &amp; RDI.</p>
+
+                <div *ngIf="serverError()" class="alert-error" role="alert">
+                    <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd"
+                            d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.63-1.516 2.63H3.72c-1.347 0-2.189-1.463-1.516-2.63L8.485 2.495ZM10 6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 6Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <span>{{ serverError() }}</span>
                 </div>
-                <input type="password" id="password" formControlName="password" placeholder=" ">
-                <small *ngIf="f.password.touched && f.password.errors?.['required']" class="field-error">
-                    Le mot de passe est obligatoire.
-                </small>
-            </div>
 
-            <button type="submit" class="submit-btn" [disabled]="form.invalid || loading()">
-                {{ loading() ? 'Connexion…' : 'Se connecter' }}
-            </button>
+                <div class="form-group">
+                    <label for="email">Adresse e-mail</label>
+                    <input type="email" id="email" formControlName="email" placeholder="nom@esprit.tn">
+                    <small *ngIf="f.email.touched && f.email.errors?.['required']" class="field-error">L'email est obligatoire.</small>
+                    <small *ngIf="f.email.touched && f.email.errors?.['email']" class="field-error">Format d'email invalide.</small>
+                </div>
 
-            <p class="auth-footer">
-                Pas encore de compte ? <a routerLink="/sign-up">Créer un compte</a>
-            </p>
-        </form>
-    </div>
-</div>
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="password">Mot de passe</label>
+                        <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+                    </div>
+                    <input type="password" id="password" formControlName="password" placeholder="Votre mot de passe">
+                    <small *ngIf="f.password.touched && f.password.errors?.['required']" class="field-error">Le mot de passe est obligatoire.</small>
+                </div>
+
+                <button type="submit" class="submit-btn" [disabled]="form.invalid || loading()">
+                    {{ loading() ? 'Connexion…' : 'Se connecter' }}
+                    <span aria-hidden="true">→</span>
+                </button>
+
+                <p class="auth-footer">
+                    Pas encore de compte ? <a routerLink="/sign-up">Créer un compte</a>
+                </p>
+            </form>
+        </div>
+    </section>
+</main>

@@ -101,7 +101,7 @@ describe('SujetDetail industrialisation warnings', () => {
 
   beforeEach(async () => {
     sujetProjetService = jasmine.createSpyObj<SujetProjetService>('SujetProjetService', ['getSujetById']);
-    authService = jasmine.createSpyObj<AuthService>('AuthService', ['getRole', 'currentUser']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['getRole', 'currentUser', 'equipeNom']);
     evaluationService = jasmine.createSpyObj<EvaluationService>('EvaluationService', ['getLatestEvaluation', 'calculateScore']);
     livrableService = jasmine.createSpyObj<LivrableService>('LivrableService', ['findByProjet', 'downloadUrl']);
     candidatureService = jasmine.createSpyObj<CandidatureService>('CandidatureService', [
@@ -121,6 +121,7 @@ describe('SujetDetail industrialisation warnings', () => {
     sujetProjetService.getSujetById.and.returnValue(of(sujet));
     authService.getRole.and.returnValue('ROLE_ENSEIGNANT');
     authService.currentUser.and.returnValue({ id: 7 } as never);
+    authService.equipeNom.and.returnValue(null);
     evaluationService.getLatestEvaluation.and.returnValue(throwError(() => ({ status: 404 })));
     livrableService.findByProjet.and.returnValue(of([]));
     livrableService.downloadUrl.and.returnValue('http://download/1');

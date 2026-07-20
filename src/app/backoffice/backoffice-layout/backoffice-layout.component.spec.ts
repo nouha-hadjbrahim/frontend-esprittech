@@ -1,6 +1,6 @@
 import { WritableSignal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { Role, User } from '../../core/models/user.model';
 import { AffiliationService } from '../../core/services/affiliation.service';
@@ -69,6 +69,22 @@ describe('BackofficeLayoutComponent', () => {
     expect(component.navItems.some((item) => item.route === '/backoffice/criteres')).toBeFalse();
     expect(component.navItems.some((item) => item.route === '/backoffice/admin/industrialisation/questions')).toBeFalse();
     expect(component.navItems.some((item) => item.route === '/backoffice/admin/livrables')).toBeFalse();
+  });
+
+  it('should expand Évaluations when a child route is active', () => {
+    const router = TestBed.inject(Router);
+    spyOnProperty(router, 'url', 'get').and.returnValue('/backoffice/criteres');
+
+    component['expandActiveGroups']();
+
+    expect(component.isNavGroupExpanded({ label: 'Évaluations', icon: 'clipboard-check', children: [] })).toBeTrue();
+    expect(component.isNavGroupActive({
+      label: 'Évaluations',
+      icon: 'clipboard-check',
+      children: [
+        { label: 'Critères', route: '/backoffice/criteres' },
+      ],
+    })).toBeTrue();
   });
 
   it('should fall back to "AD" initials and empty role label without a user', () => {

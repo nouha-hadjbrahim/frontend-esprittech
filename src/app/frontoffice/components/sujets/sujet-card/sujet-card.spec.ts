@@ -59,28 +59,18 @@ describe('SujetCard', () => {
   });
 
   // ── showCandidaturesAction ────────────────────────────────────────
-  it('showCandidaturesAction should be true for VALIDE', () => {
+  it('showCandidaturesAction should always be true', () => {
     component.sujet = { ...mockSujet, statut: 'VALIDE' } as any;
     expect(component.showCandidaturesAction).toBeTrue();
-  });
 
-  it('showCandidaturesAction should be true for CANDIDATURE_OUVERTE', () => {
-    expect(component.showCandidaturesAction).toBeTrue();
-  });
-
-  it('showCandidaturesAction should be false for REALISATION_EN_COURS', () => {
     component.sujet = { ...mockSujet, statut: 'REALISATION_EN_COURS' } as any;
-    expect(component.showCandidaturesAction).toBeFalse();
-  });
+    expect(component.showCandidaturesAction).toBeTrue();
 
-  it('showCandidaturesAction should be false for SOUMIS_EN_VALIDATION', () => {
+    component.sujet = { ...mockSujet, statut: 'REALISATION_TERMINEE' } as any;
+    expect(component.showCandidaturesAction).toBeTrue();
+
     component.sujet = { ...mockSujet, statut: 'SOUMIS_EN_VALIDATION' } as any;
-    expect(component.showCandidaturesAction).toBeFalse();
-  });
-
-  it('showCandidaturesAction should be false for INVALIDE', () => {
-    component.sujet = { ...mockSujet, statut: 'INVALIDE' } as any;
-    expect(component.showCandidaturesAction).toBeFalse();
+    expect(component.showCandidaturesAction).toBeTrue();
   });
 
   // ── Output events ─────────────────────────────────────────────────

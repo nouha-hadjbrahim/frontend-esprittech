@@ -143,6 +143,20 @@ export class UsersComponent implements OnInit, OnDestroy {
         }
     }
 
+    goToPage(newPage: number): void {
+        if (newPage < 0 || newPage >= this.totalPages || newPage === this.page) return;
+        this.page = newPage;
+        this.loadUsers();
+    }
+
+    get pageDisplayCount(): number {
+        return this.users.length;
+    }
+
+    get pageNumbers(): number[] {
+        return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i + 1);
+    }
+
     getStatusClass(status: string): string {
         switch (status.toLowerCase()) {
             case 'actif': return 'status-active';

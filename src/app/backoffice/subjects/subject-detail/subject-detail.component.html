@@ -1,80 +1,167 @@
 <div class="subject-detail-page">
   <a routerLink="/backoffice/subjects" class="back-link">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+    <span class="back-link__icon" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
     Retour aux sujets
   </a>
 
   @if (isLoading) {
-    <div class="state-msg">Chargement du sujet…</div>
+    <div class="state-msg">
+      <div class="state-msg__spinner" aria-hidden="true"></div>
+      Chargement du sujet…
+    </div>
   } @else if (loadError || !sujet) {
     <div class="state-msg state-msg--error">{{ loadError || 'Sujet introuvable.' }}</div>
   } @else {
-    <header class="detail-header">
-      <div class="detail-header__main">
-        <div class="detail-header__badges">
-          <span class="badge" [ngClass]="getCategorieClass(sujet.categorie)">{{ categorieLabel }}</span>
-          <span class="badge" [ngClass]="getStatutClass(sujet.statut)">{{ statutLabel }}</span>
-          @if (sujet.catalogue) {
-            <span class="badge badge--catalog">Catalogue</span>
-          }
+    <header class="hero">
+      <div class="hero__accent" aria-hidden="true"></div>
+      <div class="hero__body">
+        <div class="hero__content">
+          <div class="hero__badges">
+            <span class="badge" [ngClass]="getCategorieClass(sujet.categorie)">{{ categorieLabel }}</span>
+            <span class="badge" [ngClass]="getStatutClass(sujet.statut)">{{ statutLabel }}</span>
+            @if (sujet.catalogue) {
+              <span class="badge badge--catalog">Catalogue</span>
+            }
+          </div>
+          <h1 class="hero__title">{{ sujet.titre }}</h1>
+          <div class="hero__people">
+            <div class="person">
+              <span class="person__avatar">{{ sujet.encadrantNom | slice:0:1 }}</span>
+              <div class="person__info">
+                <span class="person__label">Encadrant</span>
+                <span class="person__name">{{ sujet.encadrantNom }}</span>
+                @if (sujet.encadrantEmail) {
+                  <span class="person__email">{{ sujet.encadrantEmail }}</span>
+                }
+              </div>
+            </div>
+            @if (sujet.equipeNom) {
+              <div class="person person--team">
+                <span class="person__icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </span>
+                <div class="person__info">
+                  <span class="person__label">Équipe</span>
+                  <span class="person__name">{{ sujet.equipeNom }}</span>
+                </div>
+              </div>
+            }
+          </div>
         </div>
-        <h1 class="detail-header__title">{{ sujet.titre }}</h1>
-        <p class="detail-header__meta">
-          {{ sujet.encadrantNom }}
-          @if (sujet.encadrantEmail) { · {{ sujet.encadrantEmail }} }
-          @if (sujet.equipeNom) { · {{ sujet.equipeNom }} }
-        </p>
-      </div>
-      <div class="detail-header__actions">
-        <button type="button" class="btn btn--outline" (click)="openDeleteConfirm()">Supprimer</button>
-        <button type="button" class="btn btn--primary" (click)="openEditModal()">Modifier</button>
+        <div class="hero__actions">
+          <button type="button" class="btn btn--ghost" (click)="openDeleteConfirm()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Supprimer
+          </button>
+          <button type="button" class="btn btn--primary" (click)="openEditModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+            </svg>
+            Modifier
+          </button>
+        </div>
       </div>
     </header>
 
-    <div class="summary-grid">
-      <div class="summary-card">
-        <span class="summary-card__label">Catégorie</span>
-        <span class="summary-card__value">{{ categorieLabel }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Domaines</span>
-        <span class="summary-card__value">{{ sujet.domaines.join(', ') }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Encadrant</span>
-        <span class="summary-card__value">{{ sujet.encadrantNom }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Équipe</span>
-        <span class="summary-card__value">{{ sujet.equipeNom || '—' }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Capacité</span>
-        <span class="summary-card__value">0 / {{ sujet.capaciteAccueil }}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-card__label">Date soumission</span>
-        <span class="summary-card__value">{{ formatDate(sujet.dateSoumission) }}</span>
-      </div>
-      <div class="summary-card summary-card--score">
-        <span class="summary-card__label">Score final</span>
-        <span class="summary-card__value">{{ scoreFinalLabel }}</span>
-      </div>
-      <div class="summary-card summary-card--eligibility">
-        <span class="summary-card__label">Éligibilité</span>
-        <span class="eligibility-pill" [ngClass]="eligibilityClass">{{ eligibilityLabel }}</span>
-      </div>
+    <div class="kpi-grid">
+      <article class="kpi-card">
+        <span class="kpi-card__icon kpi-card__icon--red" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </span>
+        <div>
+          <span class="kpi-card__label">Catégorie</span>
+          <strong class="kpi-card__value">{{ categorieLabel }}</strong>
+        </div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-card__icon kpi-card__icon--blue" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+        </span>
+        <div>
+          <span class="kpi-card__label">Domaines</span>
+          <strong class="kpi-card__value">{{ sujet.domaines.join(', ') || '—' }}</strong>
+        </div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-card__icon kpi-card__icon--teal" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </span>
+        <div>
+          <span class="kpi-card__label">Capacité</span>
+          <strong class="kpi-card__value">0 / {{ sujet.capaciteAccueil }}</strong>
+        </div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-card__icon kpi-card__icon--amber" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </span>
+        <div>
+          <span class="kpi-card__label">Soumission</span>
+          <strong class="kpi-card__value">{{ formatDate(sujet.dateSoumission) }}</strong>
+        </div>
+      </article>
+      <article class="kpi-card kpi-card--highlight">
+        <span class="kpi-card__icon kpi-card__icon--violet" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </span>
+        <div>
+          <span class="kpi-card__label">Score final</span>
+          <strong class="kpi-card__value">{{ scoreFinalLabel }}</strong>
+        </div>
+      </article>
+      <article class="kpi-card kpi-card--highlight">
+        <span class="kpi-card__icon kpi-card__icon--green" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </span>
+        <div>
+          <span class="kpi-card__label">Éligibilité</span>
+          <span class="eligibility-pill" [ngClass]="eligibilityClass">{{ eligibilityLabel }}</span>
+        </div>
+      </article>
     </div>
 
     @if (sujet.motifInvalidation) {
-      <div class="motif-banner">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
+      <div class="motif-banner" role="alert">
+        <span class="motif-banner__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </span>
         <div>
           <strong>Motif de refus</strong>
           <p>{{ sujet.motifInvalidation }}</p>
@@ -83,66 +170,107 @@
     }
 
     <div class="detail-layout">
-      <article class="detail-panel">
-        <section class="detail-section">
-          <h2>Description</h2>
-          <p>{{ sujet.description }}</p>
-        </section>
+      <div class="detail-main">
+        <article class="content-card">
+          <section class="content-section">
+            <div class="content-section__head">
+              <span class="content-section__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+              </span>
+              <h2>Description</h2>
+            </div>
+            <p>{{ sujet.description }}</p>
+          </section>
 
-        <section class="detail-section">
-          <h2>Objectifs</h2>
-          <ul class="objectifs-list">
-            @for (line of getObjectifLines(); track $index) {
-              <li>
-                <span class="objectifs-list__check" aria-hidden="true">
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2 5L4 7L8 3" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </span>
-                {{ line }}
-              </li>
+          <section class="content-section">
+            <div class="content-section__head">
+              <span class="content-section__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </span>
+              <h2>Objectifs</h2>
+            </div>
+            <ul class="objectifs-list">
+              @for (line of getObjectifLines(); track $index) {
+                <li>
+                  <span class="objectifs-list__check" aria-hidden="true">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5L4 7L8 3" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                  {{ line }}
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="content-section content-section--last">
+            <div class="content-section__head">
+              <span class="content-section__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </span>
+              <h2>Prérequis</h2>
+            </div>
+            @if (sujet.prerequis.length) {
+              <div class="tags">
+                @for (item of sujet.prerequis; track item) {
+                  <span class="tag tag--grey">{{ item }}</span>
+                }
+              </div>
+            } @else {
+              <p class="muted">Aucun prérequis renseigné.</p>
             }
-          </ul>
-        </section>
+          </section>
+        </article>
+      </div>
 
-        <section class="detail-section detail-section--last">
-          <h2>Prérequis</h2>
-          <p>{{ sujet.prerequis.join(', ') }}</p>
-        </section>
-      </article>
-
-      <aside class="detail-sidebar">
-        <div class="sidebar-card">
-          <h3>Technologies</h3>
+      <aside class="detail-aside">
+        <div class="aside-card">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            Technologies
+          </h3>
           <div class="tags">
             @for (tech of sujet.technologies; track tech; let i = $index) {
               <span class="tag" [ngClass]="getTechColor(i)">{{ tech }}</span>
+            } @empty {
+              <span class="muted">Aucune technologie.</span>
             }
           </div>
         </div>
 
-        <div class="sidebar-card">
-          <h3>Prérequis / Classes cibles</h3>
-          <div class="tags">
-            @for (item of sujet.prerequis; track item) {
-              <span class="tag tag--grey">{{ item }}</span>
-            }
-          </div>
-        </div>
-
-        <div class="sidebar-card">
-          <h3>Informations complémentaires</h3>
+        <div class="aside-card">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            Informations
+          </h3>
           <dl class="meta-list">
             <div class="meta-list__row">
               <dt>Statut</dt>
               <dd><span class="badge badge--sm" [ngClass]="getStatutClass(sujet.statut)">{{ statutLabel }}</span></dd>
             </div>
             <div class="meta-list__row">
-              <dt>Date création</dt>
+              <dt>Création</dt>
               <dd>{{ formatDate(sujet.dateCreation) }}</dd>
             </div>
             <div class="meta-list__row">
-              <dt>Date validation</dt>
+              <dt>Validation</dt>
               <dd>{{ formatDate(sujet.dateValidation) }}</dd>
             </div>
             <div class="meta-list__row">

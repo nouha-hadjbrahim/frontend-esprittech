@@ -2,13 +2,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AccueilStats } from '../core/models/accueil-stats.model';
 import { User } from '../core/models/user.model';
+import { AccueilService } from '../core/services/accueil.service';
 import { AuthService } from '../core/services/auth.service';
 import { SignUpComponent } from './sign-up.component';
 
 describe('SignUpComponent', () => {
   let component: SignUpComponent;
   let authService: jasmine.SpyObj<AuthService>;
+  let accueilService: jasmine.SpyObj<AccueilService>;
   let router: jasmine.SpyObj<Router>;
 
   const validValues = {
@@ -23,13 +26,18 @@ describe('SignUpComponent', () => {
     authService = jasmine.createSpyObj<AuthService>('AuthService', [
       'startRegister', 'verifyEmail', 'resendCode', 'landingRoute',
     ]);
+    accueilService = jasmine.createSpyObj<AccueilService>('AccueilService', ['getStats']);
     router = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
     authService.landingRoute.and.returnValue('/frontoffice/accueil');
+    accueilService.getStats.and.returnValue(
+      of({ projetsActifs: 12, etudiants: 40, encadrants: 8, equipesRdi: 5, industrialises: 3 } as AccueilStats),
+    );
 
     TestBed.configureTestingModule({
       imports: [SignUpComponent],
       providers: [
         { provide: AuthService, useValue: authService },
+        { provide: AccueilService, useValue: accueilService },
         { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: {} },
       ],

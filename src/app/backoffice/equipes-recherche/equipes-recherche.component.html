@@ -2,35 +2,53 @@
   <div class="page-header">
     <div class="header-text">
       <h1>Équipes de recherche</h1>
-      <p>Gérez les équipes de recherche.</p>
+      <p>Gérez les équipes, leurs chefs, domaines et demandes d’affiliation.</p>
     </div>
     <button type="button" class="add-btn" (click)="ouvrirCreation()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>
-      Nouvelle équipe
+      Ajouter
     </button>
   </div>
 
   <div class="stats-grid">
-    <app-card class="stat-card" *ngFor="let s of stats()">
-      <div class="stat-inner">
-        <div class="stat-icon {{ s.color }}">
-          <mat-icon>{{ s.icon }}</mat-icon>
-        </div>
-        <div>
+    @for (s of stats(); track s.label) {
+      <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">
+          @if (s.icon === 'teams') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          } @else if (s.icon === 'members') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <line x1="19" y1="8" x2="19" y2="14"></line>
+              <line x1="22" y1="11" x2="16" y2="11"></line>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          }
+        </span>
+        <div class="stat-text">
           <div class="stat-val">{{ s.value }}</div>
           <div class="stat-lbl">{{ s.label }}</div>
         </div>
-      </div>
-    </app-card>
+      </article>
+    }
   </div>
 
   <div class="table-container">
     <div class="table-actions">
       <div class="search-field">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0a8a8" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
@@ -38,18 +56,61 @@
         <input
           id="equipe-search"
           type="text"
-          placeholder="Rechercher une équipe…"
+          placeholder="Nom, chef, domaine…"
           [(ngModel)]="query"
           (ngModelChange)="appliquerFiltre()"
         />
       </div>
-      <div class="view-toggle">
-        <button app-button variant="ghost" size="sm" [class.active]="vue === 'grille'" (click)="vue = 'grille'">
-          <mat-icon class="icon-sm">grid_view</mat-icon> Cartes
-        </button>
-        <button app-button variant="ghost" size="sm" [class.active]="vue === 'liste'" (click)="vue = 'liste'">
-          <mat-icon class="icon-sm">list</mat-icon> Liste
-        </button>
+
+      <div class="filters-group">
+        <div class="filter-dropdown" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.filter-pill--open]="openFilter() === 'statut'"
+            (click)="toggleFilter('statut', $event)"
+          >
+            <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="8" y1="12" x2="20" y2="12"></line>
+              <line x1="12" y1="18" x2="20" y2="18"></line>
+              <circle cx="6" cy="12" r="2"></circle>
+              <circle cx="10" cy="18" r="2"></circle>
+            </svg>
+            <span class="filter-pill__label">{{ statutFilterLabel }}</span>
+            <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          @if (openFilter() === 'statut') {
+            <div class="filter-menu" role="listbox">
+              @for (opt of statutOptions; track opt.value) {
+                <button
+                  type="button"
+                  class="filter-option"
+                  [class.filter-option--active]="selectedStatut === opt.value"
+                  (click)="selectStatutFilter(opt.value)"
+                >
+                  <span>{{ opt.label }}</span>
+                  @if (selectedStatut === opt.value) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="view-toggle">
+          <button type="button" class="view-btn" [class.active]="vue === 'liste'" (click)="vue = 'liste'" title="Liste">
+            <mat-icon class="icon-sm">list</mat-icon>
+          </button>
+          <button type="button" class="view-btn" [class.active]="vue === 'grille'" (click)="vue = 'grille'" title="Cartes">
+            <mat-icon class="icon-sm">grid_view</mat-icon>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -74,7 +135,7 @@
               <td colspan="7" class="empty-row">Aucune équipe</td>
             </tr>
           } @else {
-            @for (e of filtered; track e.id) {
+            @for (e of pagedItems; track e.id) {
               <tr>
                 <td>
                   <div class="subject-cell">
@@ -97,7 +158,7 @@
                   }
                 </td>
                 <td>
-                  <span class="type-badge badge-domaine">{{ e.domaine }}</span>
+                  <span class="type-badge" [ngClass]="domaineBadgeClass(e.domaine)">{{ e.domaine }}</span>
                 </td>
                 <td>
                   <span class="equipe-text">{{ e.nbMembres }}</span>
@@ -106,11 +167,8 @@
                   <span class="equipe-text">{{ e.createdAt | date:'dd/MM/yyyy' }}</span>
                 </td>
                 <td>
-                  <span
-                    class="status-badge"
-                    [class.status-actif]="e.statut === 'Actif'"
-                    [class.status-inactif]="e.statut !== 'Actif'"
-                  >
+                  <span class="status-badge" [ngClass]="statutBadgeClass(e.statut)">
+                    <span class="status-dot" [class.dot-actif]="e.statut === 'Actif'" [class.dot-inactif]="e.statut !== 'Actif'" aria-hidden="true"></span>
                     {{ e.statut }}
                   </span>
                 </td>
@@ -151,58 +209,125 @@
         @if (filtered.length === 0) {
           <div class="center-msg">Aucune équipe</div>
         } @else {
-          @for (e of filtered; track e.id) {
-            <app-card class="team-card">
-              <div class="card-head-row">
-                <app-badge variant="outline" class="badge-xs">{{ e.domaine }}</app-badge>
-                <div class="card-head-right">
-                  @if (pendingCountByEquipeId().get(e.id); as count) {
-                    <span class="pending-badge" matTooltip="{{ count }} demande(s) en attente">
-                      <mat-icon class="pending-icon">notifications</mat-icon>
-                      <span class="pending-count">{{ count }}</span>
+          @for (e of pagedItems; track e.id) {
+            <article class="team-card">
+              <div class="card-top">
+                <div class="card-avatar" aria-hidden="true">{{ getInitial(e.nom) }}</div>
+                <div class="card-top-main">
+                  <div class="card-title-row">
+                    <h3 class="team-name">{{ e.nom }}</h3>
+                    @if (pendingCountByEquipeId().get(e.id); as count) {
+                      <span class="pending-badge" matTooltip="{{ count }} demande(s) en attente">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="pending-count">{{ count }}</span>
+                      </span>
+                    }
+                  </div>
+                  <div class="card-badges">
+                    <span class="type-badge" [ngClass]="domaineBadgeClass(e.domaine)">{{ e.domaine }}</span>
+                    <span class="status-badge" [ngClass]="statutBadgeClass(e.statut)">
+                      <span class="status-dot" [class.dot-actif]="e.statut === 'Actif'" [class.dot-inactif]="e.statut !== 'Actif'" aria-hidden="true"></span>
+                      {{ e.statut }}
                     </span>
-                  }
-                  <app-badge variant="outline" [class.badge-success]="e.statut === 'Actif'">
-                    {{ e.statut }}
-                  </app-badge>
+                  </div>
                 </div>
               </div>
-              <h3 class="team-name">{{ e.nom }}</h3>
-              <div class="leader-row">
-                <mat-icon [class.chef]="!!e.chef" [class.muted]="!e.chef" class="leader-icon">star</mat-icon>
-                <span [class.no-chef]="!e.chef">{{ e.chef ? (e.chef.prenom + ' ' + e.chef.nom) : 'Aucun chef désigné' }}</span>
-                <button
-                  [class.invisible]="!!e.chef"
-                  app-button
-                  variant="ghost"
-                  size="sm"
-                  class="btn-assign-chef"
-                  (click)="ouvrirAssignerChef(e); $event.stopPropagation()"
-                  matTooltip="Assigner un chef"
-                >
-                  <mat-icon class="icon-xs">person_add</mat-icon> Assigner
-                </button>
+
+              <div class="card-info">
+                <div class="info-line">
+                  <span class="info-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                  </span>
+                  <span class="info-text" [class.no-chef]="!e.chef">
+                    {{ e.chef ? (e.chef.prenom + ' ' + e.chef.nom) : 'Aucun chef désigné' }}
+                  </span>
+                  @if (!e.chef) {
+                    <button type="button" class="btn-assign-chef" (click)="ouvrirAssignerChef(e); $event.stopPropagation()" matTooltip="Assigner un chef">
+                      Assigner
+                    </button>
+                  }
+                </div>
+                <div class="info-meta">
+                  <span class="info-line">
+                    <span class="info-icon" aria-hidden="true">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                    </span>
+                    {{ e.nbMembres }} membre{{ e.nbMembres !== 1 ? 's' : '' }}
+                  </span>
+                  <span class="info-line">
+                    <span class="info-icon" aria-hidden="true">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                    </span>
+                    {{ e.createdAt | date:'dd/MM/yyyy' }}
+                  </span>
+                </div>
               </div>
-              <div class="meta-row">
-                <span><mat-icon class="mi">group</mat-icon>{{ e.nbMembres }} membre{{ e.nbMembres !== 1 ? 's' : '' }}</span>
-                <span><mat-icon class="mi">calendar_today</mat-icon>{{ e.createdAt | date:'dd/MM/yyyy' }}</span>
-              </div>
+
               <div class="card-actions">
-                <button app-button variant="outline" size="sm" class="flex-1" (click)="ouvrirDetails(e)">
-                  <mat-icon class="icon-xs">visibility</mat-icon> Voir détails
+                <button type="button" class="btn-details" (click)="ouvrirDetails(e)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Voir détails
                 </button>
-                <button class="action-btn edit" matTooltip="Modifier" (click)="ouvrirModification(e)">
-                  <mat-icon>edit</mat-icon>
+                <button type="button" class="icon-btn-action edit" title="Modifier" (click)="ouvrirModification(e)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                  </svg>
                 </button>
-                <span [matTooltip]="e.nbMembres > 0 ? 'Videz d\'abord l\'équipe' : 'Supprimer'">
-                  <button class="action-btn delete" (click)="supprimer(e)" [disabled]="e.nbMembres > 0">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </span>
+                <button
+                  type="button"
+                  class="icon-btn-action delete"
+                  title="{{ e.nbMembres > 0 ? 'Videz d\'abord l\'équipe' : 'Supprimer' }}"
+                  [disabled]="e.nbMembres > 0"
+                  (click)="supprimer(e)"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
               </div>
-            </app-card>
+            </article>
           }
         }
+      </div>
+    }
+
+    @if (!chargement && totalElements > 0) {
+      <div class="pagination">
+        <span class="pagination-info">
+          Affichage de <strong>{{ pageDisplayCount }}</strong> sur <strong>{{ totalElements }}</strong> équipes
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-btn" [disabled]="first" (click)="prevPage()">Précédent</button>
+          @for (p of pageNumbers; track p) {
+            <button
+              type="button"
+              class="page-num"
+              [class.page-num--active]="p === page + 1"
+              (click)="goToPage(p - 1)"
+              [attr.aria-current]="p === page + 1 ? 'page' : null"
+            >{{ p }}</button>
+          }
+          <button type="button" class="page-btn" [disabled]="last" (click)="nextPage()">Suivant</button>
+        </div>
       </div>
     }
   </div>

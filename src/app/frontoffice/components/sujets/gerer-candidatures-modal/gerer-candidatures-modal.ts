@@ -140,10 +140,12 @@ export class GererCandidaturesModal implements OnChanges {
     });
   }
 
+  get canTraiterDemandes(): boolean {
+    return this.sujet?.statut === 'CANDIDATURE_OUVERTE';
+  }
+
   get showCandidatures(): boolean {
-    const statut = this.sujet?.statut;
-    return statut === 'CANDIDATURE_OUVERTE'
-      || statut === 'REALISATION_EN_COURS' || statut === 'REALISATION_TERMINEE';
+    return this.canTraiterDemandes;
   }
 
   accepterCandidature(candidature: Candidature): void {
@@ -193,7 +195,12 @@ export class GererCandidaturesModal implements OnChanges {
 
   get showAffectations(): boolean {
     const statut = this.sujet?.statut;
-    return statut === 'REALISATION_EN_COURS' || statut === 'REALISATION_TERMINEE';
+    return (
+      statut === 'CANDIDATURE_OUVERTE' ||
+      statut === 'REALISATION_EN_COURS' ||
+      statut === 'REALISATION_TERMINEE' ||
+      this.affectations.length > 0
+    );
   }
 
   get affectationsActives(): Affectation[] {
@@ -204,8 +211,16 @@ export class GererCandidaturesModal implements OnChanges {
     return this.affectations.filter((a) => a.statut === 'RETIREE_ARCHIVEE');
   }
 
+  get canRetirerMembre(): boolean {
+    return this.sujet?.statut === 'REALISATION_EN_COURS';
+  }
+
   get canTerminer(): boolean {
     return this.sujet?.statut === 'REALISATION_EN_COURS';
+  }
+
+  get isTermine(): boolean {
+    return this.sujet?.statut === 'REALISATION_TERMINEE';
   }
 
   declarerTerminaison(): void {
@@ -253,9 +268,13 @@ export class GererCandidaturesModal implements OnChanges {
   }
 
   getInitials(candidature: Candidature): string {
-    const prenom = candidature.etudiantPrenom?.trim().charAt(0) ?? '';
-    const nom = candidature.etudiantNom?.trim().charAt(0) ?? '';
-    return `${prenom}${nom}`.toUpperCase() || '?';
+    return this.getInitialsFromName(candidature.etudiantPrenom, candidature.etudiantNom);
+  }
+
+  getInitialsFromName(prenom?: string | null, nom?: string | null): string {
+    const p = prenom?.trim().charAt(0) ?? '';
+    const n = nom?.trim().charAt(0) ?? '';
+    return `${p}${n}`.toUpperCase() || '?';
   }
 
   private extractError(err: unknown, fallback: string): string {

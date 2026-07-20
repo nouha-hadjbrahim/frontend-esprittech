@@ -10,7 +10,6 @@ import { SubjectsComponent } from './subjects/subjects.component';
 import { SubjectDetailComponent } from './subjects/subject-detail/subject-detail.component';
 import { FormulairesComponent } from './subjects/formulaires/formulaires.component';
 import { CatalogComponent } from './catalog/catalog.component';
-import { ApplicationsComponent } from './applications/applications.component';
 import { SupervisorsComponent } from './supervisors/supervisors.component';
 import { HistoryComponent } from './history/history.component';
 import { SettingsComponent } from './settings/settings.component';
@@ -37,7 +36,7 @@ export const backofficeRoutes: Routes = [
           import('../frontoffice/pages/projet-detail-enseignant/projet-detail-enseignant')
             .then(m => m.ProjetDetailEnseignant)
       },
-      { path: 'applications', component: ApplicationsComponent },
+      { path: 'applications', redirectTo: 'subjects', pathMatch: 'full' },
       { path: 'equipes-recherche', component: EquipesRechercheComponent },
       { path: 'equipes-recherche/domaines', component: DomainesComponent },
       { path: 'equipes-recherche/demandes', component: DemandesAffiliationComponent },

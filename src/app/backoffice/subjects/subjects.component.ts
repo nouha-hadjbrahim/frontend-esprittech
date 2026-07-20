@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
@@ -8,9 +8,11 @@ import { CategorieSujet, StatutSujet, SujetProjet } from '../../core/models/suje
 import { AdminService } from '../../core/services/admin.service';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { DeposerSujetModal } from '../../frontoffice/components/sujets/deposer-sujet-modal/deposer-sujet-modal';
+import { GererCandidaturesModal } from '../../frontoffice/components/sujets/gerer-candidatures-modal/gerer-candidatures-modal';
 import { CATEGORIE_LABELS, MES_SUJETS_STATUT_STYLES, STATUT_LABELS } from '../../frontoffice/constants/sujet-projet.constants';
 
 type SubjectTab = 'sujets' | 'demandes' | 'disponibles';
+type FilterKey = 'categorie' | 'statut';
 
 interface TabConfig {
   id: SubjectTab;
@@ -20,7 +22,7 @@ interface TabConfig {
 @Component({
   selector: 'app-subjects',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmDialog, DeposerSujetModal],
+  imports: [CommonModule, FormsModule, ConfirmDialog, DeposerSujetModal, GererCandidaturesModal],
   templateUrl: './subjects.component.html',
   styleUrl: './subjects.component.css',
 })
@@ -53,6 +55,7 @@ export class SubjectsComponent implements OnInit, OnDestroy {
   searchTerm = '';
   selectedCategorie = '';
   selectedStatut = '';
+  readonly openFilter = signal<FilterKey | null>(null);
 
   validateConfirmOpen = false;
   rejectDialogOpen = false;
@@ -70,6 +73,9 @@ export class SubjectsComponent implements OnInit, OnDestroy {
   editModalOpen = false;
   createModalOpen = false;
   sujetToEdit?: SujetProjet;
+
+  candidaturesModalOpen = false;
+  sujetCandidatures?: SujetProjet;
 
   readonly categorieOptions = [
     { value: '', label: 'Tous les types' },
@@ -122,9 +128,23 @@ export class SubjectsComponent implements OnInit, OnDestroy {
   }
 
   get paginationLabel(): string {
-    if (this.activeTab === 'demandes') return 'demande(s)';
-    if (this.activeTab === 'disponibles') return 'sujet(s) disponible(s)';
-    return 'sujet(s)';
+    if (this.activeTab === 'demandes') return 'demandes';
+    if (this.activeTab === 'disponibles') return 'sujets';
+    return 'sujets';
+  }
+
+  get pageDisplayCount(): number {
+    return this.sujets.length;
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i + 1);
+  }
+
+  goToPage(newPage: number): void {
+    if (newPage < 0 || newPage >= this.totalPages || newPage === this.page) return;
+    this.page = newPage;
+    this.loadData();
   }
 
   switchTab(tab: SubjectTab): void {
@@ -132,6 +152,7 @@ export class SubjectsComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
     this.page = 0;
     this.selectedStatut = '';
+    this.openFilter.set(null);
     this.loadData();
   }
 
@@ -139,16 +160,44 @@ export class SubjectsComponent implements OnInit, OnDestroy {
     this.search$.next(value);
   }
 
-  onCategorieFilter(value: string): void {
+  get categorieFilterLabel(): string {
+    return this.categorieOptions.find((o) => o.value === this.selectedCategorie)?.label ?? 'Tous les types';
+  }
+
+  get statutFilterLabel(): string {
+    return this.statutOptions.find((o) => o.value === this.selectedStatut)?.label ?? 'Tous les statuts';
+  }
+
+  @HostListener('document:click')
+  closeFiltersOnOutsideClick(): void {
+    this.openFilter.set(null);
+  }
+
+  toggleFilter(filter: FilterKey, event: Event): void {
+    event.stopPropagation();
+    this.openFilter.update((current) => (current === filter ? null : filter));
+  }
+
+  selectCategorieFilter(value: string): void {
     this.selectedCategorie = value;
+    this.openFilter.set(null);
     this.page = 0;
     this.loadData();
   }
 
-  onStatutFilter(value: string): void {
+  selectStatutFilter(value: string): void {
     this.selectedStatut = value;
+    this.openFilter.set(null);
     this.page = 0;
     this.loadData();
+  }
+
+  onCategorieFilter(value: string): void {
+    this.selectCategorieFilter(value);
+  }
+
+  onStatutFilter(value: string): void {
+    this.selectStatutFilter(value);
   }
 
   prevPage(): void {
@@ -183,6 +232,10 @@ export class SubjectsComponent implements OnInit, OnDestroy {
 
   getStatutClass(statut: StatutSujet): string {
     return MES_SUJETS_STATUT_STYLES[statut]?.listClass ?? 'badge--neutral';
+  }
+
+  getStatutDotClass(statut: StatutSujet): string {
+    return MES_SUJETS_STATUT_STYLES[statut]?.cardDotClass ?? 'status-dot--neutral';
   }
 
   viewDetails(sujet: SujetProjet): void {
@@ -223,6 +276,20 @@ export class SubjectsComponent implements OnInit, OnDestroy {
 
   onEditSaved(): void {
     this.closeEditModal();
+    this.loadData();
+  }
+
+  openCandidaturesModal(sujet: SujetProjet): void {
+    this.sujetCandidatures = sujet;
+    this.candidaturesModalOpen = true;
+  }
+
+  closeCandidaturesModal(): void {
+    this.candidaturesModalOpen = false;
+    this.sujetCandidatures = undefined;
+  }
+
+  onCandidaturesChanged(): void {
     this.loadData();
   }
 
@@ -383,6 +450,10 @@ export class SubjectsComponent implements OnInit, OnDestroy {
         this.first = res.first;
         this.last = res.last;
         this.loading.set(false);
+        if (this.candidaturesModalOpen && this.sujetCandidatures) {
+          this.sujetCandidatures =
+            this.sujets.find((s) => s.id === this.sujetCandidatures?.id) ?? this.sujetCandidatures;
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);

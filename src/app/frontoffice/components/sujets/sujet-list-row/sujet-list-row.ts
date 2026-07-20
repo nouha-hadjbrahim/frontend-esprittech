@@ -101,7 +101,7 @@ export class SujetListRow {
   }
 
   get showCandidaturesAction(): boolean {
-    return this.sujet.statut === 'VALIDE' || this.sujet.statut === 'CANDIDATURE_OUVERTE';
+    return true;
   }
 
   onEdit(event: Event): void {

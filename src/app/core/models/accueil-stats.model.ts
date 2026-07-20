@@ -3,4 +3,5 @@ export interface AccueilStats {
   etudiants: number;
   encadrants: number;
   equipesRdi: number;
+  industrialises: number;
 }

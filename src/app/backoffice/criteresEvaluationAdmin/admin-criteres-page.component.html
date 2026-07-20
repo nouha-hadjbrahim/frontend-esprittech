@@ -1,208 +1,458 @@
-<div class="criteres-container">
+<div class="criteres-page">
   <div class="page-header">
-    <h1>Criteres d'evaluation des projets</h1>
-    <p class="subtitle">Gestion des criteres, ponderations et niveaux de note utilises par l'analyse ML des livrables.</p>
+    <div class="header-text">
+      <h1>Critères d'évaluation</h1>
+      <p>Gestion des critères, pondérations et niveaux de note utilisés par l'analyse ML des livrables.</p>
+    </div>
   </div>
 
   <div *ngIf="successMessage()" class="alert alert-success">{{ successMessage() }}</div>
   <div *ngIf="warningMessage()" class="alert alert-warning">{{ warningMessage() }}</div>
   <div *ngIf="errorMessage()" class="alert alert-error">{{ errorMessage() }}</div>
 
+  <div class="stats-grid">
+    @for (s of statsCards(); track s.label) {
+      <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">
+          @if (s.icon === 'levels') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+          } @else if (s.icon === 'elim') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          } @else if (s.icon === 'notes') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          }
+        </span>
+        <div class="stat-text">
+          <div class="stat-val">{{ s.value }}</div>
+          <div class="stat-lbl">{{ s.label }}</div>
+        </div>
+      </article>
+    }
+  </div>
+
+  <!-- Niveaux de note -->
   <section class="criteres-section">
     <div class="section-header">
       <div>
-        <h2>Niveaux de note configurables</h2>
-        <p class="section-meta">{{ noteLevels().length }} niveau(x) configure(s)</p>
+        <h2>Niveaux de note</h2>
+        <p class="section-meta">{{ noteLevels().length }} niveau(x) configuré(s)</p>
       </div>
       <button class="btn btn-primary" type="button" (click)="openNoteLevelModal()" [disabled]="operationInProgress()">+ Ajouter</button>
     </div>
 
-    <div class="table-responsive">
-      <table class="criteria-table">
-        <thead>
-          <tr>
-            <th>Ordre</th>
-            <th>Valeur</th>
-            <th>Libelle</th>
-            <th>Description</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let level of noteLevels()" [class.inactive]="!level.active">
-            <td class="text-center">{{ level.order }}</td>
-            <td class="text-center"><strong>{{ level.value }}</strong></td>
-            <td>{{ level.label }}</td>
-            <td>{{ level.description || '-' }}</td>
-            <td class="text-center">
-              <span [class]="'badge badge-' + (level.active ? 'success' : 'secondary')">
-                {{ level.active ? 'Actif' : 'Inactif' }}
-              </span>
-            </td>
-            <td class="actions">
-              <button class="icon-btn-action delete" type="button" title="Supprimer" [disabled]="operationInProgress()" (click)="deleteNoteLevel(level)">x</button>
-              <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openNoteLevelModal(level)">Edit</button>
-              <button class="icon-btn-action" type="button" [title]="level.active ? 'Desactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleNoteLevel(level)">On</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="table-container table-container--flush">
+      @if (noteLevels().length === 0) {
+        <div class="empty-row">Aucun niveau de note configuré.</div>
+      } @else {
+        <table class="subjects-table">
+          <thead>
+            <tr>
+              <th>Ordre</th>
+              <th>Valeur</th>
+              <th>Libellé</th>
+              <th>Description</th>
+              <th>Statut</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let level of noteLevels()" [class.inactive]="!level.active">
+              <td>{{ level.order }}</td>
+              <td><strong>{{ level.value }}</strong></td>
+              <td>{{ level.label }}</td>
+              <td>{{ level.description || '—' }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.badge--active]="level.active"
+                  [class.badge--inactive]="!level.active"
+                >
+                  <span class="status-dot" [class.dot-active]="level.active" [class.dot-inactive]="!level.active"></span>
+                  {{ level.active ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td class="text-right">
+                <div class="actions-group">
+                  <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openNoteLevelModal(level)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                  </button>
+                  <button class="icon-btn-action" type="button" [class.activate]="!level.active" [class.deactivate]="level.active" [title]="level.active ? 'Désactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleNoteLevel(level)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M12 2v10"></path>
+                      <path d="M18.4 6.6a8 8 0 1 1-12.8 0"></path>
+                    </svg>
+                  </button>
+                  <button class="icon-btn-action delete" type="button" title="Supprimer" [disabled]="operationInProgress()" (click)="deleteNoteLevel(level)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      }
     </div>
   </section>
 
+  <!-- Critères éliminatoires -->
   <section class="criteres-section">
     <div class="section-header">
       <div>
-        <h2>Criteres eliminatoires</h2>
-        <p class="section-meta">{{ filteredEliminatoires().length }} / {{ eliminatoiresCount }} criteres - {{ eliminatoiresActiveCount }} actifs</p>
+        <h2>Critères éliminatoires</h2>
+        <p class="section-meta">{{ filteredEliminatoires().length }} / {{ eliminatoiresCount }} critères — {{ eliminatoiresActiveCount }} actifs</p>
       </div>
-      <div class="section-tools">
-        <label class="search-field" for="search-eliminatoires">
-          <span class="search-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </span>
-          <input id="search-eliminatoires" type="search" placeholder="Rechercher..." [value]="eliminatoiresSearch()" (input)="updateEliminatoiresSearch($any($event.target).value)" />
-        </label>
-        <button class="btn btn-primary" type="button" (click)="openCreateModal('eliminatoire')" [disabled]="operationInProgress()">+ Ajouter</button>
-      </div>
+      <button class="btn btn-primary" type="button" (click)="openCreateModal('eliminatoire')" [disabled]="operationInProgress()">+ Ajouter</button>
     </div>
 
-    <div *ngIf="errorEliminatoires()" class="alert alert-error">{{ errorEliminatoires() }}</div>
-    <div *ngIf="loadingEliminatoires()" class="loading">Chargement...</div>
-    <div *ngIf="!loadingEliminatoires() && filteredEliminatoires().length === 0" class="empty-state">
-      <p>Aucun critere eliminatoire.</p>
-    </div>
+    <div class="table-container">
+      <div class="table-actions">
+        <div class="search-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0a8a8" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <label for="search-eliminatoires" class="sr-only">Rechercher un critère éliminatoire</label>
+          <input
+            id="search-eliminatoires"
+            class="search-field__input"
+            type="search"
+            placeholder="Libellé, domaine, statut…"
+            [ngModel]="eliminatoiresSearch()"
+            (ngModelChange)="updateEliminatoiresSearch($event)"
+          />
+        </div>
 
-    <div *ngIf="!loadingEliminatoires() && filteredEliminatoires().length > 0" class="table-responsive">
-      <table class="criteria-table">
-        <thead>
-          <tr>
-            <th>Ordre</th>
-            <th>Libelle</th>
-            <th>Domaine</th>
-            <th>Reponse attendue</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let crit of visibleEliminatoires" [class.inactive]="!crit.actif">
-            <td class="text-center">{{ crit.ordre }}</td>
-            <td>
-              <strong>{{ crit.libelle }}</strong>
-              <p *ngIf="crit.description" class="description">{{ crit.description }}</p>
-            </td>
-            <td>{{ crit.domaine }}</td>
-            <td class="text-center">
-              <span [class]="'badge badge-' + (crit.reponseAttendue === 'OK' ? 'success' : 'danger')">{{ crit.reponseAttendue }}</span>
-            </td>
-            <td class="text-center">
-              <span [class]="'badge badge-' + (crit.actif ? 'success' : 'secondary')">{{ crit.actif ? 'Actif' : 'Inactif' }}</span>
-            </td>
-            <td class="actions">
-              <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openEditModal('eliminatoire', crit)">Edit</button>
-              <button class="icon-btn-action" type="button" [title]="crit.actif ? 'Desactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleActivation('eliminatoire', crit)">On</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="pagination-footer">
-        <span>Page {{ eliminatoiresPage() }} / {{ eliminatoiresTotalPages }}</span>
-        <div class="pagination-controls">
-          <button class="btn btn-sm btn-secondary" type="button" (click)="goToEliminatoiresPage(eliminatoiresPage() - 1)" [disabled]="eliminatoiresPage() === 1">Precedent</button>
-          <button class="btn btn-sm btn-secondary" type="button" (click)="goToEliminatoiresPage(eliminatoiresPage() + 1)" [disabled]="eliminatoiresPage() === eliminatoiresTotalPages">Suivant</button>
+        <div class="filters-group">
+          <div class="filter-dropdown" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="filter-pill"
+              [class.filter-pill--open]="openFilter() === 'statutElim'"
+              (click)="toggleFilter('statutElim', $event)"
+            >
+              <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="8" y1="12" x2="20" y2="12"></line>
+                <line x1="12" y1="18" x2="20" y2="18"></line>
+                <circle cx="6" cy="12" r="2"></circle>
+                <circle cx="10" cy="18" r="2"></circle>
+              </svg>
+              <span class="filter-pill__label">{{ statutElimFilterLabel }}</span>
+              <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            @if (openFilter() === 'statutElim') {
+              <div class="filter-menu" role="listbox">
+                @for (opt of statutOptions; track opt.value) {
+                  <button
+                    type="button"
+                    class="filter-option"
+                    [class.filter-option--active]="selectedStatutElim() === opt.value"
+                    (click)="selectStatutElimFilter(opt.value)"
+                  >
+                    <span>{{ opt.label }}</span>
+                    @if (selectedStatutElim() === opt.value) {
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
         </div>
       </div>
+
+      <div *ngIf="errorEliminatoires()" class="alert alert-error alert--inset">{{ errorEliminatoires() }}</div>
+
+      @if (loadingEliminatoires()) {
+        <div class="empty-row">Chargement…</div>
+      } @else if (filteredEliminatoires().length === 0) {
+        <div class="empty-row">Aucun critère éliminatoire.</div>
+      } @else {
+        <table class="subjects-table">
+          <thead>
+            <tr>
+              <th>Ordre</th>
+              <th>Libellé</th>
+              <th>Domaine</th>
+              <th>Réponse attendue</th>
+              <th>Statut</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let crit of visibleEliminatoires" [class.inactive]="!crit.actif">
+              <td>{{ crit.ordre }}</td>
+              <td>
+                <div class="subject-info">
+                  <span class="subject-title">{{ crit.libelle }}</span>
+                  <span *ngIf="crit.description" class="subject-meta">{{ crit.description }}</span>
+                </div>
+              </td>
+              <td>{{ crit.domaine }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.badge--ok]="crit.reponseAttendue === 'OK'"
+                  [class.badge--ko]="crit.reponseAttendue !== 'OK'"
+                >
+                  <span class="status-dot" [class.dot-ok]="crit.reponseAttendue === 'OK'" [class.dot-ko]="crit.reponseAttendue !== 'OK'"></span>
+                  {{ crit.reponseAttendue }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.badge--active]="crit.actif"
+                  [class.badge--inactive]="!crit.actif"
+                >
+                  <span class="status-dot" [class.dot-active]="crit.actif" [class.dot-inactive]="!crit.actif"></span>
+                  {{ crit.actif ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td class="text-right">
+                <div class="actions-group">
+                  <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openEditModal('eliminatoire', crit)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                  </button>
+                  <button class="icon-btn-action" type="button" [class.activate]="!crit.actif" [class.deactivate]="crit.actif" [title]="crit.actif ? 'Désactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleActivation('eliminatoire', crit)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M12 2v10"></path>
+                      <path d="M18.4 6.6a8 8 0 1 1-12.8 0"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <span class="pagination-info">
+            Affichage de <strong>{{ visibleEliminatoires.length }}</strong> sur <strong>{{ filteredEliminatoires().length }}</strong> critères
+          </span>
+          <div class="pagination-controls">
+            <button class="page-btn" type="button" (click)="goToEliminatoiresPage(eliminatoiresPage() - 1)" [disabled]="eliminatoiresPage() === 1">Précédent</button>
+            @for (p of eliminatoiresPageNumbers; track p) {
+              <button
+                type="button"
+                class="page-num"
+                [class.page-num--active]="p === eliminatoiresPage()"
+                (click)="goToEliminatoiresPage(p)"
+                [attr.aria-current]="p === eliminatoiresPage() ? 'page' : null"
+              >{{ p }}</button>
+            }
+            <button class="page-btn" type="button" (click)="goToEliminatoiresPage(eliminatoiresPage() + 1)" [disabled]="eliminatoiresPage() === eliminatoiresTotalPages">Suivant</button>
+          </div>
+        </div>
+      }
     </div>
   </section>
 
+  <!-- Critères notes -->
   <section class="criteres-section">
     <div class="section-header">
       <div>
-        <h2>Criteres notes</h2>
-        <p class="section-meta">{{ filteredNotes().length }} / {{ notesCount }} criteres - {{ notesActiveCount }} actifs</p>
+        <h2>Critères notes</h2>
+        <p class="section-meta">{{ filteredNotes().length }} / {{ notesCount }} critères — {{ notesActiveCount }} actifs</p>
       </div>
-      <div class="section-tools">
-        <label class="search-field" for="search-notes">
-          <span class="search-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </span>
-          <input id="search-notes" type="search" placeholder="Rechercher..." [value]="notesSearch()" (input)="updateNotesSearch($any($event.target).value)" />
-        </label>
-        <button class="btn btn-primary" type="button" (click)="openCreateModal('note')" [disabled]="operationInProgress()">+ Ajouter</button>
-      </div>
+      <button class="btn btn-primary" type="button" (click)="openCreateModal('note')" [disabled]="operationInProgress()">+ Ajouter</button>
     </div>
 
-    <div *ngIf="errorNotes()" class="alert alert-error">{{ errorNotes() }}</div>
-    <div *ngIf="loadingNotes()" class="loading">Chargement...</div>
-    <div *ngIf="!loadingNotes() && filteredNotes().length === 0" class="empty-state"><p>Aucun critere note.</p></div>
+    <div class="table-container">
+      <div class="table-actions">
+        <div class="search-field">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0a8a8" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <label for="search-notes" class="sr-only">Rechercher un critère note</label>
+          <input
+            id="search-notes"
+            class="search-field__input"
+            type="search"
+            placeholder="Libellé, domaine, poids…"
+            [ngModel]="notesSearch()"
+            (ngModelChange)="updateNotesSearch($event)"
+          />
+        </div>
 
-    <div *ngIf="!loadingNotes() && filteredNotes().length > 0" class="table-responsive">
-      <table class="criteria-table">
-        <thead>
-          <tr>
-            <th>Ordre</th>
-            <th>Libelle</th>
-            <th>Domaine</th>
-            <th>Poids</th>
-            <th>Note par defaut</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let crit of visibleNotes" [class.inactive]="!crit.actif">
-            <td class="text-center">{{ crit.ordre }}</td>
-            <td>
-              <strong>{{ crit.libelle }}</strong>
-              <p *ngIf="crit.description" class="description">{{ crit.description }}</p>
-            </td>
-            <td>{{ crit.domaine }}</td>
-            <td class="text-center">{{ crit.poids }}</td>
-            <td class="text-center">{{ noteLabel(crit.defaultNoteValue || 3) }}</td>
-            <td class="text-center">
-              <span [class]="'badge badge-' + (crit.actif ? 'success' : 'secondary')">{{ crit.actif ? 'Actif' : 'Inactif' }}</span>
-            </td>
-            <td class="actions">
-              <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openEditModal('note', crit)">Edit</button>
-              <button class="icon-btn-action" type="button" [title]="crit.actif ? 'Desactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleActivation('note', crit)">On</button>
-              <button class="icon-btn-action delete" type="button" title="Supprimer" [disabled]="operationInProgress()" (click)="deleteCritereNote(crit)">x</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="pagination-footer">
-        <span>Page {{ notesPage() }} / {{ notesTotalPages }}</span>
-        <div class="pagination-controls">
-          <button class="btn btn-sm btn-secondary" type="button" (click)="goToNotesPage(notesPage() - 1)" [disabled]="notesPage() === 1">Precedent</button>
-          <button class="btn btn-sm btn-secondary" type="button" (click)="goToNotesPage(notesPage() + 1)" [disabled]="notesPage() === notesTotalPages">Suivant</button>
+        <div class="filters-group">
+          <div class="filter-dropdown" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="filter-pill"
+              [class.filter-pill--open]="openFilter() === 'statutNote'"
+              (click)="toggleFilter('statutNote', $event)"
+            >
+              <svg class="filter-pill__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="8" y1="12" x2="20" y2="12"></line>
+                <line x1="12" y1="18" x2="20" y2="18"></line>
+                <circle cx="6" cy="12" r="2"></circle>
+                <circle cx="10" cy="18" r="2"></circle>
+              </svg>
+              <span class="filter-pill__label">{{ statutNoteFilterLabel }}</span>
+              <svg class="filter-pill__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            @if (openFilter() === 'statutNote') {
+              <div class="filter-menu" role="listbox">
+                @for (opt of statutOptions; track opt.value) {
+                  <button
+                    type="button"
+                    class="filter-option"
+                    [class.filter-option--active]="selectedStatutNote() === opt.value"
+                    (click)="selectStatutNoteFilter(opt.value)"
+                  >
+                    <span>{{ opt.label }}</span>
+                    @if (selectedStatutNote() === opt.value) {
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
         </div>
       </div>
+
+      <div *ngIf="errorNotes()" class="alert alert-error alert--inset">{{ errorNotes() }}</div>
+
+      @if (loadingNotes()) {
+        <div class="empty-row">Chargement…</div>
+      } @else if (filteredNotes().length === 0) {
+        <div class="empty-row">Aucun critère note.</div>
+      } @else {
+        <table class="subjects-table">
+          <thead>
+            <tr>
+              <th>Ordre</th>
+              <th>Libellé</th>
+              <th>Domaine</th>
+              <th>Poids</th>
+              <th>Note par défaut</th>
+              <th>Statut</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let crit of visibleNotes" [class.inactive]="!crit.actif">
+              <td>{{ crit.ordre }}</td>
+              <td>
+                <div class="subject-info">
+                  <span class="subject-title">{{ crit.libelle }}</span>
+                  <span *ngIf="crit.description" class="subject-meta">{{ crit.description }}</span>
+                </div>
+              </td>
+              <td>{{ crit.domaine }}</td>
+              <td>{{ crit.poids }}</td>
+              <td>{{ noteLabel(crit.defaultNoteValue || 3) }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.badge--active]="crit.actif"
+                  [class.badge--inactive]="!crit.actif"
+                >
+                  <span class="status-dot" [class.dot-active]="crit.actif" [class.dot-inactive]="!crit.actif"></span>
+                  {{ crit.actif ? 'Actif' : 'Inactif' }}
+                </span>
+              </td>
+              <td class="text-right">
+                <div class="actions-group">
+                  <button class="icon-btn-action edit" type="button" title="Modifier" [disabled]="operationInProgress()" (click)="openEditModal('note', crit)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                    </svg>
+                  </button>
+                  <button class="icon-btn-action" type="button" [class.activate]="!crit.actif" [class.deactivate]="crit.actif" [title]="crit.actif ? 'Désactiver' : 'Activer'" [disabled]="operationInProgress()" (click)="toggleActivation('note', crit)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M12 2v10"></path>
+                      <path d="M18.4 6.6a8 8 0 1 1-12.8 0"></path>
+                    </svg>
+                  </button>
+                  <button class="icon-btn-action delete" type="button" title="Supprimer" [disabled]="operationInProgress()" (click)="deleteCritereNote(crit)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <span class="pagination-info">
+            Affichage de <strong>{{ visibleNotes.length }}</strong> sur <strong>{{ filteredNotes().length }}</strong> critères
+          </span>
+          <div class="pagination-controls">
+            <button class="page-btn" type="button" (click)="goToNotesPage(notesPage() - 1)" [disabled]="notesPage() === 1">Précédent</button>
+            @for (p of notesPageNumbers; track p) {
+              <button
+                type="button"
+                class="page-num"
+                [class.page-num--active]="p === notesPage()"
+                (click)="goToNotesPage(p)"
+                [attr.aria-current]="p === notesPage() ? 'page' : null"
+              >{{ p }}</button>
+            }
+            <button class="page-btn" type="button" (click)="goToNotesPage(notesPage() + 1)" [disabled]="notesPage() === notesTotalPages">Suivant</button>
+          </div>
+        </div>
+      }
     </div>
   </section>
 
   <div *ngIf="isModalOpen()" class="modal-overlay" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>{{ modalMode === 'create' ? 'Ajouter' : 'Modifier' }} {{ modalType === 'eliminatoire' ? 'un critere eliminatoire' : 'un critere note' }}</h3>
-        <button class="close-btn" type="button" (click)="closeModal()">x</button>
+        <h3>{{ modalMode === 'create' ? 'Ajouter' : 'Modifier' }} {{ modalType === 'eliminatoire' ? 'un critère éliminatoire' : 'un critère note' }}</h3>
+        <button class="close-btn" type="button" (click)="closeModal()">×</button>
       </div>
 
       <div class="modal-body">
         <form *ngIf="modalType === 'eliminatoire'" [formGroup]="eliminatoireForm">
           <div class="form-group">
-            <label>Libelle *</label>
+            <label>Libellé *</label>
             <input type="text" formControlName="libelle" class="form-control" />
           </div>
           <div class="form-group">
@@ -221,21 +471,21 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Reponse attendue</label>
+              <label>Réponse attendue</label>
               <select formControlName="reponseAttendue" class="form-control">
                 <option [value]="ReponseEliminatoire.OK">OK</option>
                 <option [value]="ReponseEliminatoire.NOT_OK">NOT_OK</option>
               </select>
             </div>
             <div class="form-group">
-              <label><input type="checkbox" formControlName="actif" /> Actif</label>
+              <label class="checkbox-label"><input type="checkbox" formControlName="actif" /> Actif</label>
             </div>
           </div>
         </form>
 
         <form *ngIf="modalType === 'note'" [formGroup]="noteForm">
           <div class="form-group">
-            <label>Libelle *</label>
+            <label>Libellé *</label>
             <input type="text" formControlName="libelle" class="form-control" />
           </div>
           <div class="form-group">
@@ -258,14 +508,14 @@
               <input type="number" formControlName="poids" class="form-control" min="0.1" step="0.1" />
             </div>
             <div class="form-group">
-              <label>Note par defaut</label>
+              <label>Note par défaut</label>
               <select formControlName="defaultNoteValue" class="form-control">
                 <option *ngFor="let level of activeNoteLevels()" [value]="level.value">{{ level.value }} - {{ level.label }}</option>
               </select>
             </div>
           </div>
           <div class="form-group">
-            <label><input type="checkbox" formControlName="actif" /> Actif</label>
+            <label class="checkbox-label"><input type="checkbox" formControlName="actif" /> Actif</label>
           </div>
         </form>
       </div>
@@ -281,7 +531,7 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>{{ noteLevelModalMode === 'create' ? 'Ajouter' : 'Modifier' }} un niveau</h3>
-        <button class="close-btn" type="button" (click)="closeNoteLevelModal()">x</button>
+        <button class="close-btn" type="button" (click)="closeNoteLevelModal()">×</button>
       </div>
 
       <form class="modal-body" [formGroup]="noteLevelForm">
@@ -296,7 +546,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Libelle *</label>
+          <label>Libellé *</label>
           <input type="text" formControlName="label" class="form-control" />
         </div>
         <div class="form-group">
@@ -304,7 +554,7 @@
           <textarea rows="3" formControlName="description" class="form-control"></textarea>
         </div>
         <div class="form-group">
-          <label><input type="checkbox" formControlName="active" /> Actif</label>
+          <label class="checkbox-label"><input type="checkbox" formControlName="active" /> Actif</label>
         </div>
       </form>
 

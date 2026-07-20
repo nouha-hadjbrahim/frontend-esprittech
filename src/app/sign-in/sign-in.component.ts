@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AccueilStats } from '../core/models/accueil-stats.model';
+import { AccueilService } from '../core/services/accueil.service';
 import { AuthService } from '../core/services/auth.service';
 
 @Component({
@@ -12,22 +14,37 @@ import { AuthService } from '../core/services/auth.service';
   templateUrl: './sign-in.component.html',
   styleUrl: './sign-in.component.css'
 })
-export class SignInComponent {
+export class SignInComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly accueilService = inject(AccueilService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
   readonly loading = signal(false);
   readonly serverError = signal<string | null>(null);
+  readonly stats = signal<AccueilStats | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
   });
 
+  ngOnInit(): void {
+    this.accueilService.getStats().subscribe({
+      next: (s) => this.stats.set(s),
+      error: () => this.stats.set(null),
+    });
+  }
+
   get f() {
     return this.form.controls;
+  }
+
+  formatStat(value: number | null | undefined, withPlus = false): string {
+    if (value == null) return '—';
+    const formatted = new Intl.NumberFormat('fr-FR').format(value);
+    return withPlus ? `${formatted}+` : formatted;
   }
 
   onSubmit(): void {

@@ -140,40 +140,38 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     return this.authService.getRole() === 'ROLE_CHEF_EQUIPE';
   }
 
+  /** Chef d'équipe de l'équipe à laquelle appartient l'encadrant du sujet. */
+  get isChefOfSujetEquipe(): boolean {
+    if (!this.isChefEquipe || !this.sujet?.equipeNom) return false;
+    const myEquipe = this.authService.equipeNom();
+    return !!myEquipe && myEquipe === this.sujet.equipeNom;
+  }
+
+  /** Historique, livrables et candidatures : encadrant du sujet ou chef de son équipe. */
+  get canViewStaffSections(): boolean {
+    return this.isOwner || this.isChefOfSujetEquipe;
+  }
+
   get canManageCandidatures(): boolean {
-    return this.isOwner && (this.isEnseignant || this.isChefEquipe);
+    return this.canViewStaffSections;
   }
 
   get canViewHistorique(): boolean {
-    const role = this.authService.getRole();
-    if (role === 'ROLE_ADMIN' || role === 'ROLE_CI' || role === 'ROLE_CHEF_EQUIPE') {
-      return true;
-    }
-    return this.isEnseignant && this.isOwner;
+    return this.canViewStaffSections;
   }
 
   get tabs(): { label: string; icon: string }[] {
-    if (this.isEtudiant) {
-      return [
-        { label: 'Informations', icon: 'info' },
-        { label: 'Membres', icon: 'membres' },
-      ];
-    }
-
     const items = [
       { label: 'Informations', icon: 'info' },
       { label: 'Membres', icon: 'membres' },
     ];
-    if (this.canManageCandidatures) {
-      items.push({ label: 'Candidatures', icon: 'candidatures' });
+    if (this.canViewStaffSections) {
+      items.push(
+        { label: 'Candidatures', icon: 'candidatures' },
+        { label: 'Livrables', icon: 'livrables' },
+        { label: 'Historique', icon: 'historique' },
+      );
     }
-    if (this.canViewHistorique) {
-      items.push({ label: 'Historique', icon: 'historique' });
-    }
-    items.push(
-      { label: 'Livrables', icon: 'livrables' },
-      { label: 'Industrialisation', icon: 'industrialisation' },
-    );
     return items;
   }
 
@@ -226,18 +224,15 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
       next: (sujet) => {
         this.sujet = sujet;
         this.isLoading = false;
-        if (this.isEtudiant && !['Informations', 'Membres'].includes(this.activeTab)) {
-          this.activeTab = 'Informations';
-        }
-        if (this.activeTab === 'Candidatures' && !this.canManageCandidatures) {
-          this.activeTab = 'Informations';
-        }
-        if (this.activeTab === 'Historique' && !this.canViewHistorique) {
+        const allowedTabs = this.tabs.map((t) => t.label);
+        if (!allowedTabs.includes(this.activeTab)) {
           this.activeTab = 'Informations';
         }
         this.loadMembres();
-        this.loadLivrables();
-        this.loadEvaluation();
+        if (this.canViewStaffSections) {
+          this.loadLivrables();
+          this.loadEvaluation();
+        }
       },
       error: () => {
         this.error = true;
@@ -400,17 +395,18 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   }
 
   get canRequestIndustrialisation(): boolean {
-    return this.isOwner && !!this.sujet && this.sujet.statut === 'REALISATION_TERMINEE';
+    return false;
   }
 
   get canRecalculateScore(): boolean {
     return this.isOwner && !!this.sujet && this.sujet.statut === 'REALISATION_TERMINEE';
   }
 
+  /** Retrait réservé au propriétaire du sujet (enseignant ou chef d'équipe) pendant la réalisation. */
   get canRetirerMembre(): boolean {
     if (!this.sujet || this.sujet.statut !== 'REALISATION_EN_COURS') return false;
-    const role = this.authService.getRole();
-    return this.isOwner || role === 'ROLE_ADMIN' || role === 'ROLE_CHEF_EQUIPE';
+    if (!this.isOwner) return false;
+    return this.isEnseignant || this.isChefEquipe;
   }
 
   get canDeclarerTerminaison(): boolean {
@@ -577,6 +573,9 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
     }
     if (label === 'Historique') {
       this.loadHistorique();
+    }
+    if (label === 'Livrables') {
+      this.loadLivrables();
     }
   }
 
@@ -880,7 +879,7 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   }
 
   loadLivrables(): void {
-    if (!this.sujet || !['ROLE_ENSEIGNANT', 'ROLE_CI', 'ROLE_ADMIN'].includes(this.authService.getRole() ?? '')) {
+    if (!this.sujet || !this.canViewStaffSections) {
       return;
     }
     this.livrablesLoading = true;
@@ -897,7 +896,7 @@ private scoreCooldownTimer: ReturnType<typeof setInterval> | null = null;
   }
 
   loadEvaluation(): void {
-    if (!this.sujet || !['ROLE_ENSEIGNANT', 'ROLE_CI', 'ROLE_ADMIN'].includes(this.authService.getRole() ?? '')) {
+    if (!this.sujet || !this.canViewStaffSections) {
       this.evaluation = null;
       return;
     }

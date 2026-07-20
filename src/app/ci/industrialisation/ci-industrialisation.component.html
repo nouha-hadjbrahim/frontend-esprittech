@@ -330,7 +330,11 @@
           </section>
         </div>
 
-        <section class="section-card decision-helper">
+        <section
+          class="section-card decision-helper"
+          [class.decision-helper--go]="decisionHelperTone(selected()!) === 'go'"
+          [class.decision-helper--nogo]="decisionHelperTone(selected()!) === 'nogo'"
+        >
           <header class="section-header">
             <div>
               <span class="section-kicker">Décision</span>
@@ -365,7 +369,7 @@
             <div class="helper-grid helper-grid--score">
               <div class="helper-pill">
                 <span>Score utilisé</span>
-                <strong>{{ scoreDisplay(selected()!) }}{{ currentScoreCardSuffix(selected()!) ? ' / 100' : '' }}</strong>
+                <strong>{{ scoreDisplay(selected()!) }}/100</strong>
               </div>
               <div class="helper-pill">
                 <span>Analyse ML</span>

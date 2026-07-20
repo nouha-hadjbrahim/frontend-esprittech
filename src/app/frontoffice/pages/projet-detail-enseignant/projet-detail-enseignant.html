@@ -47,18 +47,46 @@
       </aside>
     </section>
 
-    <div class="projet-detail__tabs-bar">
-      <nav class="projet-detail__tabs" aria-label="Sections du projet">
-        <button type="button" class="projet-detail__tab" [class.projet-detail__tab--active]="activeTab === 'infos'" (click)="setTab('infos')">
+    <div class="sujet-detail__tabs-bar">
+      <nav class="sujet-detail__tabs" aria-label="Sections du projet">
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'infos'" (click)="setTab('infos')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
           Informations
         </button>
-        <button type="button" class="projet-detail__tab" [class.projet-detail__tab--active]="activeTab === 'livrables'" (click)="setTab('livrables')">
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'membres'" (click)="setTab('membres')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="5.5" cy="5" r="2.25" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M1.5 13.5C1.5 10.8 3.3 9.25 5.5 9.25" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="11" cy="5.5" r="1.75" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M14.5 13.5C14.5 11.4 13.1 10.1 11 10.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M8.25 7.75C9.35 8.45 10 9.65 10 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Membres
+        </button>
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'livrables'" (click)="setTab('livrables')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 1.75 2.75 4.5 8 7.25 13.25 4.5 8 1.75Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M2.75 8 8 10.75 13.25 8" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M2.75 11.25 8 14 13.25 11.25" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
           Livrables
         </button>
-        <button type="button" class="projet-detail__tab" [class.projet-detail__tab--active]="activeTab === 'industrialisation'" (click)="setTab('industrialisation')">
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'industrialisation'" (click)="setTab('industrialisation')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2.5 13.5V7.5L5.5 5.5V7.5L8.5 5.5V13.5H2.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M8.5 9.5H13.5V13.5H8.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M10.5 11.5V13.5M12.5 11.5V13.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
           Industrialisation
         </button>
-        <button type="button" class="projet-detail__tab" [class.projet-detail__tab--active]="activeTab === 'historique'" (click)="setTab('historique')">
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'historique'" (click)="setTab('historique')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M8 5.25V8.25L10.1 9.55" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           Historique
         </button>
       </nav>
@@ -314,6 +342,48 @@
           </aside>
         </div>
       }
+      @case ('membres') {
+        <div class="tab-panel membres-panel">
+          @if (membresError) {
+            <div class="tab-alert tab-alert--danger">{{ membresError }}</div>
+          }
+
+          <div class="membres-frame">
+            @if (membresLoading) {
+              <div class="projet-detail__loading">Chargement des membres...</div>
+            } @else if (!projet.sujetId) {
+              <p class="membres-section__empty">Aucun membre associé — ce projet n'est pas issu d'un sujet.</p>
+            } @else if (membres.length === 0) {
+              <p class="membres-section__empty">Aucun membre affecté pour le moment.</p>
+            } @else {
+              <ul class="membres-list">
+                @for (membre of membres; track membre.id) {
+                  <li class="membre-card">
+                    <div class="membre-card__avatar" aria-hidden="true">{{ memberInitials(membre) }}</div>
+
+                    <div class="membre-card__content">
+                      <div class="membre-card__top">
+                        <div class="membre-card__identity">
+                          <div class="membre-card__name-row">
+                            <span class="membre-card__name">{{ memberFullName(membre) }}</span>
+                            <span class="membre-card__status">Actif</span>
+                          </div>
+                          <p class="membre-card__meta">
+                            Étudiant · {{ membre.dateDebut | date:'yyyy-MM-dd' }}
+                          </p>
+                          @if (membre.etudiantEmail) {
+                            <p class="membre-card__email">{{ membre.etudiantEmail }}</p>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+      }
       @case ('livrables') {
         <div class="tab-panel">
           @if (livrableMessage) { <div class="tab-alert tab-alert--success">{{ livrableMessage }}</div> }
@@ -321,87 +391,213 @@
 
           @if (canManageLivrables) {
             <div class="livrable-forms">
-              <section class="detail-panel livrable-form">
-                <h2 class="detail-panel__title">Depot fichier</h2>
-                <div class="form-grid">
-                  <label>
-                    Type
+              <section class="livrable-card">
+                <header class="livrable-card__header">
+                  <span class="livrable-card__icon livrable-card__icon--file" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M9 12.5V4.5M9 4.5 6.25 7.25M9 4.5l2.75 2.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M3.5 12.5v1.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <div>
+                    <span class="livrable-card__eyebrow">Section</span>
+                    <h2 class="livrable-card__title">Dépôt fichier</h2>
+                  </div>
+                </header>
+
+                <div class="livrable-card__grid">
+                  <label class="livrable-field">
+                    <span class="livrable-field__label">Type</span>
                     <select [(ngModel)]="uploadForm.typeLivrable">
                       @for (type of typeLivrableOptions; track type.value) {
                         <option [value]="type.value">{{ type.label }}</option>
                       }
                     </select>
                   </label>
-                  <label>
-                    Nom
-                    <input type="text" [(ngModel)]="uploadForm.nom" />
+                  <label class="livrable-field">
+                    <span class="livrable-field__label">Nom</span>
+                    <input type="text" [(ngModel)]="uploadForm.nom" placeholder="Ex. Rapport v1" />
                   </label>
-                  <label>
-                    Fichier
-                    <input type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt" (change)="onUploadFileSelected($event)" />
+                  <label class="livrable-field">
+                    <span class="livrable-field__label">Fichier</span>
+                    <span class="livrable-file">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt"
+                        (change)="onUploadFileSelected($event)"
+                      />
+                      <span class="livrable-file__icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M4 2.5h5.5L12.5 5.5V13a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V3A.5.5 0 0 1 4 2.5Z" stroke="#E23E3E" stroke-width="1.2"/>
+                          <path d="M9.5 2.5V5.5H12.5" stroke="#E23E3E" stroke-width="1.2" stroke-linejoin="round"/>
+                        </svg>
+                      </span>
+                      <span class="livrable-file__text">{{ selectedUploadFile?.name || 'Choisir un fichier...' }}</span>
+                    </span>
                   </label>
-                  <label class="form-grid__wide">
-                    Description
-                    <textarea rows="3" [(ngModel)]="uploadForm.description"></textarea>
+                  <label class="livrable-field livrable-field--wide">
+                    <span class="livrable-field__label">Description</span>
+                    <textarea rows="3" [(ngModel)]="uploadForm.description" placeholder="Décrivez brièvement ce livrable..."></textarea>
                   </label>
                 </div>
-                <button type="button" class="action-btn" (click)="uploadLivrable()">Deposer</button>
+
+                <button type="button" class="livrable-btn livrable-btn--file" (click)="uploadLivrable()">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M7 10V3M7 3 4.75 5.25M7 3l2.25 2.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2.5 10v1c0 .55.45 1 1 1h7c.55 0 1-.45 1-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                  </svg>
+                  Déposer
+                </button>
               </section>
 
-              <section class="detail-panel livrable-form">
-                <h2 class="detail-panel__title">Lien externe</h2>
-                <div class="form-grid">
-                  <label>
-                    Type
+              <section class="livrable-card">
+                <header class="livrable-card__header">
+                  <span class="livrable-card__icon livrable-card__icon--link" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M7.25 9.75a3.25 3.25 0 0 0 4.6.35l1.9-1.9a3.25 3.25 0 0 0-4.6-4.6L8 4.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M10.75 8.25a3.25 3.25 0 0 0-4.6-.35l-1.9 1.9a3.25 3.25 0 1 0 4.6 4.6L10 13.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <div>
+                    <span class="livrable-card__eyebrow">Section</span>
+                    <h2 class="livrable-card__title">Lien externe</h2>
+                  </div>
+                </header>
+
+                <div class="livrable-card__grid">
+                  <label class="livrable-field">
+                    <span class="livrable-field__label">Type</span>
                     <select [(ngModel)]="linkForm.typeLivrable">
                       @for (type of typeLivrableOptions; track type.value) {
                         <option [value]="type.value">{{ type.label }}</option>
                       }
                     </select>
                   </label>
-                  <label>
-                    Nom
-                    <input type="text" [(ngModel)]="linkForm.nom" />
+                  <label class="livrable-field">
+                    <span class="livrable-field__label">Nom</span>
+                    <input type="text" [(ngModel)]="linkForm.nom" placeholder="Ex. Dépôt GitHub" />
                   </label>
-                  <label>
-                    URL
-                    <input type="url" [(ngModel)]="linkForm.lienExterne" />
+                  <label class="livrable-field">
+                    <span class="livrable-field__label">URL</span>
+                    <input type="url" [(ngModel)]="linkForm.lienExterne" placeholder="https://..." />
                   </label>
-                  <label class="form-grid__wide">
-                    Description
-                    <textarea rows="3" [(ngModel)]="linkForm.description"></textarea>
+                  <label class="livrable-field livrable-field--wide">
+                    <span class="livrable-field__label">Description</span>
+                    <textarea rows="3" [(ngModel)]="linkForm.description" placeholder="À quoi correspond ce lien ?"></textarea>
                   </label>
                 </div>
-                <button type="button" class="action-btn" (click)="addLivrableLink()">Ajouter le lien</button>
+
+                <button type="button" class="livrable-btn livrable-btn--link" (click)="addLivrableLink()">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M5.5 7.5a2.5 2.5 0 0 0 3.55.27l1.45-1.45a2.5 2.5 0 0 0-3.54-3.54L6 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                    <path d="M8.5 6.5A2.5 2.5 0 0 0 4.95 6.23L3.5 7.68a2.5 2.5 0 1 0 3.54 3.54L8 10.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                  Ajouter le lien
+                </button>
               </section>
             </div>
           }
 
-          <section class="detail-panel livrables-list">
-            <h2 class="detail-panel__title">Livrables du projet</h2>
+          <section class="livrables-panel">
+            <header class="livrables-panel__header">
+              <span class="livrables-panel__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 1.75 2.75 4.75 9 7.75 15.25 4.75 9 1.75Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <path d="M2.75 8.5 9 11.5 15.25 8.5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <path d="M2.75 12 9 15 15.25 12" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <div>
+                <span class="livrables-panel__eyebrow">Section</span>
+                <h2 class="livrables-panel__title">Livrables du projet</h2>
+              </div>
+            </header>
+
             @if (livrablesLoading) {
               <div class="projet-detail__loading">Chargement...</div>
             } @else if (livrables.length === 0) {
-              <p class="detail-panel__text">Aucun livrable depose.</p>
+              <p class="livrables-panel__empty">Aucun livrable déposé.</p>
             } @else {
-              <div class="livrable-table">
+              <div class="livrables-panel__list">
                 @for (livrable of livrables; track livrable.id) {
-                  <div class="livrable-row">
-                    <div>
-                      <strong>{{ livrable.nom }}</strong>
-                      <span>{{ livrableLabels[livrable.typeLivrable] }} - {{ livrable.deposantNom }}</span>
+                  <article class="livrable-item">
+                    <span
+                      class="livrable-item__icon"
+                      [class.livrable-item__icon--link]="!!livrable.lienExterne && !livrable.objectName"
+                      aria-hidden="true"
+                    >
+                      @if (livrable.lienExterne && !livrable.objectName) {
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M6.5 8.5a2.5 2.5 0 0 0 3.55.27l1.45-1.45a2.5 2.5 0 0 0-3.54-3.54L6.75 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                          <path d="M9.5 7.5A2.5 2.5 0 0 0 5.95 7.23L4.5 8.68a2.5 2.5 0 1 0 3.54 3.54L9.25 11.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                        </svg>
+                      } @else {
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M4 2.5h5.5L12.5 5.5V13a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V3A.5.5 0 0 1 4 2.5Z" stroke="currentColor" stroke-width="1.3"/>
+                          <path d="M9.5 2.5V5.5H12.5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                        </svg>
+                      }
+                    </span>
+
+                    <div class="livrable-item__content">
+                      <strong class="livrable-item__name">{{ livrableDisplayName(livrable) }}</strong>
+                      <span class="livrable-item__meta">
+                        {{ livrableDateLabel(livrable) }}
+                        @if (livrableSizeLabel(livrable); as sizeLabel) {
+                          <span aria-hidden="true">·</span>
+                          {{ sizeLabel }}
+                        } @else if (livrable.lienExterne) {
+                          <span aria-hidden="true">·</span>
+                          Lien externe
+                        }
+                      </span>
                     </div>
-                    <div class="livrable-actions">
+
+                    <div class="livrable-item__actions">
                       @if (livrable.objectName) {
-                        <a [href]="downloadLivrable(livrable)" target="_blank" rel="noreferrer">Telecharger</a>
+                        <a
+                          class="livrable-item__action"
+                          [href]="downloadLivrable(livrable)"
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Télécharger"
+                          aria-label="Télécharger {{ livrableDisplayName(livrable) }}"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M8 2.5v7.25M8 9.75 5.5 7.25M8 9.75l2.5-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M3 12.5h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                          </svg>
+                        </a>
                       } @else if (livrable.lienExterne) {
-                        <a [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
+                        <a
+                          class="livrable-item__action"
+                          [href]="livrable.lienExterne"
+                          target="_blank"
+                          rel="noreferrer"
+                          title="Ouvrir"
+                          aria-label="Ouvrir le lien"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M9.5 3H13v3.5M13 3 7.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6.5 4H4.5A1.5 1.5 0 0 0 3 5.5v6A1.5 1.5 0 0 0 4.5 13h6a1.5 1.5 0 0 0 1.5-1.5V9.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                          </svg>
+                        </a>
                       }
                       @if (canManageLivrables) {
-                        <button type="button" (click)="deleteLivrable(livrable)">Supprimer</button>
+                        <button
+                          type="button"
+                          class="livrable-item__action livrable-item__action--danger"
+                          title="Supprimer"
+                          aria-label="Supprimer {{ livrableDisplayName(livrable) }}"
+                          (click)="deleteLivrable(livrable)"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M3.5 4.5h9M6 4.5V3.25h4V4.5M6.5 7v4M9.5 7v4M4.5 4.5l.5 8h6l.5-8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
                       }
                     </div>
-                  </div>
+                  </article>
                 }
               </div>
             }
@@ -410,18 +606,48 @@
       }
       @case ('industrialisation') {
         <div class="tab-panel industrialisation-panel">
-          <section class="detail-panel">
-            <div class="industrialisation-header">
-              <div>
-                <h2 class="detail-panel__title">Demande d'industrialisation</h2>
-                <p class="detail-panel__text">
-                  Score :
+          <section class="indus-panel">
+            <header class="indus-panel__header">
+              <span class="indus-panel__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M2.75 15V8.25L6.25 5.75V8.25L9.75 5.75V15H2.75Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <path d="M9.75 10.5H15.25V15H9.75" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <path d="M12 12.75V15M14 12.75V15" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <div class="indus-panel__heading">
+                <span class="indus-panel__eyebrow">Section</span>
+                <h2 class="indus-panel__title">Demande d'industrialisation</h2>
+              </div>
+              @if (canRequestIndustrialisation) {
+                <button type="button" class="indus-panel__action" (click)="openIndustrialisation()">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M7 2.5v9M2.5 7h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                  Demander industrialisation
+                </button>
+              }
+            </header>
+
+            <div class="indus-panel__body">
+              <div class="indus-stat">
+                <span class="indus-stat__label">Score</span>
+                <strong class="indus-stat__value">
                   @if ((evaluation?.scoreFinal ?? sujetProjet?.scoreFinal) != null) {
                     {{ evaluation?.scoreFinal ?? sujetProjet?.scoreFinal }} / 100
                   } @else {
-                    non calculé
+                    Non calculé
                   }
-                  -
+                </strong>
+              </div>
+              <div class="indus-stat">
+                <span class="indus-stat__label">Éligibilité</span>
+                <strong
+                  class="indus-stat__value"
+                  [class.indus-stat__value--ok]="evaluation?.eligibilityStatus === 'ELIGIBLE' || sujetProjet?.eligibleIndustrialisation === true"
+                  [class.indus-stat__value--warn]="evaluation?.eligibilityStatus === 'REVIEW_REQUIRED'"
+                  [class.indus-stat__value--ko]="evaluation?.eligibilityStatus === 'NON_ELIGIBLE' || evaluation?.eligibilityStatus === 'NON_ELIGIBLE_EN_L_ETAT' || sujetProjet?.eligibleIndustrialisation === false"
+                >
                   @switch (evaluation?.eligibilityStatus) {
                     @case ('ELIGIBLE') { Éligible }
                     @case ('REVIEW_REQUIRED') { Revue requise }
@@ -440,14 +666,12 @@
                       }
                     }
                   }
-                </p>
+                </strong>
               </div>
-              @if (canRequestIndustrialisation) {
-                <button type="button" class="action-btn" (click)="openIndustrialisation()">Demander industrialisation</button>
-              }
             </div>
+
             @if (!canRequestIndustrialisation) {
-              <p class="detail-panel__text">
+              <p class="indus-panel__hint">
                 La demande est disponible pour l'encadrant lorsque le projet est validé.
               </p>
             }
