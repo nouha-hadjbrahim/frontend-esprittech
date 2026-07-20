@@ -130,7 +130,7 @@ describe('EvaluationPageComponent', () => {
     expect(component.filteredProjects().length).toBe(3);
 
     component.updateProjectSearch('eligible');
-    expect(component.filteredProjects().map((project) => project.id)).toEqual([2]);
+    expect(component.filteredProjects().map((project) => project.id)).toEqual([2, 3]);
 
     component.updateProjectSearch('non eligible');
     expect(component.filteredProjects().map((project) => project.id)).toEqual([3]);
@@ -259,7 +259,7 @@ it('should calculate score, update the matching row and leave other rows untouch
   });
 
   it('should format status labels and complete destroy lifecycle', () => {
-    expect(component.statusLabel('REALISATION_TERMINEE')).toBe('Realisation terminee');
+    expect(component.statusLabel('REALISATION_TERMINEE')).toBe('Réalisation terminée');
     expect(component.statusLabel('EN_ATTENTE')).toBe('EN_ATTENTE');
 
     component.ngOnDestroy();

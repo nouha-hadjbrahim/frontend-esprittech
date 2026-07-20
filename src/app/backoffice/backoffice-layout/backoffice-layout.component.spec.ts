@@ -52,7 +52,7 @@ describe('BackofficeLayoutComponent', () => {
 
   it('should create with the full navigation', () => {
     expect(component).toBeTruthy();
-    expect(component.navItems.length).toBe(10);
+    expect(component.navItems.length).toBe(7);
   });
 
   it('should group evaluation links under the evaluations parent menu', () => {

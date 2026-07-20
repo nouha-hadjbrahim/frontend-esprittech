@@ -85,7 +85,14 @@ describe('IndustrialisationService', () => {
     service.getCiScore(5).subscribe();
     const scoreReq = http.expectOne(`${environment.apiUrl}/ci/industrialisation/5/score`);
     expect(scoreReq.request.method).toBe('GET');
+    expect(scoreReq.request.url).not.toContain('/sujets/');
+    expect(scoreReq.request.url).not.toContain('/projets/5/');
     scoreReq.flush({ candidatureId: 5 });
+
+    service.getCiScore(18).subscribe();
+    const convertedScoreReq = http.expectOne(`${environment.apiUrl}/ci/industrialisation/18/score`);
+    expect(convertedScoreReq.request.url).toBe(`${environment.apiUrl}/ci/industrialisation/18/score`);
+    convertedScoreReq.flush({ candidatureId: 18, projetId: 55, scoreFinal: 84 });
 
     service.decideGo(5, { orientation: 'DSI' as never, commentaire: 'Go' }).subscribe();
     const goReq = http.expectOne(`${environment.apiUrl}/ci/industrialisation/5/go`);

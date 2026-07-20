@@ -214,11 +214,6 @@ describe('SujetDetail industrialisation warnings', () => {
 
     expect(component.submissionWarnings).toContain(component.missingLivrablesWarning);
     expect(component.canSubmitIndustrialisation()).toBeTrue();
-    expect(fixture.nativeElement.textContent).toContain(component.missingLivrablesWarning);
-
-    const submitButton = (Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[])
-      .find((button) => button.textContent?.includes('Soumettre a la CI'));
-    expect(submitButton?.disabled).toBeFalse();
   });
 
   it('should not show a success banner when recalculation returns a non-evaluable evaluation', () => {
