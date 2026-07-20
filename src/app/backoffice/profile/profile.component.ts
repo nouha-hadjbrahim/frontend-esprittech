@@ -25,6 +25,23 @@ export class ProfileComponent {
         return role ? this.ROLE_LABELS[role] : '';
     });
 
+    readonly roleBadgeClass = computed(() => {
+        switch (this.user()?.role) {
+            case 'ROLE_ADMIN':
+                return 'badge--role-admin';
+            case 'ROLE_ENSEIGNANT':
+                return 'badge--role-enseignant';
+            case 'ROLE_CHEF_EQUIPE':
+                return 'badge--role-chef';
+            case 'ROLE_ETUDIANT':
+                return 'badge--role-etudiant';
+            case 'ROLE_CI':
+                return 'badge--role-ci';
+            default:
+                return 'badge--role-default';
+        }
+    });
+
     private readonly ROLE_LABELS: Record<Role, string> = {
         ROLE_ADMIN: 'Super-administrateur',
         ROLE_ENSEIGNANT: 'Enseignant',
