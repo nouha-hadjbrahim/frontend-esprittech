@@ -309,3 +309,199 @@
     background-color: #ffffff;
     box-sizing: border-box;
 }
+
+/* Popup sujets acceptés — aligné sur les modales rouge EspritTECH (#E23E3E) */
+.accept-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.accept-modal {
+    position: relative;
+    width: min(100%, 460px);
+    padding: 28px 28px 24px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+    text-align: center;
+    overflow: hidden;
+    animation: accept-modal-in 0.22s ease;
+}
+
+@keyframes accept-modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.accept-modal__accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #E23E3E 0%, #f87171 100%);
+}
+
+.accept-modal__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.accept-modal__close:hover {
+    color: #E23E3E;
+    background: #fef2f2;
+}
+
+.accept-modal__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    margin: 8px 0 14px;
+    border-radius: 50%;
+    color: #E23E3E;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.accept-modal__eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #E23E3E;
+}
+
+.accept-modal__title {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #111827;
+}
+
+.accept-modal__text {
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #6b7280;
+}
+
+.accept-modal__text strong {
+    color: #111827;
+    font-weight: 700;
+}
+
+.accept-modal__list {
+    margin: 0 0 22px;
+    padding: 12px 14px;
+    list-style: none;
+    text-align: left;
+    border-radius: 12px;
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    max-height: 168px;
+    overflow: auto;
+}
+
+.accept-modal__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.accept-modal__list li + li {
+    border-top: 1px solid #fecaca;
+}
+
+.accept-modal__list-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: #E23E3E;
+}
+
+.accept-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.accept-modal__btn {
+    min-width: 120px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.accept-modal__btn--ghost {
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #374151;
+}
+
+.accept-modal__btn--ghost:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.accept-modal__btn--primary {
+    border: none;
+    background: #E23E3E;
+    color: #ffffff;
+}
+
+.accept-modal__btn--primary:hover {
+    background: #c93434;
+}
+
+@media (max-width: 520px) {
+    .accept-modal {
+        padding: 24px 20px 20px;
+    }
+
+    .accept-modal__actions {
+        flex-direction: column-reverse;
+    }
+
+    .accept-modal__btn {
+        width: 100%;
+    }
+}

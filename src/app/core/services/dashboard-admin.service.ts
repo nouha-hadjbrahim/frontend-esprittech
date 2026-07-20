@@ -9,7 +9,9 @@ export class DashboardAdminService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/admin/dashboard`;
 
-  getExtendedDashboard(): Observable<ExtendedDashboardResponse> {
-    return this.http.get<ExtendedDashboardResponse>(`${this.baseUrl}/extended`);
+  getExtendedDashboard(recentActivityLimit = 5): Observable<ExtendedDashboardResponse> {
+    return this.http.get<ExtendedDashboardResponse>(`${this.baseUrl}/extended`, {
+      params: { recentActivityLimit },
+    });
   }
 }

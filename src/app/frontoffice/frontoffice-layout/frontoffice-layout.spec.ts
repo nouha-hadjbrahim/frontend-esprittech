@@ -34,7 +34,7 @@ describe('FrontofficeLayout', () => {
     equipeService.getAll.and.returnValue(of([]));
     notificationService = jasmine.createSpyObj<NotificationService>(
       'NotificationService',
-      ['initialize', 'marquerCommeLu', 'marquerToutCommeLu', 'loadMore'],
+      ['initialize', 'marquerCommeLu', 'marquerToutCommeLu', 'marquerPlusieursCommeLu', 'loadMore', 'fetchUnreadByType'],
       {
         notifications: signal([]),
         unreadCount: signal(0),
@@ -42,6 +42,7 @@ describe('FrontofficeLayout', () => {
         hasMore: signal(false),
       },
     );
+    notificationService.fetchUnreadByType.and.returnValue(of([]));
     TestBed.configureTestingModule({
       imports: [FrontofficeLayout],
       providers: [
@@ -142,5 +143,58 @@ describe('FrontofficeLayout', () => {
   it('should delegate logout to the auth service', () => {
     component.logout();
     expect(logout).toHaveBeenCalled();
+  });
+
+  it('shows acceptance popup for unread SUJET_VALIDE notifications', () => {
+    currentUser.set(userWith('ROLE_ENSEIGNANT'));
+    component.openAcceptancePopup([
+      {
+        id: 11,
+        type: 'SUJET_VALIDE',
+        title: 'Sujet accepté',
+        message: 'Votre sujet "Plateforme IA" a été accepté par le chef d\'équipe.',
+        link: '/frontoffice/sujets/mes-sujets',
+        read: false,
+        createdAt: '2026-07-20T10:00:00Z',
+      },
+      {
+        id: 12,
+        type: 'SUJET_VALIDE',
+        title: 'Sujet accepté',
+        message: 'Votre sujet "IoT Lab" a été accepté par un administrateur.',
+        link: '/frontoffice/sujets/mes-sujets',
+        read: false,
+        createdAt: '2026-07-20T11:00:00Z',
+      },
+    ]);
+
+    expect(component.showSujetAcceptedPopup()).toBeTrue();
+    expect(component.acceptanceHeadline).toContain('2 sujets');
+    expect(component.acceptedSujetTitles()).toEqual(['Plateforme IA', 'IoT Lab']);
+  });
+
+  it('marks acceptance notifications as read when dismissing the popup', () => {
+    currentUser.set(userWith('ROLE_ENSEIGNANT'));
+    component.openAcceptancePopup([
+      {
+        id: 11,
+        type: 'SUJET_VALIDE',
+        title: 'Sujet accepté',
+        message: 'Votre sujet "Plateforme IA" a été accepté.',
+        link: '/frontoffice/sujets/mes-sujets',
+        read: false,
+        createdAt: '2026-07-20T10:00:00Z',
+      },
+    ]);
+
+    component.dismissSujetAcceptedPopup();
+
+    expect(component.showSujetAcceptedPopup()).toBeFalse();
+    expect(notificationService.marquerPlusieursCommeLu).toHaveBeenCalledWith([11]);
+  });
+
+  it('extracts sujet titles from validation messages', () => {
+    expect(component.extractSujetTitle('Votre sujet "Demo RDI" a été accepté.')).toBe('Demo RDI');
+    expect(component.extractSujetTitle('sans titre')).toBeNull();
   });
 });
