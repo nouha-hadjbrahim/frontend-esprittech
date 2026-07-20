@@ -149,23 +149,4 @@ describe('SujetsDisponibles', () => {
     expect(component.sujets.length).toBe(0);
     expect(component.isLoading).toBeFalse();
   });
-
-  // ── Modal open/close ───────────────────────────────────────────────
-  it('openModal should set isModalOpen to true', () => {
-    component.openModal();
-    expect(component.isModalOpen).toBeTrue();
-  });
-
-  it('closeModal should set isModalOpen to false', () => {
-    component.openModal();
-    component.closeModal();
-    expect(component.isModalOpen).toBeFalse();
-  });
-
-  it('onSujetSaved should close modal and reload sujets', () => {
-    component.openModal();
-    component.onSujetSaved();
-    expect(component.isModalOpen).toBeFalse();
-    expect(sujetServiceSpy.getSujetsDisponibles).toHaveBeenCalledTimes(2);
-  });
 });

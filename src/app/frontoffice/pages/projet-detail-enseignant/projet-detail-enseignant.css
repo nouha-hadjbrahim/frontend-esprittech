@@ -131,8 +131,8 @@
   justify-content: space-between;
   gap: 16px;
   margin-top: 18px;
-  padding: 8px;
-  border-radius: 16px;
+  padding: 6px;
+  border-radius: 999px;
   background: #ffffff;
   border: 1px solid #ebecef;
   box-shadow: 0 4px 18px rgba(17, 24, 39, 0.04);
@@ -155,33 +155,35 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 10px 14px;
+  padding: 10px 18px;
   border: none;
-  border-radius: 12px;
+  border-radius: 999px;
   background: transparent;
-  color: #4b5563;
+  color: #374151;
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .sujet-detail__tab:hover {
-  color: #E23E3E;
+  color: #b91c1c;
   background: rgba(226, 62, 62, 0.06);
 }
 
 .sujet-detail__tab--active {
-  background: #E23E3E;
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
   color: #ffffff;
   font-weight: 600;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.28);
 }
 
 .sujet-detail__tab--active:hover {
-  background: #E23E3E;
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
   color: #ffffff;
+  filter: brightness(0.98);
 }
 
 .tab-panel {
@@ -415,25 +417,27 @@
   justify-content: center;
   gap: 8px;
   align-self: flex-start;
-  padding: 11px 18px;
+  padding: 11px 22px;
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 0.92rem;
+  font-weight: 600;
   color: #ffffff;
   cursor: pointer;
-  transition: background 0.15s ease;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.32);
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .livrable-btn--file,
 .livrable-btn--link {
-  background: #E23E3E;
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
 }
 
 .livrable-btn--file:hover,
 .livrable-btn--link:hover {
-  background: #c93434;
+  filter: brightness(0.96);
+  box-shadow: 0 10px 22px rgba(185, 28, 28, 0.38);
 }
 
 .livrables-panel {
@@ -615,34 +619,41 @@
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 10px;
-  padding: 10px 16px;
-  background: #E23E3E;
+  border-radius: 999px;
+  padding: 11px 22px;
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
   color: #ffffff;
   font: inherit;
-  font-weight: 700;
+  font-size: 0.92rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.32);
+  transition: filter 0.2s ease, box-shadow 0.2s ease, border-color 0.15s ease;
 }
 
-.action-btn:hover {
-  background: #c93434;
+.action-btn:hover:not(:disabled) {
+  filter: brightness(0.96);
+  box-shadow: 0 10px 22px rgba(185, 28, 28, 0.38);
 }
 
 .action-btn--ghost {
   border: 1px solid #e5e7eb;
   background: #ffffff;
   color: #374151;
+  box-shadow: none;
 }
 
-.action-btn--ghost:hover {
+.action-btn--ghost:hover:not(:disabled) {
+  filter: none;
   background: #f9fafb;
   border-color: #d1d5db;
+  box-shadow: none;
 }
 
 .action-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .tab-alert--warning {
@@ -966,21 +977,23 @@
   justify-content: center;
   gap: 8px;
   flex-shrink: 0;
-  padding: 11px 18px;
+  padding: 11px 22px;
   border: none;
-  border-radius: 10px;
-  background: #E23E3E;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
   color: #ffffff;
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 0.92rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.32);
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .indus-panel__action:hover {
-  background: #c93434;
+  filter: brightness(0.96);
+  box-shadow: 0 10px 22px rgba(185, 28, 28, 0.38);
 }
 
 .indus-panel__body {
@@ -1576,15 +1589,16 @@
   justify-content: center;
   gap: 8px;
   min-height: 42px;
-  padding: 0 18px;
-  border-radius: 12px;
-  background: #E23E3E;
-  border-color: #E23E3E;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #e23e3e 0%, #b91c1c 100%);
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.32);
 }
 
 .indus-modal__footer .action-btn:hover:not(:disabled) {
-  background: #c93434;
-  border-color: #c93434;
+  filter: brightness(0.96);
+  box-shadow: 0 10px 22px rgba(185, 28, 28, 0.38);
 }
 
 .indus-modal__footer .action-btn--ghost {
