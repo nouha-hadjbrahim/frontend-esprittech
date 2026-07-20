@@ -9,6 +9,15 @@
         </svg>
         {{ equipeLabel }}
       </span>
+      @if (isAccepted) {
+        <span class="dispo-card__header-pill dispo-card__header-pill--membre">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="7" cy="4.5" r="2.2" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M2.5 12.5C2.5 10 4.5 8.5 7 8.5C9.5 8.5 11.5 10 11.5 12.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Membre
+        </span>
+      }
     </div>
   </div>
 
@@ -129,7 +138,7 @@
             </svg>
             Candidatures
           </button>
-        } @else if (detailsOnly) {
+        } @else if (detailsOnly && !isAccepted && !estAccepte) {
           @if (dejaPostule) {
             <button type="button" class="dispo-card__btn dispo-card__btn--deja-postule" disabled>
               Candidature déposée

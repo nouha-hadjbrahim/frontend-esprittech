@@ -1,5 +1,5 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, Injector, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -11,6 +11,7 @@ import {
   UpdateProfileRequest,
   User,
 } from '../models/user.model';
+import { NotificationService } from './notification.service';
 
 /** Anciennes clés localStorage (tokens + user) à purger : plus aucune donnée sensible côté JS. */
 const LEGACY_STORAGE_KEYS = [
@@ -33,6 +34,7 @@ const LEGACY_STORAGE_KEYS = [
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
 
   private readonly baseUrl = `${environment.apiUrl}/auth`;
 
@@ -203,6 +205,7 @@ export class AuthService {
   }
 
   private finalizeLogout(): void {
+    this.injector.get(NotificationService).deconnecter();
     this.clearSession();
     void this.router.navigate(['/sign-in']);
   }
