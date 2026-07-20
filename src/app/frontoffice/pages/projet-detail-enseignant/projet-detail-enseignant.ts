@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProjetDetails, StatutProjet } from '../../../core/models/projet-catalogue.model';
 import { LivrableCatalogue } from '../../../core/models/livrable-catalogue.model';
 import {
+  Livrable,
   TYPE_LIVRABLE_LABELS,
   TYPE_LIVRABLE_OPTIONS,
   TypeLivrable,
@@ -30,12 +31,16 @@ import { EvaluationService } from '../../../core/services/evaluation.service';
 import { HistoriqueService } from '../../../core/services/historique.service';
 import { ACTION_LABEL, HistoriqueResponse } from '../../../core/models/historique.model';
 import { IndustrialisationService } from '../../../core/services/industrialisation.service';
+import { LivrableService } from '../../../core/services/livrable.service';
 import { ProjetCatalogueService } from '../../../core/services/projet-catalogue.service';
 import { SujetProjetService } from '../../../core/services/sujet-projet.service';
 import { STATUT_PROJET_LABELS, TYPE_PROJET_LABELS, DEFAULT_PROJET_COVER_IMAGE } from '../../constants/projet-catalogue.constants';
 import { EvaluationChecklistComponent } from '../../../shared/components/evaluation-checklist/evaluation-checklist.component';
 
 type DetailTab = 'infos' | 'membres' | 'livrables' | 'industrialisation' | 'historique';
+
+/** Livrable catalogue, ou hérité en lecture seule du sujet d'origine après publication. */
+type DisplayLivrable = LivrableCatalogue & { fromSujet?: boolean };
 
 /** Statuts pour lesquels un projet est publié au catalogue (dépôt de livrables autorisé). */
 const STATUTS_CATALOGUE = new Set<StatutProjet>([
@@ -65,6 +70,7 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly candidatureService = inject(CandidatureService);
   private readonly livrableService = inject(CatalogueLivrableService);
+  private readonly sujetLivrableService = inject(LivrableService);
   private readonly historiqueService = inject(HistoriqueService);
   private readonly sujetProjetService = inject(SujetProjetService);
   private readonly evaluationService = inject(EvaluationService);
@@ -97,7 +103,7 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   membresLoading = false;
   membresError = '';
 
-  livrables: LivrableCatalogue[] = [];
+  livrables: DisplayLivrable[] = [];
   livrablesLoading = false;
   livrableError = '';
   livrableMessage = '';
@@ -156,6 +162,17 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
       return this.projet.technologies.slice(0, 4);
     }
     return this.projet?.domaines.slice(0, 4) ?? [];
+  }
+
+  /** Score affiché : évaluation ML (catalogue ou sujet), sinon score projet / sujet. */
+  get displayedScore(): number {
+    if (this.evaluation?.scoreFinal != null) {
+      return Math.round(this.evaluation.scoreFinal);
+    }
+    if (this.sujetProjet?.scoreFinal != null) {
+      return Math.round(this.sujetProjet.scoreFinal);
+    }
+    return this.projet?.score ?? 0;
   }
 
   ngOnInit(): void {
@@ -293,17 +310,20 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
 
   // ── Évaluation du projet ─────────────────────────────────────────────
 
-  /** Un projet du catalogue est évaluable automatiquement dès qu'il est validé (dépôt manuel ou issu d'un sujet). */
+  /** Affiche l'évaluation pour tout projet publié au catalogue (y compris après demande d'industrialisation). */
   get isEvaluable(): boolean {
-    return this.projet?.statut === 'VALIDE';
+    return !!this.projet && STATUTS_CATALOGUE.has(this.projet.statut);
   }
 
-  /** Le recalcul est réservé à l'encadrant, sur un projet catalogue validé. */
+  /** Le recalcul est réservé à l'encadrant, sur un projet catalogue encore validé. */
   get canRecalculateScore(): boolean {
-    return this.isOwner && this.isEvaluable;
+    return this.isOwner && this.projet?.statut === 'VALIDE';
   }
 
-  /** Charge la dernière évaluation du projet catalogue (indexée par l'identifiant de projet). */
+  /**
+   * Charge la dernière évaluation catalogue ; si absente et que le projet vient d'un sujet terminé,
+   * reprend l'évaluation ML du sujet d'origine (note, critères, éligibilité).
+   */
   loadEvaluation(): void {
     if (!this.projet) {
       this.evaluation = null;
@@ -316,12 +336,36 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
       next: (evaluation) => {
         this.evaluation = evaluation;
         this.evaluationLoading = false;
+        this.syncScoreFromEvaluation();
+      },
+      error: () => this.loadSujetEvaluationFallback(),
+    });
+  }
+
+  private loadSujetEvaluationFallback(): void {
+    const sujetId = this.projet?.sujetId;
+    if (!sujetId) {
+      this.evaluation = null;
+      this.evaluationLoading = false;
+      return;
+    }
+    this.evaluationService.getLatestEvaluation(sujetId).subscribe({
+      next: (evaluation) => {
+        this.evaluation = evaluation;
+        this.evaluationLoading = false;
+        this.syncScoreFromEvaluation();
       },
       error: () => {
         this.evaluation = null;
         this.evaluationLoading = false;
       },
     });
+  }
+
+  private syncScoreFromEvaluation(): void {
+    if (this.projet && this.evaluation?.scoreFinal != null) {
+      this.projet = { ...this.projet, score: Math.round(this.evaluation.scoreFinal) };
+    }
   }
 
   /** Formate l'affichage de la note d'un critère (identique à la page sujet). */
@@ -434,16 +478,65 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
     if (!this.projet) return;
     this.livrablesLoading = true;
     this.livrableError = '';
-    this.livrableService.findByProjet(this.projet.id).subscribe({
+    const projetId = this.projet.id;
+    const sujetId = this.projet.sujetId;
+
+    this.livrableService.findByProjet(projetId).subscribe({
       next: (livrables) => {
-        this.livrables = livrables;
-        this.livrablesLoading = false;
+        if (livrables.length > 0 || !sujetId) {
+          this.livrables = livrables;
+          this.livrablesLoading = false;
+          return;
+        }
+        // Projet issu d'un sujet terminé : les livrables restent sur le sujet tant qu'aucun dépôt catalogue.
+        this.loadSujetLivrablesFallback(sujetId);
       },
       error: () => {
+        if (sujetId) {
+          this.loadSujetLivrablesFallback(sujetId);
+          return;
+        }
         this.livrableError = 'Impossible de charger les livrables.';
         this.livrablesLoading = false;
       },
     });
+  }
+
+  private loadSujetLivrablesFallback(sujetId: number): void {
+    this.sujetLivrableService.findByProjet(sujetId).subscribe({
+      next: (sujetLivrables) => {
+        this.livrables = sujetLivrables
+          .filter((livrable) => livrable.actif !== false)
+          .map((livrable) => this.mapSujetLivrable(livrable));
+        this.livrablesLoading = false;
+      },
+      error: () => {
+        this.livrables = [];
+        this.livrableError = 'Impossible de charger les livrables.';
+        this.livrablesLoading = false;
+      },
+    });
+  }
+
+  private mapSujetLivrable(livrable: Livrable): DisplayLivrable {
+    return {
+      id: livrable.id,
+      projetId: this.projet!.id,
+      projetTitre: livrable.projetTitre,
+      typeLivrable: livrable.typeLivrable,
+      nom: livrable.nom,
+      description: livrable.description,
+      originalFileName: livrable.originalFileName,
+      objectName: livrable.objectName,
+      contentType: livrable.contentType,
+      size: livrable.size,
+      lienExterne: livrable.lienExterne,
+      deposantId: livrable.deposantId,
+      deposantNom: livrable.deposantNom,
+      dateDepot: livrable.dateDepot,
+      actif: livrable.actif,
+      fromSujet: true,
+    };
   }
 
   onUploadFileSelected(event: Event): void {
@@ -496,22 +589,32 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
     });
   }
 
-  deleteLivrable(livrable: LivrableCatalogue): void {
+  deleteLivrable(livrable: DisplayLivrable): void {
+    if (livrable.fromSujet) {
+      return;
+    }
     this.livrableService.delete(livrable.id).subscribe({
       next: () => this.loadLivrables(),
       error: () => (this.livrableError = 'Suppression impossible.'),
     });
   }
 
-  downloadLivrable(livrable: LivrableCatalogue): string {
+  downloadLivrable(livrable: DisplayLivrable): string {
+    if (livrable.fromSujet) {
+      return this.sujetLivrableService.downloadUrl(livrable.id);
+    }
     return this.livrableService.downloadUrl(livrable.id);
   }
 
-  livrableDisplayName(livrable: LivrableCatalogue): string {
+  livrableTrackId(livrable: DisplayLivrable): string {
+    return `${livrable.fromSujet ? 'sujet' : 'catalogue'}-${livrable.id}`;
+  }
+
+  livrableDisplayName(livrable: DisplayLivrable): string {
     return livrable.originalFileName?.trim() || livrable.nom;
   }
 
-  livrableDateLabel(livrable: LivrableCatalogue): string {
+  livrableDateLabel(livrable: DisplayLivrable): string {
     if (!livrable.dateDepot) return '—';
     return new Date(livrable.dateDepot).toLocaleDateString('fr-FR', {
       year: 'numeric',
@@ -520,7 +623,7 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
     });
   }
 
-  livrableSizeLabel(livrable: LivrableCatalogue): string | null {
+  livrableSizeLabel(livrable: DisplayLivrable): string | null {
     if (livrable.size == null || livrable.size <= 0) return null;
     const bytes = livrable.size;
     if (bytes < 1024) return `${bytes} o`;

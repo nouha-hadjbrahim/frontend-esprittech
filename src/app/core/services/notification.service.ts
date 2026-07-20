@@ -103,5 +103,9 @@ export class NotificationService {
   deconnecter(): void {
     this.websocketService.disconnect();
     this.initialized = false;
+    this._notifications.set([]);
+    this._unreadCount.set(0);
+    this._currentPage.set(0);
+    this._hasMore.set(true);
   }
 }

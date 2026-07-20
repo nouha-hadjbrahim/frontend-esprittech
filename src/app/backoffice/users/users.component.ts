@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { Role, User } from '../../core/models/user.model';
@@ -65,6 +65,17 @@ export class UsersComponent implements OnInit, OnDestroy {
 
     // Recherche
     searchTerm = '';
+    selectedRole = '';
+    readonly openFilter = signal<'role' | null>(null);
+
+    readonly roleOptions = [
+        { label: 'Tous les rôles', value: '' },
+        { label: 'Étudiant', value: 'Étudiant' },
+        { label: 'Enseignant', value: 'Enseignant' },
+        { label: 'CI', value: 'CI' },
+        { label: "Chef d'équipe", value: "Chef d'équipe" },
+        { label: 'Administrateur', value: 'Administrateur' },
+    ];
 
     roles = ['Étudiant', 'Enseignant', 'CI', "Chef d'équipe", 'Administrateur'];
     statuses = ['Actif', 'Suspendu'];
@@ -150,20 +161,64 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
 
     get pageDisplayCount(): number {
-        return this.users.length;
+        return this.filteredUsers.length;
     }
 
-    get pageNumbers(): number[] {
-        return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i + 1);
+    get filteredUsers(): UserRow[] {
+        if (!this.selectedRole) {
+            return this.users;
+        }
+        return this.users.filter((user) => user.role === this.selectedRole);
+    }
+
+    get roleFilterLabel(): string {
+        return this.roleOptions.find((opt) => opt.value === this.selectedRole)?.label ?? 'Tous les rôles';
+    }
+
+    @HostListener('document:click')
+    closeFilters(): void {
+        this.openFilter.set(null);
+    }
+
+    toggleFilter(event: Event): void {
+        event.stopPropagation();
+        this.openFilter.update((current) => (current === 'role' ? null : 'role'));
+    }
+
+    selectRoleFilter(value: string): void {
+        this.selectedRole = value;
+        this.openFilter.set(null);
+    }
+
+    getRoleClass(role: string): string {
+        switch (role) {
+            case 'Étudiant': return 'badge--role-etudiant';
+            case 'Enseignant': return 'badge--role-enseignant';
+            case "Chef d'équipe": return 'badge--role-chef';
+            case 'Administrateur': return 'badge--role-admin';
+            case 'CI': return 'badge--role-ci';
+            default: return 'badge--role-default';
+        }
     }
 
     getStatusClass(status: string): string {
         switch (status.toLowerCase()) {
-            case 'actif': return 'status-active';
-            case 'suspendu': return 'status-suspended';
-            case 'en attente': return 'status-pending';
-            default: return '';
+            case 'actif': return 'badge--statut-actif';
+            case 'suspendu': return 'badge--statut-suspendu';
+            default: return 'badge--statut-neutral';
         }
+    }
+
+    getStatusDotClass(status: string): string {
+        switch (status.toLowerCase()) {
+            case 'actif': return 'dot-actif';
+            case 'suspendu': return 'dot-suspendu';
+            default: return 'dot-neutral';
+        }
+    }
+
+    get pageNumbers(): number[] {
+        return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i + 1);
     }
 
     // --- Actions Methods ---

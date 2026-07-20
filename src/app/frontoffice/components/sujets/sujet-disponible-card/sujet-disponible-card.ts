@@ -13,6 +13,8 @@ export class SujetDisponibleCard {
   @Input({ required: true }) sujet!: SujetProjet;
   @Input() showPostuler = false;
   @Input() dejaPostule = false;
+  @Input() isAccepted = false;
+  @Input() estAccepte = false;
   @Output() postuler = new EventEmitter<void>();
 
   get categorieShortLabel(): string {
