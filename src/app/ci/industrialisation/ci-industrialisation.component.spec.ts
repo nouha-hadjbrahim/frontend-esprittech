@@ -238,6 +238,86 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.error()).toBe('Decision No Go impossible.');
   });
 
+  it('should load score for a converted candidature without sujet relation', () => {
+    const converted = {
+      ...candidature,
+      id: 18,
+      projetId: 55,
+      scoreEvaluationProjet: 84,
+      latestEvaluation: {
+        id: 9,
+        sujetProjetId: null,
+        projetCatalogueId: 55,
+        scoreFinal: 84,
+        eligibleIndustrialisation: true,
+        bloqueParEliminatoire: false,
+        dateCalcul: '2026-01-02T00:00:00Z',
+        commentaire: '',
+        calculatedBy: 'SYSTEM',
+        recalculationReason: null,
+        resultats: [
+          { id: 1, critereId: 20, critereLibelle: 'Qualite technique', typeCritere: 'NOTE', noteValue: 4, normalizedScore: 0.84 },
+        ],
+      },
+    } as CandidatureIndustrialisation;
+    const convertedScore = {
+      ...score,
+      candidatureId: 18,
+      projetId: 55,
+      scoreFinal: 84,
+      detailsCalcul: [
+        { composant: 'CRITERES_NOTES', reference: '20', libelle: 'Qualite technique', score: 84, poids: 1, statut: 'NOTE_PROJET', details: 'Evidence', revueManuelleRequise: false },
+      ],
+    } as IndustrialisationScore;
+
+    industrialisationService.getCiDetail.and.returnValue(of(converted));
+    industrialisationService.getCiScore.and.returnValue(of(convertedScore));
+
+    component.openDetail(18);
+
+    expect(industrialisationService.getCiDetail).toHaveBeenCalledWith(18);
+    expect(industrialisationService.getCiScore).toHaveBeenCalledWith(18);
+    expect(component.selected()?.id).toBe(18);
+    expect(component.score()?.scoreFinal).toBe(84);
+    expect(component.score()?.detailsCalcul.length).toBe(1);
+    expect(component.error()).toBeNull();
+  });
+
+  it('should keep detail when score fails and display Non calculé', () => {
+    industrialisationService.getCiDetail.and.returnValue(of({
+      ...candidature,
+      scoreEvaluationProjet: null,
+      latestEvaluation: null,
+    }));
+    industrialisationService.getCiScore.and.returnValue(throwError(() => new Error('score boom')));
+
+    component.openDetail(11);
+
+    expect(component.selected()?.id).toBe(11);
+    expect(component.score()).toBeNull();
+    expect(component.detailLoading()).toBeFalse();
+    expect(component.error()).toBeNull();
+    expect(component.scoreDisplay(component.selected()!)).toBe('Non calculé');
+  });
+
+  it('should show error banner only for genuine detail request failures', () => {
+    industrialisationService.getCiDetail.and.returnValue(throwError(() => ({ status: 500 })));
+    component.openDetail(18);
+    expect(component.error()).toBe('Impossible de charger le detail.');
+    expect(component.selected()).toBeNull();
+  });
+
+  it('should not reinterpret candidatureId as sujetId or projetId for score calls', () => {
+    industrialisationService.getCiDetail.and.returnValue(of({ ...candidature, id: 18, projetId: 55 }));
+    industrialisationService.getCiScore.and.returnValue(of({ ...score, candidatureId: 18, projetId: 55 }));
+
+    component.openDetail(18);
+
+    expect(industrialisationService.getCiScore).toHaveBeenCalledOnceWith(18);
+    expect(industrialisationService.getCiScore).not.toHaveBeenCalledWith(55);
+    expect(industrialisationService.getCiScore).not.toHaveBeenCalledWith(42);
+  });
+
   it('should open/close decision and livrables modals and finish after a decision', fakeAsync(() => {
     component.openLivrablesModal();
     expect(component.livrablesModalOpen).toBeTrue();

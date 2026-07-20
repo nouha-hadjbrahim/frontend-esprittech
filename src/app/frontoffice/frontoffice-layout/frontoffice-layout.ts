@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { Role } from '../../core/models/user.model';
+import { Notification } from '../../core/models/notification.model';
 import { AuthService } from '../../core/services/auth.service';
 import { AffiliationService } from '../../core/services/affiliation.service';
 import { EquipeService } from '../../core/services/equipe.service';
@@ -27,6 +28,9 @@ interface NavLink {
   children?: NavLink[];
 }
 
+const SUJET_TITLE_REGEX = /sujet\s+"([^"]+)"/i;
+const ACCEPTANCE_ROLES: Role[] = ['ROLE_ENSEIGNANT', 'ROLE_CHEF_EQUIPE'];
+
 @Component({
   selector: 'app-frontoffice-layout',
   imports: [CommonModule, RouterModule, NotificationBellComponent],
@@ -45,6 +49,12 @@ export class FrontofficeLayout implements OnInit {
   isProfileDropdownOpen = signal<boolean>(false);
 
   readonly pendingDemandesCount = signal(0);
+
+  /** Popup « sujets acceptés » affiché à la connexion. */
+  readonly showSujetAcceptedPopup = signal(false);
+  readonly acceptedSujetTitles = signal<string[]>([]);
+  private acceptedNotificationIds: number[] = [];
+  private acceptancePopupChecked = false;
 
   /** URL courante pour rafraîchir le style actif de la navbar. */
   private readonly currentUrl = toSignal(
@@ -92,6 +102,55 @@ export class FrontofficeLayout implements OnInit {
   ngOnInit(): void {
     this.loadPendingCount();
     this.notificationService.initialize();
+    this.checkSujetAcceptedPopup();
+  }
+
+  private checkSujetAcceptedPopup(): void {
+    if (this.acceptancePopupChecked) return;
+    const role = this.authService.getRole();
+    if (!role || !ACCEPTANCE_ROLES.includes(role)) return;
+
+    this.acceptancePopupChecked = true;
+    this.notificationService.fetchUnreadByType('SUJET_VALIDE').subscribe({
+      next: (notifications) => this.openAcceptancePopup(notifications),
+      error: () => undefined,
+    });
+  }
+
+  /** Expose pour les tests unitaires. */
+  openAcceptancePopup(notifications: Notification[]): void {
+    if (!notifications.length) return;
+
+    this.acceptedNotificationIds = notifications.map((n) => n.id);
+    const titles = notifications
+      .map((n) => this.extractSujetTitle(n.message))
+      .filter((title): title is string => !!title);
+    this.acceptedSujetTitles.set(titles.length ? titles : notifications.map((n) => n.title));
+    this.showSujetAcceptedPopup.set(true);
+  }
+
+  extractSujetTitle(message: string | null | undefined): string | null {
+    if (!message) return null;
+    const match = message.match(SUJET_TITLE_REGEX);
+    return match?.[1]?.trim() || null;
+  }
+
+  get acceptanceHeadline(): string {
+    const count = this.acceptedSujetTitles().length || this.acceptedNotificationIds.length;
+    return count > 1
+      ? `${count} sujets ont été acceptés`
+      : 'Votre sujet a été accepté';
+  }
+
+  dismissSujetAcceptedPopup(navigateToMesSujets = false): void {
+    this.showSujetAcceptedPopup.set(false);
+    if (this.acceptedNotificationIds.length) {
+      this.notificationService.marquerPlusieursCommeLu(this.acceptedNotificationIds);
+      this.acceptedNotificationIds = [];
+    }
+    if (navigateToMesSujets) {
+      void this.router.navigateByUrl('/frontoffice/sujets/mes-sujets');
+    }
   }
 
   private loadPendingCount(): void {

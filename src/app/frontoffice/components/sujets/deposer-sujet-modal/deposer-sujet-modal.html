@@ -138,7 +138,7 @@
 
     <div class="modal__columns">
       <div class="modal__column">
-        <div class="form-field">
+        <div class="form-field" [class.form-field--error]="isInvalid('titre')">
           <label class="form-label" for="titre">Titre</label>
           <input
             id="titre"
@@ -148,9 +148,20 @@
             formControlName="titre"
             placeholder="Titre du sujet"
           />
+          @if (isInvalid('titre')) {
+            <span class="form-error">
+              @if (form.controls.titre.errors?.['required']) {
+                Le titre est obligatoire.
+              } @else if (form.controls.titre.errors?.['minlength']) {
+                Le titre doit contenir au moins 3 caractères.
+              } @else if (form.controls.titre.errors?.['maxlength']) {
+                Le titre ne doit pas dépasser 255 caractères.
+              }
+            </span>
+          }
         </div>
 
-        <div class="form-field">
+        <div class="form-field" [class.form-field--error]="isInvalid('description')">
           <label class="form-label" for="description">Description</label>
           <textarea
             id="description"
@@ -160,9 +171,18 @@
             rows="5"
             placeholder="Décrivez le sujet..."
           ></textarea>
+          @if (isInvalid('description')) {
+            <span class="form-error">
+              @if (form.controls.description.errors?.['required']) {
+                La description est obligatoire.
+              } @else if (form.controls.description.errors?.['minlength']) {
+                La description doit contenir au moins 10 caractères.
+              }
+            </span>
+          }
         </div>
 
-        <div class="form-field">
+        <div class="form-field" [class.form-field--error]="isInvalid('objectifs')">
           <label class="form-label" for="objectifs">Objectifs</label>
           <textarea
             id="objectifs"
@@ -172,6 +192,15 @@
             rows="5"
             placeholder="Objectifs du projet..."
           ></textarea>
+          @if (isInvalid('objectifs')) {
+            <span class="form-error">
+              @if (form.controls.objectifs.errors?.['required']) {
+                Les objectifs sont obligatoires.
+              } @else if (form.controls.objectifs.errors?.['minlength']) {
+                Les objectifs doivent contenir au moins 10 caractères.
+              }
+            </span>
+          }
         </div>
 
         <div class="form-field" [class.form-field--error]="isPrerequisInvalid()">

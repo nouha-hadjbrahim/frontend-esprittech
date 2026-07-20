@@ -3,7 +3,6 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize, switchMap, forkJoin } from 'rxjs';
 
 import { Equipe } from '../../../../core/models/equipe.model';
@@ -29,7 +28,6 @@ export class EquipeDetail implements OnInit {
   private readonly equipeSvc = inject(EquipeService);
   private readonly affiliationSvc = inject(AffiliationService);
   private readonly authSvc = inject(AuthService);
-  private readonly snack = inject(MatSnackBar);
 
   readonly currentUser = this.authSvc.currentUser;
 
@@ -138,7 +136,6 @@ export class EquipeDetail implements OnInit {
         error: () => {
           this.error.set("Impossible de charger l'équipe. Vérifiez que le backend est démarré.");
           this.loading.set(false);
-          this.toast("Erreur lors du chargement de l'équipe");
         },
       });
   }
@@ -183,9 +180,7 @@ export class EquipeDetail implements OnInit {
         } else {
           this.loadMesDemandes();
         }
-        this.toast('Demande d\'affiliation envoyée', 'succes');
       },
-      error: () => this.toast("Erreur lors de l'envoi de la demande"),
     });
   }
 
@@ -205,7 +200,6 @@ export class EquipeDetail implements OnInit {
   onEditSaved(): void {
     this.editModalOpen = false;
     this.reloadEquipe();
-    this.toast('Équipe mise à jour', 'succes');
   }
 
   openAddMemberModal(): void {
@@ -215,7 +209,6 @@ export class EquipeDetail implements OnInit {
   onMemberAdded(): void {
     this.addMemberModalOpen = false;
     this.reloadEquipe();
-    this.toast('Membre(s) ajouté(s) avec succès', 'succes');
   }
 
   accepterDemande(id: number, nom?: string): void {
@@ -225,9 +218,7 @@ export class EquipeDetail implements OnInit {
       next: () => {
         this.reloadEquipe();
         this.loadAffiliations(eq.id);
-        this.toast(`Demande ${nom ? 'de ' + nom : ''} acceptée`, 'succes');
       },
-      error: () => this.toast("Erreur lors de l'acceptation de la demande"),
     });
   }
 
@@ -246,9 +237,7 @@ export class EquipeDetail implements OnInit {
         this.motifDialogOpen = false;
         this.pendingRefuseId = null;
         this.loadAffiliations(eq.id);
-        this.toast('Demande refusée', 'succes');
       },
-      error: () => this.toast("Erreur lors du refus de la demande"),
     });
   }
 
@@ -263,9 +252,7 @@ export class EquipeDetail implements OnInit {
     this.equipeSvc.retirerMembre(eq.id, userId).subscribe({
       next: () => {
         this.reloadEquipe();
-        this.toast('Membre retiré de l\'équipe', 'succes');
       },
-      error: () => this.toast('Erreur lors du retrait du membre'),
     });
   }
 
@@ -277,7 +264,6 @@ export class EquipeDetail implements OnInit {
         this.equipe.set(data);
         this.loadMembres(data.id);
       },
-      error: () => this.toast("Erreur lors du rechargement de l'équipe"),
     });
   }
 
@@ -332,10 +318,4 @@ export class EquipeDetail implements OnInit {
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
-  private toast(msg: string, type: 'succes' | 'erreur' = 'erreur') {
-    this.snack.open(msg, '✕', {
-      duration: 3500,
-      panelClass: type === 'succes' ? ['snack-success'] : ['snack-error'],
-    });
-  }
 }

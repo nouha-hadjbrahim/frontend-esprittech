@@ -173,7 +173,10 @@
 }
 
 .form-error {
+  display: block;
+  margin-top: 6px;
   font-size: 12px;
+  line-height: 1.35;
   color: #dc2626;
 }
 

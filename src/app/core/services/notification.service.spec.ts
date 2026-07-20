@@ -251,6 +251,19 @@ describe('NotificationService', () => {
     });
   });
 
+  describe('fetchUnreadByType', () => {
+    it('should request unread notifications filtered by type', () => {
+      const notifs = [makeNotification({ id: 5, type: 'SUJET_VALIDE' })];
+      service.fetchUnreadByType('SUJET_VALIDE').subscribe((result) => {
+        expect(result).toEqual(notifs);
+      });
+
+      const req = http.expectOne(`${API}/unread?type=SUJET_VALIDE`);
+      expect(req.request.method).toBe('GET');
+      req.flush(notifs);
+    });
+  });
+
   describe('initialize', () => {
     it('should not fetch if already initialized', () => {
       (service as any).initialized = true;

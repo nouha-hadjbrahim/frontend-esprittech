@@ -293,19 +293,27 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
 
   // ── Évaluation du projet ─────────────────────────────────────────────
 
-  /** Un projet du catalogue est évaluable automatiquement dès qu'il est validé (dépôt manuel ou issu d'un sujet). */
-  get isEvaluable(): boolean {
-    return this.projet?.statut === 'VALIDE';
+  /**
+   * Affichage de l'évaluation persistée : disponible pour tout projet publié au catalogue,
+   * indépendamment du passage de VALIDE vers un statut d'industrialisation.
+   */
+  get canViewEvaluation(): boolean {
+    return !!this.projet && STATUTS_CATALOGUE.has(this.projet.statut);
   }
 
-  /** Le recalcul est réservé à l'encadrant, sur un projet catalogue validé. */
+  /** Alias historique : l'affichage n'est plus limité au seul statut VALIDE. */
+  get isEvaluable(): boolean {
+    return this.canViewEvaluation;
+  }
+
+  /** Le recalcul reste réservé à l'encadrant sur un projet encore VALIDE (règle backend). */
   get canRecalculateScore(): boolean {
-    return this.isOwner && this.isEvaluable;
+    return this.isOwner && this.projet?.statut === 'VALIDE';
   }
 
   /** Charge la dernière évaluation du projet catalogue (indexée par l'identifiant de projet). */
   loadEvaluation(): void {
-    if (!this.projet || !this.isEvaluable) {
+    if (!this.projet || !this.canViewEvaluation) {
       this.evaluation = null;
       return;
     }
@@ -496,6 +504,10 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   }
 
   deleteLivrable(livrable: LivrableCatalogue): void {
+    if (livrable.fromSujet) {
+      this.livrableError = 'Ce livrable appartient au sujet d’origine et ne peut pas être supprimé ici.';
+      return;
+    }
     this.livrableService.delete(livrable.id).subscribe({
       next: () => this.loadLivrables(),
       error: () => (this.livrableError = 'Suppression impossible.'),
@@ -503,6 +515,9 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   }
 
   downloadLivrable(livrable: LivrableCatalogue): string {
+    if (livrable.fromSujet && this.projet) {
+      return this.livrableService.downloadPublishedUrl(this.projet.id, livrable.id, true);
+    }
     return this.livrableService.downloadUrl(livrable.id);
   }
 

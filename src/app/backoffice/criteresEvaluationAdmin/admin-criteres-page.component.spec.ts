@@ -359,6 +359,7 @@ describe('AdminCriteresPageComponent', () => {
     })));
 
     component.deleteNoteLevel(levels[0]);
+    expect(component.deleteConfirmOpen).toBeTrue();
     component.confirmDelete();
 
     expect(noteLevelService.delete).toHaveBeenCalledWith(1);

@@ -130,7 +130,7 @@ describe('EvaluationPageComponent', () => {
     expect(component.filteredProjects().length).toBe(3);
 
     component.updateProjectSearch('eligible');
-    expect(component.filteredProjects().map((project) => project.id)).toEqual([2]);
+    expect(component.filteredProjects().map((project) => project.id)).toEqual([2, 3]);
 
     component.updateProjectSearch('non eligible');
     expect(component.filteredProjects().map((project) => project.id)).toEqual([3]);

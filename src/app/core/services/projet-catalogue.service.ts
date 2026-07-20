@@ -10,6 +10,7 @@ import {
   ReferenceItem,
   TypeProjet,
 } from '../models/projet-catalogue.model';
+import { EvaluationResponse } from '../models/evaluation.model';
 
 /** Filtres optionnels du catalogue public. */
 export interface CatalogueFiltres {
@@ -56,6 +57,11 @@ export class ProjetCatalogueService {
   /** Détail vue publique du catalogue (statut public requis). */
   detailsCatalogue(id: number): Observable<ProjetDetails> {
     return this.http.get<ProjetDetails>(`${this.catalogueUrl}/${id}`);
+  }
+
+  /** Dernière évaluation ML d'un projet publié (fallback sujet d'origine). */
+  evaluationCatalogue(id: number): Observable<EvaluationResponse> {
+    return this.http.get<EvaluationResponse>(`${this.catalogueUrl}/${id}/evaluation`);
   }
 
   // ── Admin ──────────────────────────────────────────────────────────
