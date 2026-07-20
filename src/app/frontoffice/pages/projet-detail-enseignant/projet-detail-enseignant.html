@@ -585,7 +585,7 @@
                           </svg>
                         </a>
                       }
-                      @if (canManageLivrables) {
+                      @if (canManageLivrables && !livrable.fromSujet) {
                         <button
                           type="button"
                           class="livrable-item__action livrable-item__action--danger"

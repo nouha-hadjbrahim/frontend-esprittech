@@ -17,6 +17,8 @@ export interface LivrableCatalogue {
   deposantNom: string;
   dateDepot: string;
   actif: boolean;
+  /** True si le livrable est hérité du sujet d'origine (lecture seule). */
+  fromSujet?: boolean | null;
 }
 
 export type { LivrableLinkRequest };

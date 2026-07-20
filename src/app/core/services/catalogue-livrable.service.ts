@@ -42,4 +42,14 @@ export class CatalogueLivrableService {
   downloadUrl(id: number): string {
     return `${this.apiUrl}/livrables-catalogue/${id}/download`;
   }
+
+  /** Téléchargement public catalogue (supporte fromSujet pour les livrables hérités). */
+  downloadPublishedUrl(projetId: number, livrableId: number, fromSujet = false): string {
+    const qs = fromSujet ? '?fromSujet=true' : '';
+    return `${this.apiUrl}/catalogue/${projetId}/livrables/${livrableId}/download${qs}`;
+  }
+
+  findPublishedByProjet(projetId: number): Observable<LivrableCatalogue[]> {
+    return this.http.get<LivrableCatalogue[]>(`${this.apiUrl}/catalogue/${projetId}/livrables`);
+  }
 }
