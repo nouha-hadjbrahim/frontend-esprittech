@@ -925,4 +925,134 @@ describe('EquipeDetail', () => {
       });
     });
   });
+
+  describe('couleurAvatarMembre', () => {
+    it('should return red for chef', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.couleurAvatarMembre(chefUser, 0)).toBe('#ef4444');
+    });
+
+    it('should return different colors for non-chef members by index', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      const c1 = component.couleurAvatarMembre(memberUser, 1);
+      const c2 = component.couleurAvatarMembre(memberUser, 2);
+      const c3 = component.couleurAvatarMembre(memberUser, 3);
+      const c4 = component.couleurAvatarMembre(memberUser, 4);
+      expect(c1).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(c2).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(c3).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(c4).toMatch(/^#[0-9a-fA-F]{6}$/);
+    });
+  });
+
+  describe('initiales edge cases', () => {
+    it('should handle empty string', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.initiales('')).toBe('');
+    });
+
+    it('should handle single word', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.initiales('Alice')).toBe('A');
+    });
+  });
+
+  describe('accepterDemande with nom', () => {
+    it('should pass nom in toast', () => {
+      currentUserSignal.set(chefUser);
+      authSvc.getRole.and.returnValue('ROLE_CHEF_EQUIPE');
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      affiliationSvc.traiter.and.returnValue(of(mockAcceptee as any));
+      spyOn(component as any, 'reloadEquipe').and.callThrough();
+      spyOn(component as any, 'loadAffiliations').and.callThrough();
+      component.accepterDemande(1, 'Jean Dupont');
+      expect(affiliationSvc.traiter).toHaveBeenCalledWith(1, 1, 'ACCEPTEE');
+    });
+  });
+
+  describe('rejoindreEquipe error toast', () => {
+    it('should show error toast on create failure', () => {
+      currentUserSignal.set(enseignantUser);
+      authSvc.getRole.and.returnValue('ROLE_ENSEIGNANT');
+      affiliationSvc.create.and.returnValue(throwError(() => new Error('fail')));
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      spyOn<any>(component, 'toast');
+      component.rejoindreEquipe();
+      expect((component as any).toast).toHaveBeenCalledWith("Erreur lors de l'envoi de la demande");
+    });
+  });
+
+  describe('reloadEquipe error toast', () => {
+    it('should show error toast on reload failure', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      equipeSvc.getById.and.returnValue(throwError(() => new Error('fail')));
+      spyOn<any>(component, 'toast');
+      (component as any).reloadEquipe();
+      expect((component as any).toast).toHaveBeenCalledWith("Erreur lors du rechargement de l'équipe");
+    });
+  });
+
+  describe('loadMembres error path with finalize', () => {
+    it('should set loading false after getMembres error', () => {
+      equipeSvc.getById.and.returnValue(of(mockEquipe));
+      equipeSvc.getMembres.and.returnValue(throwError(() => new Error('fail')));
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.loading()).toBeFalse();
+      expect(component.membres()).toEqual([]);
+    });
+  });
+
+  describe('toast method', () => {
+    it('should call snack.open with succes panel class', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      spyOn((component as any).snack, 'open');
+      (component as any).toast('Test message', 'succes');
+      expect((component as any).snack.open).toHaveBeenCalledWith('Test message', '✕', {
+        duration: 3500,
+        panelClass: ['snack-success'],
+      });
+    });
+
+    it('should call snack.open with error panel class by default', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      spyOn((component as any).snack, 'open');
+      (component as any).toast('Error message');
+      expect((component as any).snack.open).toHaveBeenCalledWith('Error message', '✕', {
+        duration: 3500,
+        panelClass: ['snack-error'],
+      });
+    });
+  });
+
+  describe('ngOnInit with non-chef non-enseignant role', () => {
+    it('should not load affiliations for admin role', () => {
+      authSvc.getRole.and.returnValue('ROLE_ADMIN');
+      currentUserSignal.set(null);
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(affiliationSvc.getByEquipe).not.toHaveBeenCalled();
+      expect(affiliationSvc.getMesDemandes).not.toHaveBeenCalled();
+    });
+  });
 });

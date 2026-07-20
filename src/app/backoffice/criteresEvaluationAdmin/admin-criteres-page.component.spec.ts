@@ -353,13 +353,13 @@ describe('AdminCriteresPageComponent', () => {
   });
 
   it('should show conflict warning when deleting a used note level', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
     noteLevelService.delete.and.returnValue(throwError(() => new HttpErrorResponse({
       status: 409,
       error: { detail: 'Ce niveau de note est deja utilise. Vous pouvez le desactiver au lieu de le supprimer.' },
     })));
 
     component.deleteNoteLevel(levels[0]);
+    component.confirmDelete();
 
     expect(noteLevelService.delete).toHaveBeenCalledWith(1);
     expect(component.warningMessage()).toBe('Ce niveau de note est deja utilise. Vous pouvez le desactiver au lieu de le supprimer.');
@@ -391,6 +391,217 @@ describe('AdminCriteresPageComponent', () => {
 
     tick(3000);
   }));
+
+  it('should show validation messages for domaine, ordre, poids and defaultNoteValue', () => {
+    component.openCreateModal('note');
+    component.noteForm.controls['libelle'].setValue('Valid');
+    component.noteForm.controls['domaine'].setValue('');
+    component.saveCritere();
+    expect(component.warningMessage()).toBe('Le domaine est obligatoire.');
+
+    component.noteForm.controls['domaine'].setValue('Domaine');
+    component.noteForm.controls['ordre'].setValue(0);
+    component.saveCritere();
+    expect(component.warningMessage()).toContain("L'ordre");
+
+    component.noteForm.controls['ordre'].setValue(1);
+    component.noteForm.controls['poids'].setValue(0);
+    component.saveCritere();
+    expect(component.warningMessage()).toContain('Le poids');
+
+    component.noteForm.controls['poids'].setValue(1);
+    component.noteForm.controls['defaultNoteValue'].setValue(0);
+    component.saveCritere();
+    expect(component.warningMessage()).toContain('La note par defaut');
+  });
+
+  it('should show validation messages for noteLevel value and order', () => {
+    component.openNoteLevelModal();
+    component.noteLevelForm.controls['label'].setValue('Test');
+    component.noteLevelForm.controls['value'].setValue(0);
+    component.saveNoteLevel();
+    expect(component.warningMessage()).toContain('La valeur');
+
+    component.noteLevelForm.controls['value'].setValue(1);
+    component.noteLevelForm.controls['order'].setValue(0);
+    component.saveNoteLevel();
+    expect(component.warningMessage()).toContain("L'ordre");
+  });
+
+  it('should return correct deleteConfirmTitle and deleteConfirmMessage', () => {
+    component.deleteTarget = { kind: 'note', item: notes[0] };
+    expect(component.deleteConfirmTitle).toBe('Supprimer le critère note');
+    expect(component.deleteConfirmMessage).toContain('Qualite code');
+
+    component.deleteTarget = { kind: 'level', item: levels[0] };
+    expect(component.deleteConfirmTitle).toBe('Supprimer le niveau de note');
+    expect(component.deleteConfirmMessage).toContain('Tres insatisfait');
+
+    component.deleteTarget = null;
+    expect(component.deleteConfirmMessage).toBe('');
+  });
+
+  it('should return noteLabel with fallback for null/undefined', () => {
+    expect(component.noteLabel(null)).toBe('3');
+    expect(component.noteLabel(undefined)).toBe('3');
+    expect(component.noteLabel(3)).toBe('3 - Peu satisfait');
+    expect(component.noteLabel(99)).toBe('99');
+  });
+
+  it('should skip when toggling, deleting or saving is already in progress', () => {
+    component.toggling.set(true);
+    component.toggleActivation('eliminatoire', eliminatoires[0]);
+    expect(eliminatoireService.deactivate).not.toHaveBeenCalled();
+    component.toggling.set(false);
+
+    component.saving.set(true);
+    component.openCreateModal('eliminatoire');
+    component.saveCritere();
+    component.saving.set(false);
+
+    component.deleting.set(true);
+    component.deleteCritereNote(notes[0]);
+    expect(component.deleteConfirmOpen).toBeFalse();
+    component.deleting.set(false);
+
+    component.deleting.set(true);
+    component.deleteNoteLevel(levels[0]);
+    expect(component.deleteConfirmOpen).toBeFalse();
+    component.deleting.set(false);
+
+    component.deleting.set(true);
+    component.cancelDelete();
+    expect(component.deleteConfirmOpen).toBeFalse();
+    component.deleting.set(false);
+
+    component.deleting.set(true);
+    component.confirmDelete();
+    expect(component.deleteConfirmOpen).toBeFalse();
+    component.deleting.set(false);
+  });
+
+  it('should handle noteForm saving guard', () => {
+    component.saving.set(true);
+    component.openCreateModal('note');
+    component.noteForm.patchValue({ libelle: 'Test', domaine: 'D', ordre: 1, poids: 1, defaultNoteValue: 3 });
+    component.saveCritere();
+    expect(noteService.create).not.toHaveBeenCalled();
+    component.saving.set(false);
+  });
+
+  it('should handle noteLevel saving guard', () => {
+    component.saving.set(true);
+    component.openNoteLevelModal();
+    component.noteLevelForm.patchValue({ value: 6, label: 'Excellent', order: 6 });
+    component.saveNoteLevel();
+    expect(noteLevelService.create).not.toHaveBeenCalled();
+    component.saving.set(false);
+  });
+
+  it('should handle extractErrorMessage with string payload, payload.message, payload.errors', () => {
+    const stringErr = { error: '  Direct string error  ' } as any;
+    expect(component['extractErrorMessage'](stringErr, 'fallback')).toBe('Direct string error');
+
+    const msgErr = { error: { message: 'Message field' } } as any;
+    expect(component['extractErrorMessage'](msgErr, 'fallback')).toBe('Message field');
+
+    const detailErr = { error: { detail: 'Detail field' } } as any;
+    expect(component['extractErrorMessage'](detailErr, 'fallback')).toBe('Detail field');
+
+    const errorsErr = { error: { errors: { libelle: 'Already used' } } } as any;
+    expect(component['extractErrorMessage'](errorsErr, 'fallback')).toBe('Already used');
+
+    const httpErr = new Error('HttpError');
+    expect(component['extractErrorMessage'](httpErr, 'fallback')).toBe('HttpError');
+  });
+
+  it('should handle isBusinessStatus correctly', () => {
+    expect(component['isBusinessStatus']({ status: 400 })).toBeTrue();
+    expect(component['isBusinessStatus']({ status: 404 })).toBeTrue();
+    expect(component['isBusinessStatus']({ status: 409 })).toBeTrue();
+    expect(component['isBusinessStatus']({ status: 500 })).toBeFalse();
+  });
+
+  it('should close feedback and clear messages', () => {
+    component.successMessage.set('ok');
+    component.warningMessage.set('warn');
+    component.errorMessage.set('err');
+    component.feedbackOpen = true;
+    component.feedbackMessage = 'msg';
+    component.closeFeedback();
+    expect(component.successMessage()).toBeNull();
+    expect(component.warningMessage()).toBeNull();
+    expect(component.errorMessage()).toBeNull();
+    expect(component.feedbackOpen).toBeFalse();
+    expect(component.feedbackMessage).toBe('');
+  });
+
+  it('should compute operationInProgress', () => {
+    expect(component.operationInProgress()).toBeFalse();
+    component.saving.set(true);
+    expect(component.operationInProgress()).toBeTrue();
+    component.saving.set(false);
+    component.deleting.set(true);
+    expect(component.operationInProgress()).toBeTrue();
+    component.deleting.set(false);
+    component.toggling.set(true);
+    expect(component.operationInProgress()).toBeTrue();
+    component.toggling.set(false);
+  });
+
+  it('should compute defaultActiveNoteValue and maxActiveNoteValue', () => {
+    component.noteLevels.set([]);
+    expect(component.defaultActiveNoteValue).toBe(1);
+
+    component.noteLevels.set(levels);
+    expect(component.defaultActiveNoteValue).toBe(1);
+    expect(component.maxActiveNoteValue).toBe(5);
+  });
+
+  it('should filter eliminatoires by statut inactif', () => {
+    component.criteresEliminatoires.set([
+      { ...eliminatoires[0], actif: true },
+      { ...eliminatoires[0], id: 99, actif: false },
+    ]);
+    component.selectedStatutElim.set('inactif');
+    expect(component.filteredEliminatoires().length).toBe(1);
+    expect(component.filteredEliminatoires()[0].actif).toBeFalse();
+  });
+
+  it('should filter notes by statut actif', () => {
+    component.criteresNotes.set([
+      { ...notes[0], actif: true },
+      { ...notes[0], id: 99, actif: false },
+    ]);
+    component.selectedStatutNote.set('actif');
+    expect(component.filteredNotes().length).toBe(1);
+    expect(component.filteredNotes()[0].actif).toBeTrue();
+  });
+
+  it('should handle statutElimFilterLabel and statutNoteFilterLabel', () => {
+    expect(component.statutElimFilterLabel).toBe('Tous les statuts');
+    component.selectedStatutElim.set('actif');
+    expect(component.statutElimFilterLabel).toBe('Actif');
+    component.selectedStatutElim.set('inactif');
+    expect(component.statutElimFilterLabel).toBe('Inactif');
+
+    expect(component.statutNoteFilterLabel).toBe('Tous les statuts');
+    component.selectedStatutNote.set('actif');
+    expect(component.statutNoteFilterLabel).toBe('Actif');
+  });
+
+  it('should handle loadNoteLevels error', () => {
+    noteLevelService.findAll.and.returnValue(throwError(() => new Error('boom')));
+    component['loadNoteLevels']();
+    expect(component.errorMessage()).toBe('boom');
+  });
+
+  it('should handle eliminatoireForm validation on invalid', () => {
+    component.openCreateModal('eliminatoire');
+    component.eliminatoireForm.controls['libelle'].setValue('');
+    component.saveCritere();
+    expect(component.warningMessage()).toBe('Formulaire invalide.');
+  });
 
   it('should toggle activation and clamp pagination', () => {
     component.toggleActivation('eliminatoire', eliminatoires[0]);
