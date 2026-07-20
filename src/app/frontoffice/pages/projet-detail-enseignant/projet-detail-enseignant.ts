@@ -441,9 +441,13 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
     if (!this.projet) return;
     this.livrablesLoading = true;
     this.livrableError = '';
-    this.livrableService.findByProjet(this.projet.id).subscribe({
+    const request = STATUTS_CATALOGUE.has(this.projet.statut)
+      ? this.livrableService.findPublishedByProjet(this.projet.id)
+      : this.livrableService.findByProjet(this.projet.id);
+    request.subscribe({
       next: (livrables) => {
-        this.livrables = livrables;
+        this.livrables = this.dedupeLivrables(livrables);
+        this.livrableError = '';
         this.livrablesLoading = false;
       },
       error: () => {
@@ -519,6 +523,16 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
       return this.livrableService.downloadPublishedUrl(this.projet.id, livrable.id, true);
     }
     return this.livrableService.downloadUrl(livrable.id);
+  }
+
+  trackLivrable(livrable: LivrableCatalogue): string {
+    if (livrable.objectName?.trim()) {
+      return `object:${livrable.objectName.trim()}`;
+    }
+    if (livrable.lienExterne?.trim()) {
+      return `link:${livrable.lienExterne.trim().toLowerCase()}`;
+    }
+    return `${livrable.fromSujet ? 'sujet' : 'catalogue'}:${livrable.id}`;
   }
 
   livrableDisplayName(livrable: LivrableCatalogue): string {
@@ -921,6 +935,18 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   private cleanText(value: string | null | undefined): string | null {
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
+  }
+
+  private dedupeLivrables(livrables: LivrableCatalogue[]): LivrableCatalogue[] {
+    const seen = new Set<string>();
+    return livrables.filter((livrable) => {
+      const key = this.trackLivrable(livrable);
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
   }
 
   private textValueForPayload(question: QuestionIndustrialisation, answer: ReponseIndustrialisationRequest): string | null {
