@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { ProjetDetails } from '../../../core/models/projet-catalogue.model';
 import { EvaluationResponse } from '../../../core/models/evaluation.model';
+import { LivrableCatalogue } from '../../../core/models/livrable-catalogue.model';
 import { ProjetDetailCatalogue } from './projet-detail-catalogue';
 import { environment } from '../../../../environments/environment';
 
@@ -39,7 +40,7 @@ describe('ProjetDetailCatalogue', () => {
     commentaire: 'ok',
   };
 
-  const inheritedLivrable = {
+  const inheritedLivrable: LivrableCatalogue = {
     id: 99,
     projetId: 1,
     projetTitre: 'Projet IA',
@@ -56,9 +57,9 @@ describe('ProjetDetailCatalogue', () => {
     dateDepot: '2026-02-01T10:00:00',
     actif: true,
     fromSujet: true,
-  } as const;
+  };
 
-  const directLivrable = {
+  const directLivrable: LivrableCatalogue = {
     id: 12,
     projetId: 1,
     projetTitre: 'Projet IA',
@@ -75,7 +76,7 @@ describe('ProjetDetailCatalogue', () => {
     dateDepot: '2026-03-01T10:00:00',
     actif: true,
     fromSujet: false,
-  } as const;
+  };
 
   function createComponent(id: string = '1'): void {
     TestBed.configureTestingModule({
@@ -145,6 +146,7 @@ describe('ProjetDetailCatalogue', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${API}/catalogue/1`).flush(mockDetails);
     flushDetailExtras(mockEvaluation, [directLivrable, inheritedLivrable]);
+    component.setTab('livrables');
     fixture.detectChanges();
 
     expect(component.livrables.length).toBe(2);
@@ -172,6 +174,7 @@ describe('ProjetDetailCatalogue', () => {
       directLivrable,
       { ...inheritedLivrable, objectName: directLivrable.objectName, nom: 'Doublon' },
     ]);
+    component.setTab('livrables');
     fixture.detectChanges();
 
     expect(component.livrables.length).toBe(1);
