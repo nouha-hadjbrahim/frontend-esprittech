@@ -40,7 +40,7 @@
         }
       </div>
 
-      <aside class="score-card">
+      <aside class="score-card" aria-label="Score final">
         <span>Score final</span>
         <strong>{{ projet.score }}</strong>
         <small>/100</small>
@@ -281,7 +281,7 @@
             </article>
           </div>
 
-          <aside class="projet-detail__sidebar sujet-detail__sidebar">
+          <aside class="projet-detail__sidebar sujet-detail__sidebar" aria-label="Stack technique">
             <div class="sidebar-card">
               <span class="sidebar-chip sidebar-chip--red">
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -559,7 +559,7 @@
                           class="livrable-item__action"
                           [href]="downloadLivrable(livrable)"
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           title="Télécharger"
                           aria-label="Télécharger {{ livrableDisplayName(livrable) }}"
                         >
@@ -573,7 +573,7 @@
                           class="livrable-item__action"
                           [href]="livrable.lienExterne"
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           title="Ouvrir"
                           aria-label="Ouvrir le lien"
                         >

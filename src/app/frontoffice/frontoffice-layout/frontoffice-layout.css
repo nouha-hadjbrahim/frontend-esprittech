@@ -295,10 +295,6 @@
     color: #666;
 }
 
-.profile-dropdown {
-    position: relative;
-}
-
 /* For main content — pleine largeur, fond blanc, ~1cm de marge latérale en plus */
 .main-content {
     flex: 1;

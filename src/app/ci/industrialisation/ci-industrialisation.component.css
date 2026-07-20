@@ -1004,16 +1004,6 @@ p {
   border-color: #e0e0e0;
 }
 
-.info-pill span,
-.helper-pill span {
-  display: block;
-  color: #9b1c1c;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
 .decision-helper .helper-pill > span {
   margin-bottom: 8px;
   color: #666666;
@@ -1028,15 +1018,6 @@ p {
   font-size: 0.6rem;
   font-weight: 500;
   letter-spacing: 0.08em;
-}
-
-.info-pill strong,
-.helper-pill strong {
-  display: block;
-  margin-top: 6px;
-  color: #111827;
-  font-size: 14px;
-  font-weight: 750;
 }
 
 .decision-helper .helper-pill strong:not(.helper-decision) {
@@ -1510,11 +1491,6 @@ p {
   border-radius: 16px;
   background: #fbfdff;
   text-align: center;
-}
-
-.inline-empty,
-.state-card,
-.detail-empty {
   display: grid;
   justify-items: center;
   gap: 8px;
