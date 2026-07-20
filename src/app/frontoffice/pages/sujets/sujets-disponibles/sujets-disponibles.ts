@@ -4,7 +4,6 @@ import { CategorieSujet, StatutSujet, SujetProjet } from '../../../../core/model
 import { AuthService } from '../../../../core/services/auth.service';
 import { CandidatureService } from '../../../../core/services/candidature.service';
 import { SujetProjetService } from '../../../../core/services/sujet-projet.service';
-import { DeposerSujetModal } from '../../../components/sujets/deposer-sujet-modal/deposer-sujet-modal';
 import { FilterDropdown } from '../../../components/sujets/filter-dropdown/filter-dropdown';
 import { PostulerModal } from '../../../components/sujets/postuler-modal/postuler-modal';
 import { SujetDisponibleCard } from '../../../components/sujets/sujet-disponible-card/sujet-disponible-card';
@@ -20,7 +19,6 @@ const PAGE_SIZE = 9;
   selector: 'app-sujets-disponibles',
   imports: [
     FormsModule,
-    DeposerSujetModal,
     SujetDisponibleCard,
     FilterDropdown,
     PostulerModal,
@@ -40,7 +38,6 @@ export class SujetsDisponibles implements OnInit {
   filteredSujets: SujetProjet[] = [];
   pagedSujets: SujetProjet[] = [];
   isLoading = true;
-  isModalOpen = false;
   searchQuery = '';
   selectedCategorie = '';
   selectedStatut = '';
@@ -55,9 +52,6 @@ export class SujetsDisponibles implements OnInit {
   selectedSujet: SujetProjet | null = null;
   mesCandidaturesSujetIds: Set<number> = new Set();
 
-  readonly canDeposerSujet = computed(
-    () => this.authService.getRole() === 'ROLE_ENSEIGNANT' || this.authService.getRole() === 'ROLE_CHEF_EQUIPE',
-  );
   readonly isEtudiant = computed(() => this.authService.getRole() === 'ROLE_ETUDIANT');
 
   readonly categoriePills = [{ value: '', label: 'Tous' }, ...CATEGORIE_OPTIONS];
@@ -137,19 +131,6 @@ export class SujetsDisponibles implements OnInit {
 
   dejaPostule(sujet: SujetProjet): boolean {
     return this.mesCandidaturesSujetIds.has(sujet.id);
-  }
-
-  openModal(): void {
-    this.isModalOpen = true;
-  }
-
-  closeModal(): void {
-    this.isModalOpen = false;
-  }
-
-  onSujetSaved(): void {
-    this.isModalOpen = false;
-    this.loadSujets();
   }
 
   selectCategoriePill(value: string): void {

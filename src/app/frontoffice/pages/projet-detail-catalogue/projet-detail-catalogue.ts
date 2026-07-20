@@ -52,6 +52,12 @@ export class ProjetDetailCatalogue implements OnInit {
   historiqueError = '';
   historiqueForbidden = false;
 
+  activeTab: 'infos' | 'evaluation' | 'livrables' | 'historique' = 'infos';
+
+  setTab(tab: 'infos' | 'evaluation' | 'livrables' | 'historique'): void {
+    this.activeTab = tab;
+  }
+
   get coverImage(): string {
     return this.projet?.coverImage || this.defaultCoverImage;
   }

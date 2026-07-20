@@ -66,10 +66,11 @@ export class MesSujets implements OnInit {
   readonly categorieOptions = [{ value: '', label: 'Tous les types' }, ...CATEGORIE_OPTIONS];
   readonly statutOptions = [
     { value: '', label: 'Tous les statuts' },
-    ...Object.entries(STATUT_LABELS).map(([value, info]) => ({
-      value,
-      label: info.label,
-    })),
+    { value: 'SOUMIS_EN_VALIDATION', label: STATUT_LABELS.SOUMIS_EN_VALIDATION.label },
+    { value: 'VALIDE', label: STATUT_LABELS.VALIDE.label },
+    { value: 'INVALIDE', label: STATUT_LABELS.INVALIDE.label },
+    { value: 'CANDIDATURE_OUVERTE', label: STATUT_LABELS.CANDIDATURE_OUVERTE.label },
+    { value: 'REALISATION_EN_COURS', label: STATUT_LABELS.REALISATION_EN_COURS.label },
   ];
   readonly sortOptions = [
     { value: 'recent', label: 'Plus récents' },

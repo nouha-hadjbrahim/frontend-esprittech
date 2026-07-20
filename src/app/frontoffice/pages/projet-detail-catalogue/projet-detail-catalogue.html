@@ -41,6 +41,42 @@
       </aside>
     </section>
 
+    <div class="sujet-detail__tabs-bar">
+      <nav class="sujet-detail__tabs" aria-label="Sections du projet">
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'infos'" (click)="setTab('infos')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2.5 3.5H13.5V12.5H2.5V3.5Z" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M5.5 6.5H10.5M5.5 9H8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          Informations
+        </button>
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'evaluation'" (click)="setTab('evaluation')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 1.8L8.9 5.2H12.5L9.7 7.3L10.6 10.7L8 8.7L5.4 10.7L6.3 7.3L3.5 5.2H7.1L8 1.8Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
+          Évaluation
+        </button>
+        <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'livrables'" (click)="setTab('livrables')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 1.75 2.75 4.5 8 7.25 13.25 4.5 8 1.75Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M2.75 8 8 10.75 13.25 8" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M2.75 11.25 8 14 13.25 11.25" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
+          Livrables
+        </button>
+        @if (canViewHistorique && !historiqueForbidden) {
+          <button type="button" class="sujet-detail__tab" [class.sujet-detail__tab--active]="activeTab === 'historique'" (click)="setTab('historique')">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M8 5.25V8.25L10.1 9.55" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Historique
+          </button>
+        }
+      </nav>
+    </div>
+
+    @if (activeTab === 'infos') {
     <div class="detail-grid">
       <article class="panel-card">
         <header class="panel-card__header">
@@ -151,7 +187,9 @@
         <p class="panel-card__empty">Aucun prérequis renseigné.</p>
       }
     </article>
+    }
 
+    @if (activeTab === 'evaluation') {
     <article class="panel-card panel-card--full">
       <header class="panel-card__header">
         <span class="panel-card__icon" aria-hidden="true">
@@ -210,7 +248,9 @@
         <p class="panel-card__empty">Non calculé</p>
       }
     </article>
+    }
 
+    @if (activeTab === 'livrables') {
     <article class="panel-card panel-card--full">
       <header class="panel-card__header">
         <span class="panel-card__icon" aria-hidden="true">
@@ -252,8 +292,9 @@
         <p class="panel-card__empty">Aucun livrable disponible.</p>
       }
     </article>
+    }
 
-    @if (canViewHistorique && !historiqueForbidden) {
+    @if (activeTab === 'historique' && canViewHistorique && !historiqueForbidden) {
       <article class="panel-card panel-card--full">
         <header class="panel-card__header">
           <span class="panel-card__icon" aria-hidden="true">
