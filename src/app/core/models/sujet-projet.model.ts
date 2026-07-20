@@ -57,4 +57,5 @@ export interface SujetProjet {
   dateTerminaison: string | null;
   motifInvalidation: string | null;
   nombreMembresActifs?: number;
+  candidatureAcceptee?: boolean;
 }
