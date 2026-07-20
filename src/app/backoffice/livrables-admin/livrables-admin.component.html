@@ -108,7 +108,7 @@
     } @else if (filteredLivrables().length === 0) {
       <div class="empty-row">Aucun livrable trouvé.</div>
     } @else {
-      <table class="subjects-table">
+      <table class="subjects-table" aria-label="Livrables">
         <thead>
           <tr>
             <th>Nom</th>
@@ -146,7 +146,7 @@
                       class="icon-btn-action download"
                       [href]="download(livrable)"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       title="Télécharger"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -160,7 +160,7 @@
                       class="icon-btn-action view"
                       [href]="livrable.lienExterne"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       title="Ouvrir le lien"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

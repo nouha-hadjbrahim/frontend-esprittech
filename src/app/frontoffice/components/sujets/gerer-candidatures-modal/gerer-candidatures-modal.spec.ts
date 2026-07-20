@@ -9,9 +9,9 @@ describe('GererCandidaturesModal', () => {
   let fixture: ComponentFixture<GererCandidaturesModal>;
   let candidatureServiceSpy: jasmine.SpyObj<CandidatureService>;
 
-  const mockSujetValide: any = { id: 1, titre: 'Sujet A', statut: 'VALIDE' };
-  const mockSujetOuvert: any = { id: 2, titre: 'Sujet B', statut: 'CANDIDATURE_OUVERTE' };
-  const mockSujetRealisation: any = { id: 3, titre: 'Sujet C', statut: 'REALISATION_EN_COURS' };
+  const mockSujetValide: any = { id: 1, titre: 'Sujet A', statut: 'VALIDE', capaciteAccueil: 3 };
+  const mockSujetOuvert: any = { id: 2, titre: 'Sujet B', statut: 'CANDIDATURE_OUVERTE', capaciteAccueil: 3 };
+  const mockSujetRealisation: any = { id: 3, titre: 'Sujet C', statut: 'REALISATION_EN_COURS', capaciteAccueil: 3 };
 
   const mockCandidature: any = {
     id: 10, sujetId: 2, etudiantId: 5,
@@ -51,7 +51,7 @@ describe('GererCandidaturesModal', () => {
     expect(component).toBeTruthy();
   });
 
-  // ── canOuvrir / canFermer / canTerminer ────────────────────────────
+  // ── canOuvrir / canFermer / canTerminer / canRetirerMembre / isTermine ──
   it('canOuvrir should be true when statut is VALIDE', () => {
     component.sujet = mockSujetValide;
     expect(component.canOuvrir).toBeTrue();
@@ -67,6 +67,11 @@ describe('GererCandidaturesModal', () => {
     expect(component.canFermer).toBeTrue();
   });
 
+  it('canFermer should be false for other statuts', () => {
+    component.sujet = mockSujetValide;
+    expect(component.canFermer).toBeFalse();
+  });
+
   it('canTerminer should be true when statut is REALISATION_EN_COURS', () => {
     component.sujet = mockSujetRealisation;
     expect(component.canTerminer).toBeTrue();
@@ -77,7 +82,32 @@ describe('GererCandidaturesModal', () => {
     expect(component.canTerminer).toBeFalse();
   });
 
-  // ── showCandidatures / showAffectations ───────────────────────────
+  it('canRetirerMembre should be true when REALISATION_EN_COURS', () => {
+    component.sujet = mockSujetRealisation;
+    expect(component.canRetirerMembre).toBeTrue();
+  });
+
+  it('canRetirerMembre should be false when CANDIDATURE_OUVERTE', () => {
+    component.sujet = mockSujetOuvert;
+    expect(component.canRetirerMembre).toBeFalse();
+  });
+
+  it('isTermine should be true when REALISATION_TERMINEE', () => {
+    component.sujet = { ...mockSujetRealisation, statut: 'REALISATION_TERMINEE' };
+    expect(component.isTermine).toBeTrue();
+  });
+
+  it('isTermine should be false otherwise', () => {
+    component.sujet = mockSujetRealisation;
+    expect(component.isTermine).toBeFalse();
+  });
+
+  // ── canTraiterDemandes / showCandidatures ─────────────────────────
+  it('canTraiterDemandes should be true when CANDIDATURE_OUVERTE', () => {
+    component.sujet = mockSujetOuvert;
+    expect(component.canTraiterDemandes).toBeTrue();
+  });
+
   it('showCandidatures should be true when statut is CANDIDATURE_OUVERTE', () => {
     component.sujet = mockSujetOuvert;
     expect(component.showCandidatures).toBeTrue();
@@ -88,9 +118,32 @@ describe('GererCandidaturesModal', () => {
     expect(component.showCandidatures).toBeFalse();
   });
 
-  it('showAffectations should be true when statut is REALISATION_EN_COURS', () => {
+  // ── showAffectations ─────────────────────────────────────────────
+  it('showAffectations should be true when REALISATION_EN_COURS', () => {
     component.sujet = mockSujetRealisation;
     expect(component.showAffectations).toBeTrue();
+  });
+
+  it('showAffectations should be true when CANDIDATURE_OUVERTE', () => {
+    component.sujet = mockSujetOuvert;
+    expect(component.showAffectations).toBeTrue();
+  });
+
+  it('showAffectations should be true when REALISATION_TERMINEE', () => {
+    component.sujet = { ...mockSujetRealisation, statut: 'REALISATION_TERMINEE' };
+    expect(component.showAffectations).toBeTrue();
+  });
+
+  it('showAffectations should be true when affectations exist even with other statut', () => {
+    component.sujet = mockSujetValide;
+    component.affectations = [mockAffectation];
+    expect(component.showAffectations).toBeTrue();
+  });
+
+  it('showAffectations should be false when VALIDE and no affectations', () => {
+    component.sujet = mockSujetValide;
+    component.affectations = [];
+    expect(component.showAffectations).toBeFalse();
   });
 
   // ── loadData on open ───────────────────────────────────────────────
@@ -107,6 +160,73 @@ describe('GererCandidaturesModal', () => {
     expect(candidatureServiceSpy.getCandidaturesParSujet).toHaveBeenCalledWith(2);
     expect(component.candidatures.length).toBe(1);
     expect(component.affectations.length).toBe(1);
+  });
+
+  it('should handle candidatures load error', () => {
+    candidatureServiceSpy.getCandidaturesParSujet.and.returnValue(
+      throwError(() => new Error('fail'))
+    );
+    candidatureServiceSpy.getAffectationsParSujet.and.returnValue(of([]));
+
+    component.sujet = mockSujetOuvert;
+    component.isOpen = true;
+    component.ngOnChanges({
+      isOpen: new SimpleChange(false, true, false),
+    });
+
+    expect(component.candidatures).toEqual([]);
+  });
+
+  it('should handle affectations load error', () => {
+    candidatureServiceSpy.getCandidaturesParSujet.and.returnValue(of([]));
+    candidatureServiceSpy.getAffectationsParSujet.and.returnValue(
+      throwError(() => new Error('fail'))
+    );
+
+    component.sujet = mockSujetOuvert;
+    component.isOpen = true;
+    component.ngOnChanges({
+      isOpen: new SimpleChange(false, true, false),
+    });
+
+    expect(component.affectations).toEqual([]);
+    expect(component.isLoading).toBeFalse();
+  });
+
+  // ── close when isOpen=false resets state ───────────────────────────
+  it('should reset state when isOpen changes to false', () => {
+    component.candidatures = [mockCandidature];
+    component.affectations = [mockAffectation];
+    component.errorMessage = 'some error';
+    component.motifTargetId = 99;
+    component.motifText = 'text';
+
+    component.isOpen = false;
+    component.ngOnChanges({
+      isOpen: new SimpleChange(true, false, false),
+    });
+
+    expect(component.candidatures).toEqual([]);
+    expect(component.affectations).toEqual([]);
+    expect(component.errorMessage).toBe('');
+    expect(component.motifTargetId).toBeNull();
+    expect(component.motifText).toBe('');
+  });
+
+  it('should not load data when isOpen is already true and no change', () => {
+    component.sujet = mockSujetOuvert;
+    component.isOpen = true;
+    component.ngOnChanges({});
+    expect(candidatureServiceSpy.getCandidaturesParSujet).not.toHaveBeenCalled();
+  });
+
+  it('should not load when isOpen becomes true but sujet is undefined', () => {
+    component.sujet = undefined;
+    component.isOpen = true;
+    component.ngOnChanges({
+      isOpen: new SimpleChange(false, true, false),
+    });
+    expect(candidatureServiceSpy.getCandidaturesParSujet).not.toHaveBeenCalled();
   });
 
   // ── ouvrirCandidatures ────────────────────────────────────────────
@@ -129,6 +249,13 @@ describe('GererCandidaturesModal', () => {
     component.sujet = mockSujetValide;
     component.ouvrirCandidatures();
     expect(component.errorMessage).toBe('Erreur ouverture');
+    expect(component.actionLoading).toBeFalse();
+  });
+
+  it('ouvrirCandidatures should not run when sujet is undefined', () => {
+    component.sujet = undefined;
+    component.ouvrirCandidatures();
+    expect(candidatureServiceSpy.ouvrirCandidatures).not.toHaveBeenCalled();
   });
 
   // ── fermerCandidatures ────────────────────────────────────────────
@@ -147,6 +274,21 @@ describe('GererCandidaturesModal', () => {
     expect(closedSpy).toHaveBeenCalled();
   });
 
+  it('fermerCandidatures should set error on failure', () => {
+    candidatureServiceSpy.fermerCandidatures.and.returnValue(
+      throwError(() => ({ error: { detail: 'Erreur fermeture' } }))
+    );
+    component.sujet = mockSujetOuvert;
+    component.fermerCandidatures();
+    expect(component.errorMessage).toBe('Erreur fermeture');
+  });
+
+  it('fermerCandidatures should not run when sujet is undefined', () => {
+    component.sujet = undefined;
+    component.fermerCandidatures();
+    expect(candidatureServiceSpy.fermerCandidatures).not.toHaveBeenCalled();
+  });
+
   // ── accepterCandidature ───────────────────────────────────────────
   it('accepterCandidature should call service with candidature id', () => {
     candidatureServiceSpy.accepterCandidature.and.returnValue(of(mockCandidature));
@@ -160,10 +302,34 @@ describe('GererCandidaturesModal', () => {
     expect(changedSpy).toHaveBeenCalled();
   });
 
+  it('accepterCandidature should set error on failure', () => {
+    candidatureServiceSpy.accepterCandidature.and.returnValue(
+      throwError(() => ({ error: { message: 'Erreur acceptation' } }))
+    );
+    component.sujet = mockSujetOuvert;
+
+    component.accepterCandidature(mockCandidature);
+
+    expect(component.errorMessage).toBe('Erreur acceptation');
+    expect(component.actionLoading).toBeFalse();
+  });
+
+  it('accepterCandidature should use fallback error message', () => {
+    candidatureServiceSpy.accepterCandidature.and.returnValue(
+      throwError(() => new Error('unknown'))
+    );
+    component.sujet = mockSujetOuvert;
+
+    component.accepterCandidature(mockCandidature);
+
+    expect(component.errorMessage).toBe("Impossible d'accepter cette candidature.");
+  });
+
   // ── motif refus ───────────────────────────────────────────────────
   it('ouvrirMotifRefus should set motifTargetId', () => {
     component.ouvrirMotifRefus(mockCandidature);
     expect(component.motifTargetId).toBe(10);
+    expect(component.motifText).toBe('');
   });
 
   it('annulerMotif should reset motif state', () => {
@@ -181,14 +347,60 @@ describe('GererCandidaturesModal', () => {
     expect(candidatureServiceSpy.refuserCandidature).not.toHaveBeenCalled();
   });
 
-  it('confirmerMotif should call refuserCandidature', () => {
+  it('confirmerMotif should not call service if motifText is whitespace only', () => {
+    component.motifTargetId = 10;
+    component.motifText = '   ';
+    component.confirmerMotif();
+    expect(candidatureServiceSpy.refuserCandidature).not.toHaveBeenCalled();
+  });
+
+  it('confirmerMotif should not call service if motifTargetId is null', () => {
+    component.motifTargetId = null;
+    component.motifText = 'reason';
+    component.confirmerMotif();
+    expect(candidatureServiceSpy.refuserCandidature).not.toHaveBeenCalled();
+  });
+
+  it('confirmerMotif should call refuserCandidature on success', () => {
     candidatureServiceSpy.refuserCandidature.and.returnValue(of(mockCandidature));
     component.motifTargetId = 10;
     component.motifText = 'Profil insuffisant';
+    const changedSpy = jasmine.createSpy('changed');
+    component.changed.subscribe(changedSpy);
+
     component.confirmerMotif();
+
     expect(candidatureServiceSpy.refuserCandidature).toHaveBeenCalledWith(10, 'Profil insuffisant');
+    expect(component.motifTargetId).toBeNull();
+    expect(changedSpy).toHaveBeenCalled();
   });
 
+  it('confirmerMotif should set error on failure', () => {
+    candidatureServiceSpy.refuserCandidature.and.returnValue(
+      throwError(() => ({ error: { message: 'Erreur refus' } }))
+    );
+    component.motifTargetId = 10;
+    component.motifText = 'Reason';
+
+    component.confirmerMotif();
+
+    expect(component.errorMessage).toBe('Erreur refus');
+    expect(component.actionLoading).toBeFalse();
+  });
+
+  it('confirmerMotif should use fallback error message', () => {
+    candidatureServiceSpy.refuserCandidature.and.returnValue(
+      throwError(() => new Error('unknown'))
+    );
+    component.motifTargetId = 10;
+    component.motifText = 'Reason';
+
+    component.confirmerMotif();
+
+    expect(component.errorMessage).toBe('Impossible de refuser cette candidature.');
+  });
+
+  // ── demandesCandidatures ──────────────────────────────────────────
   it('demandesCandidatures should only include DEPOSEE candidatures', () => {
     component.candidatures = [
       mockCandidature,
@@ -197,6 +409,21 @@ describe('GererCandidaturesModal', () => {
     ];
     expect(component.demandesCandidatures.length).toBe(1);
     expect(component.demandesCandidatures[0].statut).toBe('DEPOSEE');
+  });
+
+  // ── metaLabel ────────────────────────────────────────────────────
+  it('metaLabel should format correctly', () => {
+    component.candidatures = [mockCandidature, { ...mockCandidature, id: 11 }];
+    component.affectations = [mockAffectation];
+    component.sujet = mockSujetRealisation;
+    expect(component.metaLabel).toBe('2 candidats · 1/3 places');
+  });
+
+  it('metaLabel should handle singular forms', () => {
+    component.candidatures = [mockCandidature];
+    component.affectations = [];
+    component.sujet = { ...mockSujetRealisation, capaciteAccueil: 1 };
+    expect(component.metaLabel).toBe('1 candidat · 0/1 place');
   });
 
   // ── affectationsActives / Archivees ──────────────────────────────
@@ -229,6 +456,134 @@ describe('GererCandidaturesModal', () => {
 
     expect(candidatureServiceSpy.declarerTerminaison).toHaveBeenCalledWith(3);
     expect(changedSpy).toHaveBeenCalled();
+  });
+
+  it('declarerTerminaison should set error on failure', () => {
+    candidatureServiceSpy.declarerTerminaison.and.returnValue(
+      throwError(() => ({ error: { message: 'Erreur terminaison' } }))
+    );
+    component.sujet = mockSujetRealisation;
+
+    component.declarerTerminaison();
+
+    expect(component.errorMessage).toBe('Erreur terminaison');
+  });
+
+  it('declarerTerminaison should use fallback error', () => {
+    candidatureServiceSpy.declarerTerminaison.and.returnValue(
+      throwError(() => new Error('unknown'))
+    );
+    component.sujet = mockSujetRealisation;
+
+    component.declarerTerminaison();
+
+    expect(component.errorMessage).toBe('Impossible de déclarer la terminaison.');
+  });
+
+  it('declarerTerminaison should not run when sujet is undefined', () => {
+    component.sujet = undefined;
+    component.declarerTerminaison();
+    expect(candidatureServiceSpy.declarerTerminaison).not.toHaveBeenCalled();
+  });
+
+  // ── ouvrirMotifRetrait / confirmerRetrait ─────────────────────────
+  it('ouvrirMotifRetrait should set motifTargetId', () => {
+    component.ouvrirMotifRetrait(mockAffectation);
+    expect(component.motifTargetId).toBe(20);
+    expect(component.motifText).toBe('');
+  });
+
+  it('confirmerRetrait should not call service if motifText is empty', () => {
+    component.motifTargetId = 20;
+    component.motifText = '';
+    component.confirmerRetrait();
+    expect(candidatureServiceSpy.retirerEtudiant).not.toHaveBeenCalled();
+  });
+
+  it('confirmerRetrait should not call service if motifTargetId is null', () => {
+    component.motifTargetId = null;
+    component.motifText = 'reason';
+    component.confirmerRetrait();
+    expect(candidatureServiceSpy.retirerEtudiant).not.toHaveBeenCalled();
+  });
+
+  it('confirmerRetrait should call retirerEtudiant on success', () => {
+    candidatureServiceSpy.retirerEtudiant.and.returnValue(of(mockAffectation));
+    component.motifTargetId = 20;
+    component.motifText = 'Abandon';
+    const changedSpy = jasmine.createSpy('changed');
+    component.changed.subscribe(changedSpy);
+
+    component.confirmerRetrait();
+
+    expect(candidatureServiceSpy.retirerEtudiant).toHaveBeenCalledWith(20, 'Abandon');
+    expect(component.motifTargetId).toBeNull();
+    expect(changedSpy).toHaveBeenCalled();
+  });
+
+  it('confirmerRetrait should set error on failure', () => {
+    candidatureServiceSpy.retirerEtudiant.and.returnValue(
+      throwError(() => ({ error: { message: 'Erreur retrait' } }))
+    );
+    component.motifTargetId = 20;
+    component.motifText = 'Reason';
+
+    component.confirmerRetrait();
+
+    expect(component.errorMessage).toBe('Erreur retrait');
+    expect(component.actionLoading).toBeFalse();
+  });
+
+  it('confirmerRetrait should use fallback error message', () => {
+    candidatureServiceSpy.retirerEtudiant.and.returnValue(
+      throwError(() => new Error('unknown'))
+    );
+    component.motifTargetId = 20;
+    component.motifText = 'Reason';
+
+    component.confirmerRetrait();
+
+    expect(component.errorMessage).toBe('Une erreur est survenue.');
+  });
+
+  // ── onOverlayClick ───────────────────────────────────────────────
+  it('onOverlayClick should close when target has gcm-overlay class', () => {
+    const spy = spyOn(component, 'close');
+    const event = {
+      target: { classList: { contains: (cls: string) => cls === 'gcm-overlay' } },
+    } as unknown as MouseEvent;
+    component.onOverlayClick(event);
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('onOverlayClick should not close when target does not have gcm-overlay class', () => {
+    const spy = spyOn(component, 'close');
+    const event = {
+      target: { classList: { contains: () => false } },
+    } as unknown as MouseEvent;
+    component.onOverlayClick(event);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  // ── getInitials / getInitialsFromName ─────────────────────────────
+  it('getInitials should return initials from candidature', () => {
+    expect(component.getInitials(mockCandidature)).toBe('SB');
+  });
+
+  it('getInitialsFromName should return ? when both are empty', () => {
+    expect(component.getInitialsFromName(null, null)).toBe('?');
+  });
+
+  it('getInitialsFromName should handle empty strings', () => {
+    expect(component.getInitialsFromName('', '')).toBe('?');
+  });
+
+  it('getInitialsFromName should handle only prenom', () => {
+    expect(component.getInitialsFromName('Sami', null)).toBe('S');
+  });
+
+  it('getInitialsFromName should handle only nom', () => {
+    expect(component.getInitialsFromName(null, 'Ali')).toBe('A');
   });
 
   // ── close ─────────────────────────────────────────────────────────

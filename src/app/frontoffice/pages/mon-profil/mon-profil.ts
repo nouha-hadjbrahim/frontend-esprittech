@@ -4,6 +4,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Role } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 
+const UI_MESSAGES = {
+  PASSWORD_MISMATCH: 'Les deux mots de passe ne correspondent pas.',
+  PASSWORD_CHANGED: 'Mot de passe modifié avec succès.',
+  PROFILE_UPDATED: 'Profil mis à jour avec succès.',
+  UNAUTHORIZED: 'Mot de passe actuel incorrect ou session expirée.',
+  BAD_REQUEST: 'Données invalides. Vérifiez le formulaire.',
+  GENERIC_ERROR: 'Une erreur est survenue. Veuillez réessayer.',
+} as const;
+
 @Component({
   selector: 'app-mon-profil',
   imports: [ReactiveFormsModule],
@@ -73,7 +82,7 @@ export class MonProfil implements OnInit {
     this.authService.updateProfile(this.profileForm.getRawValue()).subscribe({
       next: () => {
         this.isSavingProfile = false;
-        this.profileSuccess = 'Profil mis à jour avec succès.';
+        this.profileSuccess = UI_MESSAGES.PROFILE_UPDATED;
       },
       error: (err) => {
         this.isSavingProfile = false;
@@ -90,7 +99,7 @@ export class MonProfil implements OnInit {
 
     const { currentPassword, newPassword, confirmPassword } = this.passwordForm.getRawValue();
     if (newPassword !== confirmPassword) {
-      this.passwordError = 'Les deux mots de passe ne correspondent pas.';
+      this.passwordError = UI_MESSAGES.PASSWORD_MISMATCH;
       return;
     }
 
@@ -101,7 +110,7 @@ export class MonProfil implements OnInit {
     this.authService.changePassword({ currentPassword, newPassword }).subscribe({
       next: () => {
         this.isSavingPassword = false;
-        this.passwordSuccess = 'Mot de passe modifié avec succès.';
+        this.passwordSuccess = UI_MESSAGES.PASSWORD_CHANGED;
         this.passwordForm.reset();
       },
       error: (err) => {
@@ -126,12 +135,12 @@ export class MonProfil implements OnInit {
         }
       }
       if (err.status === 401) {
-        return 'Mot de passe actuel incorrect ou session expirée.';
+        return UI_MESSAGES.UNAUTHORIZED;
       }
       if (err.status === 400) {
-        return 'Données invalides. Vérifiez le formulaire.';
+        return UI_MESSAGES.BAD_REQUEST;
       }
     }
-    return "Une erreur est survenue. Veuillez réessayer.";
+    return UI_MESSAGES.GENERIC_ERROR;
   }
 }

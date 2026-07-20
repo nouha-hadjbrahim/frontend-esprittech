@@ -64,7 +64,7 @@
       @if (noteLevels().length === 0) {
         <div class="empty-row">Aucun niveau de note configuré.</div>
       } @else {
-        <table class="subjects-table">
+        <table class="subjects-table" aria-label="Niveaux de note">
           <thead>
             <tr>
               <th>Ordre</th>
@@ -197,7 +197,7 @@
       } @else if (filteredEliminatoires().length === 0) {
         <div class="empty-row">Aucun critère éliminatoire.</div>
       } @else {
-        <table class="subjects-table">
+        <table class="subjects-table" aria-label="Critères éliminatoires">
           <thead>
             <tr>
               <th>Ordre</th>
@@ -357,7 +357,7 @@
       } @else if (filteredNotes().length === 0) {
         <div class="empty-row">Aucun critère note.</div>
       } @else {
-        <table class="subjects-table">
+        <table class="subjects-table" aria-label="Critères de note">
           <thead>
             <tr>
               <th>Ordre</th>
@@ -565,7 +565,6 @@
     </div>
   </div>
 }
-
 <app-confirm-dialog
   [isOpen]="deleteConfirmOpen"
   [title]="deleteConfirmTitle"

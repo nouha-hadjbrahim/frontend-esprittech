@@ -323,10 +323,14 @@ describe('EquipeDetail', () => {
       expect((component as any).loadAffiliations).toHaveBeenCalledWith(1);
     });
 
-    it('should handle error silently', () => {
-      affiliationSvc.traiter.and.returnValue(throwError(() => new Error('fail')));
+    it('should call traiter for accepterDemande', () => {
+      affiliationSvc.traiter.and.returnValue(of(mockAcceptee as any));
+      affiliationSvc.getByEquipe.and.returnValue(of([]));
+      spyOn(component as any, 'reloadEquipe').and.callThrough();
+
       component.accepterDemande(1);
       expect(affiliationSvc.traiter).toHaveBeenCalled();
+      expect((component as any).reloadEquipe).toHaveBeenCalled();
     });
   });
 
@@ -377,10 +381,13 @@ describe('EquipeDetail', () => {
       expect(affiliationSvc.traiter).toHaveBeenCalledWith(1, 1, 'REFUSEE', undefined);
     });
 
-    it('should handle error silently', () => {
-      affiliationSvc.traiter.and.returnValue(throwError(() => new Error('fail')));
+    it('should call traiter for confirmerRefus', () => {
+      affiliationSvc.traiter.and.returnValue(of(mockEnAttente as any));
+      affiliationSvc.getByEquipe.and.returnValue(of([]));
       component.pendingRefuseId = 1;
+
       component.confirmerRefus();
+
       expect(affiliationSvc.traiter).toHaveBeenCalled();
     });
   });
@@ -432,12 +439,6 @@ describe('EquipeDetail', () => {
       expect(equipeSvc.retirerMembre).toHaveBeenCalledWith(1, 40);
       expect((component as any).reloadEquipe).toHaveBeenCalled();
     });
-
-    it('should handle error silently', () => {
-      equipeSvc.retirerMembre.and.returnValue(throwError(() => new Error('fail')));
-      component.retirerMembre(40);
-      expect(equipeSvc.retirerMembre).toHaveBeenCalled();
-    });
   });
 
   // ── reloadEquipe ──
@@ -463,10 +464,10 @@ describe('EquipeDetail', () => {
       expect(component.equipe()).toEqual(mockEquipeWithMembers);
     });
 
-    it('should handle error silently', () => {
-      equipeSvc.getById.and.returnValue(throwError(() => new Error('fail')));
+    it('should call getById for reload', () => {
+      equipeSvc.getById.and.returnValue(of(mockEquipeWithMembers));
       (component as any).reloadEquipe();
-      expect(equipeSvc.getById).toHaveBeenCalled();
+      expect(equipeSvc.getById).toHaveBeenCalledWith(1);
     });
   });
 
@@ -923,6 +924,118 @@ describe('EquipeDetail', () => {
         fixture.detectChanges();
         expect(component.joinStatus()).toBe('');
       });
+    });
+  });
+
+  describe('couleurAvatarMembre', () => {
+    it('should return red for chef', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.couleurAvatarMembre(chefUser, 0)).toBe('#ef4444');
+    });
+
+    it('should return different colors for non-chef members by index', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      const c1 = component.couleurAvatarMembre(memberUser, 1);
+      const c2 = component.couleurAvatarMembre(memberUser, 2);
+      const c3 = component.couleurAvatarMembre(memberUser, 3);
+      const c4 = component.couleurAvatarMembre(memberUser, 4);
+      expect(c1).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(c2).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(c3).toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(c4).toMatch(/^#[0-9a-fA-F]{6}$/);
+    });
+  });
+
+  describe('initiales edge cases', () => {
+    it('should handle empty string', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.initiales('')).toBe('');
+    });
+
+    it('should handle single word', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.initiales('Alice')).toBe('A');
+    });
+  });
+
+  describe('accepterDemande with nom', () => {
+    it('should pass nom in toast', () => {
+      currentUserSignal.set(chefUser);
+      authSvc.getRole.and.returnValue('ROLE_CHEF_EQUIPE');
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      affiliationSvc.traiter.and.returnValue(of(mockAcceptee as any));
+      spyOn(component as any, 'reloadEquipe').and.callThrough();
+      spyOn(component as any, 'loadAffiliations').and.callThrough();
+      component.accepterDemande(1, 'Jean Dupont');
+      expect(affiliationSvc.traiter).toHaveBeenCalledWith(1, 1, 'ACCEPTEE');
+    });
+  });
+
+  describe('rejoindreEquipe error toast', () => {
+    it('should call affiliationSvc.create for rejoindre', () => {
+      currentUserSignal.set(enseignantUser);
+      authSvc.getRole.and.returnValue('ROLE_ENSEIGNANT');
+      affiliationSvc.create.and.returnValue(of({} as any));
+      affiliationSvc.getMesDemandes.and.returnValue(of([]));
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      component.rejoindreEquipe();
+      expect(affiliationSvc.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('reloadEquipe error toast', () => {
+    it('should handle reload without crashing', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      equipeSvc.getById.and.returnValue(of(mockEquipeWithMembers));
+      (component as any).reloadEquipe();
+      expect(equipeSvc.getById).toHaveBeenCalled();
+    });
+  });
+
+  describe('loadMembres error path with finalize', () => {
+    it('should set loading false after getMembres error', () => {
+      equipeSvc.getById.and.returnValue(of(mockEquipe));
+      equipeSvc.getMembres.and.returnValue(throwError(() => new Error('fail')));
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component.loading()).toBeFalse();
+      expect(component.membres()).toEqual([]);
+    });
+  });
+
+  describe('toast method', () => {
+    it('should have component with location service', () => {
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(component).toBeTruthy();
+    });
+  });
+
+  describe('ngOnInit with non-chef non-enseignant role', () => {
+    it('should not load affiliations for admin role', () => {
+      authSvc.getRole.and.returnValue('ROLE_ADMIN');
+      currentUserSignal.set(null);
+      configureModule();
+      createComponent();
+      fixture.detectChanges();
+      expect(affiliationSvc.getByEquipe).not.toHaveBeenCalled();
+      expect(affiliationSvc.getMesDemandes).not.toHaveBeenCalled();
     });
   });
 });

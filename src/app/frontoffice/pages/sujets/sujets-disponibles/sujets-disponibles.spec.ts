@@ -88,7 +88,6 @@ describe('SujetsDisponibles', () => {
     expect(component.dejaPostule(mockSujets[1])).toBeFalse();
   });
 
-  // ── Search filter ─────────────────────────────────────────────────
   it('should filter sujets by search query on domain', () => {
     component.searchQuery = 'intelligence';
     component.onSearchChange();
@@ -111,9 +110,8 @@ describe('SujetsDisponibles', () => {
     expect(component.filteredSujets.length).toBe(2);
   });
 
-  // ── Sort ─────────────────────────────────────────────────────────
   it('should sort by most recent by default', () => {
-    expect(component.filteredSujets[0].id).toBe(2); // newer date first
+    expect(component.filteredSujets[0].id).toBe(2);
   });
 
   it('should sort oldest first when sortOrder is ancien', () => {
@@ -121,7 +119,6 @@ describe('SujetsDisponibles', () => {
     expect(component.filteredSujets[0].id).toBe(1);
   });
 
-  // ── Modal state ───────────────────────────────────────────────────
   it('ouvrirPostuler should set selectedSujet and show modal', () => {
     component.ouvrirPostuler(mockSujets[0]);
     expect(component.showPostulerModal).toBeTrue();
@@ -139,14 +136,114 @@ describe('SujetsDisponibles', () => {
     component.ouvrirPostuler(mockSujets[0]);
     component.onCandidatureSoumise();
     expect(component.showPostulerModal).toBeFalse();
-    expect(candidatureServiceSpy.getMesCandidatures).toHaveBeenCalledTimes(2); // init + after submit
+    expect(candidatureServiceSpy.getMesCandidatures).toHaveBeenCalledTimes(2);
   });
 
-  // ── Error handling ────────────────────────────────────────────────
   it('should handle error when loading sujets fails', () => {
     sujetServiceSpy.getSujetsDisponibles.and.returnValue(throwError(() => new Error('Network error')));
     component.loadSujets();
     expect(component.sujets.length).toBe(0);
     expect(component.isLoading).toBeFalse();
+  });
+
+  it('should show candidature fermee alert when opening a VALIDE sujet', () => {
+    component.ouvrirPostuler({ ...mockSujets[0], statut: 'VALIDE' } as any);
+    expect(component.showCandidatureFermeeAlert).toBeTrue();
+    expect(component.showPostulerModal).toBeFalse();
+    expect(component.selectedSujet).toBeNull();
+  });
+
+  it('should not open modal for unknown statut', () => {
+    component.ouvrirPostuler({ ...mockSujets[0], statut: 'INCONNU' } as any);
+    expect(component.showPostulerModal).toBeFalse();
+    expect(component.selectedSujet).toBeNull();
+  });
+
+  it('should close candidature alert', () => {
+    component.showCandidatureFermeeAlert = true;
+    component.fermerAlerteCandidature();
+    expect(component.showCandidatureFermeeAlert).toBeFalse();
+  });
+
+  it('should open postuler modal for CANDIDATURE_OUVERTE', () => {
+    component.ouvrirPostuler({ ...mockSujets[0], statut: 'CANDIDATURE_OUVERTE' } as any);
+    expect(component.showPostulerModal).toBeTrue();
+    expect(component.selectedSujet).toBeTruthy();
+  });
+
+  it('should filter by statut', () => {
+    component.onStatutChange('VALIDE');
+    expect(component.selectedStatut).toBe('VALIDE');
+    expect(component.filteredSujets.length).toBe(0);
+
+    component.onStatutChange('CANDIDATURE_OUVERTE');
+    expect(component.filteredSujets.length).toBe(2);
+  });
+
+  it('should filter by equipe', () => {
+    component.onEquipeChange('Dr. Martin');
+    expect(component.selectedEquipe).toBe('Dr. Martin');
+  });
+
+  it('should filter by encadrant', () => {
+    component.onEncadrantChange('Dr. Sami');
+    expect(component.selectedEncadrant).toBe('Dr. Sami');
+  });
+
+  it('should select categorie pill and reload', () => {
+    component.selectCategoriePill('PFE');
+    expect(component.selectedCategorie).toBe('PFE');
+    expect(sujetServiceSpy.getSujetsDisponibles).toHaveBeenCalled();
+  });
+
+  it('should expose totalPages and goToPage', () => {
+    expect(component.totalPages).toBeGreaterThanOrEqual(1);
+    component.goToPage(1);
+    expect(component.currentPage).toBe(1);
+  });
+
+  it('should compute statutOptions, equipeOptions and encadrantOptions', () => {
+    expect(component.statutOptions.length).toBeGreaterThanOrEqual(1);
+    expect(component.equipeOptions.length).toBeGreaterThanOrEqual(1);
+    expect(component.encadrantOptions.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should expose isEtudiant computed signals', () => {
+    expect(component.isEtudiant()).toBeTrue();
+  });
+
+  it('should handle loadMesCandidatures error silently', () => {
+    candidatureServiceSpy.getMesCandidatures.and.returnValue(throwError(() => new Error('boom')));
+    component.mesCandidaturesSujetIds = new Set();
+    component.loadMesCandidatures();
+    expect(component.mesCandidaturesSujetIds.size).toBe(0);
+  });
+
+  it('should filter by search on titre', () => {
+    component.searchQuery = 'IA Project';
+    component.onSearchChange();
+    expect(component.filteredSujets.length).toBe(1);
+  });
+
+  it('should filter by search on encadrantNom', () => {
+    component.searchQuery = 'Sami';
+    component.onSearchChange();
+    expect(component.filteredSujets.length).toBe(1);
+  });
+
+  it('should only include DEPOSEE and ACCEPTEE candidatures in mesCandidaturesSujetIds', () => {
+    const makeC = (id: number, sujetId: number, statut: string) => ({
+      id, sujetId, etudiantId: 1, etudiantNom: 'Test', etudiantPrenom: 'User',
+      statut, motifRefus: null, messageEtudiant: '', dateDepot: new Date().toISOString(), dateDecision: null,
+    } as any);
+    candidatureServiceSpy.getMesCandidatures.and.returnValue(of([
+      makeC(1, 1, 'DEPOSEE'),
+      makeC(2, 2, 'ACCEPTEE'),
+      makeC(3, 3, 'REFUSEE'),
+    ]));
+    component.loadMesCandidatures();
+    expect(component.mesCandidaturesSujetIds.has(1)).toBeTrue();
+    expect(component.mesCandidaturesSujetIds.has(2)).toBeTrue();
+    expect(component.mesCandidaturesSujetIds.has(3)).toBeFalse();
   });
 });

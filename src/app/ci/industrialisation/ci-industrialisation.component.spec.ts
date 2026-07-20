@@ -424,4 +424,257 @@ describe('CiIndustrialisationComponent', () => {
     expect(component.decisionClass('GO')).toBe('status-pill--go');
     expect(component.decisionClass('NO_GO')).toBe('status-pill--nogo');
   });
+
+  it('should compute personInitials correctly', () => {
+    expect(component.personInitials('Jean Dupont')).toBe('JD');
+    expect(component.personInitials('  ')).toBe('CI');
+    expect(component.personInitials('Alice')).toBe('A');
+  });
+
+  it('should return submissionWarnings for null candidature', () => {
+    expect(component.submissionWarnings(null)).toEqual([]);
+  });
+
+  it('should return submissionWarnings preserving existing warnings', () => {
+    const withWarnings = { ...candidature, livrables: [], warnings: ['Existing warning'] };
+    const result = component.submissionWarnings(withWarnings);
+    expect(result).toContain('Existing warning');
+    expect(result).toContain(component.missingLivrablesWarning);
+  });
+
+  it('should not duplicate missingLivrablesWarning when already present', () => {
+    const withWarning = { ...candidature, livrables: [], warnings: [component.missingLivrablesWarning] };
+    const result = component.submissionWarnings(withWarning);
+    const count = result.filter((w) => w === component.missingLivrablesWarning).length;
+    expect(count).toBe(1);
+  });
+
+  it('should compute eligibilityDisplay for all statuses', () => {
+    const eligible = { ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, eligibilityStatus: 'ELIGIBLE' } };
+    expect(component.eligibilityDisplay(eligible)).toBe('Éligible');
+
+    const notEligibleEtat = { ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, eligibilityStatus: 'NON_ELIGIBLE_EN_L_ETAT' } };
+    expect(component.eligibilityDisplay(notEligibleEtat)).toBe('Non éligible en l\u2019état');
+
+    const notEvaluable = { ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, eligibilityStatus: 'NOT_EVALUABLE' } };
+    expect(component.eligibilityDisplay(notEvaluable)).toBe('Non évaluable');
+
+    const falseEligible = { ...candidature, eligibleIndustrialisation: false };
+    expect(component.eligibilityDisplay(falseEligible)).toBe('Non éligible');
+
+    const trueEligible = { ...candidature, eligibleIndustrialisation: true, latestEvaluation: null };
+    expect(component.eligibilityDisplay(trueEligible)).toBe('Éligible industrialisation');
+  });
+
+  it('should compute scoreTitle for all branches', () => {
+    const validated = { ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, validationStatus: 'VALIDATED', finalValidatedScore: 80 } };
+    expect(component.scoreTitle(validated)).toBe('Score final validé');
+
+    const overridden = { ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, validationStatus: 'OVERRIDDEN', finalValidatedScore: 90 } };
+    expect(component.scoreTitle(overridden)).toBe('Score final validé');
+
+    const latest = { ...candidature, latestEvaluation: { ...candidature.latestEvaluation! } };
+    expect(component.scoreTitle(latest)).toBe('Score officiel provisoire');
+
+    const noLatest = { ...candidature, latestEvaluation: null };
+    expect(component.scoreTitle(noLatest)).toBe('Score final');
+  });
+
+  it('should compute scoreValue for uncalculated evaluation', () => {
+    const uncalc = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, mlStatus: 'FAILED_RETRYABLE', processingStatus: null },
+    };
+    expect(component.scoreValue(uncalc)).toBeNull();
+  });
+
+  it('should compute scoreValue for candidature with finalValidatedScore', () => {
+    const withValidated = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, finalValidatedScore: 95, scoreFinal: 70 },
+    };
+    component.score.set(null);
+    expect(component.scoreValue(withValidated)).toBe(95);
+  });
+
+  it('should compute scoreValue for candidature with scoreFinal only', () => {
+    const withScore = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, finalValidatedScore: null, scoreFinal: 70 },
+    };
+    component.score.set(null);
+    expect(component.scoreValue(withScore)).toBe(70);
+  });
+
+  it('should compute scoreValue for candidature with scoreEvaluationProjet 0', () => {
+    const zeroScore = { ...candidature, scoreEvaluationProjet: 0, latestEvaluation: null };
+    expect(component.scoreValue(zeroScore)).toBeNull();
+  });
+
+  it('should compute scoreValue for candidature with null scoreEvaluationProjet', () => {
+    const nullScore = { ...candidature, scoreEvaluationProjet: null, latestEvaluation: null };
+    expect(component.scoreValue(nullScore)).toBeNull();
+  });
+
+  it('should compute scoreClass for NOT_EVALUABLE', () => {
+    const notEvaluable = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, eligibilityStatus: 'NOT_EVALUABLE' },
+    };
+    component.score.set(null);
+    expect(component.scoreClass(notEvaluable)).toBe('score-card--danger');
+  });
+
+  it('should compute scoreClass for REVIEW_REQUIRED', () => {
+    const review = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, eligibilityStatus: 'REVIEW_REQUIRED' },
+    };
+    component.score.set(null);
+    expect(component.scoreClass(review)).toBe('score-card--warning');
+  });
+
+  it('should compute scoreDisplay correctly', () => {
+    expect(component.scoreDisplay(candidature)).toBe('80');
+    const noScore = { ...candidature, scoreEvaluationProjet: null, latestEvaluation: null };
+    component.score.set(null);
+    expect(component.scoreDisplay(noScore)).toBe('Non calculé');
+  });
+
+  it('should compute currentDecisionOrEligibility', () => {
+    const uncalc = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, mlStatus: 'FAILED_RETRYABLE' },
+    };
+    expect(component.currentDecisionOrEligibility(uncalc)).toBe('Éligible industrialisation');
+  });
+
+  it('should compute currentDecisionOrEligibility with score', () => {
+    expect(component.currentDecisionOrEligibility(candidature)).toBe('Éligible industrialisation');
+  });
+
+  it('should compute useBackendIndustrialisationScore and backendIndustrialisationScore', () => {
+    expect(component.useBackendIndustrialisationScore(candidature)).toBeFalse();
+    expect(component.backendIndustrialisationScore(candidature)).toBeNull();
+
+    const noBackend = { ...candidature, latestEvaluation: { ...candidature.latestEvaluation!, mlStatus: 'FAILED_RETRYABLE' } };
+    component.score.set(null);
+    expect(component.useBackendIndustrialisationScore(noBackend)).toBeFalse();
+    expect(component.backendIndustrialisationScore(noBackend)).toBeNull();
+  });
+
+  it('should compute decisionHelperTone correctly', () => {
+    expect(component.decisionHelperTone(candidature)).toBe('go');
+
+    component.score.set({ ...score, decisionRecommandee: 'NO_GO' });
+    expect(component.decisionHelperTone({ ...candidature, id: 11 })).toBe('nogo');
+
+    component.score.set(null);
+    const neutral = { ...candidature, scoreEvaluationProjet: 40, latestEvaluation: null };
+    expect(component.decisionHelperTone(neutral)).toBe('neutral');
+  });
+
+  it('should compute recommendation for uncalculated evaluation', () => {
+    const uncalc = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, mlStatus: 'FAILED_RETRYABLE' },
+    };
+    expect(component.recommendation(uncalc)).toBe('Analyse non calculée');
+  });
+
+  it('should compute recommendationExplanation for uncalculated evaluation', () => {
+    const uncalc = {
+      ...candidature,
+      latestEvaluation: { ...candidature.latestEvaluation!, mlStatus: 'FAILED_RETRYABLE' },
+    };
+    expect(component.recommendationExplanation(uncalc)).toContain('Aucun score');
+  });
+
+  it('should compute recommendationExplanation with elim warning count > 0', () => {
+    const withElimWarning = {
+      ...candidature,
+      latestEvaluation: null,
+      scoreEvaluationProjet: 40,
+      eliminatoryWarningsCount: 1,
+    } as any;
+    expect(component.recommendationExplanation(withElimWarning)).toContain('Alerte éliminatoire');
+  });
+
+  it('should compute recommendationExplanation default branch', () => {
+    const defaultCase = { ...candidature, latestEvaluation: null, scoreEvaluationProjet: 40 };
+    expect(component.recommendationExplanation(defaultCase)).toContain('decision GO');
+  });
+
+  it('should compute analysisIssueCount with warnings and errorMessage', () => {
+    const withIssues = {
+      ...candidature,
+      latestEvaluation: {
+        ...candidature.latestEvaluation!,
+        resultats: [{ id: 1, critereId: 1, critereLibelle: 'test', typeCritere: 'NOTE', ruleConfigured: false } as any],
+        mlWarnings: ['WARN1'],
+        errorMessage: 'Some error',
+      },
+    };
+    expect(component.analysisIssueCount(withIssues)).toBe(3);
+  });
+
+  it('should compute analysisIssueCount with no evaluation', () => {
+    const noEval = { ...candidature, latestEvaluation: null };
+    expect(component.analysisIssueCount(noEval)).toBe(0);
+  });
+
+  it('should compute eliminatoryWarningCount from candidature.eliminatoryWarningsCount', () => {
+    const withCount = { ...candidature, eliminatoryWarningsCount: 3, latestEvaluation: null } as any;
+    component.score.set(null);
+    expect(component.eliminatoryWarningCount(withCount)).toBe(3);
+  });
+
+  it('should compute eliminatoryWarningCount from bloqueParEliminatoire', () => {
+    const blocked = { ...candidature, bloqueParEliminatoire: true, latestEvaluation: null };
+    component.score.set(null);
+    expect(component.eliminatoryWarningCount(blocked)).toBe(1);
+  });
+
+  it('should load and auto-select first visible when selected no longer visible', () => {
+    industrialisationService.findCiRequests.and.returnValue(of([]));
+    component.load();
+    expect(component.selected()).toBeNull();
+    expect(component.score()).toBeNull();
+  });
+
+  it('should load and keep selected when still visible', () => {
+    component.selected.set(candidature);
+    industrialisationService.findCiRequests.and.returnValue(of([candidature]));
+    component.load();
+    expect(component.selected()?.id).toBe(11);
+  });
+
+  it('should handle onStatutChange and onTypeChange', () => {
+    component.onStatutChange('GO');
+    expect(component.statutFilter).toBe('GO');
+    expect(industrialisationService.findCiRequests).toHaveBeenCalled();
+
+    component.onTypeChange('EXTERNE');
+    expect(component.typeFilter).toBe('EXTERNE');
+  });
+
+  it('should handle onDomaineChange and onSortChange', () => {
+    component.onDomaineChange('IoT');
+    expect(component.domaineFilter).toBe('IoT');
+
+    component.onSortChange('score-asc');
+    expect(component.sortBy).toBe('score-asc');
+  });
+
+  it('should handle normalize edge cases', () => {
+    const privateComp = component as any;
+    expect(privateComp.normalize(null)).toBe('');
+    expect(privateComp.normalize(undefined)).toBe('');
+    expect(privateComp.normalize('Hello')).toBe('hello');
+  });
+
+  it('should handle currentScoreCardValue and currentScoreCardSuffix', () => {
+    expect(component.currentScoreCardValue(candidature)).toBe('80');
+    expect(component.currentScoreCardSuffix(candidature)).toBe('/100');
+  });
 });

@@ -5,6 +5,7 @@ import { EquipeService } from '../../../../core/services/equipe.service';
 import { Equipe } from '../../../../core/models/equipe.model';
 import { User } from '../../../../core/models/user.model';
 import { Page } from '../../../../core/models/page.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 const mockEquipe: Equipe = {
   id: 1, nom: 'AI Lab', description: null, domaineId: 1, domaine: 'Info',
@@ -17,21 +18,23 @@ const mockUsers: User[] = [
 ];
 
 const mockPage: Page<User> = { content: mockUsers, page: 0, size: 10, totalElements: 2, totalPages: 1, first: true, last: true };
-const mockEmptyPage: Page<User> = { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0, first: true, last: true };
 
 describe('AjouterMembreModal', () => {
   let component: AjouterMembreModal;
   let fixture: ComponentFixture<AjouterMembreModal>;
   let svc: jasmine.SpyObj<EquipeService>;
+  let snackSpy: jasmine.SpyObj<MatSnackBar>;
 
   beforeEach(() => {
     svc = jasmine.createSpyObj<EquipeService>('EquipeService', ['chercherUtilisateursEligibles', 'ajouterMembres']);
     svc.chercherUtilisateursEligibles.and.returnValue(of(mockPage));
+    snackSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
 
     TestBed.configureTestingModule({
       imports: [AjouterMembreModal],
       providers: [
         { provide: EquipeService, useValue: svc },
+        { provide: MatSnackBar, useValue: snackSpy },
       ],
     });
     fixture = TestBed.createComponent(AjouterMembreModal);
@@ -187,11 +190,36 @@ describe('AjouterMembreModal', () => {
       const u: User = { ...mockUsers[0], prenom: null as any, nom: null as any };
       expect(component.initiales(u)).toBe('');
     });
+
+    it('should handle both empty', () => {
+      const u: User = { ...mockUsers[0], prenom: '', nom: '' };
+      expect(component.initiales(u)).toBe('');
+    });
+
+    it('should handle double spaces in names', () => {
+      const u: User = { ...mockUsers[0], prenom: 'Jean  Paul', nom: 'Dupont' };
+      expect(component.initiales(u)).toBe('J');
+    });
   });
 
   describe('nomComplet', () => {
     it('should return prenom and nom', () => {
       expect(component.nomComplet(mockUsers[0])).toBe('Jean Dupont');
+    });
+
+    it('should handle null prenom', () => {
+      const u: User = { ...mockUsers[0], prenom: null as any };
+      expect(component.nomComplet(u)).toBe('Dupont');
+    });
+
+    it('should handle null nom', () => {
+      const u: User = { ...mockUsers[0], nom: null as any };
+      expect(component.nomComplet(u)).toBe('Jean');
+    });
+
+    it('should handle both null', () => {
+      const u: User = { ...mockUsers[0], prenom: null as any, nom: null as any };
+      expect(component.nomComplet(u)).toBe('');
     });
   });
 });

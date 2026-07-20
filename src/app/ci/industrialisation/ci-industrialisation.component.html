@@ -190,7 +190,7 @@
             </div>
           </div>
 
-          <aside class="score-card" [ngClass]="scoreClass(selected()!)">
+          <aside class="score-card" [ngClass]="scoreClass(selected()!)" aria-label="Score">
             <span>{{ scoreTitle(selected()!) }}</span>
             <div class="score-card__value">
               <strong>{{ currentScoreCardValue(selected()!) }}</strong>
@@ -641,11 +641,11 @@
                 </div>
               </div>
               @if (livrable.objectName) {
-                <a class="btn btn--ghost btn--sm" [href]="downloadLivrable(livrable.id)" target="_blank" rel="noreferrer">
+                <a class="btn btn--ghost btn--sm" [href]="downloadLivrable(livrable.id)" target="_blank" rel="noopener noreferrer">
                   {{ livrableActionLabel(livrable) }}
                 </a>
               } @else if (livrable.lienExterne) {
-                <a class="btn btn--ghost btn--sm" [href]="livrable.lienExterne" target="_blank" rel="noreferrer">
+                <a class="btn btn--ghost btn--sm" [href]="livrable.lienExterne" target="_blank" rel="noopener noreferrer">
                   {{ livrableActionLabel(livrable) }}
                 </a>
               }

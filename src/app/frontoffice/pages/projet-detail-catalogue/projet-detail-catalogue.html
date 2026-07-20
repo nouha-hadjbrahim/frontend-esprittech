@@ -270,8 +270,8 @@
       } @else if (livrableError) {
         <div class="alert alert--error">{{ livrableError }}</div>
       } @else if (livrables.length) {
-        <ul class="livrable-list">
-          @for (livrable of livrables; track trackLivrable(livrable)) {
+        <ul class="livrable-list" aria-label="Liste des livrables du projet">
+          @for (livrable of livrables; track livrable.id) {
             <li class="livrable-list__item">
               <div>
                 <strong>{{ livrableDisplayName(livrable) }}</strong>
@@ -281,7 +281,7 @@
                 }
               </div>
               @if (livrable.objectName) {
-                <a [href]="downloadLivrable(livrable)" target="_blank" rel="noreferrer">Télécharger</a>
+                <a [href]="downloadLivrable(livrable)" target="_blank" rel="noopener noreferrer">Télécharger</a>
               } @else if (livrable.lienExterne) {
                 <a [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
               }

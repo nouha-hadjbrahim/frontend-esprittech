@@ -27,7 +27,7 @@ module.exports = function (config) {
         { type: 'lcovonly', file: 'lcov.info' },
       ],
     },
-    reporters: ['progress', 'kjhtml'],
+    reporters: ['progress', 'coverage', 'kjhtml'],
     browsers: ['Chrome'],
     customLaunchers: {
       ChromeHeadlessNoSandbox: {

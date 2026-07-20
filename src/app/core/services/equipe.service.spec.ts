@@ -83,6 +83,16 @@ describe('EquipeService', () => {
     req.flush(updated);
   });
 
+  it('should update an equipe with memberIds', () => {
+    const payload = { nom: 'Reassigned', memberIds: [10, 20, 30] };
+    const updated = { id: 1, ...payload } as unknown as Equipe;
+    service.modifier(1, payload).subscribe((res) => expect(res).toEqual(updated));
+    const req = http.expectOne(`${API}/1`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ nom: 'Reassigned', memberIds: [10, 20, 30] });
+    req.flush(updated);
+  });
+
   it('should delete an equipe', () => {
     service.supprimer(1).subscribe((res) => expect(res).toBeNull());
     const req = http.expectOne(`${API}/1`);

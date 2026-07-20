@@ -226,6 +226,132 @@ describe('IndustrialisationQuestionsComponent', () => {
     expect(component.openDropdown()).toBeNull();
   });
 
+  it('should close overlays and filters on document click', () => {
+    component.openDropdown.set('typeReponse');
+    component.openFilter.set('statut');
+    component.closeOverlays();
+    expect(component.openDropdown()).toBeNull();
+    expect(component.openFilter()).toBeNull();
+  });
+
+  it('should toggle and select statut/critere filters', () => {
+    const event = jasmine.createSpyObj<Event>('Event', ['stopPropagation']);
+
+    component.toggleFilter('statut', event);
+    expect(component.openFilter()).toBe('statut');
+
+    component.toggleFilter('statut', event);
+    expect(component.openFilter()).toBeNull();
+
+    component.toggleFilter('critere', event);
+    expect(component.openFilter()).toBe('critere');
+
+    component.selectStatutFilter('inactif');
+    expect(component.selectedStatut()).toBe('inactif');
+    expect(component.openFilter()).toBeNull();
+    expect(component.currentPage()).toBe(1);
+
+    component.selectCritereFilter('ELIMINATOIRE');
+    expect(component.selectedCritere()).toBe('ELIMINATOIRE');
+    expect(component.openFilter()).toBeNull();
+    expect(component.currentPage()).toBe(1);
+  });
+
+  it('should clamp goToPage within valid range', () => {
+    component.questions.set(questions);
+    expect(component.totalPages).toBe(1);
+
+    component.goToPage(0);
+    expect(component.currentPage()).toBe(1);
+
+    component.goToPage(999);
+    expect(component.currentPage()).toBe(1);
+
+    component.goToPage(1);
+    expect(component.currentPage()).toBe(1);
+  });
+
+  it('should expose statutFilterLabel and critereFilterLabel', () => {
+    expect(component.statutFilterLabel).toBe('Tous les statuts');
+    component.selectedStatut.set('actif');
+    expect(component.statutFilterLabel).toBe('Actif');
+
+    expect(component.critereFilterLabel).toBe('Tous les critères');
+    component.selectedCritere.set('NOTE');
+    expect(component.critereFilterLabel).toBe('Note');
+  });
+
+  it('should compute statsCards correctly', () => {
+    component.questions.set(questions);
+    const cards = component.statsCards();
+    expect(cards[0].value).toBe(2);
+    expect(cards[1].value).toBe(1);
+    expect(cards[2].value).toBe(1);
+    expect(cards[3].value).toBe(1);
+  });
+
+  it('should compute pageNumbers and visibleQuestions', () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({
+      ...questions[0], id: i + 1, ordre: i + 1,
+    }));
+    component.questions.set(many);
+    expect(component.totalPages).toBe(3);
+    expect(component.pageNumbers).toEqual([1, 2, 3]);
+    expect(component.visibleQuestions.length).toBe(8);
+
+    component.goToPage(3);
+    expect(component.visibleQuestions.length).toBe(4);
+  });
+
+  it('should edit an eliminatoire question and set correct form values', () => {
+    component.edit(questions[0]);
+    expect(component.editingId()).toBe(2);
+    expect(component.form.controls.typeCritere.value).toBe('ELIMINATOIRE');
+    expect(component.form.controls.conditionEliminatoire.value).toBeTrue();
+    expect(component.form.controls.poids.value).toBeNull();
+  });
+
+  it('should save an eliminatoire question with null poids', fakeAsync(() => {
+    component.edit(questions[0]);
+    component.save();
+    expect(service.updateQuestion).toHaveBeenCalledWith(2, jasmine.objectContaining({
+      typeCritere: 'ELIMINATOIRE',
+      poids: null,
+      conditionEliminatoire: true,
+    }));
+
+    component.message.set(null);
+    tick(2500);
+    expect(component.message()).toBeNull();
+    fixture.destroy();
+  }));
+
+  it('should filter questions matching oblgatoire/actif search terms', () => {
+    component.questions.set(questions);
+    component.questionSearch.set('obligatoire');
+    expect(component.filteredQuestions().length).toBe(1);
+    expect(component.filteredQuestions()[0].id).toBe(2);
+
+    component.questionSearch.set('inactif');
+    expect(component.filteredQuestions().length).toBe(1);
+    expect(component.filteredQuestions()[0].id).toBe(1);
+
+    component.questionSearch.set('facultatif');
+    expect(component.filteredQuestions().length).toBe(1);
+  });
+
+  it('should search by ordre and description', () => {
+    component.questions.set(questions);
+    component.questionSearch.set('2');
+    expect(component.filteredQuestions().length).toBe(1);
+
+    component.questionSearch.set('desc b');
+    expect(component.filteredQuestions().length).toBe(1);
+
+    component.questionSearch.set('');
+    expect(component.filteredQuestions().length).toBe(2);
+  });
+
   it('should guard internal criterion synchronization branches', () => {
     const internal = component as unknown as {
       syncingCriterionState: boolean;

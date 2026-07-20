@@ -27,21 +27,6 @@
     letter-spacing: 0.5px;
 }
 
-.auth-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 8px;
-    text-align: left;
-}
-
-.auth-subtitle {
-    font-size: 15px;
-    color: var(--text-muted);
-    margin-bottom: 32px;
-    text-align: left;
-}
-
 .alert-error {
     display: flex;
     align-items: flex-start;
@@ -64,22 +49,10 @@
     color: #DC2626;
 }
 
-.form-group {
-    margin-bottom: 24px;
-}
-
 .label-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-main);
-    margin-bottom: 8px;
 }
 
 input,
@@ -106,25 +79,6 @@ select:hover {
     border-color: #CBD5E1;
 }
 
-.forgot-link {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--primary-color);
-}
-
-.submit-btn {
-    width: 100%;
-    padding: 14px;
-    background-color: var(--primary-color);
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 12px;
-    margin-top: 8px;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 6px -1px rgba(230, 57, 70, 0.2), 0 2px 4px -2px rgba(230, 57, 70, 0.1);
-}
-
 .submit-btn:hover:not(:disabled) {
     background-color: var(--primary-hover);
     transform: translateY(-1px);
@@ -138,17 +92,6 @@ select:hover {
 .submit-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-}
-
-.auth-footer {
-    margin-top: 32px;
-    text-align: center;
-    font-size: 14px;
-    color: var(--text-muted);
-}
-
-.auth-footer a {
-    font-weight: 600;
 }
 
 @media (max-width: 480px) {
@@ -392,6 +335,7 @@ select:hover {
     font-size: clamp(30px, 3vw, 40px);
     font-weight: 800;
     letter-spacing: -.035em;
+    text-align: left;
 }
 
 .auth-subtitle {
@@ -399,6 +343,7 @@ select:hover {
     color: #737780;
     font-size: 14px;
     line-height: 1.55;
+    text-align: left;
 }
 
 .form-group {
@@ -406,6 +351,7 @@ select:hover {
 }
 
 label {
+    display: block;
     margin-bottom: 10px;
     color: #22252a;
     font-size: 12px;
@@ -445,6 +391,7 @@ input:-webkit-autofill:active {
 .forgot-link {
     color: #c52d3b;
     font-size: 11px;
+    font-weight: 500;
     text-decoration: none;
 }
 
@@ -453,20 +400,29 @@ input:-webkit-autofill:active {
     align-items: center;
     justify-content: center;
     gap: 12px;
+    width: 100%;
     min-height: 49px;
+    padding: 14px;
     margin-top: 8px;
     border: 0;
     border-radius: 12px;
     background: linear-gradient(135deg, #ed2638, #df1e31);
-    box-shadow: 0 10px 22px rgba(230, 35, 53, .24);
+    color: white;
     font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 22px rgba(230, 35, 53, .24);
+    transition: all 0.2s ease;
 }
 
 .auth-footer {
     margin-top: 28px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
 }
 
 .auth-footer a {
+    font-weight: 600;
     color: #d4283a;
 }
 
