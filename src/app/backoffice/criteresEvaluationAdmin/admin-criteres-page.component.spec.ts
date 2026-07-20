@@ -236,20 +236,23 @@ describe('AdminCriteresPageComponent', () => {
   });
 
   it('should delete note criteria and show conflict warnings', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-
     component.deleteCritereNote(notes[0]);
+    expect(component.deleteConfirmOpen).toBeTrue();
+    component.confirmDelete();
     expect(noteService.delete).toHaveBeenCalledWith(1);
     expect(component.successMessage()).toBe('Critere note supprime.');
+    expect(component.feedbackOpen).toBeTrue();
 
     noteService.delete.and.returnValue(throwError(() => new HttpErrorResponse({
       status: 409,
       error: { detail: 'Ce critère est déjà utilisé dans des évaluations. Vous pouvez le désactiver au lieu de le supprimer.' },
     })));
     component.deleteCritereNote(notes[0]);
+    component.confirmDelete();
 
     expect(component.warningMessage()).toBe('Ce critère est déjà utilisé dans des évaluations. Vous pouvez le désactiver au lieu de le supprimer.');
     expect(component.errorMessage()).toBeNull();
+    expect(component.feedbackOpen).toBeTrue();
   });
 
   it('should manage note levels', () => {
@@ -269,8 +272,9 @@ describe('AdminCriteresPageComponent', () => {
     component.toggleNoteLevel({ ...levels[0], active: false });
     expect(noteLevelService.activate).toHaveBeenCalledWith(1);
 
-    spyOn(window, 'confirm').and.returnValue(true);
     component.deleteNoteLevel(levels[0]);
+    expect(component.deleteConfirmOpen).toBeTrue();
+    component.confirmDelete();
     expect(noteLevelService.delete).toHaveBeenCalledWith(1);
     expect(component.successMessage()).toBe('Niveau de note supprime.');
   });

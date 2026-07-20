@@ -83,7 +83,6 @@ export class BackofficeLayoutComponent {
         },
         { label: 'Utilisateurs', icon: 'users-group', route: '/backoffice/users' },
         { label: 'Historique', icon: 'clock', route: '/backoffice/history' },
-        { label: 'Paramètres', icon: 'settings', route: '/backoffice/settings' },
         {
             label: 'Évaluations',
             icon: 'clipboard-check',

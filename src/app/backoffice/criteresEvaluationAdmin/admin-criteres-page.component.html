@@ -6,10 +6,6 @@
     </div>
   </div>
 
-  <div *ngIf="successMessage()" class="alert alert-success">{{ successMessage() }}</div>
-  <div *ngIf="warningMessage()" class="alert alert-warning">{{ warningMessage() }}</div>
-  <div *ngIf="errorMessage()" class="alert alert-error">{{ errorMessage() }}</div>
-
   <div class="stats-grid">
     @for (s of statsCards(); track s.label) {
       <article class="stat-card">
@@ -564,4 +560,23 @@
       </div>
     </div>
   </div>
-</div>
+}
+
+<app-confirm-dialog
+  [isOpen]="deleteConfirmOpen"
+  [title]="deleteConfirmTitle"
+  [message]="deleteConfirmMessage"
+  confirmLabel="Supprimer"
+  cancelLabel="Annuler"
+  [loading]="deleting()"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>
+
+<app-confirm-dialog
+  [isOpen]="feedbackOpen"
+  [title]="feedbackTitle"
+  [message]="feedbackMessage"
+  [alertOnly]="true"
+  (cancelled)="closeFeedback()"
+/>

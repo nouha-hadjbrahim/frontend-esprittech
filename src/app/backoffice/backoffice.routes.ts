@@ -12,7 +12,6 @@ import { FormulairesComponent } from './subjects/formulaires/formulaires.compone
 import { CatalogComponent } from './catalog/catalog.component';
 import { SupervisorsComponent } from './supervisors/supervisors.component';
 import { HistoryComponent } from './history/history.component';
-import { SettingsComponent } from './settings/settings.component';
 import { ProfileComponent } from './profile/profile.component';
 
 export const backofficeRoutes: Routes = [
@@ -43,7 +42,6 @@ export const backofficeRoutes: Routes = [
       { path: 'supervisors', component: SupervisorsComponent },
       { path: 'users', component: UsersComponent },
       { path: 'history', component: HistoryComponent },
-      { path: 'settings', component: SettingsComponent },
       { path: 'profile', component: ProfileComponent },
       {
         path: 'admin/evaluations',
