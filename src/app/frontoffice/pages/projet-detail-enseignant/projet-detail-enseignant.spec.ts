@@ -238,4 +238,91 @@ describe('ProjetDetailEnseignant', () => {
     expect(fixture.nativeElement.querySelectorAll('.tab-alert--danger').length).toBe(0);
     component.ngOnDestroy();
   });
+
+  it('VALIDE with evaluation shows score and details', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
+    flushHistorique();
+    fixture.detectChanges();
+
+    expect(component.canViewEvaluation).toBeTrue();
+    expect(component.canRecalculateScore).toBeTrue();
+    expect(component.evaluation?.scoreFinal).toBe(82);
+    expect(fixture.nativeElement.textContent).toContain('82');
+    expect(fixture.nativeElement.textContent).toContain('Dernière évaluation ML disponible');
+  });
+
+  it('non-VALIDE published status with evaluation still shows score and details', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    httpTesting.expectOne(`${API}/projets/1`).flush({
+      ...validDetails,
+      statut: 'CANDIDAT_INDUSTRIALISATION_INTERNE',
+      score: 82,
+    });
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
+    flushHistorique();
+    fixture.detectChanges();
+
+    expect(component.canViewEvaluation).toBeTrue();
+    expect(component.isEvaluable).toBeTrue();
+    expect(component.canRecalculateScore).toBeFalse();
+    expect(component.evaluation?.scoreFinal).toBe(82);
+    expect(fixture.nativeElement.textContent).toContain('82 / 100');
+    expect(fixture.nativeElement.textContent).not.toContain("L'évaluation est disponible lorsque le projet est publié");
+  });
+
+  it('non-VALIDE published status without evaluation shows Non calculé', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    httpTesting.expectOne(`${API}/projets/1`).flush({
+      ...validDetails,
+      statut: 'INDUSTRIALISE_DSI',
+      score: 0,
+    });
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
+      { message: 'Aucune evaluation trouvee' },
+      { status: 404, statusText: 'Not Found' },
+    );
+    flushHistorique();
+    fixture.detectChanges();
+
+    expect(component.canViewEvaluation).toBeTrue();
+    expect(component.evaluation).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Non calculé');
+  });
+
+  it('status change away from VALIDE followed by reload still shows persisted evaluation', () => {
+    createComponent();
+    fixture.detectChanges();
+
+    httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
+    flushLivrables();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
+    flushHistorique();
+    fixture.detectChanges();
+    expect(component.evaluation?.scoreFinal).toBe(82);
+
+    component.projet = {
+      ...validDetails,
+      statut: 'CANDIDAT_INDUSTRIALISATION_EXTERNE',
+      score: 82,
+    };
+    component.loadEvaluation();
+    httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
+    fixture.detectChanges();
+
+    expect(component.canViewEvaluation).toBeTrue();
+    expect(component.evaluation?.scoreFinal).toBe(82);
+    expect(component.evaluation?.id).toBe(10);
+    expect(fixture.nativeElement.textContent).toContain('82 / 100');
+  });
 });

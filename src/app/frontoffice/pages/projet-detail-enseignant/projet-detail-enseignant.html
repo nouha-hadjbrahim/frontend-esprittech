@@ -133,12 +133,14 @@
               </div>
 
               <p class="info-card__text">
-                @if (!isEvaluable) {
+                @if (!canViewEvaluation) {
                   L'évaluation est disponible lorsque le projet est publié au catalogue.
                 } @else if (evaluation) {
                   Dernière évaluation ML disponible (projet catalogue ou sujet d'origine).
-                } @else {
+                } @else if (canRecalculateScore) {
                   Aucune évaluation enregistrée pour ce projet. Cliquez sur « Recalculer score » pour lancer l'évaluation automatique.
+                } @else {
+                  Aucune évaluation enregistrée pour ce projet (Non calculé).
                 }
               </p>
 
