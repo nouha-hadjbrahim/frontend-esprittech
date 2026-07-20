@@ -171,7 +171,7 @@ secret-scan-trivy:
 sonarqube-analysis:
   stage: sonarqube
   image:
-    name: sonarsource/sonar-scanner-cli:5.0.1
+    name: sonarsource/sonar-scanner-cli:12.1.0.3233_8.0.1
     entrypoint: [""]
   needs:
     - job: test-frontend
