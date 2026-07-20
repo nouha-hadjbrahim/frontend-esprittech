@@ -1,10 +1,22 @@
 @import '../../shared/styles/pagination.shared.css';
 
+:host {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 0;
+  height: fit-content;
+  overflow: hidden;
+  background: #fffcfc;
+}
+
 .criteres-page {
   display: flex;
   flex-direction: column;
   gap: 22px;
   padding-top: 12px;
+  padding-bottom: 0;
+  background: #fffcfc;
 }
 
 .page-header {
@@ -135,7 +147,7 @@
 
 /* Sections */
 .criteres-section {
-  overflow: visible;
+  overflow: hidden;
   background: #ffffff;
   border: 1px solid #f2e8ea;
   border-radius: 20px;
@@ -170,7 +182,7 @@
 .table-container {
   background-color: #ffffff;
   padding: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .table-container--flush {
@@ -185,6 +197,8 @@
   padding: 20px 24px;
   background: #fffcfc;
   border-bottom: 1px solid #f3eaea;
+  position: relative;
+  z-index: 3;
 }
 
 .search-field {
