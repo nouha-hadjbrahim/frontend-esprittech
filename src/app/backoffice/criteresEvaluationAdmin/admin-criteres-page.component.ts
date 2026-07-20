@@ -15,14 +15,18 @@ import {
 import { CritereEliminatoireService } from '../../core/services/critere-eliminatoire.service';
 import { CritereNoteService } from '../../core/services/critere-note.service';
 import { NoteLevelService } from '../../core/services/note-level.service';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 
 type FilterKey = 'statutElim' | 'statutNote';
 type StatutFilter = '' | 'actif' | 'inactif';
+type DeleteTarget =
+  | { kind: 'note'; item: CritereNote }
+  | { kind: 'level'; item: NoteLevel };
 
 @Component({
   selector: 'app-admin-criteres-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ConfirmDialog],
   templateUrl: './admin-criteres-page.component.html',
   styleUrl: './admin-criteres-page.component.scss',
 })
@@ -77,7 +81,30 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
   deleting = signal(false);
   toggling = signal(false);
 
+  deleteConfirmOpen = false;
+  deleteTarget: DeleteTarget | null = null;
+  feedbackOpen = false;
+  feedbackTitle = 'Information';
+  feedbackMessage = '';
+
   readonly ReponseEliminatoire = ReponseEliminatoire;
+
+  get deleteConfirmTitle(): string {
+    if (this.deleteTarget?.kind === 'level') {
+      return 'Supprimer le niveau de note';
+    }
+    return 'Supprimer le critère note';
+  }
+
+  get deleteConfirmMessage(): string {
+    if (this.deleteTarget?.kind === 'level') {
+      return `Voulez-vous vraiment supprimer le niveau « ${this.deleteTarget.item.label} » ?`;
+    }
+    if (this.deleteTarget?.kind === 'note') {
+      return `Voulez-vous vraiment supprimer le critère note « ${this.deleteTarget.item.libelle} » ?`;
+    }
+    return '';
+  }
 
   filteredEliminatoires = computed(() => {
     const query = this.normalize(this.eliminatoiresSearch());
@@ -389,13 +416,10 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     this.errorMessage.set(null);
     operation.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        this.successMessage.set(message);
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
         this.saving.set(false);
         this.closeModal();
         reload();
-        setTimeout(() => this.successMessage.set(null), 3000);
+        this.showFeedback('Succès', message);
       },
       error: (err) => {
         this.showOperationError(err, 'Enregistrement impossible.');
@@ -413,12 +437,9 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     const operation = critere.actif ? service.deactivate(critere.id) : service.activate(critere.id);
     operation.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        this.successMessage.set(critere.actif ? 'Critere desactive.' : 'Critere active.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
         this.toggling.set(false);
         this.loadCriteres();
-        setTimeout(() => this.successMessage.set(null), 3000);
+        this.showFeedback('Succès', critere.actif ? 'Critere desactive.' : 'Critere active.');
       },
       error: (err) => {
         this.showOperationError(err, 'Changement de statut impossible.');
@@ -431,24 +452,8 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     if (this.deleting() || this.saving() || this.toggling()) {
       return;
     }
-    if (!window.confirm(`Supprimer le critere note "${critere.libelle}" ?`)) {
-      return;
-    }
-    this.deleting.set(true);
-    this.critereNoteService.delete(critere.id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.successMessage.set('Critere note supprime.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
-        this.deleting.set(false);
-        this.loadNotes();
-        setTimeout(() => this.successMessage.set(null), 3000);
-      },
-      error: (err) => {
-        this.showOperationError(err, 'Ce critère est déjà utilisé dans des évaluations. Vous pouvez le désactiver au lieu de le supprimer.');
-        this.deleting.set(false);
-      },
-    });
+    this.deleteTarget = { kind: 'note', item: critere };
+    this.deleteConfirmOpen = true;
   }
 
   noteLabel(value: number | null | undefined): string {
@@ -490,12 +495,10 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
       : this.noteLevelService.update(this.selectedNoteLevelId!, request);
     operation.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        this.successMessage.set('Niveau de note enregistre.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
         this.saving.set(false);
         this.closeNoteLevelModal();
         this.loadNoteLevels();
+        this.showFeedback('Succès', 'Niveau de note enregistre.');
       },
       error: (err) => {
         this.showOperationError(err, 'Enregistrement du niveau impossible.');
@@ -512,11 +515,9 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     const operation = level.active ? this.noteLevelService.deactivate(level.id) : this.noteLevelService.activate(level.id);
     operation.pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        this.successMessage.set(level.active ? 'Niveau de note desactive.' : 'Niveau de note active.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
         this.toggling.set(false);
         this.loadNoteLevels();
+        this.showFeedback('Succès', level.active ? 'Niveau de note desactive.' : 'Niveau de note active.');
       },
       error: (err) => {
         this.showOperationError(err, 'Changement de statut du niveau impossible.');
@@ -529,23 +530,71 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     if (this.deleting() || this.saving() || this.toggling()) {
       return;
     }
-    if (!window.confirm(`Supprimer le niveau de note "${level.label}" ?`)) {
+    this.deleteTarget = { kind: 'level', item: level };
+    this.deleteConfirmOpen = true;
+  }
+
+  cancelDelete(): void {
+    if (this.deleting()) {
       return;
     }
+    this.deleteConfirmOpen = false;
+    this.deleteTarget = null;
+  }
+
+  confirmDelete(): void {
+    if (!this.deleteTarget || this.deleting()) {
+      return;
+    }
+
+    const target = this.deleteTarget;
     this.deleting.set(true);
-    this.noteLevelService.delete(level.id).pipe(takeUntil(this.destroy$)).subscribe({
+
+    if (target.kind === 'note') {
+      this.critereNoteService.delete(target.item.id).pipe(takeUntil(this.destroy$)).subscribe({
+        next: () => {
+          this.deleting.set(false);
+          this.deleteConfirmOpen = false;
+          this.deleteTarget = null;
+          this.showFeedback('Succès', 'Critere note supprime.');
+          this.loadNotes();
+        },
+        error: (err) => {
+          this.deleting.set(false);
+          this.deleteConfirmOpen = false;
+          this.deleteTarget = null;
+          this.showOperationError(
+            err,
+            'Ce critère est déjà utilisé dans des évaluations. Vous pouvez le désactiver au lieu de le supprimer.',
+          );
+        },
+      });
+      return;
+    }
+
+    this.noteLevelService.delete(target.item.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        this.successMessage.set('Niveau de note supprime.');
-        this.warningMessage.set(null);
-        this.errorMessage.set(null);
         this.deleting.set(false);
+        this.deleteConfirmOpen = false;
+        this.deleteTarget = null;
+        this.showFeedback('Succès', 'Niveau de note supprime.');
         this.loadNoteLevels();
       },
       error: (err) => {
-        this.showOperationError(err, 'Suppression du niveau impossible.');
         this.deleting.set(false);
+        this.deleteConfirmOpen = false;
+        this.deleteTarget = null;
+        this.showOperationError(err, 'Suppression du niveau impossible.');
       },
     });
+  }
+
+  closeFeedback(): void {
+    this.feedbackOpen = false;
+    this.feedbackMessage = '';
+    this.successMessage.set(null);
+    this.warningMessage.set(null);
+    this.errorMessage.set(null);
   }
 
   goToEliminatoiresPage(page: number): void {
@@ -616,6 +665,7 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     this.warningMessage.set(message);
     this.errorMessage.set(null);
     this.successMessage.set(null);
+    this.showFeedback('Attention', message);
   }
 
   private showOperationError(err: unknown, fallback: string): void {
@@ -623,11 +673,24 @@ export class AdminCriteresPageComponent implements OnInit, OnDestroy {
     if (this.isBusinessStatus(err)) {
       this.warningMessage.set(message);
       this.errorMessage.set(null);
+      this.showFeedback('Attention', message);
     } else {
       this.errorMessage.set(message);
       this.warningMessage.set(null);
+      this.showFeedback('Erreur', message);
     }
     this.successMessage.set(null);
+  }
+
+  private showFeedback(title: string, message: string): void {
+    this.feedbackTitle = title;
+    this.feedbackMessage = message;
+    this.feedbackOpen = true;
+    if (title === 'Succès') {
+      this.successMessage.set(message);
+      this.warningMessage.set(null);
+      this.errorMessage.set(null);
+    }
   }
 
   private extractErrorMessage(err: unknown, fallback: string): string {

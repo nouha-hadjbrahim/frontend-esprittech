@@ -54,8 +54,6 @@ export class SujetsDisponibles implements OnInit {
   showCandidatureFermeeAlert = false;
   selectedSujet: SujetProjet | null = null;
   mesCandidaturesSujetIds: Set<number> = new Set();
-  mesCandidaturesAccepteesSujetIds: Set<number> = new Set();
-  estAccepte = false;
 
   readonly canDeposerSujet = computed(
     () => this.authService.getRole() === 'ROLE_ENSEIGNANT' || this.authService.getRole() === 'ROLE_CHEF_EQUIPE',
@@ -129,15 +127,9 @@ export class SujetsDisponibles implements OnInit {
       next: (candidatures) => {
         this.mesCandidaturesSujetIds = new Set(
           candidatures
-            .filter((c: { statut: string }) => c.statut === 'DEPOSEE')
+            .filter((c: { statut: string }) => c.statut === 'DEPOSEE' || c.statut === 'ACCEPTEE')
             .map((c: { sujetId: number }) => c.sujetId),
         );
-        this.mesCandidaturesAccepteesSujetIds = new Set(
-          candidatures
-            .filter((c: { statut: string }) => c.statut === 'ACCEPTEE')
-            .map((c: { sujetId: number }) => c.sujetId),
-        );
-        this.estAccepte = candidatures.some((c: { statut: string }) => c.statut === 'ACCEPTEE');
       },
       error: () => {},
     });
@@ -145,10 +137,6 @@ export class SujetsDisponibles implements OnInit {
 
   dejaPostule(sujet: SujetProjet): boolean {
     return this.mesCandidaturesSujetIds.has(sujet.id);
-  }
-
-  isAccepted(sujet: SujetProjet): boolean {
-    return this.mesCandidaturesAccepteesSujetIds.has(sujet.id);
   }
 
   openModal(): void {

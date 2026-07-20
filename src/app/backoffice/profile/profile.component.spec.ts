@@ -40,5 +40,6 @@ describe('ProfileComponent', () => {
     currentUser.set(userWith('ROLE_ADMIN'));
     expect(component.initials()).toBe('JD');
     expect(component.roleLabel()).toBe('Super-administrateur');
+    expect(component.roleBadgeClass()).toBe('badge--role-admin');
   });
 });
