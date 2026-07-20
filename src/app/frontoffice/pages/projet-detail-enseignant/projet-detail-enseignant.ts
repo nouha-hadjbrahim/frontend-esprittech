@@ -504,6 +504,10 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   }
 
   deleteLivrable(livrable: LivrableCatalogue): void {
+    if (livrable.fromSujet) {
+      this.livrableError = 'Ce livrable appartient au sujet d’origine et ne peut pas être supprimé ici.';
+      return;
+    }
     this.livrableService.delete(livrable.id).subscribe({
       next: () => this.loadLivrables(),
       error: () => (this.livrableError = 'Suppression impossible.'),
@@ -511,6 +515,9 @@ export class ProjetDetailEnseignant implements OnInit, OnDestroy {
   }
 
   downloadLivrable(livrable: LivrableCatalogue): string {
+    if (livrable.fromSujet && this.projet) {
+      return this.livrableService.downloadPublishedUrl(this.projet.id, livrable.id, true);
+    }
     return this.livrableService.downloadUrl(livrable.id);
   }
 

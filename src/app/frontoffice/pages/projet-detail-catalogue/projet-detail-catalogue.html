@@ -34,8 +34,10 @@
 
       <aside class="score-card">
         <span>Score final</span>
-        <strong>{{ projet.score }}</strong>
-        <small>/100</small>
+        <strong>{{ displayedScore }}</strong>
+        @if (showScoreSuffix) {
+          <small>/100</small>
+        }
       </aside>
     </section>
 
@@ -147,6 +149,107 @@
         </div>
       } @else {
         <p class="panel-card__empty">Aucun prérequis renseigné.</p>
+      }
+    </article>
+
+    <article class="panel-card panel-card--full">
+      <header class="panel-card__header">
+        <span class="panel-card__icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1.8L8.1 5H11.5L8.85 7.1L9.85 10.4L7 8.4L4.15 10.4L5.15 7.1L2.5 5H5.9L7 1.8Z" fill="#ffffff"/>
+          </svg>
+        </span>
+        <div>
+          <span class="panel-card__kicker">Industrialisation</span>
+          <h2 class="panel-card__title">Évaluation technique (ML)</h2>
+        </div>
+      </header>
+
+      @if (evaluationLoading) {
+        <p class="panel-card__empty">Chargement de l'évaluation...</p>
+      } @else if (evaluationError) {
+        <div class="alert alert--error">{{ evaluationError }}</div>
+      } @else if (evaluation) {
+        <div class="eval-summary">
+          <div class="eval-summary__item">
+            <span>Score</span>
+            <strong>
+              @if (evaluation.scoreFinal != null) {
+                {{ evaluation.scoreFinal }} / 100
+              } @else {
+                Non calculé
+              }
+            </strong>
+          </div>
+          <div class="eval-summary__item">
+            <span>Éligibilité</span>
+            <strong>
+              @if (evaluation.eligibleIndustrialisation === true) {
+                Éligible
+              } @else if (evaluation.eligibleIndustrialisation === false) {
+                Non éligible
+              } @else {
+                Non calculé
+              }
+            </strong>
+          </div>
+          <div class="eval-summary__item">
+            <span>Éliminatoires</span>
+            <strong>{{ evaluation.eliminatoryWarningsCount ?? (evaluation.hasEliminatoryWarnings ? 1 : 0) }}</strong>
+          </div>
+          <div class="eval-summary__item">
+            <span>Date</span>
+            <strong>{{ evaluation.dateCalcul | date:'dd/MM/yyyy HH:mm' }}</strong>
+          </div>
+        </div>
+        <app-evaluation-checklist
+          [evaluation]="evaluation"
+          [projectTitle]="projet.titre"
+        ></app-evaluation-checklist>
+      } @else {
+        <p class="panel-card__empty">Non calculé</p>
+      }
+    </article>
+
+    <article class="panel-card panel-card--full">
+      <header class="panel-card__header">
+        <span class="panel-card__icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 2.5h5.5L11 5.5V11.5H3V2.5Z" stroke="#ffffff" stroke-width="1.2"/>
+            <path d="M8.5 2.5V5.5H11" stroke="#ffffff" stroke-width="1.2"/>
+          </svg>
+        </span>
+        <div>
+          <span class="panel-card__kicker">Livrables</span>
+          <h2 class="panel-card__title">Documents du projet</h2>
+        </div>
+      </header>
+
+      @if (livrablesLoading) {
+        <p class="panel-card__empty">Chargement des livrables...</p>
+      } @else if (livrableError) {
+        <div class="alert alert--error">{{ livrableError }}</div>
+      } @else if (livrables.length) {
+        <ul class="livrable-list">
+          @for (livrable of livrables; track livrable.id) {
+            <li class="livrable-list__item">
+              <div>
+                <strong>{{ livrableDisplayName(livrable) }}</strong>
+                <span>{{ livrable.typeLivrable }}</span>
+                @if (livrable.fromSujet) {
+                  <span class="livrable-list__badge">Hérité du sujet</span>
+                }
+              </div>
+              @if (livrable.objectName) {
+                <a [href]="downloadLivrable(livrable)" target="_blank" rel="noreferrer">Télécharger</a>
+              } @else if (livrable.lienExterne) {
+                <a [href]="livrable.lienExterne" target="_blank" rel="noreferrer">Ouvrir</a>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="panel-card__empty">Aucun livrable disponible.</p>
       }
     </article>
 
