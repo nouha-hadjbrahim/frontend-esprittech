@@ -89,8 +89,9 @@ describe('ProjetDetailEnseignant', () => {
   afterEach(() => httpTesting.verify());
 
   /** Après le chargement du projet, le composant charge aussi ses livrables. */
-  function flushLivrables(id: string = '1'): void {
-    httpTesting.expectOne(`${API}/projets-catalogue/${id}/livrables`).flush([]);
+  function flushLivrables(id: string = '1', published = false): void {
+    const path = published ? 'catalogue' : 'projets-catalogue';
+    httpTesting.expectOne(`${API}/${path}/${id}/livrables`).flush([]);
   }
 
   function flushHistorique(id: string = '1'): void {
@@ -99,7 +100,7 @@ describe('ProjetDetailEnseignant', () => {
 
   function flushValidProjectWithNoEvaluation(): void {
     httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
       { message: 'Aucune evaluation trouvee' },
       { status: 404, statusText: 'Not Found' },
@@ -244,7 +245,7 @@ describe('ProjetDetailEnseignant', () => {
     fixture.detectChanges();
 
     httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
     flushHistorique();
     fixture.detectChanges();
@@ -265,7 +266,7 @@ describe('ProjetDetailEnseignant', () => {
       statut: 'CANDIDAT_INDUSTRIALISATION_INTERNE',
       score: 82,
     });
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
     flushHistorique();
     fixture.detectChanges();
@@ -287,7 +288,7 @@ describe('ProjetDetailEnseignant', () => {
       statut: 'INDUSTRIALISE_DSI',
       score: 0,
     });
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(
       { message: 'Aucune evaluation trouvee' },
       { status: 404, statusText: 'Not Found' },
@@ -305,7 +306,7 @@ describe('ProjetDetailEnseignant', () => {
     fixture.detectChanges();
 
     httpTesting.expectOne(`${API}/projets/1`).flush(validDetails);
-    flushLivrables();
+    flushLivrables('1', true);
     httpTesting.expectOne(`${API}/projets-catalogue/1/evaluation`).flush(evaluation);
     flushHistorique();
     fixture.detectChanges();

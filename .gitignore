@@ -44,6 +44,8 @@ testem.log
 /typings
 .scannerwork
 .scannerwork/*
+image.oci.tar
+image.env
 
 # Claude
 .claude/

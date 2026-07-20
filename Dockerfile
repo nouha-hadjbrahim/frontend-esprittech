@@ -1,18 +1,9 @@
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build -- --configuration production
-
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.27.2-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist/esprittech-frontend/browser /usr/share/nginx/html
+COPY dist/esprittech-frontend/browser /usr/share/nginx/html
 
+USER 101
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
